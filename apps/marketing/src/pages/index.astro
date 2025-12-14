@@ -1,0 +1,221 @@
+---
+import { Image } from 'astro:assets';
+import articleReaderView from '../assets/article-reader-view.png';
+import feedListView from '../assets/feed-list-view.png';
+import tagsManagement from '../assets/tags-management.png';
+import WaitlistForm from '../components/WaitlistForm';
+import Layout from '../layouts/Layout.astro';
+---
+
+<Layout>
+  <div class="bg-background min-h-screen">
+    <!-- Hero Section -->
+    <section class="mx-auto max-w-6xl px-6 py-16 md:py-20">
+      <div class="text-center">
+        <h1 class="font-display text-foreground mb-6 text-5xl leading-tight md:text-7xl">
+          your feed, <span class="text-foreground/70">your rules</span>
+        </h1>
+        <p class="text-foreground mx-auto mb-4 max-w-2xl text-xl md:text-2xl">
+          A centralized feed reader where <span class="font-semibold">you</span> control what you see.
+        </p>
+        <p class="text-foreground/70 mx-auto mb-12 max-w-xl text-lg">
+          No algorithms. No distractions. Just the content you choose to follow, organized your way.
+        </p>
+
+        <!-- Email Signup Form -->
+        <WaitlistForm client:load />
+      </div>
+    </section>
+
+    <!-- Features Grid -->
+    <section class="mx-auto max-w-6xl px-6 py-16">
+      <div class="grid grid-cols-2 gap-8 lg:grid-cols-4">
+        <div class="text-center">
+          <div
+            class="bg-foreground mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl"
+          >
+            <svg
+              class="h-8 w-8 text-white"
+              xmlns="http://www.w3.org/2000/svg"
+              width="24"
+              height="24"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <path d="M4 11a9 9 0 0 1 9 9"></path>
+              <path d="M4 4a16 16 0 0 1 16 16"></path>
+              <circle cx="5" cy="19" r="1"></circle>
+            </svg>
+          </div>
+          <h3 class="text-foreground mb-2 text-lg font-bold">All In One Place</h3>
+          <p class="text-foreground/70 text-sm">
+            Centralize blogs, news, podcasts, and YouTube channels in a single feed.
+          </p>
+        </div>
+
+        <div class="text-center">
+          <div
+            class="bg-foreground mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl"
+          >
+            <svg
+              class="h-8 w-8 text-white"
+              xmlns="http://www.w3.org/2000/svg"
+              width="24"
+              height="24"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <circle cx="12" cy="12" r="10"></circle>
+              <circle cx="12" cy="12" r="6"></circle>
+              <circle cx="12" cy="12" r="2"></circle>
+            </svg>
+          </div>
+          <h3 class="text-foreground mb-2 text-lg font-bold">You're In Control</h3>
+          <p class="text-foreground/70 text-sm">
+            No algorithms deciding what you see. You choose what to follow and when to read it.
+          </p>
+        </div>
+
+        <div class="text-center">
+          <div
+            class="bg-foreground mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl"
+          >
+            <svg
+              class="h-8 w-8 text-white"
+              xmlns="http://www.w3.org/2000/svg"
+              width="24"
+              height="24"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"></path>
+              <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"></path>
+            </svg>
+          </div>
+          <h3 class="text-foreground mb-2 text-lg font-bold">Read Your Way</h3>
+          <p class="text-foreground/70 text-sm">
+            Organize feeds with labels. Read at your own pace without pressure.
+          </p>
+        </div>
+
+        <div class="text-center">
+          <div
+            class="bg-foreground mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl"
+          >
+            <svg
+              class="h-8 w-8 text-white"
+              xmlns="http://www.w3.org/2000/svg"
+              width="24"
+              height="24"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <rect width="18" height="11" x="3" y="11" rx="2" ry="2"></rect>
+              <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+            </svg>
+          </div>
+          <h3 class="text-foreground mb-2 text-lg font-bold">Private & Simple</h3>
+          <p class="text-foreground/70 text-sm">
+            Just you and your feeds. No tracking, no social sharing, no noise.
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Open Source Section -->
+    <section class="mx-auto max-w-4xl px-6 pb-16 pt-8">
+      <div class="text-center">
+        <div class="mb-4 inline-flex items-center gap-3">
+          <svg
+            class="text-foreground/70 mt-[2px] h-8 w-8"
+            fill="currentColor"
+            viewBox="0 0 1024 1024"
+          >
+            <path
+              fill-rule="evenodd"
+              clip-rule="evenodd"
+              d="M8 0C3.58 0 0 3.58 0 8C0 11.54 2.29 14.53 5.47 15.59C5.87 15.66 6.02 15.42 6.02 15.21C6.02 15.02 6.01 14.39 6.01 13.72C4 14.09 3.48 13.23 3.32 12.78C3.23 12.55 2.84 11.84 2.5 11.65C2.22 11.5 1.82 11.13 2.49 11.12C3.12 11.11 3.57 11.7 3.72 11.94C4.44 13.15 5.59 12.81 6.05 12.6C6.12 12.08 6.33 11.73 6.56 11.53C4.78 11.33 2.92 10.64 2.92 7.58C2.92 6.71 3.23 5.99 3.74 5.43C3.66 5.23 3.38 4.41 3.82 3.31C3.82 3.31 4.49 3.1 6.02 4.13C6.66 3.95 7.34 3.86 8.02 3.86C8.7 3.86 9.38 3.95 10.02 4.13C11.55 3.09 12.22 3.31 12.22 3.31C12.66 4.41 12.38 5.23 12.3 5.43C12.81 5.99 13.12 6.7 13.12 7.58C13.12 10.65 11.25 11.33 9.47 11.53C9.76 11.78 10.01 12.26 10.01 13.01C10.01 14.08 10 14.94 10 15.21C10 15.42 10.15 15.67 10.55 15.59C13.71 14.53 16 11.53 16 8C16 3.58 12.42 0 8 0Z"
+              transform="scale(64)"></path>
+          </svg>
+          <h2 class="text-foreground text-3xl font-bold md:text-4xl">
+            Open Source & Self-Hostable
+          </h2>
+        </div>
+        <p class="text-foreground mx-auto mb-3 max-w-2xl text-xl">
+          Full transparency. Full control. Host it yourself or use our service, your choice.
+        </p>
+        <p class="text-foreground/70 mx-auto max-w-xl text-base">
+          No lock-in, no mystery code, built for the community.
+        </p>
+      </div>
+    </section>
+
+    <!-- App Preview Section -->
+    <section class="bg-foreground/5 py-16">
+      <div class="mx-auto max-w-4xl px-6">
+        <div class="text-foreground/50 mb-10 text-center text-xs uppercase tracking-wider">
+          Early Preview
+        </div>
+        <div class="flex items-center justify-center gap-4">
+          <div
+            class="border-foreground/20 w-64 -rotate-6 overflow-hidden rounded-lg border bg-white shadow-2xl"
+          >
+            <Image src={feedListView} alt="Feed list view" class="h-auto w-full" />
+          </div>
+          <div
+            class="border-foreground/20 w-72 rotate-2 overflow-hidden rounded-lg border bg-white shadow-2xl"
+          >
+            <Image src={articleReaderView} alt="Article reader view" class="h-auto w-full" />
+          </div>
+          <div
+            class="border-foreground/20 w-64 rotate-6 overflow-hidden rounded-lg border bg-white shadow-2xl"
+          >
+            <Image src={tagsManagement} alt="Tags management" class="h-auto w-full" />
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Final CTA -->
+    <section class="mx-auto max-w-3xl px-6 py-16 text-center">
+      <h2 class="text-foreground mb-4 text-3xl font-bold md:text-4xl">
+        Take back control of your content
+      </h2>
+      <p class="text-foreground/70 mb-8 text-lg">
+        Join the waitlist and be among the first to experience a calmer, more intentional way to
+        consume content.
+      </p>
+      <button
+        onclick="window.scrollTo({ top: 0, behavior: 'smooth' })"
+        class="bg-accent hover:bg-accent/90 inline-block rounded-lg px-8 py-3 text-base font-semibold text-white transition-all hover:shadow-lg"
+      >
+        Join the Waitlist
+      </button>
+    </section>
+
+    <!-- Footer -->
+    <footer class="border-foreground/20 bg-background border-t py-8">
+      <div class="mx-auto max-w-6xl px-6 text-center">
+        <p class="text-foreground/60 text-sm">
+          © 2025 OpenFeeds. Built for people who value their attention.
+        </p>
+      </div>
+    </footer>
+  </div>
+</Layout>

@@ -1,0 +1,69 @@
+---
+import Header from '../components/Header.astro';
+import PostHog from '../components/posthog.astro';
+import '../styles/global.css';
+
+const title = 'OpenFeeds - Your feed, your rules';
+const description =
+  'A centralized RSS feed reader where you control what you see. No algorithms, no distractions. Just the content you choose to follow, organized your way.';
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="description" content={description} />
+    <meta name="theme-color" content="#f3f0e3" />
+
+    <link rel="icon" type="image/svg+xml" href="/logo-alt-simple.svg" />
+    <link rel="apple-touch-icon" href="/logo-alt-simple.svg" />
+
+    <meta name="generator" content={Astro.generator} />
+    <title>{title}</title>
+
+    <!-- Open Graph -->
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    <meta property="og:type" content="website" />
+    <meta property="og:image" content="/article-reader-view.png" />
+
+    <!-- Twitter -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content={title} />
+    <meta name="twitter:description" content={description} />
+    <meta name="twitter:image" content="/article-reader-view.png" />
+
+    <PostHog />
+    <script is:inline>
+      // Remove UTM parameters from URL after page load
+      if (window.location.search) {
+        const url = new URL(window.location.href);
+        const params = new URLSearchParams(url.search);
+
+        // List of UTM parameters to remove
+        const utmParams = ['utm_source', 'utm_medium', 'utm_campaign', 'utm_term', 'utm_content'];
+        let hasUtm = false;
+
+        utmParams.forEach((param) => {
+          if (params.has(param)) {
+            params.delete(param);
+            hasUtm = true;
+          }
+        });
+
+        // Update URL without UTM params if any were found
+        if (hasUtm) {
+          const newUrl = params.toString()
+            ? `${url.pathname}?${params.toString()}${url.hash}`
+            : `${url.pathname}${url.hash}`;
+          window.history.replaceState({}, '', newUrl);
+        }
+      }
+    </script>
+  </head>
+  <body class="bg-background">
+    <Header />
+    <slot />
+  </body>
+</html>

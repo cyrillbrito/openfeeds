@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Mock Tech Blog</title>
+    <link>http://localhost:9999/tech-blog</link>
+    <description>A mock technology blog for testing RSS feed imports</description>
+    <language>en-us</language>
+    <atom:link href="http://localhost:9999/tech-blog.xml" rel="self" type="application/rss+xml"/>
+
+    <item>
+      <title>Introduction to Bun: The Fast JavaScript Runtime</title>
+      <link>http://localhost:9999/tech-blog/bun-intro</link>
+      <guid>http://localhost:9999/tech-blog/bun-intro</guid>
+      <pubDate>Mon, 01 Jan 2024 10:00:00 GMT</pubDate>
+      <description>Learn about Bun, the blazing fast all-in-one JavaScript runtime that's changing the game.</description>
+    </item>
+
+    <item>
+      <title>Building Modern Web Apps with SolidJS</title>
+      <link>http://localhost:9999/tech-blog/solidjs-guide</link>
+      <guid>http://localhost:9999/tech-blog/solidjs-guide</guid>
+      <pubDate>Wed, 03 Jan 2024 14:30:00 GMT</pubDate>
+      <description>Discover why SolidJS is becoming the go-to framework for reactive web applications.</description>
+    </item>
+
+    <item>
+      <title>TypeScript Best Practices for 2024</title>
+      <link>http://localhost:9999/tech-blog/typescript-best-practices</link>
+      <guid>http://localhost:9999/tech-blog/typescript-best-practices</guid>
+      <pubDate>Fri, 05 Jan 2024 09:15:00 GMT</pubDate>
+      <description>Essential TypeScript patterns and practices every developer should know in 2024.</description>
+    </item>
+  </channel>
+</rss>

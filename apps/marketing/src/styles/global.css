@@ -1,0 +1,49 @@
+@import 'tailwindcss';
+
+/** https://gwfh.mranftl.com/ */
+@font-face {
+  font-display: swap;
+  font-family: 'Gilda Display';
+  font-style: normal;
+  font-weight: 400;
+  src: url('/fonts/gilda-display-v20-latin-regular.woff2') format('woff2');
+}
+
+/* inter-700 - latin */
+@font-face {
+  font-display: swap; /* Check https://developer.mozilla.org/en-US/docs/Web/CSS/@font-face/font-display for other options. */
+  font-family: 'Inter';
+  font-style: normal;
+  font-weight: 700;
+  src: url('/fonts/inter-v20-latin-700.woff2') format('woff2'); /* Chrome 36+, Opera 23+, Firefox 39+, Safari 12+, iOS 10+ */
+}
+
+@theme {
+  --color-background: #f3f0e3;
+  --color-foreground: #2e2e2e;
+  --color-accent: #f76f53;
+
+  --font-display: 'Gilda Display', serif;
+  --font-logo: 'Inter', sans-serif;
+}
+
+body {
+  font-family:
+    -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell',
+    'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  scroll-behavior: smooth;
+}
+
+h1,
+h2,
+h3,
+p {
+  text-wrap: balance;
+}
+
+html,
+body {
+  overscroll-behavior: none;
+}

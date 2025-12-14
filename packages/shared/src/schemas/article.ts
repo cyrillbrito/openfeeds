@@ -1,0 +1,85 @@
+import { z } from 'zod';
+import { CursorQuerySchema } from './common';
+import { FeedSchema } from './feed';
+
+export const ArticleQuerySchema = CursorQuerySchema.extend({
+  feedId: z.coerce.number().optional(),
+  tagId: z.coerce.number().optional(),
+  isRead: z.stringbool().optional(),
+  isArchived: z.stringbool().optional(),
+  type: z.enum(['all', 'shorts']).default('all').optional(),
+  search: z.string().optional(),
+  seed: z.coerce.number().optional(),
+});
+
+export const ArticleSchema = z.object({
+  id: z.number(),
+  feedId: z.number(),
+  title: z.string(),
+  url: z.string().nullable(),
+  description: z.string().nullable(),
+  content: z.string().nullable(),
+  author: z.string().nullable(),
+  pubDate: z.iso.datetime().nullable(),
+  isRead: z.boolean().nullable(),
+  isArchived: z.boolean().nullable(),
+  hasCleanContent: z.boolean(),
+  tags: z.array(z.number()),
+  createdAt: z.iso.datetime(),
+});
+
+export const CreateArticleSchema = z.object({
+  feedId: z.number(),
+  title: z.string(),
+  url: z.string().nullable().optional(),
+  description: z.string().nullable().optional(),
+  content: z.string().nullable().optional(),
+  author: z.string().nullable().optional(),
+  guid: z.string().nullable().optional(),
+  pubDate: z.string().nullable().optional(),
+});
+
+export const UpdateArticleSchema = z.object({
+  isRead: z.boolean().optional(),
+  isArchived: z.boolean().optional(),
+  tags: z.array(z.number()).optional(),
+});
+
+// Article with feed information
+export const ArticleWithFeedSchema = ArticleSchema.extend({
+  feed: FeedSchema,
+});
+
+// Bulk operations
+export const BulkUpdateArticlesSchema = z.object({
+  articleIds: z.array(z.number()),
+  updates: z.object({
+    isRead: z.boolean().optional(),
+  }),
+});
+
+// Article stats
+export const ArticleStatsSchema = z.object({
+  total: z.number(),
+  unread: z.number(),
+  starred: z.number(),
+  byFeed: z.record(z.string(), z.number()),
+});
+
+// Mark many as read (context-aware)
+export const MarkManyReadRequestSchema = z.object({
+  context: z.enum(['all', 'feed', 'tag']),
+  feedId: z.number().optional(), // Required when context is 'feed'
+  tagId: z.number().optional(), // Required when context is 'tag'
+});
+
+export const MarkManyReadResponseSchema = z.object({
+  success: z.boolean(),
+  markedCount: z.number(),
+  error: z.string().optional(),
+});
+
+// Article with clean content for reader view
+export const ArticleWithContentSchema = ArticleSchema.extend({
+  cleanContent: z.string().nullable(),
+});

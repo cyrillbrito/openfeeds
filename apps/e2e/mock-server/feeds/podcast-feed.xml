@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom" xmlns:itunes="http://www.itunes.com/dtds/podcast-1.0.dtd">
+  <channel>
+    <title>The Mock Developer Podcast</title>
+    <link>http://localhost:9999/podcast</link>
+    <description>Mock podcast feed for testing RSS imports with podcast-specific elements</description>
+    <language>en-us</language>
+    <atom:link href="http://localhost:9999/podcast-feed.xml" rel="self" type="application/rss+xml"/>
+    <itunes:author>Mock Podcast Network</itunes:author>
+    <itunes:category text="Technology"/>
+
+    <item>
+      <title>EP001: Getting Started with E2E Testing</title>
+      <link>http://localhost:9999/podcast/ep001</link>
+      <guid>http://localhost:9999/podcast/ep001</guid>
+      <pubDate>Mon, 01 Jan 2024 12:00:00 GMT</pubDate>
+      <description>In this episode, we dive deep into end-to-end testing strategies and best practices.</description>
+      <itunes:duration>45:30</itunes:duration>
+    </item>
+
+    <item>
+      <title>EP002: Modern Web Frameworks Comparison</title>
+      <link>http://localhost:9999/podcast/ep002</link>
+      <guid>http://localhost:9999/podcast/ep002</guid>
+      <pubDate>Mon, 08 Jan 2024 12:00:00 GMT</pubDate>
+      <description>We compare React, Vue, SolidJS, and Svelte to help you choose the right framework.</description>
+      <itunes:duration>52:15</itunes:duration>
+    </item>
+  </channel>
+</rss>

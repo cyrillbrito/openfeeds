@@ -1,0 +1,41 @@
+# Use Bun image as base
+FROM oven/bun:alpine AS base
+
+# Pruner stage - prune the monorepo
+FROM base AS pruner
+
+# Install turbo globally
+RUN bun install -g turbo@canary
+
+# Copy entire monorepo
+COPY . .
+
+# Generate a partial monorepo with a pruned lockfile for the "api" workspace
+RUN turbo prune @repo/server --docker
+
+# Builder stage - install dependencies & build / compile
+FROM base AS builder
+
+# Copy pruned lockfile and package.json files
+COPY --from=pruner /home/bun/app/out/json/ .
+
+# Install dependencies using Bun with cache mount
+RUN --mount=type=cache,target=/root/.bun/install/cache bun install --frozen-lockfile
+
+# Copy the full pruned code
+COPY --from=pruner /home/bun/app/out/full/ .
+
+# Compile full api to an single executable
+# This is not working...
+# Copying all the app...
+# RUN bun build --entrypoints ./apps/server/src/index.ts --target bun --production --outdir ./apps/server/out --sourcemap="linked"
+
+# Runner stage - final production image
+FROM base AS runner
+
+# COPY --from=builder /home/bun/app/apps/server/out .
+COPY --from=builder /home/bun/app .
+
+USER bun
+EXPOSE 3001
+CMD ["bun", "run", "apps/server/src/index.ts"]

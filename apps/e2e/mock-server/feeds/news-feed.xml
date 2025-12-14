@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Mock News Network</title>
+    <link>http://localhost:9999/news</link>
+    <description>Mock news feed for testing RSS imports</description>
+    <language>en-us</language>
+    <atom:link href="http://localhost:9999/news-feed.xml" rel="self" type="application/rss+xml"/>
+
+    <item>
+      <title>Breaking: New Testing Framework Released</title>
+      <link>http://localhost:9999/news/testing-framework</link>
+      <guid>http://localhost:9999/news/testing-framework</guid>
+      <pubDate>Tue, 02 Jan 2024 08:00:00 GMT</pubDate>
+      <description>A revolutionary new testing framework promises to make E2E testing easier than ever.</description>
+    </item>
+
+    <item>
+      <title>Developer Productivity Tools Roundup</title>
+      <link>http://localhost:9999/news/productivity-tools</link>
+      <guid>http://localhost:9999/news/productivity-tools</guid>
+      <pubDate>Thu, 04 Jan 2024 11:45:00 GMT</pubDate>
+      <description>Our weekly roundup of the best tools to boost your development workflow.</description>
+    </item>
+
+    <item>
+      <title>Open Source Spotlight: OpenFeeds</title>
+      <link>http://localhost:9999/news/openfeeds-spotlight</link>
+      <guid>http://localhost:9999/news/openfeeds-spotlight</guid>
+      <pubDate>Sat, 06 Jan 2024 16:20:00 GMT</pubDate>
+      <description>Exploring a new open-source RSS reader built with modern web technologies.</description>
+    </item>
+
+    <item>
+      <title>The Future of Web Development</title>
+      <link>http://localhost:9999/news/web-dev-future</link>
+      <guid>http://localhost:9999/news/web-dev-future</guid>
+      <pubDate>Sun, 07 Jan 2024 13:00:00 GMT</pubDate>
+      <description>Industry experts weigh in on where web development is heading in the next decade.</description>
+    </item>
+  </channel>
+</rss>

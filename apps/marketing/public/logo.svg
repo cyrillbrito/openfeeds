@@ -1,0 +1,35 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 24" fill="none">
+  <!-- Concept: Layered frames/windows representing organized content -->
+  <!-- Like stacked reading panes or organized feed cards -->
+
+  <!-- Back frame (lightest) -->
+  <rect
+    x="8" y="8"
+    width="24" height="20"
+    rx="3"
+    fill="#f76f53"
+    opacity="0.3"
+  />
+
+  <!-- Middle frame -->
+  <rect
+    x="4" y="4"
+    width="24" height="20"
+    rx="3"
+    fill="#f76f53"
+    opacity="0.6"
+  />
+
+  <!-- Front frame (main) -->
+  <rect
+    x="0" y="0"
+    width="24" height="20"
+    rx="3"
+    fill="#2e2e2e"
+  />
+
+  <!-- Content lines inside front frame -->
+  <line x1="4" y1="5" x2="16" y2="5" stroke="#f3f0e3" stroke-width="1.5" stroke-linecap="round"/>
+  <line x1="4" y1="9" x2="14" y2="9" stroke="#f3f0e3" stroke-width="1.5" stroke-linecap="round"/>
+  <line x1="4" y1="13" x2="18" y2="13" stroke="#f3f0e3" stroke-width="1.5" stroke-linecap="round"/>
+</svg>

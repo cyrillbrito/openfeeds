@@ -1,0 +1,23 @@
+{
+  "mcpServers": {
+    "grep": {
+      "type": "http",
+      "url": "https://mcp.grep.app"
+    },
+    "context7": {
+      "type": "http",
+      "url": "https://mcp.context7.com/mcp",
+      "headers": {
+        "CONTEXT7_API_KEY": "ctx7sk-73f16777-8e11-484c-89c6-d104af555a90"
+      }
+    },
+    "linear-server": {
+      "type": "sse",
+      "url": "https://mcp.linear.app/sse"
+    },
+    "chrome-devtools": {
+      "command": "npx",
+      "args": ["chrome-devtools-mcp@latest"]
+    }
+  }
+}

@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 28 22" fill="none">
+  <!-- Simplified version with just one ripple for better favicon visibility -->
+
+  <!-- Back frame (lighter) -->
+  <rect
+    x="0" y="2"
+    width="24" height="20"
+    rx="3"
+    fill="#f76f53"
+    opacity="0.5"
+  />
+
+  <!-- Front frame (main) - larger and more visible -->
+  <rect
+    x="4" y="0"
+    width="24" height="20"
+    rx="3"
+    fill="#2e2e2e"
+  />
+
+  <!-- Content lines inside front frame -->
+  <line x1="8" y1="5" x2="20" y2="5" stroke="#f3f0e3" stroke-width="2" stroke-linecap="round"/>
+  <line x1="8" y1="10" x2="18" y2="10" stroke="#f3f0e3" stroke-width="2" stroke-linecap="round"/>
+  <line x1="8" y1="15" x2="22" y2="15" stroke="#f3f0e3" stroke-width="2" stroke-linecap="round"/>
+</svg>

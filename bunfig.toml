@@ -1,0 +1,4 @@
+# With isolate packages, there were some build issues with vite version
+
+[install]
+linker = "hoisted"

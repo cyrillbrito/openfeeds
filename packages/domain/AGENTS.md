@@ -1,0 +1,67 @@
+# Domain Package - Business Logic
+
+All business logic for OpenFeeds. Shared by server (HTTP) and worker (job processing).
+
+## Commands
+
+```bash
+bun check-types
+```
+
+## Architecture
+
+**Owns:**
+- Business logic (feeds, articles, tags, settings, RSS sync, archive, import)
+- Queue instances and enqueueing (BullMQ Queue, not Worker)
+- Infrastructure (dbProvider, logger, environment, errors)
+
+**Does NOT own:**
+- BullMQ Worker instances → `apps/worker`
+- HTTP routes → `apps/server`
+
+## Key Modules
+
+**Business Logic:**
+- `feeds.ts` - Feed CRUD, discovery
+- `articles.ts` - Article queries and updates
+- `rss-sync.ts` - RSS fetching, article sync, enqueues feed jobs
+- `import.ts` - OPML import, enqueues sync/detail jobs
+- `archive.ts` - Auto-archive logic
+- `tags.ts`, `settings.ts`, `filter-rules.ts`
+
+**Infrastructure:**
+- `queues.ts` - Queue instances, enqueue functions
+- `queue-config.ts` - Redis connection, queue names
+- `db-provider.ts` - Database provider singleton
+- `logger.ts` - PostHog + file logging
+- `environment.ts` - Env validation
+- `errors.ts` - Domain error classes
+
+## Queue Architecture
+
+**Exports:**
+- Queue instances: `feedSyncOrchestratorQueue`, `singleFeedSyncQueue`, `feedDetailQueue`, `autoArchiveQueue`
+- Enqueue functions: `enqueueFeedSync()`, `enqueueFeedDetail()`, `initializeScheduledJobs()`
+- Config: `QUEUE_NAMES`, `redisConnection`
+
+**Scheduled Jobs (`initializeScheduledJobs()`):**
+- Feed sync orchestrator: `* * * * *` (every minute)
+- Auto archive: `0 0 * * *` (daily at midnight)
+
+**Pattern:**
+1. Server enqueues via `enqueueFeedSync()`, `enqueueFeedDetail()`
+2. Worker creates Worker instances, calls domain business logic
+3. Both connect to same Redis queues
+
+## Environment Variables
+
+- `DB_PATH` - SQLite database path
+- `REDIS_HOST`, `REDIS_PORT` - Redis connection
+- `POSTHOG_PUBLIC_KEY` - Analytics (optional)
+
+## Guidelines
+
+- Pure business logic only (no HTTP, no Workers)
+- Owns Queue instances and enqueueing, NOT Worker instances
+- Throw domain errors: `NotFoundError`, `ConflictError`, `UnauthorizedError`, etc.
+- Import utilities from `@repo/shared/utils`

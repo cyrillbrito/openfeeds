@@ -1,0 +1,20 @@
+{
+  "rules": {
+    "no-unassigned-vars": "off"
+  },
+  "overrides": [
+    {
+      "files": ["apps/e2e/**/*.ts"],
+      "rules": {
+        "no-unused-vars": "off"
+      }
+    },
+    {
+      "files": ["apps/marketing/src/components/PostHog.astro"],
+      "rules": {
+        "no-unused-expressions": "off",
+        "number-arg-out-of-range": "off"
+      }
+    }
+  ]
+}

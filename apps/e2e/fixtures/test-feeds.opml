@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<opml version="2.0">
+  <head>
+    <title>Test RSS Feeds</title>
+  </head>
+  <body>
+    <!--
+      Mock RSS feeds for testing - powered by Mock Server (localhost:9999)
+      These feeds are served by apps/e2e/mocks/server.ts during test runs.
+    -->
+
+    <!-- Technology Feeds -->
+    <outline text="Technology" title="Technology">
+      <outline type="rss"
+               text="Mock Tech Blog"
+               title="Mock Tech Blog"
+               xmlUrl="http://localhost:9999/tech-blog.xml"
+               htmlUrl="http://localhost:9999/tech-blog"/>
+    </outline>
+
+    <!-- News Feeds -->
+    <outline text="News" title="News">
+      <outline type="rss"
+               text="Mock News Network"
+               title="Mock News Network"
+               xmlUrl="http://localhost:9999/news-feed.xml"
+               htmlUrl="http://localhost:9999/news"/>
+    </outline>
+
+    <!-- Podcast Feeds -->
+    <outline text="Podcasts" title="Podcasts">
+      <outline type="rss"
+               text="The Mock Developer Podcast"
+               title="The Mock Developer Podcast"
+               xmlUrl="http://localhost:9999/podcast-feed.xml"
+               htmlUrl="http://localhost:9999/podcast"/>
+    </outline>
+  </body>
+</opml>
