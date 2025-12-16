@@ -2,7 +2,7 @@
 
 **Your feed, your rules.** A modern, privacy-focused RSS reader built for the way you consume content.
 
-![OpenFeeds Logo](docs/logo-alt.svg)
+<img src="docs/logo-alt.svg" alt="OpenFeeds Logo" width="200">
 
 ---
 
