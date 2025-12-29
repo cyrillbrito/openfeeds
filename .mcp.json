@@ -8,12 +8,8 @@
       "type": "http",
       "url": "https://mcp.context7.com/mcp",
       "headers": {
-        "CONTEXT7_API_KEY": "ctx7sk-73f16777-8e11-484c-89c6-d104af555a90"
+        "CONTEXT7_API_KEY": "ctx7sk-36a64cee-4a43-49f5-8340-1d5156c1168db"
       }
-    },
-    "linear-server": {
-      "type": "sse",
-      "url": "https://mcp.linear.app/sse"
     },
     "chrome-devtools": {
       "command": "npx",
