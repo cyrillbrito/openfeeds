@@ -44,9 +44,6 @@ interface TagFormProps {
 
 export function TagForm(props: TagFormProps) {
   const isEditMode = () => !!props.editTag;
-  console.log(
-    `🎯 TagForm: FRESH component created! Mode: ${isEditMode() ? 'EDIT' : 'CREATE'}. Timestamp: ${Date.now()}`,
-  );
 
   const [tagName, setTagName] = createSignal('');
   const [tagColor, setTagColor] = createSignal<TagColor>(null);

@@ -21,7 +21,6 @@ export const articlesCollection = createCollection(
     // When views create live queries with .where() clauses, those filters
     // are passed here via ctx.meta.loadSubsetOptions
     queryFn: async (ctx) => {
-      console.log('ctx Articles', ctx);
       const api = useApi();
       const { signal } = ctx;
 

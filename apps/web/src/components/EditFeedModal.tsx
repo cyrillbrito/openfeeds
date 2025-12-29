@@ -37,10 +37,6 @@ interface EditFeedFormProps {
 }
 
 function EditFeedForm(props: EditFeedFormProps) {
-  console.log(
-    `🎯 EditFeedForm: FRESH component created! Feed: ${props.feed.title}. Timestamp: ${Date.now()}`,
-  );
-
   const tagsQuery = useTags();
 
   const [activeTab, setActiveTab] = createSignal<'tags' | 'rules'>('tags');

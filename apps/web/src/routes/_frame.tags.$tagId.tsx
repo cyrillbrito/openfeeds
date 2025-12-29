@@ -43,18 +43,17 @@ function TagArticles() {
   const articlesQuery = useLiveQuery((q) => {
     let query = q
       .from({ article: articlesCollection })
-      .join(
-        { articleTag: articleTagsCollection },
-        ({ article, articleTag }) => eq(article.id, articleTag.articleId),
-        'inner',
+      .innerJoin({ articleTag: articleTagsCollection }, ({ article, articleTag }) =>
+        eq(article.id, articleTag.articleId),
       )
-      .where(({ articleTag }) => eq(articleTag.tagId, tagId()));
+      .where(({ articleTag }) => eq(articleTag.tagId, tagId()))
+      .select(({ article }) => ({ ...article }));
 
     if (isRead() !== null) {
       query = query.where(({ article }) => eq(article.isRead, isRead()));
     }
 
-    return query.select(({ article }) => article);
+    return query;
   });
 
   let markAllModalController!: ModalController;

@@ -1,4 +1,4 @@
-import { ErrorBoundary, Show, createSignal, type JSXElement } from 'solid-js';
+import { createSignal, ErrorBoundary, Show, type JSXElement } from 'solid-js';
 
 export function CommonErrorBoundary(props: { children: JSXElement }) {
   return (
@@ -15,9 +15,7 @@ export function CommonErrorBoundary(props: { children: JSXElement }) {
         return (
           <div class="bg-base-300 rounded-lg p-4 text-left">
             <div class="flex items-start justify-between gap-3">
-              <p class="text-error font-mono text-sm break-words flex-1">
-                {errorMessage}
-              </p>
+              <p class="text-error flex-1 font-mono text-sm wrap-break-word">{errorMessage}</p>
               <button class="btn btn-sm btn-primary shrink-0" onClick={reset}>
                 Retry
               </button>
@@ -25,13 +23,13 @@ export function CommonErrorBoundary(props: { children: JSXElement }) {
 
             <Show when={errorStack}>
               <button
-                class="text-xs text-base-content/70 hover:text-base-content mt-3 underline"
+                class="text-base-content/70 hover:text-base-content mt-3 text-xs underline"
                 onClick={() => setShowDetails(!showDetails())}
               >
                 {showDetails() ? 'Hide details' : 'Show details'}
               </button>
               <Show when={showDetails()}>
-                <pre class="mt-2 text-xs text-base-content/60 overflow-x-auto whitespace-pre-wrap break-words max-h-32 overflow-y-auto">
+                <pre class="text-base-content/60 mt-2 max-h-32 overflow-x-auto overflow-y-auto text-xs break-words whitespace-pre-wrap">
                   {errorStack}
                 </pre>
               </Show>

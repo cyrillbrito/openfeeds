@@ -26,10 +26,8 @@ export const feedsCollection = createCollection(
     onInsert: async ({ transaction }) => {
       const api = useApi();
 
-      console.log('transaction', transaction);
       await Promise.all(
         transaction.mutations.map(async (mutation) => {
-          console.log(mutation);
           const feed = mutation.modified;
           const { data, error } = await api.feeds.post({
             url: feed.url,

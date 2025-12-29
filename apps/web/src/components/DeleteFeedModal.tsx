@@ -42,10 +42,6 @@ interface DeleteFeedFormProps {
 }
 
 function DeleteFeedForm(props: DeleteFeedFormProps) {
-  console.log(
-    `🎯 DeleteFeedForm: FRESH component created! Feed: ${props.feed.title}. Timestamp: ${Date.now()}`,
-  );
-
   const [isDeleting, setIsDeleting] = createSignal(false);
 
   const handleDeleteConfirm = async () => {

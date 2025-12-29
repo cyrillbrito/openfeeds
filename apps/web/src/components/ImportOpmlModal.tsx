@@ -33,8 +33,6 @@ interface ImportOpmlFormProps {
 }
 
 function ImportOpmlForm(props: ImportOpmlFormProps) {
-  console.log(`🎯 ImportOpmlForm: FRESH component created! Timestamp: ${Date.now()}`);
-
   const api = useApi();
   const queryClient = useQueryClient();
   const [isImporting, setIsImporting] = createSignal(false);
@@ -46,10 +44,6 @@ function ImportOpmlForm(props: ImportOpmlFormProps) {
 
   const handleImportOpml = async (content: string) => {
     try {
-      console.log('[IMPORT UI] Starting import');
-      console.log('[IMPORT UI] Content length:', content.length);
-      console.log('[IMPORT UI] Content preview (first 200 chars):', content.substring(0, 200));
-
       setIsImporting(true);
       setImportError(null);
       setImportResult(null);
@@ -140,18 +134,9 @@ function ImportOpmlForm(props: ImportOpmlFormProps) {
               onChange={(e) => {
                 const file = e.currentTarget.files?.[0];
                 if (file) {
-                  console.log(
-                    '[IMPORT UI] File selected:',
-                    file.name,
-                    'type:',
-                    file.type,
-                    'size:',
-                    file.size,
-                  );
                   const reader = new FileReader();
                   reader.onload = (event) => {
                     const content = event.target?.result as string;
-                    console.log('[IMPORT UI] File read complete');
                     void handleImportOpml(content);
                   };
                   reader.onerror = (error) => {

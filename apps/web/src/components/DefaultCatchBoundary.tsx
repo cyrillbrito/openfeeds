@@ -5,7 +5,7 @@ import {
   useRouter,
   type ErrorComponentProps,
 } from '@tanstack/solid-router';
-import { TriangleAlert } from 'lucide-solid';
+import TriangleAlert from 'lucide-solid/icons/triangle-alert';
 import { createSignal, Show } from 'solid-js';
 
 export function DefaultCatchBoundary({ error }: ErrorComponentProps) {

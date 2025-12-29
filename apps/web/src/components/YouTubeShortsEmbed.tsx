@@ -17,7 +17,6 @@ export function YouTubeShortsEmbed(props: YouTubeShortsEmbedProps) {
   };
 
   if (!videoId()) {
-    console.log('no id');
     return null;
   }
 

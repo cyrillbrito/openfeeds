@@ -54,7 +54,6 @@ export function getYouTubeEmbedUrl(videoId: string, isShorts = false): string {
 }
 
 export function isYouTubeShorts(url: string): boolean {
-  console.log(url);
   if (!url) return false;
 
   try {
