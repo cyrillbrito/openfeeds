@@ -31,10 +31,11 @@
       "Bash(mkdir:*)",
       "Bash(bun create-user:*)",
       "Bash(bun:*)",
-      "WebFetch(domain:elysiajs.com)"
+      "WebFetch(domain:elysiajs.com)",
+      "mcp__context7__query-docs"
     ],
     "deny": []
   },
-  "enabledMcpjsonServers": ["grep", "context7", "linear-server", "chrome-devtools"],
-  "enableAllProjectMcpServers": true
+  "enableAllProjectMcpServers": true,
+  "enabledMcpjsonServers": ["grep", "context7", "linear-server", "chrome-devtools"]
 }

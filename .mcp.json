@@ -8,7 +8,7 @@
       "type": "http",
       "url": "https://mcp.context7.com/mcp",
       "headers": {
-        "CONTEXT7_API_KEY": "ctx7sk-36a64cee-4a43-49f5-8340-1d5156c1168db"
+        "CONTEXT7_API_KEY": "ctx7sk-92e490fe-3edf-47a5-b71a-d65fecb2f341"
       }
     },
     "chrome-devtools": {
