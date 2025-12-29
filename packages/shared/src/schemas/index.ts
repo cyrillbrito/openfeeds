@@ -1,4 +1,5 @@
 export * from './article';
+export * from './article-tag';
 export * from './feed';
 export * from './tag';
 export * from './import';

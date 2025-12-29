@@ -1,5 +1,6 @@
 // Domain logic exports
 export * from './archive';
+export * from './article-tags';
 export * from './articles';
 export * from './errors';
 export * from './feed-details';

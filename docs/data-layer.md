@@ -37,20 +37,22 @@ All entities use TanStack DB collections:
 
 Mutations go through collections → optimistic update → background sync → confirmed state (or rollback on failure).
 
-## Data Modeling Consideration
+## Data Modeling: Junction Tables
 
-> **TODO**: Article-tag relationship needs restructuring.
->
-> Current state: DB has `articles`, `tags`, and `article_tags` junction table (many-to-many). API exposes tags as array inside article object.
->
-> Problem: Local-first sync delivers DB structure to frontend. The junction table pattern doesn't translate cleanly when syncing collections directly.
->
-> Options:
->
-> 1. Change API to expose junction table explicitly (consistent with DB structure)
-> 2. Handle transformation at sync layer only
->
-> Decision pending - likely change whole API for consistency.
+**Problem**: Local-first sync delivers DB structure to frontend. Junction tables (many-to-many) don't translate cleanly when syncing collections directly - TanStack DB needs flat entities to perform joins client-side.
+
+**Solution**: Intentional data duplication.
+
+Article-tag relationships are exposed in two ways:
+
+1. **`tags` array on Article** - Convenient for API consumers, keeps article responses self-contained
+2. **`/article-tags` endpoint** - Returns junction table rows (`{ id, articleId, tagId }`) for TanStack DB collections
+
+This duplication allows:
+- Traditional API usage with embedded tags
+- Local-first collections with proper relational structure for client-side joins
+
+Same pattern applies to feed-tags if needed later.
 
 ## Current Implementation
 

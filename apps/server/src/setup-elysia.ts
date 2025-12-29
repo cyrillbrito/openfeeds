@@ -3,6 +3,7 @@ import { openapi } from '@elysiajs/openapi';
 import { Elysia } from 'elysia';
 import { z } from 'zod';
 import { articlesApp } from './apps/articles';
+import { articleTagsApp } from './apps/article-tags';
 // import { authApp } from './apps/auth';
 import { feedsApp } from './apps/feeds';
 import { filterRulesApp } from './apps/filter-rules';
@@ -33,6 +34,7 @@ export const apiApp = new Elysia({ prefix: '/api' })
   .use(tagsApp)
   .use(feedsApp)
   .use(articlesApp)
+  .use(articleTagsApp)
   .use(importApp)
   .use(settingsApp)
   .use(filterRulesApp)
