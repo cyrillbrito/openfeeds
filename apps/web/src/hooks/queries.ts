@@ -2,7 +2,7 @@ import type {
   Article,
   ArticleTypeFilter,
   CreateFilterRuleApi,
-  MarkManyReadRequest,
+  MarkManyArchivedRequest,
   PaginatedResponse,
   UpdateArticle,
   UpdateFilterRule,
@@ -393,13 +393,13 @@ export function useUpdateArticle() {
   }));
 }
 
-export function useMarkManyRead() {
+export function useMarkManyArchived() {
   const queryClient = useQueryClient();
   const api = useApi();
 
   return useMutation(() => ({
-    mutationFn: async (input: MarkManyReadRequest) => {
-      const { data, error } = await api.articles['mark-many-read'].post(input);
+    mutationFn: async (input: MarkManyArchivedRequest) => {
+      const { data, error } = await api.articles['mark-many-archived'].post(input);
       if (error) {
         throw new Error(error.value?.summary || error.value?.message || 'Request failed');
       }

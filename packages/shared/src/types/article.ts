@@ -7,8 +7,8 @@ import type {
   ArticleWithFeedSchema,
   BulkUpdateArticlesSchema,
   CreateArticleSchema,
-  MarkManyReadRequestSchema,
-  MarkManyReadResponseSchema,
+  MarkManyArchivedRequestSchema,
+  MarkManyArchivedResponseSchema,
   UpdateArticleSchema,
 } from '../schemas/article';
 
@@ -20,8 +20,8 @@ export type UpdateArticle = z.infer<typeof UpdateArticleSchema>;
 export type ArticleWithFeed = z.infer<typeof ArticleWithFeedSchema>;
 export type BulkUpdateArticles = z.infer<typeof BulkUpdateArticlesSchema>;
 export type ArticleStats = z.infer<typeof ArticleStatsSchema>;
-export type MarkManyReadRequest = z.infer<typeof MarkManyReadRequestSchema>;
-export type MarkManyReadResponse = z.infer<typeof MarkManyReadResponseSchema>;
+export type MarkManyArchivedRequest = z.infer<typeof MarkManyArchivedRequestSchema>;
+export type MarkManyArchivedResponse = z.infer<typeof MarkManyArchivedResponseSchema>;
 
 // Read status filter type
 export type ArticleTypeFilter = 'all' | 'shorts';

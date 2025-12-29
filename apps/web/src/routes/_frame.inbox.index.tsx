@@ -1,11 +1,10 @@
-import type { MarkManyReadRequest } from '@repo/shared/types';
+import type { MarkManyArchivedRequest } from '@repo/shared/types';
 import { eq } from '@tanstack/db';
 import { useLiveQuery } from '@tanstack/solid-db';
 import { createFileRoute, Link } from '@tanstack/solid-router';
 import { articlesCollection, updateArticle } from '~/entities/articles';
 import { useFeeds } from '~/entities/feeds';
 import { useTags } from '~/entities/tags';
-import ShuffleIcon from 'lucide-solid/icons/shuffle';
 import VideoIcon from 'lucide-solid/icons/video';
 import { createSignal, Show, Suspense } from 'solid-js';
 import { validateReadStatusSearch } from '../common/routing';
@@ -15,9 +14,9 @@ import { CommonErrorBoundary } from '../components/CommonErrorBoundary';
 import { Header } from '../components/Header';
 import { LazyModal, type ModalController } from '../components/LazyModal';
 import { CenterLoader } from '../components/Loader';
-import { MarkAllReadButton } from '../components/MarkAllReadButton';
+import { MarkAllArchivedButton } from '../components/MarkAllArchivedButton';
 import { ReadStatusToggle } from '../components/ReadStatusToggle';
-import { useMarkManyRead } from '../hooks/queries';
+import { useMarkManyArchived } from '../hooks/queries';
 import { useToast } from '../hooks/toast';
 
 export const Route = createFileRoute('/_frame/inbox/')({
@@ -45,24 +44,24 @@ function Inbox() {
 
   const feedsQuery = useFeeds();
   const tagsQuery = useTags();
-  const markManyReadMutation = useMarkManyRead();
+  const markManyArchivedMutation = useMarkManyArchived();
   const { showToast } = useToast();
 
   let markAllModalController!: ModalController;
-  const [isMarkingAllRead, setIsMarkingAllRead] = createSignal(false);
+  const [isMarkingAllArchived, setIsMarkingAllArchived] = createSignal(false);
 
-  const handleMarkAllRead = async () => {
+  const handleMarkAllArchived = async () => {
     try {
-      setIsMarkingAllRead(true);
-      const request: MarkManyReadRequest = {
+      setIsMarkingAllArchived(true);
+      const request: MarkManyArchivedRequest = {
         context: 'all',
       };
-      await markManyReadMutation.mutateAsync(request);
+      await markManyArchivedMutation.mutateAsync(request);
       markAllModalController.close();
     } catch (err) {
-      console.error('Mark many read failed:', err);
+      console.error('Mark many archived failed:', err);
     } finally {
-      setIsMarkingAllRead(false);
+      setIsMarkingAllArchived(false);
     }
   };
 
@@ -121,7 +120,11 @@ function Inbox() {
         rightContent={
           <>
             <Show when={totalCount() > 0 && readStatus() === 'unread'}>
-              <MarkAllReadButton context="all" totalCount={totalCount()} contextLabel="globally" />
+              <MarkAllArchivedButton
+                context="all"
+                totalCount={totalCount()}
+                contextLabel="globally"
+              />
             </Show>
           </>
         }
@@ -130,7 +133,7 @@ function Inbox() {
             <Show when={totalCount() > 0 && readStatus() === 'unread'}>
               <li>
                 <button onClick={() => markAllModalController.open()}>
-                  Mark All Read ({totalCount()})
+                  Mark All Archived ({totalCount()})
                 </button>
               </li>
             </Show>
@@ -161,19 +164,19 @@ function Inbox() {
       <LazyModal
         controller={(controller) => (markAllModalController = controller)}
         class="max-w-md"
-        title="Mark All as Read"
+        title="Mark All as Archived"
       >
         <div class="mb-6">
           <p class="mb-4">
-            Are you sure you want to mark all unread articles as read globally? This action cannot
-            be undone.
+            Are you sure you want to mark all unarchived articles as archived globally? This action
+            cannot be undone.
           </p>
 
           <Show when={totalCount() > 0}>
             <div class="bg-base-200 rounded-lg p-4">
               <h4 class="text-base-content-gray mb-1 text-sm font-semibold">Articles to mark:</h4>
               <p class="font-medium">
-                {totalCount()} unread article{totalCount() !== 1 ? 's' : ''}
+                {totalCount()} unarchived article{totalCount() !== 1 ? 's' : ''}
               </p>
             </div>
           </Show>
@@ -184,18 +187,18 @@ function Inbox() {
             type="button"
             class="btn"
             onClick={() => markAllModalController.close()}
-            disabled={isMarkingAllRead()}
+            disabled={isMarkingAllArchived()}
           >
             Cancel
           </button>
           <button
             type="button"
             class="btn btn-primary"
-            onClick={handleMarkAllRead}
-            disabled={isMarkingAllRead()}
+            onClick={handleMarkAllArchived}
+            disabled={isMarkingAllArchived()}
           >
-            {isMarkingAllRead() && <span class="loading loading-spinner loading-sm"></span>}
-            {isMarkingAllRead() ? 'Marking as Read...' : 'Mark All Read'}
+            {isMarkingAllArchived() && <span class="loading loading-spinner loading-sm"></span>}
+            {isMarkingAllArchived() ? 'Archiving...' : 'Mark All Archived'}
           </button>
         </div>
       </LazyModal>

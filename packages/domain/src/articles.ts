@@ -2,8 +2,8 @@ import { articles, articleTags, feedTags, type UserDb } from '@repo/db';
 import {
   type Article,
   type ArticleQuery,
-  type MarkManyReadRequest,
-  type MarkManyReadResponse,
+  type MarkManyArchivedRequest,
+  type MarkManyArchivedResponse,
   type PaginatedResponse,
   type UpdateArticle,
 } from '@repo/shared/types';
@@ -234,10 +234,10 @@ export async function updateArticle(id: number, data: UpdateArticle, db: UserDb)
   return getArticleById(id, db);
 }
 
-export async function markManyArticlesRead(
-  request: MarkManyReadRequest,
+export async function markManyArticlesArchived(
+  request: MarkManyArchivedRequest,
   db: UserDb,
-): Promise<MarkManyReadResponse> {
+): Promise<MarkManyArchivedResponse> {
   const { context, feedId, tagId } = request;
 
   // Validate context-specific parameters
@@ -252,13 +252,13 @@ export async function markManyArticlesRead(
 
   switch (context) {
     case 'all':
-      whereClause = or(eq(articles.isRead, false), isNull(articles.isRead));
+      whereClause = or(eq(articles.isArchived, false), isNull(articles.isArchived));
       break;
 
     case 'feed':
       whereClause = and(
         eq(articles.feedId, feedId!),
-        or(eq(articles.isRead, false), isNull(articles.isRead)),
+        or(eq(articles.isArchived, false), isNull(articles.isArchived)),
       );
       break;
 
@@ -275,7 +275,7 @@ export async function markManyArticlesRead(
       const feedIds = feedsWithTag.map((ft) => ft.feedId);
       whereClause = and(
         inArray(articles.feedId, feedIds),
-        or(eq(articles.isRead, false), isNull(articles.isRead)),
+        or(eq(articles.isArchived, false), isNull(articles.isArchived)),
       );
       break;
 
@@ -283,10 +283,10 @@ export async function markManyArticlesRead(
       throw new BadRequestError();
   }
 
-  // Update all matching articles to read
+  // Update all matching articles to archived
   const result = await db
     .update(articles)
-    .set({ isRead: true })
+    .set({ isArchived: true })
     .where(whereClause)
     .returning({ id: articles.id });
 

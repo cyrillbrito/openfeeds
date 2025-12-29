@@ -1,11 +1,11 @@
-import type { MarkManyReadRequest } from '@repo/shared/types';
+import type { MarkManyArchivedRequest } from '@repo/shared/types';
 import TriangleAlertIcon from 'lucide-solid/icons/triangle-alert';
 import { createSignal, Show } from 'solid-js';
-import { useMarkManyRead } from '../hooks/queries';
+import { useMarkManyArchived } from '../hooks/queries';
 import { LazyModal, type ModalController } from './LazyModal';
 
-interface MarkAllReadButtonProps {
-  context: MarkManyReadRequest['context'];
+interface MarkAllArchivedButtonProps {
+  context: MarkManyArchivedRequest['context'];
   feedId?: number;
   tagId?: number;
   totalCount?: number;
@@ -13,36 +13,36 @@ interface MarkAllReadButtonProps {
   disabled?: boolean;
 }
 
-export function MarkAllReadButton(props: MarkAllReadButtonProps) {
+export function MarkAllArchivedButton(props: MarkAllArchivedButtonProps) {
   let modalController!: ModalController;
 
   return (
     <>
-      <MarkAllReadButtonTrigger {...props} onOpenModal={() => modalController.open()} />
+      <MarkAllArchivedButtonTrigger {...props} onOpenModal={() => modalController.open()} />
       <LazyModal
         controller={(controller) => (modalController = controller)}
         class="max-w-md"
-        title="Mark All as Read"
+        title="Mark All as Archived"
       >
-        <MarkAllReadConfirmation {...props} onClose={() => modalController.close()} />
+        <MarkAllArchivedConfirmation {...props} onClose={() => modalController.close()} />
       </LazyModal>
     </>
   );
 }
 
-interface MarkAllReadButtonTriggerProps extends MarkAllReadButtonProps {
+interface MarkAllArchivedButtonTriggerProps extends MarkAllArchivedButtonProps {
   onOpenModal: () => void;
 }
 
-function MarkAllReadButtonTrigger(props: MarkAllReadButtonTriggerProps) {
+function MarkAllArchivedButtonTrigger(props: MarkAllArchivedButtonTriggerProps) {
   const [isProcessing] = createSignal(false);
 
   const getButtonText = () => {
     const count = props.totalCount;
     if (count && count > 0) {
-      return `Mark All Read (${count})`;
+      return `Mark All Archived (${count})`;
     }
-    return 'Mark All Read';
+    return 'Mark All Archived';
   };
 
   return (
@@ -60,14 +60,12 @@ function MarkAllReadButtonTrigger(props: MarkAllReadButtonTriggerProps) {
   );
 }
 
-interface MarkAllReadConfirmationProps extends MarkAllReadButtonProps {
+interface MarkAllArchivedConfirmationProps extends MarkAllArchivedButtonProps {
   onClose: () => void;
 }
 
-function MarkAllReadConfirmation(props: MarkAllReadConfirmationProps) {
-  console.log(`🎯 MarkAllReadConfirmation: FRESH component created! Timestamp: ${Date.now()}`);
-
-  const markManyReadMutation = useMarkManyRead();
+function MarkAllArchivedConfirmation(props: MarkAllArchivedConfirmationProps) {
+  const markManyArchivedMutation = useMarkManyArchived();
   const [isProcessing, setIsProcessing] = createSignal(false);
 
   const getContextLabel = () => {
@@ -85,20 +83,20 @@ function MarkAllReadConfirmation(props: MarkAllReadConfirmationProps) {
     }
   };
 
-  const handleConfirmMarkRead = async () => {
+  const handleConfirmMarkArchived = async () => {
     try {
       setIsProcessing(true);
 
-      const request: MarkManyReadRequest = {
+      const request: MarkManyArchivedRequest = {
         context: props.context,
         ...(props.feedId && { feedId: props.feedId }),
         ...(props.tagId && { tagId: props.tagId }),
       };
 
-      await markManyReadMutation.mutateAsync(request);
+      await markManyArchivedMutation.mutateAsync(request);
       props.onClose();
     } catch (err) {
-      console.error('Mark many read failed:', err);
+      console.error('Mark many archived failed:', err);
     } finally {
       setIsProcessing(false);
     }
@@ -108,22 +106,22 @@ function MarkAllReadConfirmation(props: MarkAllReadConfirmationProps) {
     <>
       <div class="mb-6">
         <p class="mb-4">
-          Are you sure you want to mark all unread articles as read {getContextLabel()}? This action
-          cannot be undone.
+          Are you sure you want to mark all unarchived articles as archived {getContextLabel()}?
+          This action cannot be undone.
         </p>
 
         <Show when={props.totalCount && props.totalCount > 0}>
           <div class="bg-base-200 rounded-lg p-4">
             <h4 class="text-base-content-gray mb-1 text-sm font-semibold">Articles to mark:</h4>
             <p class="font-medium">
-              {props.totalCount} unread article{props.totalCount !== 1 ? 's' : ''}
+              {props.totalCount} unarchived article{props.totalCount !== 1 ? 's' : ''}
             </p>
           </div>
         </Show>
 
         <div class="alert alert-info mt-4">
           <TriangleAlertIcon size={20} />
-          <span class="text-sm">Marked articles will no longer appear in your unread lists.</span>
+          <span class="text-sm">Archived articles will no longer appear in your inbox.</span>
         </div>
       </div>
 
@@ -134,11 +132,11 @@ function MarkAllReadConfirmation(props: MarkAllReadConfirmationProps) {
         <button
           type="button"
           class="btn btn-primary"
-          onClick={handleConfirmMarkRead}
+          onClick={handleConfirmMarkArchived}
           disabled={isProcessing()}
         >
           {isProcessing() && <span class="loading loading-spinner loading-sm"></span>}
-          {isProcessing() ? 'Marking as Read...' : 'Mark All Read'}
+          {isProcessing() ? 'Archiving...' : 'Mark All Archived'}
         </button>
       </div>
     </>

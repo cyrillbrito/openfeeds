@@ -1,7 +1,7 @@
 import {
   getArticles,
   getArticleWithContent,
-  markManyArticlesRead,
+  markManyArticlesArchived,
   updateArticle,
 } from '@repo/domain';
 import {
@@ -9,8 +9,8 @@ import {
   ArticleSchema,
   ArticleWithContentSchema,
   createPaginatedResponseSchema,
-  MarkManyReadRequestSchema,
-  MarkManyReadResponseSchema,
+  MarkManyArchivedRequestSchema,
+  MarkManyArchivedResponseSchema,
   UpdateArticleSchema,
 } from '@repo/shared/schemas';
 import { Elysia } from 'elysia';
@@ -55,17 +55,17 @@ export const articlesApp = new Elysia({ prefix: '/articles' })
     },
   )
   .post(
-    '/mark-many-read',
+    '/mark-many-archived',
     async ({ body, db }) => {
-      const result = await markManyArticlesRead(body, db);
+      const result = await markManyArticlesArchived(body, db);
       return result;
     },
     {
-      body: MarkManyReadRequestSchema,
-      response: MarkManyReadResponseSchema,
+      body: MarkManyArchivedRequestSchema,
+      response: MarkManyArchivedResponseSchema,
       detail: {
         tags: ['Articles'],
-        summary: 'Mark multiple articles as read',
+        summary: 'Mark multiple articles as archived',
       },
     },
   )

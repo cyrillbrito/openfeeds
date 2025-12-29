@@ -66,14 +66,14 @@ export const ArticleStatsSchema = z.object({
   byFeed: z.record(z.string(), z.number()),
 });
 
-// Mark many as read (context-aware)
-export const MarkManyReadRequestSchema = z.object({
+// Mark many as archived (context-aware)
+export const MarkManyArchivedRequestSchema = z.object({
   context: z.enum(['all', 'feed', 'tag']),
   feedId: z.number().optional(), // Required when context is 'feed'
   tagId: z.number().optional(), // Required when context is 'tag'
 });
 
-export const MarkManyReadResponseSchema = z.object({
+export const MarkManyArchivedResponseSchema = z.object({
   success: z.boolean(),
   markedCount: z.number(),
   error: z.string().optional(),

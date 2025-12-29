@@ -1,4 +1,4 @@
-import type { Feed, MarkManyReadRequest } from '@repo/shared/types';
+import type { Feed, MarkManyArchivedRequest } from '@repo/shared/types';
 import { eq } from '@tanstack/db';
 import { useLiveQuery } from '@tanstack/solid-db';
 import { createFileRoute, Link, useSearch } from '@tanstack/solid-router';
@@ -18,10 +18,10 @@ import { Dropdown } from '../components/Dropdown';
 import { EditFeedModal } from '../components/EditFeedModal';
 import { Header } from '../components/Header';
 import { LazyModal, type ModalController } from '../components/LazyModal';
-import { MarkAllReadButton } from '../components/MarkAllReadButton';
+import { MarkAllArchivedButton } from '../components/MarkAllArchivedButton';
 import { ReadStatusToggle, type ReadStatus } from '../components/ReadStatusToggle';
 import { ShuffleButton } from '../components/ShuffleButton';
-import { useMarkManyRead } from '../hooks/queries';
+import { useMarkManyArchived } from '../hooks/queries';
 import { getTagDotColor } from '../utils/tagColors';
 
 export const Route = createFileRoute('/_frame/feeds/$feedId/')({
@@ -55,28 +55,28 @@ function FeedArticles() {
 
   const feedsQuery = useFeeds();
   const tagsQuery = useTags();
-  const markManyReadMutation = useMarkManyRead();
+  const markManyArchivedMutation = useMarkManyArchived();
 
   let editFeedModalController!: ModalController;
   let deleteFeedModalController!: ModalController;
   let markAllModalController!: ModalController;
 
   const [feedToDelete, setFeedToDelete] = createSignal<Feed | null>(null);
-  const [isMarkingAllRead, setIsMarkingAllRead] = createSignal(false);
+  const [isMarkingAllArchived, setIsMarkingAllArchived] = createSignal(false);
 
-  const handleMarkAllRead = async () => {
+  const handleMarkAllArchived = async () => {
     try {
-      setIsMarkingAllRead(true);
-      const request: MarkManyReadRequest = {
+      setIsMarkingAllArchived(true);
+      const request: MarkManyArchivedRequest = {
         context: 'feed',
         feedId: feedId(),
       };
-      await markManyReadMutation.mutateAsync(request);
+      await markManyArchivedMutation.mutateAsync(request);
       markAllModalController.close();
     } catch (err) {
-      console.error('Mark many read failed:', err);
+      console.error('Mark many archived failed:', err);
     } finally {
-      setIsMarkingAllRead(false);
+      setIsMarkingAllArchived(false);
     }
   };
 
@@ -211,7 +211,7 @@ function FeedArticles() {
           <>
             <ShuffleButton currentSeed={seed()} />
             <Show when={unreadCount() > 0 && readStatus() === 'unread'}>
-              <MarkAllReadButton
+              <MarkAllArchivedButton
                 context="feed"
                 feedId={feedId()}
                 totalCount={unreadCount()}
@@ -238,7 +238,7 @@ function FeedArticles() {
             <Show when={unreadCount() > 0 && readStatus() === 'unread'}>
               <li>
                 <button onClick={() => markAllModalController.open()}>
-                  Mark All Read ({unreadCount()})
+                  Mark All Archived ({unreadCount()})
                 </button>
               </li>
             </Show>
@@ -294,19 +294,19 @@ function FeedArticles() {
       <LazyModal
         controller={(controller) => (markAllModalController = controller)}
         class="max-w-md"
-        title="Mark All as Read"
+        title="Mark All as Archived"
       >
         <div class="mb-6">
           <p class="mb-4">
-            Are you sure you want to mark all unread articles as read in this feed? This action
-            cannot be undone.
+            Are you sure you want to mark all unarchived articles as archived in this feed? This
+            action cannot be undone.
           </p>
 
           <Show when={unreadCount() > 0}>
             <div class="bg-base-200 rounded-lg p-4">
               <h4 class="text-base-content-gray mb-1 text-sm font-semibold">Articles to mark:</h4>
               <p class="font-medium">
-                {unreadCount()} unread article{unreadCount() !== 1 ? 's' : ''}
+                {unreadCount()} unarchived article{unreadCount() !== 1 ? 's' : ''}
               </p>
             </div>
           </Show>
@@ -317,18 +317,18 @@ function FeedArticles() {
             type="button"
             class="btn"
             onClick={() => markAllModalController.close()}
-            disabled={isMarkingAllRead()}
+            disabled={isMarkingAllArchived()}
           >
             Cancel
           </button>
           <button
             type="button"
             class="btn btn-primary"
-            onClick={handleMarkAllRead}
-            disabled={isMarkingAllRead()}
+            onClick={handleMarkAllArchived}
+            disabled={isMarkingAllArchived()}
           >
-            {isMarkingAllRead() && <span class="loading loading-spinner loading-sm"></span>}
-            {isMarkingAllRead() ? 'Marking as Read...' : 'Mark All Read'}
+            {isMarkingAllArchived() && <span class="loading loading-spinner loading-sm"></span>}
+            {isMarkingAllArchived() ? 'Archiving...' : 'Mark All Archived'}
           </button>
         </div>
       </LazyModal>
