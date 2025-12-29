@@ -4,17 +4,7 @@ import { queryCollectionOptions } from '@tanstack/query-db-collection';
 import { createCollection, useLiveQuery } from '@tanstack/solid-db';
 import { useApi } from '../hooks/api';
 import { queryClient } from '../routes/__root';
-
-// Helper function to extract error message from Elysia error
-function getErrorMessage(error: any): string {
-  if (typeof error?.value === 'object' && error.value && 'message' in error.value) {
-    return error.value.message as string;
-  }
-  if (typeof error?.value === 'string') {
-    return error.value;
-  }
-  return 'Request failed';
-}
+import { generateTempId, getErrorMessage } from './utils';
 
 // Feeds Collection
 export const feedsCollection = createCollection(
@@ -98,7 +88,7 @@ export function useFeeds() {
  * The feed will appear in useFeeds() once the server responds and refetch completes.
  */
 export async function createFeed(data: { url: string }): Promise<void> {
-  const tempId = -(Math.floor(Math.random() * 1000000) + 1);
+  const tempId = generateTempId();
 
   const tx = feedsCollection.insert({
     id: tempId,

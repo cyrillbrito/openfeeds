@@ -4,17 +4,7 @@ import { queryCollectionOptions } from '@tanstack/query-db-collection';
 import { createCollection, useLiveQuery } from '@tanstack/solid-db';
 import { useApi } from '../hooks/api';
 import { queryClient } from '../routes/__root';
-
-// Helper function to extract error message from Elysia error
-function getErrorMessage(error: any): string {
-  if (typeof error?.value === 'object' && error.value && 'message' in error.value) {
-    return error.value.message as string;
-  }
-  if (typeof error?.value === 'string') {
-    return error.value;
-  }
-  return 'Request failed';
-}
+import { generateTempId, getErrorMessage } from './utils';
 
 // Tags Collection
 export const tagsCollection = createCollection(
@@ -90,7 +80,7 @@ export function useTags() {
  * The tag will appear in useTags() once the server responds and refetch completes.
  */
 export async function createTag(data: { name: string; color?: TagColor }): Promise<void> {
-  const tempId = -(Math.floor(Math.random() * 1000000) + 1);
+  const tempId = generateTempId();
 
   const tx = tagsCollection.insert({
     id: tempId,

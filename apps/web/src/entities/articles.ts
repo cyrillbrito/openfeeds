@@ -5,17 +5,7 @@ import { queryCollectionOptions } from '@tanstack/query-db-collection';
 import { createCollection } from '@tanstack/solid-db';
 import { useApi } from '../hooks/api';
 import { queryClient } from '../routes/__root';
-
-// Helper function to extract error message from Elysia error
-function getErrorMessage(error: any): string {
-  if (typeof error?.value === 'object' && error.value && 'message' in error.value) {
-    return error.value.message as string;
-  }
-  if (typeof error?.value === 'string') {
-    return error.value;
-  }
-  return 'Request failed';
-}
+import { getErrorMessage } from './utils';
 
 // Articles Collection
 export const articlesCollection = createCollection(
