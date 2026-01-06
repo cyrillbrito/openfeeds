@@ -69,28 +69,30 @@ export async function initializeScheduledJobs() {
   }
 
   // Orchestrate feed sync every minute
-  await feedSyncOrchestratorQueue.add(
+  await feedSyncOrchestratorQueue.upsertJobScheduler(
     'feed-sync-orchestrator',
-    {},
     {
-      repeat: {
-        pattern: '* * * * *', // Every minute
+      pattern: '* * * * *', // Every minute
+    },
+    {
+      opts: {
+        removeOnComplete: 100,
+        removeOnFail: 500,
       },
-      removeOnComplete: 100,
-      removeOnFail: 500,
     },
   );
 
   // Auto-archive daily at midnight
-  await autoArchiveQueue.add(
+  await autoArchiveQueue.upsertJobScheduler(
     'auto-archive',
-    {},
     {
-      repeat: {
-        pattern: '0 0 * * *', // Daily at midnight (00:00)
+      pattern: '0 0 * * *', // Daily at midnight (00:00)
+    },
+    {
+      opts: {
+        removeOnComplete: 100,
+        removeOnFail: 500,
       },
-      removeOnComplete: 100,
-      removeOnFail: 500,
     },
   );
 
