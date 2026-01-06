@@ -52,10 +52,42 @@ Tired of algorithmic feeds deciding what you should see? OpenFeeds puts you back
 
 ---
 
+## Prerequisites
+
+Before running OpenFeeds, ensure you have the following installed:
+
+| Requirement | Version | Notes |
+|-------------|---------|-------|
+| [Bun](https://bun.sh) | 1.3.0+ | JavaScript runtime & package manager |
+| [Redis](https://redis.io) | 7+ | Required for background job processing |
+
+### Environment Setup
+
+Copy the example environment files:
+
+```bash
+cp apps/server/.env.example apps/server/.env
+cp apps/web/.env.example apps/web/.env
+```
+
+Generate a random secret for `BETTER_AUTH_SECRET` in `apps/server/.env`:
+
+```bash
+openssl rand -base64 32
+```
+
+---
+
 ## Quick Start
 
 ```bash
+# Start Redis (using Docker)
+docker compose up -d redis
+
+# Install dependencies
 bun install
+
+# Start development servers
 bun dev
 ```
 
