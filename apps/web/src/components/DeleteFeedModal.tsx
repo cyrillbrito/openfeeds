@@ -1,7 +1,7 @@
 import type { Feed } from '@repo/shared/types';
 import { deleteFeed } from '~/entities/feeds';
 import TriangleAlertIcon from 'lucide-solid/icons/triangle-alert';
-import { createSignal, Show } from 'solid-js';
+import { Show } from 'solid-js';
 import { LazyModal, type ModalController } from './LazyModal';
 
 interface DeleteFeedModalProps {
@@ -42,19 +42,10 @@ interface DeleteFeedFormProps {
 }
 
 function DeleteFeedForm(props: DeleteFeedFormProps) {
-  const [isDeleting, setIsDeleting] = createSignal(false);
-
-  const handleDeleteConfirm = async () => {
-    try {
-      setIsDeleting(true);
-      await deleteFeed(props.feed.id);
-      props.onDeleteComplete?.();
-      props.onClose();
-    } catch (err) {
-      console.error('Delete failed:', err);
-    } finally {
-      setIsDeleting(false);
-    }
+  const handleDeleteConfirm = () => {
+    deleteFeed(props.feed.id);
+    props.onDeleteComplete?.();
+    props.onClose();
   };
 
   return (
@@ -75,17 +66,11 @@ function DeleteFeedForm(props: DeleteFeedFormProps) {
       </div>
 
       <div class="modal-action">
-        <button type="button" class="btn" onClick={() => props.onClose()} disabled={isDeleting()}>
+        <button type="button" class="btn" onClick={() => props.onClose()}>
           Cancel
         </button>
-        <button
-          type="button"
-          class="btn btn-error"
-          onClick={handleDeleteConfirm}
-          disabled={isDeleting()}
-        >
-          {isDeleting() && <span class="loading loading-spinner loading-sm"></span>}
-          {isDeleting() ? 'Deleting...' : 'Delete Feed'}
+        <button type="button" class="btn btn-error" onClick={handleDeleteConfirm}>
+          Delete Feed
         </button>
       </div>
     </>

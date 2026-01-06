@@ -4,7 +4,7 @@
 
 ```bash
 bun create better-t-stack@latest openfeeds \
-  --frontend solid --backend elysia --runtime bun \
+  --frontend tanstack-start --backend elysia --runtime bun \
   --auth better-auth --database sqlite --orm drizzle \
   --package-manager bun --addons oxlint turborepo \
   --api none --payments none --db-setup none --no-git \
@@ -12,6 +12,12 @@ bun create better-t-stack@latest openfeeds \
 
 cd openfeeds
 bun add -D prettier prettier-plugin-tailwindcss @ianvs/prettier-plugin-sort-imports
+```
+
+## E2E
+
+```bash
+cd apps && bun create playwright && cd ..
 ```
 
 ## Additional Packages

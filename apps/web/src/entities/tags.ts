@@ -76,31 +76,25 @@ export function useTags() {
 
 /**
  * Create a new tag
- * Note: Returns void because temp IDs make it difficult to reliably return the created entity.
- * The tag will appear in useTags() once the server responds and refetch completes.
+ * Applies optimistic insert immediately - UI updates via live queries
  */
-export async function createTag(data: { name: string; color?: TagColor }): Promise<void> {
+export function createTag(data: { name: string; color?: TagColor }): void {
   const tempId = generateTempId();
 
-  const tx = tagsCollection.insert({
+  tagsCollection.insert({
     id: tempId,
     name: data.name,
     color: data.color ?? null,
     createdAt: new Date().toISOString(),
   });
-
-  await tx.isPersisted.promise;
 }
 
 /**
  * Update an existing tag
- * Returns the updated tag after persistence
+ * Applies optimistic update immediately - UI updates via live queries
  */
-export async function updateTag(
-  id: number,
-  changes: { name?: string; color?: TagColor },
-): Promise<Tag> {
-  const tx = tagsCollection.update(id, (draft) => {
+export function updateTag(id: number, changes: { name?: string; color?: TagColor }): void {
+  tagsCollection.update(id, (draft) => {
     if (changes.name) {
       draft.name = changes.name;
     }
@@ -108,21 +102,12 @@ export async function updateTag(
       draft.color = changes.color;
     }
   });
-
-  await tx.isPersisted.promise;
-
-  const updatedTag = tagsCollection.get(id);
-  if (!updatedTag) {
-    throw new Error('Tag not found after update');
-  }
-
-  return updatedTag;
 }
 
 /**
  * Delete a tag
+ * Applies optimistic delete immediately - syncs in background
  */
-export async function deleteTag(id: number): Promise<void> {
-  const tx = tagsCollection.delete(id);
-  await tx.isPersisted.promise;
+export function deleteTag(id: number): void {
+  tagsCollection.delete(id);
 }

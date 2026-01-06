@@ -1,6 +1,6 @@
 import type { Tag } from '@repo/shared/types';
 import { deleteTag } from '~/entities/tags';
-import { createSignal, Show } from 'solid-js';
+import { Show } from 'solid-js';
 import { LazyModal, type ModalController } from './LazyModal';
 import { TagBadge } from './TagBadge';
 
@@ -44,19 +44,10 @@ interface DeleteTagFormProps {
 }
 
 function DeleteTagForm(props: DeleteTagFormProps) {
-  const [isDeleting, setIsDeleting] = createSignal(false);
-
-  const handleDeleteConfirm = async () => {
-    try {
-      setIsDeleting(true);
-      await deleteTag(props.tag.id);
-      props.onDeleteComplete?.();
-      props.onClose();
-    } catch (err) {
-      console.error('Delete failed:', err);
-    } finally {
-      setIsDeleting(false);
-    }
+  const handleDeleteConfirm = () => {
+    deleteTag(props.tag.id);
+    props.onDeleteComplete?.();
+    props.onClose();
   };
 
   return (
@@ -72,17 +63,11 @@ function DeleteTagForm(props: DeleteTagFormProps) {
       </div>
 
       <div class="modal-action">
-        <button type="button" class="btn" onClick={() => props.onClose()} disabled={isDeleting()}>
+        <button type="button" class="btn" onClick={() => props.onClose()}>
           Cancel
         </button>
-        <button
-          type="button"
-          class="btn btn-error"
-          onClick={handleDeleteConfirm}
-          disabled={isDeleting()}
-        >
-          {isDeleting() && <span class="loading loading-spinner loading-sm"></span>}
-          {isDeleting() ? 'Deleting...' : 'Delete Tag'}
+        <button type="button" class="btn btn-error" onClick={handleDeleteConfirm}>
+          Delete Tag
         </button>
       </div>
     </>

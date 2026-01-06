@@ -2,6 +2,7 @@ import type { Feed, MarkManyArchivedRequest } from '@repo/shared/types';
 import { eq } from '@tanstack/db';
 import { useLiveQuery } from '@tanstack/solid-db';
 import { createFileRoute, Link, useSearch } from '@tanstack/solid-router';
+import { markManyArchived } from '~/entities/actions';
 import { articlesCollection, updateArticle } from '~/entities/articles';
 import { useFeeds } from '~/entities/feeds';
 import { useTags } from '~/entities/tags';
@@ -21,7 +22,6 @@ import { LazyModal, type ModalController } from '../components/LazyModal';
 import { MarkAllArchivedButton } from '../components/MarkAllArchivedButton';
 import { ReadStatusToggle, type ReadStatus } from '../components/ReadStatusToggle';
 import { ShuffleButton } from '../components/ShuffleButton';
-import { useMarkManyArchived } from '../hooks/queries';
 import { getTagDotColor } from '../utils/tagColors';
 
 export const Route = createFileRoute('/_frame/feeds/$feedId/')({
@@ -55,7 +55,6 @@ function FeedArticles() {
 
   const feedsQuery = useFeeds();
   const tagsQuery = useTags();
-  const markManyArchivedMutation = useMarkManyArchived();
 
   let editFeedModalController!: ModalController;
   let deleteFeedModalController!: ModalController;
@@ -71,7 +70,7 @@ function FeedArticles() {
         context: 'feed',
         feedId: feedId(),
       };
-      await markManyArchivedMutation.mutateAsync(request);
+      await markManyArchived(request);
       markAllModalController.close();
     } catch (err) {
       console.error('Mark many archived failed:', err);
@@ -80,11 +79,11 @@ function FeedArticles() {
     }
   };
 
-  const handleUpdateArticle = async (
+  const handleUpdateArticle = (
     articleId: number,
     updates: { isRead?: boolean; tags?: number[] },
   ) => {
-    await updateArticle(articleId, updates);
+    updateArticle(articleId, updates);
   };
 
   const articles = () => articlesQuery.data || [];

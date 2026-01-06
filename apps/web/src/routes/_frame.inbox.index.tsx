@@ -2,6 +2,7 @@ import type { MarkManyArchivedRequest } from '@repo/shared/types';
 import { eq } from '@tanstack/db';
 import { useLiveQuery } from '@tanstack/solid-db';
 import { createFileRoute, Link } from '@tanstack/solid-router';
+import { markManyArchived } from '~/entities/actions';
 import { articlesCollection, updateArticle } from '~/entities/articles';
 import { useFeeds } from '~/entities/feeds';
 import { useTags } from '~/entities/tags';
@@ -16,7 +17,6 @@ import { LazyModal, type ModalController } from '../components/LazyModal';
 import { CenterLoader } from '../components/Loader';
 import { MarkAllArchivedButton } from '../components/MarkAllArchivedButton';
 import { ReadStatusToggle } from '../components/ReadStatusToggle';
-import { useMarkManyArchived } from '../hooks/queries';
 import { useToast } from '../hooks/toast';
 
 export const Route = createFileRoute('/_frame/inbox/')({
@@ -44,7 +44,6 @@ function Inbox() {
 
   const feedsQuery = useFeeds();
   const tagsQuery = useTags();
-  const markManyArchivedMutation = useMarkManyArchived();
   const { showToast } = useToast();
 
   let markAllModalController!: ModalController;
@@ -56,7 +55,7 @@ function Inbox() {
       const request: MarkManyArchivedRequest = {
         context: 'all',
       };
-      await markManyArchivedMutation.mutateAsync(request);
+      await markManyArchived(request);
       markAllModalController.close();
     } catch (err) {
       console.error('Mark many archived failed:', err);
@@ -73,7 +72,7 @@ function Inbox() {
     return articlesQuery.data?.length || 0;
   };
 
-  const handleUpdateArticle = async (
+  const handleUpdateArticle = (
     articleId: number,
     updates: { isRead?: boolean; isArchived?: boolean; tags?: number[] },
   ) => {
@@ -82,8 +81,8 @@ function Inbox() {
       showToast('Article archived', {
         action: {
           label: 'Undo',
-          onClick: async () => {
-            await updateArticle(articleId, {
+          onClick: () => {
+            updateArticle(articleId, {
               isArchived: false,
             });
           },
@@ -91,7 +90,7 @@ function Inbox() {
       });
     }
 
-    await updateArticle(articleId, updates);
+    updateArticle(articleId, updates);
   };
 
   return (

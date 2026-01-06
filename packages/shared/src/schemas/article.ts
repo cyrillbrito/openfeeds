@@ -20,12 +20,12 @@ export const ArticleSchema = z.object({
   description: z.string().nullable(),
   content: z.string().nullable(),
   author: z.string().nullable(),
-  pubDate: z.iso.datetime().nullable(),
+  pubDate: z.coerce.date().nullable(),
   isRead: z.boolean().nullable(),
   isArchived: z.boolean().nullable(),
   hasCleanContent: z.boolean(),
   tags: z.array(z.number()),
-  createdAt: z.iso.datetime(),
+  createdAt: z.coerce.date(),
 });
 
 export const CreateArticleSchema = z.object({

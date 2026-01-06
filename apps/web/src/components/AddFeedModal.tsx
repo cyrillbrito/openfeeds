@@ -1,5 +1,5 @@
 import type { DiscoveredFeed } from '@repo/shared/types';
-import { createFeed } from '~/entities/feeds';
+import { createFeed, updateFeed } from '~/entities/feeds';
 import { useTags } from '~/entities/tags';
 import CircleAlertIcon from 'lucide-solid/icons/circle-alert';
 import { createSignal, For, Show } from 'solid-js';
@@ -84,32 +84,19 @@ function AddFeedForm(props: AddFeedFormProps) {
   };
 
   const handleAddFeed = async (feed: DiscoveredFeed) => {
-    // Set this feed as adding
     setAddingFeeds((prev) => new Set([...prev, feed.url]));
+    setError(null);
 
     try {
-      setError(null);
-      await createFeed({ url: feed.url });
+      const createdFeed = await createFeed({ url: feed.url });
 
-      alert('The tags part is ot working');
-      // Add tags if selected for this specific feed
+      // Assign tags if selected for this feed
       const tags = feedTagSelections()[feed.url] || selectedTags();
       if (tags.length > 0) {
-        // Get the created feed from the collection
-        // Note: We need to wait a bit for the feed to be created on server
-        // This is a limitation of the temp ID system
-        await new Promise((resolve) => setTimeout(resolve, 100));
-        // For now, we'll skip tag assignment on create
-        // Tags can be added after feed is created
+        updateFeed(createdFeed.id, { tags });
       }
 
-      // Mark as added and remove from adding
       setAddedFeeds((prev) => new Set([...prev, feed.url]));
-      setAddingFeeds((prev) => {
-        const newSet = new Set(prev);
-        newSet.delete(feed.url);
-        return newSet;
-      });
 
       // If this is the only feed, close the modal
       if (discoveredFeeds().length === 1) {
@@ -118,8 +105,7 @@ function AddFeedForm(props: AddFeedFormProps) {
     } catch (err) {
       console.error('Failed to add feed:', err);
       setError(err instanceof Error ? err.message : 'Failed to add feed');
-
-      // Remove from adding state on error
+    } finally {
       setAddingFeeds((prev) => {
         const newSet = new Set(prev);
         newSet.delete(feed.url);
@@ -130,23 +116,21 @@ function AddFeedForm(props: AddFeedFormProps) {
 
   const handleAddManually = async () => {
     const url = feedUrl().trim();
-
-    // Set this URL as adding
     setAddingFeeds((prev) => new Set([...prev, url]));
+    setError(null);
 
     try {
-      setError(null);
-      await createFeed({ url });
+      const createdFeed = await createFeed({ url });
 
-      // Tags can be added after feed is created via Edit Feed modal
-      alert('The tags part is ot working');
+      // Assign tags if selected
+      if (selectedTags().length > 0) {
+        updateFeed(createdFeed.id, { tags: selectedTags() });
+      }
 
       props.onClose();
     } catch (err) {
       console.error('Failed to add feed:', err);
       setError(err instanceof Error ? err.message : 'Failed to add feed');
-
-      // Remove from adding state on error
       setAddingFeeds((prev) => {
         const newSet = new Set(prev);
         newSet.delete(url);

@@ -1,7 +1,7 @@
 import { FilterOperator } from '@repo/shared/types';
+import { createFilterRule } from '~/entities/filter-rules';
 import CircleAlertIcon from 'lucide-solid/icons/circle-alert';
 import { createSignal, For, Show } from 'solid-js';
-import { useCreateFilterRule } from '../hooks/queries';
 
 interface AddRuleFormProps {
   feedId: number;
@@ -10,7 +10,6 @@ interface AddRuleFormProps {
 }
 
 export function AddRuleForm(props: AddRuleFormProps) {
-  const createRuleMutation = useCreateFilterRule();
   const [pattern, setPattern] = createSignal('');
   const [operator, setOperator] = createSignal<
     (typeof FilterOperator)[keyof typeof FilterOperator]
@@ -31,7 +30,7 @@ export function AddRuleForm(props: AddRuleFormProps) {
     },
   ];
 
-  const handleSubmit = async (e: Event) => {
+  const handleSubmit = (e: Event) => {
     e.preventDefault();
     const trimmedPattern = pattern().trim();
 
@@ -40,25 +39,19 @@ export function AddRuleForm(props: AddRuleFormProps) {
       return;
     }
 
-    try {
-      setError(null);
-      await createRuleMutation.mutateAsync({
-        feedId: props.feedId,
-        pattern: trimmedPattern,
-        operator: operator(),
-        isActive: isActive(),
-      });
+    setError(null);
+    createFilterRule(props.feedId, {
+      pattern: trimmedPattern,
+      operator: operator(),
+      isActive: isActive(),
+    });
 
-      // Reset form
-      setPattern('');
-      setOperator(FilterOperator.INCLUDES);
-      setIsActive(true);
+    // Reset form
+    setPattern('');
+    setOperator(FilterOperator.INCLUDES);
+    setIsActive(true);
 
-      props.onSuccess?.();
-    } catch (err) {
-      console.error('Failed to create rule:', err);
-      setError(err instanceof Error ? err.message : 'Failed to create rule');
-    }
+    props.onSuccess?.();
   };
 
   const handleCancel = () => {
@@ -146,19 +139,11 @@ export function AddRuleForm(props: AddRuleFormProps) {
       </Show>
 
       <div class="flex justify-end gap-2">
-        <button
-          type="button"
-          class="btn"
-          onClick={handleCancel}
-          disabled={createRuleMutation.isPending}
-        >
+        <button type="button" class="btn" onClick={handleCancel}>
           Cancel
         </button>
-        <button type="submit" class="btn btn-primary" disabled={createRuleMutation.isPending}>
-          <Show when={createRuleMutation.isPending} fallback="Add Rule">
-            <span class="loading loading-spinner loading-sm"></span>
-            Adding...
-          </Show>
+        <button type="submit" class="btn btn-primary">
+          Add Rule
         </button>
       </div>
     </form>

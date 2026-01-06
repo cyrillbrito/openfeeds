@@ -74,6 +74,29 @@ const articlesCollection = createCollection(
 
 Not fully optimized yet - still HTTP request/response pattern. But abstracts the sync mechanism so frontend code remains unchanged when upgrading.
 
+## Fire-and-Forget Mutations
+
+Mutations are **fire-and-forget** - no awaiting required:
+
+```typescript
+// Good: Fire and forget
+updateArticle(id, { isRead: true });
+createFeed({ url: 'https://example.com/feed' });
+deleteTag(tagId);
+
+// Unnecessary: Awaiting persistence
+await tx.isPersisted.promise; // Don't do this
+```
+
+**Why this works:**
+
+1. **Optimistic updates**: TanStack DB applies changes immediately to local state
+2. **Live queries**: UI updates automatically via reactive live queries
+3. **Background sync**: Collection handlers (`onUpdate`, `onInsert`, `onDelete`) sync to backend
+4. **Auto-rollback**: If sync fails, TanStack DB reverts optimistic state
+
+**Future enhancement**: Client-generated UUIDs for inserts would eliminate temp ID mapping entirely, making inserts truly fire-and-forget without server round-trip for ID resolution.
+
 ## Future: Sync Engine Evolution
 
 As the ecosystem matures, can swap to real sync engines:

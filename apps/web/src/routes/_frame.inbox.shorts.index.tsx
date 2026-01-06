@@ -37,12 +37,12 @@ function InboxShorts() {
     return shortsQuery.data || [];
   };
 
-  const markAsRead = async (articleId: number) => {
-    await updateArticle(articleId, { isRead: true });
+  const markAsRead = (articleId: number) => {
+    updateArticle(articleId, { isRead: true });
   };
 
-  const toggleRead = async (articleId: number, isRead: boolean) => {
-    await updateArticle(articleId, { isRead });
+  const toggleRead = (articleId: number, isRead: boolean) => {
+    updateArticle(articleId, { isRead });
   };
 
   return (

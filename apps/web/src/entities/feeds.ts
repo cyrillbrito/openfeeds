@@ -4,7 +4,7 @@ import { queryCollectionOptions } from '@tanstack/query-db-collection';
 import { createCollection, useLiveQuery } from '@tanstack/solid-db';
 import { useApi } from '../hooks/api';
 import { queryClient } from '../routes/__root';
-import { generateTempId, getErrorMessage } from './utils';
+import { getErrorMessage } from './utils';
 
 // Feeds Collection
 export const feedsCollection = createCollection(
@@ -82,32 +82,34 @@ export function useFeeds() {
 
 /**
  * Create a new feed
- * Note: Returns void because temp IDs make it difficult to reliably return the created entity.
- * The feed will appear in useFeeds() once the server responds and refetch completes.
+ * Awaits server response to get real feed ID (needed for tag assignment)
+ * Returns the created feed with server-generated ID
  */
-export async function createFeed(data: { url: string }): Promise<void> {
-  const tempId = generateTempId();
+export async function createFeed(data: { url: string }): Promise<Feed> {
+  const api = useApi();
 
-  const tx = feedsCollection.insert({
-    id: tempId,
-    url: data.url,
-    feedUrl: data.url, // Will be updated by server
-    title: 'Loading...', // Placeholder
-    description: null,
-    icon: null,
-    createdAt: new Date().toISOString(),
-    lastSyncAt: null,
-    tags: [],
-  });
+  // Call API directly to get real feed ID (bypasses temp ID issue)
+  const { data: feed, error } = await api.feeds.post({ url: data.url });
 
-  await tx.isPersisted.promise;
+  if (error) {
+    throw new Error(getErrorMessage(error));
+  }
+
+  if (!feed) {
+    throw new Error('Failed to create feed - no data returned');
+  }
+
+  // Add the real feed to collection
+  feedsCollection.utils.writeInsert(feed);
+
+  return feed;
 }
 
 /**
  * Update an existing feed
- * Returns the updated feed after persistence
+ * Applies optimistic update immediately - UI updates via live queries
  */
-export async function updateFeed(
+export function updateFeed(
   id: number,
   changes: {
     title?: string;
@@ -116,8 +118,8 @@ export async function updateFeed(
     icon?: string | null;
     tags?: number[];
   },
-): Promise<Feed> {
-  const tx = feedsCollection.update(id, (draft) => {
+): void {
+  feedsCollection.update(id, (draft) => {
     if (changes.title !== undefined) {
       draft.title = changes.title;
     }
@@ -134,21 +136,12 @@ export async function updateFeed(
       draft.tags = changes.tags;
     }
   });
-
-  await tx.isPersisted.promise;
-
-  const updatedFeed = feedsCollection.get(id);
-  if (!updatedFeed) {
-    throw new Error('Feed not found after update');
-  }
-
-  return updatedFeed;
 }
 
 /**
  * Delete a feed
+ * Applies optimistic delete immediately - syncs in background
  */
-export async function deleteFeed(id: number): Promise<void> {
-  const tx = feedsCollection.delete(id);
-  await tx.isPersisted.promise;
+export function deleteFeed(id: number): void {
+  feedsCollection.delete(id);
 }

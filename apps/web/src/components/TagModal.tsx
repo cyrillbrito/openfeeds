@@ -1,7 +1,7 @@
 import type { Tag, TagColor } from '@repo/shared/types';
 import { createTag, updateTag } from '~/entities/tags';
 import CircleAlertIcon from 'lucide-solid/icons/circle-alert';
-import { createEffect, createSignal, For } from 'solid-js';
+import { createEffect, createSignal, For, Show } from 'solid-js';
 import { availableTagColors, getTagDotColor } from '../utils/tagColors';
 import { ColorIndicator } from './ColorIndicator';
 import { LazyModal, type ModalController } from './LazyModal';
@@ -47,7 +47,6 @@ export function TagForm(props: TagFormProps) {
 
   const [tagName, setTagName] = createSignal('');
   const [tagColor, setTagColor] = createSignal<TagColor>(null);
-  const [isSubmitting, setIsSubmitting] = createSignal(false);
   const [error, setError] = createSignal<string | null>(null);
 
   // Reset form when editTag changes (for edit mode)
@@ -63,7 +62,7 @@ export function TagForm(props: TagFormProps) {
     setError(null);
   });
 
-  const handleSubmit = async (e: Event) => {
+  const handleSubmit = (e: Event) => {
     e.preventDefault();
     const name = tagName().trim();
 
@@ -72,34 +71,24 @@ export function TagForm(props: TagFormProps) {
       return;
     }
 
-    try {
-      setIsSubmitting(true);
-      setError(null);
+    setError(null);
 
-      if (isEditMode()) {
-        await updateTag(props.editTag!.id, {
-          name,
-          color: tagColor(),
-        });
-        props.onEditComplete?.();
-      } else {
-        await createTag({
-          name,
-          color: tagColor(),
-        });
-      }
-
-      setTagName('');
-      setTagColor(null);
-      setError(null);
-      props.onClose();
-    } catch (err) {
-      setError(
-        err instanceof Error ? err.message : `Failed to ${isEditMode() ? 'update' : 'create'} tag`,
-      );
-    } finally {
-      setIsSubmitting(false);
+    if (isEditMode()) {
+      updateTag(props.editTag!.id, {
+        name,
+        color: tagColor(),
+      });
+      props.onEditComplete?.();
+    } else {
+      createTag({
+        name,
+        color: tagColor(),
+      });
     }
+
+    setTagName('');
+    setTagColor(null);
+    props.onClose();
   };
 
   return (
@@ -156,26 +145,19 @@ export function TagForm(props: TagFormProps) {
         </div>
       </div>
 
-      {error() && (
+      <Show when={error()}>
         <div class="alert alert-error mb-4">
           <CircleAlertIcon size={20} />
           <span>{error()}</span>
         </div>
-      )}
+      </Show>
 
       <div class="modal-action">
         <button type="button" class="btn" onClick={() => props.onClose()}>
           Cancel
         </button>
-        <button type="submit" class="btn btn-primary" disabled={isSubmitting()}>
-          {isSubmitting() && <span class="loading loading-spinner loading-sm"></span>}
-          {isSubmitting()
-            ? isEditMode()
-              ? 'Updating...'
-              : 'Creating...'
-            : isEditMode()
-              ? 'Update Tag'
-              : 'Create Tag'}
+        <button type="submit" class="btn btn-primary">
+          {isEditMode() ? 'Update Tag' : 'Create Tag'}
         </button>
       </div>
     </form>

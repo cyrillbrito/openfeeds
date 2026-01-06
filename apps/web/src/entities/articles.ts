@@ -102,17 +102,17 @@ export const articlesCollection = createCollection(
 
 /**
  * Update an existing article
- * Returns the updated article after persistence
+ * Applies optimistic update immediately - UI updates via live queries
  */
-export async function updateArticle(
+export function updateArticle(
   id: number,
   changes: {
     isRead?: boolean;
     isArchived?: boolean;
     tags?: number[];
   },
-): Promise<Article> {
-  const tx = articlesCollection.update(id, (draft) => {
+): void {
+  articlesCollection.update(id, (draft) => {
     if (changes.isRead !== undefined) {
       draft.isRead = changes.isRead;
     }
@@ -123,15 +123,6 @@ export async function updateArticle(
       draft.tags = changes.tags;
     }
   });
-
-  await tx.isPersisted.promise;
-
-  const updatedArticle = articlesCollection.get(id);
-  if (!updatedArticle) {
-    throw new Error('Article not found after update');
-  }
-
-  return updatedArticle;
 }
 
 /**

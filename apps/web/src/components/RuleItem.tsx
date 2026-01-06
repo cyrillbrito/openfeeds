@@ -1,7 +1,7 @@
 import { FilterOperator, type FilterRule } from '@repo/shared/types';
+import { deleteFilterRule, updateFilterRule } from '~/entities/filter-rules';
 import CircleAlertIcon from 'lucide-solid/icons/circle-alert';
 import { createSignal, For, Show } from 'solid-js';
-import { useDeleteFilterRule, useUpdateFilterRule } from '../hooks/queries';
 
 interface RuleItemProps {
   rule: FilterRule;
@@ -10,9 +10,6 @@ interface RuleItemProps {
 }
 
 export function RuleItem(props: RuleItemProps) {
-  const updateRuleMutation = useUpdateFilterRule();
-  const deleteRuleMutation = useDeleteFilterRule();
-
   const [isEditing, setIsEditing] = createSignal(false);
   const [editPattern, setEditPattern] = createSignal(props.rule.pattern);
   const [editOperator, setEditOperator] = createSignal(props.rule.operator);
@@ -41,7 +38,7 @@ export function RuleItem(props: RuleItemProps) {
     setError(null);
   };
 
-  const handleSaveEdit = async (e: Event) => {
+  const handleSaveEdit = (e: Event) => {
     e.preventDefault();
     const trimmedPattern = editPattern().trim();
 
@@ -50,54 +47,31 @@ export function RuleItem(props: RuleItemProps) {
       return;
     }
 
-    try {
-      setError(null);
-      await updateRuleMutation.mutateAsync({
-        feedId: props.rule.feedId,
-        ruleId: props.rule.id,
-        pattern: trimmedPattern,
-        operator: editOperator(),
-        isActive: editIsActive(),
-      });
+    setError(null);
+    updateFilterRule(props.rule.feedId, props.rule.id, {
+      pattern: trimmedPattern,
+      operator: editOperator(),
+      isActive: editIsActive(),
+    });
 
-      setIsEditing(false);
-      props.onUpdate?.();
-    } catch (err) {
-      console.error('Failed to update rule:', err);
-      setError(err instanceof Error ? err.message : 'Failed to update rule');
-    }
+    setIsEditing(false);
+    props.onUpdate?.();
   };
 
-  const handleDelete = async () => {
+  const handleDelete = () => {
     if (!confirm('Are you sure you want to delete this filter rule?')) {
       return;
     }
 
-    try {
-      await deleteRuleMutation.mutateAsync({
-        feedId: props.rule.feedId,
-        ruleId: props.rule.id,
-      });
-      props.onDelete?.();
-    } catch (err) {
-      console.error('Failed to delete rule:', err);
-      setError(err instanceof Error ? err.message : 'Failed to delete rule');
-    }
+    deleteFilterRule(props.rule.feedId, props.rule.id);
+    props.onDelete?.();
   };
 
-  const handleToggleActive = async () => {
-    try {
-      setError(null);
-      await updateRuleMutation.mutateAsync({
-        feedId: props.rule.feedId,
-        ruleId: props.rule.id,
-        isActive: !props.rule.isActive,
-      });
-      props.onUpdate?.();
-    } catch (err) {
-      console.error('Failed to toggle rule:', err);
-      setError(err instanceof Error ? err.message : 'Failed to toggle rule');
-    }
+  const handleToggleActive = () => {
+    updateFilterRule(props.rule.feedId, props.rule.id, {
+      isActive: !props.rule.isActive,
+    });
+    props.onUpdate?.();
   };
 
   return (
@@ -133,26 +107,15 @@ export function RuleItem(props: RuleItemProps) {
               <button
                 class="btn btn-sm"
                 onClick={handleToggleActive}
-                disabled={updateRuleMutation.isPending}
                 title={props.rule.isActive ? 'Disable rule' : 'Enable rule'}
               >
                 {props.rule.isActive ? 'Disable' : 'Enable'}
               </button>
-              <button
-                class="btn btn-sm"
-                onClick={handleEdit}
-                disabled={updateRuleMutation.isPending || deleteRuleMutation.isPending}
-              >
+              <button class="btn btn-sm" onClick={handleEdit}>
                 Edit
               </button>
-              <button
-                class="btn btn-sm btn-error"
-                onClick={handleDelete}
-                disabled={updateRuleMutation.isPending || deleteRuleMutation.isPending}
-              >
-                <Show when={deleteRuleMutation.isPending} fallback="Delete">
-                  <span class="loading loading-spinner loading-xs"></span>
-                </Show>
+              <button class="btn btn-sm btn-error" onClick={handleDelete}>
+                Delete
               </button>
             </div>
           </div>
@@ -200,33 +163,22 @@ export function RuleItem(props: RuleItemProps) {
             </label>
           </div>
 
+          <Show when={error()}>
+            <div class="alert alert-error alert-sm">
+              <CircleAlertIcon size={16} />
+              <span class="text-sm">{error()}</span>
+            </div>
+          </Show>
+
           <div class="flex justify-end gap-2">
-            <button
-              type="button"
-              class="btn btn-sm"
-              onClick={handleCancelEdit}
-              disabled={updateRuleMutation.isPending}
-            >
+            <button type="button" class="btn btn-sm" onClick={handleCancelEdit}>
               Cancel
             </button>
-            <button
-              type="submit"
-              class="btn btn-sm btn-primary"
-              disabled={updateRuleMutation.isPending}
-            >
-              <Show when={updateRuleMutation.isPending} fallback="Save">
-                <span class="loading loading-spinner loading-xs"></span>
-              </Show>
+            <button type="submit" class="btn btn-sm btn-primary">
+              Save
             </button>
           </div>
         </form>
-      </Show>
-
-      <Show when={error()}>
-        <div class="alert alert-error mt-2">
-          <CircleAlertIcon size={20} />
-          <span class="text-sm">{error()}</span>
-        </div>
       </Show>
     </div>
   );

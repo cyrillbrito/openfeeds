@@ -2,6 +2,7 @@ import type { MarkManyArchivedRequest } from '@repo/shared/types';
 import { eq } from '@tanstack/db';
 import { useLiveQuery } from '@tanstack/solid-db';
 import { createFileRoute, Link, useSearch } from '@tanstack/solid-router';
+import { markManyArchived } from '~/entities/actions';
 import { articleTagsCollection } from '~/entities/article-tags';
 import { articlesCollection, updateArticle } from '~/entities/articles';
 import { useFeeds } from '~/entities/feeds';
@@ -17,7 +18,6 @@ import { CenterLoader } from '../components/Loader';
 import { MarkAllArchivedButton } from '../components/MarkAllArchivedButton';
 import { ReadStatusToggle, type ReadStatus } from '../components/ReadStatusToggle';
 import { ShuffleButton } from '../components/ShuffleButton';
-import { useMarkManyArchived } from '../hooks/queries';
 
 export const Route = createFileRoute('/_frame/tags/$tagId')({
   validateSearch: validateReadStatusSearch,
@@ -38,7 +38,6 @@ function TagArticles() {
 
   const tagsQuery = useTags();
   const feedsQuery = useFeeds();
-  const markManyArchivedMutation = useMarkManyArchived();
 
   const articlesQuery = useLiveQuery((q) => {
     let query = q
@@ -66,7 +65,7 @@ function TagArticles() {
         context: 'tag',
         tagId: tagId(),
       };
-      await markManyArchivedMutation.mutateAsync(request);
+      await markManyArchived(request);
       markAllModalController.close();
     } catch (err) {
       console.error('Mark many archived failed:', err);
@@ -77,11 +76,11 @@ function TagArticles() {
 
   const tag = () => tagsQuery.data?.find((t) => t.id === tagId());
 
-  const handleUpdateArticle = async (
+  const handleUpdateArticle = (
     articleId: number,
     updates: { isRead?: boolean; tags?: number[] },
   ) => {
-    await updateArticle(articleId, updates);
+    updateArticle(articleId, updates);
   };
 
   const articles = () => articlesQuery.data || [];

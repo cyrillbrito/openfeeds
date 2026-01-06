@@ -1,62 +1,43 @@
-import type { AppSettings, ArchiveResult } from '@repo/shared/types';
-import { createMutation, createQuery, useQueryClient } from '@tanstack/solid-query';
+import type { ArchiveResult } from '@repo/shared/types';
 import { createFileRoute } from '@tanstack/solid-router';
 import { createSignal, Show } from 'solid-js';
+import { triggerAutoArchive, updateSettings, useSettings } from '~/entities/settings';
 import { Card } from '../components/Card';
 import { Header } from '../components/Header';
-import { useApi } from '../hooks/api';
 
 export const Route = createFileRoute('/_frame/settings')({
   component: SettingsPage,
 });
 
 export default function SettingsPage() {
-  const api = useApi();
-  const queryClient = useQueryClient();
+  const settingsQuery = useSettings();
   const [editMode, setEditMode] = createSignal(false);
-  const [formData, setFormData] = createSignal<Partial<AppSettings>>({});
+  const [formData, setFormData] = createSignal<{ theme?: 'light' | 'dark' | 'system'; autoArchiveDays?: number }>({});
   const [showMarkReadDialog, setShowMarkReadDialog] = createSignal(false);
-  const [ArchiveResult, setArchiveResult] = createSignal<ArchiveResult | null>(null);
+  const [archiveResult, setArchiveResult] = createSignal<ArchiveResult | null>(null);
+  const [isArchiving, setIsArchiving] = createSignal(false);
+  const [archiveError, setArchiveError] = createSignal<string | null>(null);
 
-  const settingsQuery = createQuery(() => ({
-    queryKey: ['settings'],
-    queryFn: async () => {
-      const { data, error } = await api.settings.get();
-      if (error) {
-        throw new Error(error.value?.summary || error.value?.message || 'Request failed');
-      }
-      return data;
-    },
-  }));
+  const handleUpdate = () => {
+    updateSettings(formData());
+    setEditMode(false);
+    setFormData({});
+  };
 
-  const updateMutation = createMutation(() => ({
-    mutationFn: async (updates: Partial<AppSettings>) => {
-      const { data, error } = await api.settings.put(updates);
-      if (error) {
-        throw new Error(error.value?.summary || error.value?.message || 'Request failed');
-      }
-      return data;
-    },
-    onSuccess: (data) => {
-      queryClient.setQueryData(['settings'], data);
-      setEditMode(false);
-      setFormData({});
-    },
-  }));
-
-  const markReadMutation = createMutation(() => ({
-    mutationFn: async () => {
-      const { data, error } = await api.settings['auto-archive'].post();
-      if (error) {
-        throw new Error(error.value?.summary || error.value?.message || 'Request failed');
-      }
-      return data;
-    },
-    onSuccess: (result) => {
+  const handleTriggerAutoArchive = async () => {
+    try {
+      setIsArchiving(true);
+      setArchiveError(null);
+      const result = await triggerAutoArchive();
       setArchiveResult(result);
       setShowMarkReadDialog(true);
-    },
-  }));
+    } catch (err) {
+      console.error('Failed to trigger auto-archive:', err);
+      setArchiveError(err instanceof Error ? err.message : 'Failed to archive');
+    } finally {
+      setIsArchiving(false);
+    }
+  };
 
   return (
     <>
@@ -77,7 +58,7 @@ export default function SettingsPage() {
             </div>
           </Show>
 
-          <Show when={settingsQuery.error}>
+          <Show when={settingsQuery.isError}>
             <div class="alert alert-error">
               <svg
                 xmlns="http://www.w3.org/2000/svg"
@@ -92,7 +73,7 @@ export default function SettingsPage() {
                   d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"
                 />
               </svg>
-              <span>Error loading settings: {settingsQuery.error?.message || 'Unknown error'}</span>
+              <span>Error loading settings</span>
             </div>
           </Show>
 
@@ -144,15 +125,10 @@ export default function SettingsPage() {
                           setEditMode(false);
                           setFormData({});
                         }}
-                        disabled={updateMutation.isPending}
                       >
                         Cancel
                       </button>
-                      <button
-                        class="btn btn-primary btn-sm"
-                        onClick={() => updateMutation.mutate(formData())}
-                        disabled={updateMutation.isPending}
-                      >
+                      <button class="btn btn-primary btn-sm" onClick={handleUpdate}>
                         Save
                       </button>
                     </div>
@@ -169,7 +145,7 @@ export default function SettingsPage() {
                         onChange={(e) =>
                           setFormData({
                             ...formData(),
-                            theme: e.target.value as AppSettings['theme'],
+                            theme: e.target.value as 'light' | 'dark' | 'system',
                           })
                         }
                       >
@@ -204,11 +180,6 @@ export default function SettingsPage() {
                     </div>
                   </div>
 
-                  <Show when={updateMutation.isError}>
-                    <div class="alert alert-error mt-4">
-                      <span>Error updating settings. Please try again.</span>
-                    </div>
-                  </Show>
                 </div>
               </Show>
 
@@ -226,19 +197,19 @@ export default function SettingsPage() {
                     <div class="card-actions">
                       <button
                         class="btn btn-warning btn-sm"
-                        onClick={() => markReadMutation.mutate()}
-                        disabled={markReadMutation.isPending}
+                        onClick={handleTriggerAutoArchive}
+                        disabled={isArchiving()}
                       >
-                        <Show when={markReadMutation.isPending}>
+                        <Show when={isArchiving()}>
                           <span class="loading loading-spinner loading-xs mr-2"></span>
                         </Show>
                         Archive Old Articles
                       </button>
                     </div>
-                    <Show when={markReadMutation.isError}>
+                    <Show when={archiveError()}>
                       <div class="alert alert-error alert-sm mt-2">
                         <span class="text-xs">
-                          Error: {markReadMutation.error?.message || 'Unknown error'}
+                          Error: {archiveError()}
                         </span>
                       </div>
                     </Show>
@@ -265,16 +236,16 @@ export default function SettingsPage() {
           <div class="modal modal-open">
             <div class="modal-box">
               <h3 class="mb-4 text-lg font-bold">Archive Results</h3>
-              <Show when={ArchiveResult()}>
+              <Show when={archiveResult()}>
                 <div class="space-y-3">
                   <div class="stat">
                     <div class="stat-title">Articles Archived</div>
-                    <div class="stat-value text-2xl">{ArchiveResult()!.markedCount}</div>
+                    <div class="stat-value text-2xl">{archiveResult()!.markedCount}</div>
                   </div>
                   <div class="stat">
                     <div class="stat-title">Cutoff Date</div>
                     <div class="stat-desc">
-                      {new Date(ArchiveResult()!.cutoffDate).toLocaleString()}
+                      {new Date(archiveResult()!.cutoffDate).toLocaleString()}
                     </div>
                   </div>
                 </div>

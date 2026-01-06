@@ -1,7 +1,7 @@
 import type { MarkManyArchivedRequest } from '@repo/shared/types';
 import TriangleAlertIcon from 'lucide-solid/icons/triangle-alert';
 import { createSignal, Show } from 'solid-js';
-import { useMarkManyArchived } from '../hooks/queries';
+import { markManyArchived } from '~/entities/actions';
 import { LazyModal, type ModalController } from './LazyModal';
 
 interface MarkAllArchivedButtonProps {
@@ -65,7 +65,6 @@ interface MarkAllArchivedConfirmationProps extends MarkAllArchivedButtonProps {
 }
 
 function MarkAllArchivedConfirmation(props: MarkAllArchivedConfirmationProps) {
-  const markManyArchivedMutation = useMarkManyArchived();
   const [isProcessing, setIsProcessing] = createSignal(false);
 
   const getContextLabel = () => {
@@ -93,7 +92,7 @@ function MarkAllArchivedConfirmation(props: MarkAllArchivedConfirmationProps) {
         ...(props.tagId && { tagId: props.tagId }),
       };
 
-      await markManyArchivedMutation.mutateAsync(request);
+      await markManyArchived(request);
       props.onClose();
     } catch (err) {
       console.error('Mark many archived failed:', err);

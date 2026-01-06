@@ -1,11 +1,10 @@
-import { useQueryClient } from '@tanstack/solid-query';
+import { feedsCollection } from '~/entities/feeds';
 import { tagsCollection } from '~/entities/tags';
 import CircleAlertIcon from 'lucide-solid/icons/circle-alert';
 import CircleCheckIcon from 'lucide-solid/icons/circle-check';
 import TriangleAlertIcon from 'lucide-solid/icons/triangle-alert';
 import { createSignal, Match, Show, Switch } from 'solid-js';
 import { useApi } from '../hooks/api';
-import { queryKeys } from '../hooks/queries';
 import { LazyModal, type ModalController } from './LazyModal';
 
 interface ImportOpmlModalProps {
@@ -34,7 +33,6 @@ interface ImportOpmlFormProps {
 
 function ImportOpmlForm(props: ImportOpmlFormProps) {
   const api = useApi();
-  const queryClient = useQueryClient();
   const [isImporting, setIsImporting] = createSignal(false);
   const [importError, setImportError] = createSignal<string | null>(null);
   const [importResult, setImportResult] = createSignal<{
@@ -56,8 +54,8 @@ function ImportOpmlForm(props: ImportOpmlFormProps) {
 
       setImportResult(data);
 
-      // Refresh data: feeds via invalidation, tags via refetch
-      void queryClient.invalidateQueries({ queryKey: queryKeys.feeds() });
+      // Refresh data using collections
+      feedsCollection.utils.refetch();
       tagsCollection.utils.refetch();
 
       if (data.failed.length === 0) {

@@ -40,7 +40,6 @@ function EditFeedForm(props: EditFeedFormProps) {
   const tagsQuery = useTags();
 
   const [activeTab, setActiveTab] = createSignal<'tags' | 'rules'>('tags');
-  const [isUpdatingTags, setIsUpdatingTags] = createSignal(false);
   const [selectedTagIds, setSelectedTagIds] = createSignal<number[]>([]);
 
   // Initialize selected tags when component is created
@@ -48,19 +47,10 @@ function EditFeedForm(props: EditFeedFormProps) {
     setSelectedTagIds([...props.feed.tags]);
   });
 
-  const handleUpdateTags = async () => {
-    if (isUpdatingTags()) return;
-
-    try {
-      setIsUpdatingTags(true);
-      await updateFeed(props.feed.id, {
-        tags: selectedTagIds(),
-      });
-    } catch (err) {
-      console.error('Failed to update tags:', err);
-    } finally {
-      setIsUpdatingTags(false);
-    }
+  const handleUpdateTags = () => {
+    updateFeed(props.feed.id, {
+      tags: selectedTagIds(),
+    });
   };
 
   const hasTagChanges = createMemo(() => {
@@ -142,7 +132,6 @@ function EditFeedForm(props: EditFeedFormProps) {
                     tags={tagsQuery.data!}
                     selectedIds={selectedTagIds()}
                     onSelectionChange={setSelectedTagIds}
-                    disabled={isUpdatingTags()}
                   />
 
                   <Show when={hasTagChanges()}>
@@ -152,7 +141,6 @@ function EditFeedForm(props: EditFeedFormProps) {
                           type="button"
                           class="btn btn-ghost btn-sm"
                           onClick={() => setSelectedTagIds([...props.feed.tags])}
-                          disabled={isUpdatingTags()}
                         >
                           Reset
                         </button>
@@ -160,12 +148,8 @@ function EditFeedForm(props: EditFeedFormProps) {
                           type="button"
                           class="btn btn-primary btn-sm"
                           onClick={handleUpdateTags}
-                          disabled={isUpdatingTags()}
                         >
-                          <Show when={isUpdatingTags()} fallback="Save Tags">
-                            <span class="loading loading-spinner loading-sm"></span>
-                            Saving...
-                          </Show>
+                          Save Tags
                         </button>
                       </div>
                     </div>
@@ -182,12 +166,7 @@ function EditFeedForm(props: EditFeedFormProps) {
 
       {/* Modal Actions */}
       <div class="modal-action">
-        <button
-          type="button"
-          class="btn"
-          onClick={() => props.onClose()}
-          disabled={isUpdatingTags()}
-        >
+        <button type="button" class="btn" onClick={() => props.onClose()}>
           Done
         </button>
       </div>

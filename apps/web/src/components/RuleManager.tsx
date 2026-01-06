@@ -1,6 +1,7 @@
+import { applyFilterRules } from '~/entities/actions';
+import { useFilterRules } from '~/entities/filter-rules';
 import CircleAlertIcon from 'lucide-solid/icons/circle-alert';
 import { createSignal, For, Show } from 'solid-js';
-import { useApplyFilterRules, useFilterRules } from '../hooks/queries';
 import { AddRuleForm } from './AddRuleForm';
 import { RuleItem } from './RuleItem';
 
@@ -10,17 +11,16 @@ interface RuleManagerProps {
 
 export function RuleManager(props: RuleManagerProps) {
   const filterRulesQuery = useFilterRules(props.feedId);
-  const applyRulesMutation = useApplyFilterRules();
 
   const [showAddForm, setShowAddForm] = createSignal(false);
   const [applyError, setApplyError] = createSignal<string | null>(null);
+  const [isApplying, setIsApplying] = createSignal(false);
 
   const rules = () => filterRulesQuery.data || [];
   const activeRulesCount = () => rules().filter((rule) => rule.isActive).length;
 
   const handleAddSuccess = () => {
     setShowAddForm(false);
-    void filterRulesQuery.refetch();
   };
 
   const handleAddCancel = () => {
@@ -28,17 +28,18 @@ export function RuleManager(props: RuleManagerProps) {
   };
 
   const handleRuleUpdate = () => {
-    void filterRulesQuery.refetch();
+    // Live query auto-updates, no manual refetch needed
   };
 
   const handleRuleDelete = () => {
-    void filterRulesQuery.refetch();
+    // Live query auto-updates, no manual refetch needed
   };
 
   const handleApplyRules = async () => {
     try {
       setApplyError(null);
-      const result = await applyRulesMutation.mutateAsync(props.feedId);
+      setIsApplying(true);
+      const result = await applyFilterRules(props.feedId);
 
       // Show a success message or toast
       alert(
@@ -47,6 +48,8 @@ export function RuleManager(props: RuleManagerProps) {
     } catch (err) {
       console.error('Failed to apply rules:', err);
       setApplyError(err instanceof Error ? err.message : 'Failed to apply rules');
+    } finally {
+      setIsApplying(false);
     }
   };
 
@@ -69,10 +72,10 @@ export function RuleManager(props: RuleManagerProps) {
             <button
               class="btn btn-sm btn-outline"
               onClick={handleApplyRules}
-              disabled={applyRulesMutation.isPending || activeRulesCount() === 0}
+              disabled={isApplying() || activeRulesCount() === 0}
               title="Mark existing articles as read based on current rules"
             >
-              <Show when={applyRulesMutation.isPending} fallback="Mark Existing as Read">
+              <Show when={isApplying()} fallback="Mark Existing as Read">
                 <span class="loading loading-spinner loading-xs"></span>
                 Applying...
               </Show>
@@ -106,7 +109,7 @@ export function RuleManager(props: RuleManagerProps) {
       </Show>
 
       <Show
-        when={!filterRulesQuery.isLoading}
+        when={!filterRulesQuery.isLoading()}
         fallback={
           <div class="flex justify-center py-4">
             <span class="loading loading-spinner loading-md"></span>
@@ -137,7 +140,7 @@ export function RuleManager(props: RuleManagerProps) {
         </Show>
       </Show>
 
-      <Show when={filterRulesQuery.isError}>
+      <Show when={filterRulesQuery.isError()}>
         <div class="alert alert-error">
           <CircleAlertIcon size={20} />
           <span>Failed to load filter rules. Please try again.</span>

@@ -1,4 +1,6 @@
 import { createFileRoute, Link, useRouter } from '@tanstack/solid-router';
+import { useArticleDetails } from '~/entities/article-details';
+import { updateArticle } from '~/entities/articles';
 import { useFeeds } from '~/entities/feeds';
 import { useTags } from '~/entities/tags';
 import ArchiveIcon from 'lucide-solid/icons/archive';
@@ -12,7 +14,6 @@ import { Header } from '../components/Header';
 import { Loader } from '../components/Loader';
 import { ReadIconButton } from '../components/ReadIconButton';
 import { TimeAgo } from '../components/TimeAgo';
-import { useArticle, useUpdateArticle } from '../hooks/queries';
 import { extractYouTubeVideoId, isYouTubeUrl } from '../utils/youtube';
 
 export const Route = createFileRoute('/_frame/articles/$articleId')({
@@ -24,26 +25,29 @@ function ArticleView() {
   const router = useRouter();
   const articleId = () => Number(params().articleId);
 
-  const articleQuery = useArticle(articleId);
+  // Use article details collection for detailed view with cleanContent
+  const articleQuery = useArticleDetails(articleId);
+
+  const article = () => articleQuery.data?.[0];
+
   const feedsQuery = useFeeds();
   const tagsQuery = useTags();
-  const updateArticleMutation = useUpdateArticle();
 
   const feed = () => {
-    const article = articleQuery.data;
-    if (!article || !feedsQuery.data) return null;
-    return feedsQuery.data.find((f) => f.id === article.feedId);
+    const art = article();
+    if (!art || !feedsQuery.data) return null;
+    return feedsQuery.data.find((f) => f.id === art.feedId);
   };
 
   const isVideo = () => {
-    const article = articleQuery.data;
-    return article?.url && isYouTubeUrl(article.url);
+    const art = article();
+    return art?.url && isYouTubeUrl(art.url);
   };
 
   const videoEmbedUrl = () => {
-    const article = articleQuery.data;
-    if (!article?.url) return null;
-    const videoId = extractYouTubeVideoId(article.url);
+    const art = article();
+    if (!art?.url) return null;
+    const videoId = extractYouTubeVideoId(art.url);
     if (!videoId) return null;
     return `https://www.youtube.com/embed/${videoId}?autoplay=1`;
   };
@@ -64,7 +68,7 @@ function ArticleView() {
 
   return (
     <>
-      <Header title={articleQuery.data?.title}>
+      <Header title={article()?.title}>
         <button onClick={handleBack} class="btn btn-ghost btn-sm">
           <ArrowLeftIcon size={20} />
           <span class="hidden sm:inline">Back</span>
@@ -81,42 +85,36 @@ function ArticleView() {
           }
         >
           <Show
-            when={!articleQuery.isPending && articleQuery.data}
+            when={!articleQuery.isLoading() && article()}
             fallback={
-              <Show when={articleQuery.isError}>
+              <Show when={articleQuery.isError()}>
                 <div class="py-8 text-center">
                   <p class="text-error">Failed to load article</p>
                 </div>
               </Show>
             }
           >
-            {(article) => (
+            {(art) => (
               <Card class="shadow-xl">
                 <article>
                   {/* Article Header */}
                   <header class="mb-8">
                     <div class="mb-4 flex gap-3">
                       <h1 class="text-base-content flex-1 text-3xl leading-tight font-bold md:text-4xl">
-                        {article().title}
+                        {art().title}
                       </h1>
                       <div class="flex shrink-0 gap-2">
                         <ArchiveIconButton
-                          read={article().isRead || false}
-                          archived={article().isArchived || false}
+                          read={art().isRead || false}
+                          archived={art().isArchived || false}
                           setArchived={(isArchived) => {
-                            updateArticleMutation.mutate({
-                              id: article().id,
-                              isArchived,
-                            });
+                            void updateArticle(art().id, { isArchived });
                           }}
                         />
                         <ReadIconButton
-                          read={article().isRead || false}
+                          read={art().isRead || false}
                           setRead={(isRead) => {
-                            updateArticleMutation.mutate({
-                              id: article().id,
-                              isRead,
-                            });
+                            void updateArticle(art().id, { isRead });
                           }}
                         />
                       </div>
@@ -125,7 +123,7 @@ function ArticleView() {
                     <div class="text-base-content/70 flex flex-wrap items-center gap-2 text-sm">
                       <div class="flex items-center gap-1">
                         <Show
-                          when={article().isArchived}
+                          when={art().isArchived}
                           fallback={<InboxIcon size={16} class="text-base-content/40" />}
                         >
                           <ArchiveIcon size={16} class="text-base-content/40" />
@@ -133,7 +131,7 @@ function ArticleView() {
                         <Show when={feed()}>
                           <Link
                             to="/feeds/$feedId"
-                            params={{ feedId: article().feedId?.toString() }}
+                            params={{ feedId: art().feedId?.toString() }}
                             class="text-primary font-medium hover:underline"
                           >
                             {feed()!.title}
@@ -141,20 +139,20 @@ function ArticleView() {
                         </Show>
                       </div>
 
-                      <Show when={article().author}>
+                      <Show when={art().author}>
                         <span>•</span>
-                        <span>By {article().author}</span>
+                        <span>By {art().author}</span>
                       </Show>
 
-                      <Show when={article().pubDate}>
+                      <Show when={art().pubDate}>
                         <span>•</span>
-                        <TimeAgo date={article().pubDate!} />
+                        <TimeAgo date={art().pubDate!} />
                       </Show>
 
-                      <Show when={article().url}>
+                      <Show when={art().url}>
                         <span>•</span>
                         <a
-                          href={article().url!}
+                          href={art().url!}
                           target="_blank"
                           rel="noopener noreferrer"
                           class="text-primary hover:underline"
@@ -169,12 +167,9 @@ function ArticleView() {
                       <div class="mt-4">
                         <ArticleTagManager
                           tags={tagsQuery.data!}
-                          selectedIds={article().tags}
+                          selectedIds={art().tags}
                           onSelectionChange={(tagIds) => {
-                            updateArticleMutation.mutate({
-                              id: article().id,
-                              tags: tagIds,
-                            });
+                            void updateArticle(art().id, { tags: tagIds });
                           }}
                         />
                       </div>
@@ -192,7 +187,7 @@ function ArticleView() {
                       <div class="aspect-video overflow-hidden rounded-lg shadow-lg">
                         <iframe
                           src={videoEmbedUrl()!}
-                          title={article().title}
+                          title={art().title}
                           allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
                           allowfullscreen
                           class="h-full w-full border-0"
@@ -201,44 +196,42 @@ function ArticleView() {
                     </div>
 
                     {/* Video Description */}
-                    <Show
-                      when={article().cleanContent || article().description || article().content}
-                    >
+                    <Show when={art().cleanContent || art().description || art().content}>
                       <div class="prose prose-lg text-base-content prose-headings:text-base-content prose-a:text-primary prose-strong:text-base-content prose-code:text-base-content prose-blockquote:text-base-content/80 max-w-none">
                         <Show
-                          when={article().cleanContent}
+                          when={art().cleanContent}
                           fallback={
                             <div>
                               <h2 class="mb-3 text-xl font-semibold">Description</h2>
                               <p class="whitespace-pre-wrap">
-                                {article().description || article().content}
+                                {art().description || art().content}
                               </p>
                             </div>
                           }
                         >
-                          <div innerHTML={article().cleanContent!} />
+                          <div innerHTML={art().cleanContent!} />
                         </Show>
                       </div>
                     </Show>
                   </Show>
 
                   {/* Article Content - for non-videos */}
-                  <Show when={!isVideo() && article().cleanContent}>
+                  <Show when={!isVideo() && art().cleanContent}>
                     <div
                       class="prose prose-lg text-base-content prose-headings:text-base-content prose-a:text-primary prose-strong:text-base-content prose-code:text-base-content prose-blockquote:text-base-content/80 max-w-none"
-                      innerHTML={article().cleanContent!}
+                      innerHTML={art().cleanContent!}
                     />
                   </Show>
 
                   {/* No content fallback */}
-                  <Show when={!isVideo() && !article().cleanContent}>
+                  <Show when={!isVideo() && !art().cleanContent}>
                     <div class="py-8 text-center">
                       <p class="text-warning">
                         This article doesn't have readable content available
                       </p>
-                      <Show when={article().url}>
+                      <Show when={art().url}>
                         <a
-                          href={article().url!}
+                          href={art().url!}
                           target="_blank"
                           rel="noopener noreferrer"
                           class="btn btn-primary btn-sm mt-4"
