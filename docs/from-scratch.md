@@ -1,30 +1,42 @@
 # Build from Scratch
 
+Avoid doing from scratch, better to just focus per app. From scratch there is no global settings that are relevant.
+
 ## Better-T-Stack Setup
 
 ```bash
 bun create better-t-stack@latest openfeeds \
-  --frontend tanstack-start --backend elysia --runtime bun \
+  --frontend solid --backend elysia --runtime bun \
   --auth better-auth --database sqlite --orm drizzle \
   --package-manager bun --addons oxlint turborepo \
   --api none --payments none --db-setup none --no-git \
   --web-deploy none --server-deploy none --no-install --examples none
 
 cd openfeeds
-bun add -D prettier prettier-plugin-tailwindcss @ianvs/prettier-plugin-sort-imports
 ```
 
 ## E2E
 
-```bash
-cd apps && bun create playwright && cd ..
+just copied whole project, since setup with bun was not working.
+
+## Marketing
+
+```
+cd apps && bun create astro@latest marketing && cd ..
+```
+
+## Worker
+
+```
+cd apps && bun init worker && cd ..
 ```
 
 ## Additional Packages
 
 ```bash
+
 # Create packages
-cd packages && bun init discovery && bun init scripts && cd ..
+cd packages && rm -rf env && rm -rf config  && bun init discovery && bun init scripts && bun init shared && cd ..
 
 # E2E setup
 cd apps && mkdir e2e && cd e2e

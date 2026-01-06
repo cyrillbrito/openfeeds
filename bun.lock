@@ -182,10 +182,10 @@
     },
   },
   "catalog": {
-    "better-auth": "^1.3.28",
-    "drizzle-orm": "0.44.7",
-    "typescript": "^5.9.3",
-    "zod": "^4.1.11",
+    "better-auth": "^1.4.9",
+    "drizzle-orm": "^0.44.7",
+    "typescript": "^5",
+    "zod": "^4.1.13",
   },
   "packages": {
     "@acemir/cssom": ["@acemir/cssom@0.9.30", "", {}, "sha512-9CnlMCI0LmCIq0olalQqdWrJHPzm0/tw3gzOA9zJSgvFX7Xau3D24mAGa4BtwxwY69nsuJW6kQqqCzf/mEcQgg=="],
