@@ -48,7 +48,8 @@ function ImportOpmlForm(props: ImportOpmlFormProps) {
 
       const { data, error } = await api.import.opml.post({ opmlContent: content });
       if (error) {
-        setImportError(error.value?.summary || error.value?.message || 'Request failed');
+        const errVal = error.value as { summary?: string; message?: string } | undefined;
+        setImportError(errVal?.summary || errVal?.message || 'Request failed');
         return;
       }
 

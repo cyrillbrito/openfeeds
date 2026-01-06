@@ -10,7 +10,8 @@ export const Route = createFileRoute('/')({
       const api = useApi();
       const { data, error } = await api.feeds.get();
       if (error) {
-        throw new Error(error.value?.summary || error.value?.message || 'Request failed');
+        const errVal = error.value as { summary?: string; message?: string } | undefined;
+        throw new Error(errVal?.summary || errVal?.message || 'Request failed');
       }
 
       // If no feeds, redirect to feeds page to get started

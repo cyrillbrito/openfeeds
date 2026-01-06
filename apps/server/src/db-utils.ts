@@ -33,12 +33,12 @@ export function articleDbToApi(dbArticle: DbArticleWithTags): Article {
     description: dbArticle.description,
     content: dbArticle.content,
     author: dbArticle.author,
-    pubDate: dbArticle.pubDate?.toISOString() ?? null,
+    pubDate: dbArticle.pubDate ?? null,
     isRead: dbArticle.isRead,
     isArchived: dbArticle.isArchived,
     hasCleanContent: !!dbArticle.cleanContent,
     tags: dbArticle.articleTags.map((at) => at.tagId),
-    createdAt: dbArticle.createdAt.toISOString(),
+    createdAt: dbArticle.createdAt,
   };
 }
 

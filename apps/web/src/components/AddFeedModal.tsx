@@ -64,7 +64,8 @@ function AddFeedForm(props: AddFeedFormProps) {
       setIsDiscovering(true);
       const { data, error } = await api.feeds.discover.post({ url });
       if (error) {
-        setError(error.value?.summary || error.value?.message || 'Request failed');
+        const errVal = error.value as { summary?: string; message?: string } | undefined;
+        setError(errVal?.summary || errVal?.message || 'Request failed');
         return;
       }
 
