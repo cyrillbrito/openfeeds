@@ -2,8 +2,8 @@ import { ArticleTagSchema } from '@repo/shared/schemas';
 import type { ArticleTag } from '@repo/shared/types';
 import { queryCollectionOptions } from '@tanstack/query-db-collection';
 import { createCollection, useLiveQuery } from '@tanstack/solid-db';
+import { queryClient } from '~/query-client';
 import { useApi } from '../hooks/api';
-import { queryClient } from '../routes/__root';
 import { getErrorMessage } from './utils';
 
 // Article Tags Collection (junction table for local-first joins)

@@ -2,9 +2,9 @@ import { AppSettingsSchema } from '@repo/shared/schemas';
 import type { AppSettings, ArchiveResult } from '@repo/shared/types';
 import { queryCollectionOptions } from '@tanstack/query-db-collection';
 import { createCollection, useLiveQuery } from '@tanstack/solid-db';
+import { queryClient } from '~/query-client';
 import { z } from 'zod';
 import { useApi } from '../hooks/api';
-import { queryClient } from '../routes/__root';
 import { articlesCollection } from './articles';
 import { getErrorMessage } from './utils';
 

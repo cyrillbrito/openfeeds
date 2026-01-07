@@ -1,7 +1,7 @@
 import { useMutation, useQuery } from '@tanstack/solid-query';
+import { queryClient } from '~/query-client';
 import { createAuthClient } from 'better-auth/solid';
 import { environment } from '../environment';
-import { queryClient } from '../routes/__root';
 
 export const authClient = createAuthClient({
   baseURL: environment.apiUrl,

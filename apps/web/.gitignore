@@ -4,7 +4,6 @@ dist
 dist-ssr
 *.local
 .env
-
+.nitro
+.tanstack
 .wrangler
-.alchemy
-.dev.vars*

@@ -1,21 +1,18 @@
-import path from 'node:path';
 import tailwindcss from '@tailwindcss/vite';
-import { tanstackRouter } from '@tanstack/router-plugin/vite';
+import { devtools } from '@tanstack/devtools-vite';
+import { tanstackStart } from '@tanstack/solid-start/plugin/vite';
+import { nitro } from 'nitro/vite';
 import { defineConfig } from 'vite';
 import solidPlugin from 'vite-plugin-solid';
+import viteTsConfigPaths from 'vite-tsconfig-paths';
 
 export default defineConfig({
-  server: {
-    port: 3000,
-  },
   plugins: [
-    tanstackRouter({ target: 'solid', autoCodeSplitting: true }),
-    solidPlugin(),
+    devtools(),
+    nitro({ preset: 'bun' }),
+    viteTsConfigPaths({ projects: ['./tsconfig.json'] }),
     tailwindcss(),
+    tanstackStart({ spa: { enabled: true } }),
+    solidPlugin({ ssr: true }),
   ],
-  resolve: {
-    alias: {
-      '~': path.resolve(__dirname, './src'),
-    },
-  },
 });

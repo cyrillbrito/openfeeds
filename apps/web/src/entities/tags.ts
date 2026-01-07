@@ -2,8 +2,8 @@ import { TagSchema } from '@repo/shared/schemas';
 import type { Tag, TagColor } from '@repo/shared/types';
 import { queryCollectionOptions } from '@tanstack/query-db-collection';
 import { createCollection, useLiveQuery } from '@tanstack/solid-db';
+import { queryClient } from '~/query-client';
 import { useApi } from '../hooks/api';
-import { queryClient } from '../routes/__root';
 import { generateTempId, getErrorMessage } from './utils';
 
 // Tags Collection

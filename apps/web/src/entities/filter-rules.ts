@@ -2,8 +2,8 @@ import { filterRuleSchema } from '@repo/shared/schemas';
 import type { CreateFilterRuleApi, FilterRule, UpdateFilterRule } from '@repo/shared/types';
 import { queryCollectionOptions } from '@tanstack/query-db-collection';
 import { createCollection, useLiveQuery } from '@tanstack/solid-db';
+import { queryClient } from '~/query-client';
 import { useApi } from '../hooks/api';
-import { queryClient } from '../routes/__root';
 import { generateTempId, getErrorMessage } from './utils';
 
 // Filter Rules Collection Factory
@@ -119,11 +119,7 @@ export function createFilterRule(feedId: number, data: CreateFilterRuleApi): voi
  * Update an existing filter rule
  * Applies optimistic update immediately - UI updates via live queries
  */
-export function updateFilterRule(
-  feedId: number,
-  ruleId: number,
-  changes: UpdateFilterRule,
-): void {
+export function updateFilterRule(feedId: number, ruleId: number, changes: UpdateFilterRule): void {
   const collection = getFilterRulesCollection(feedId);
 
   collection.update(ruleId, (draft) => {

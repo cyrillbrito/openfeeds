@@ -3,10 +3,11 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "vite",
+    "dev": "vite dev --port 3000",
     "build": "vite build",
-    "serve": "vite preview",
+    "preview": "vite preview",
     "test": "vitest run",
+    "start": "bun .output/server/index.mjs",
     "check-types": "tsc --noEmit"
   },
   "dependencies": {
@@ -20,16 +21,19 @@
     "@solid-primitives/scheduled": "^1.5.2",
     "@tailwindcss/typography": "^0.5.19",
     "@tanstack/query-db-collection": "^1.0.5",
-    "@tanstack/router-plugin": "^1.132.33",
+    "@tanstack/router-plugin": "^1.133.21",
     "@tanstack/solid-db": "^0.1.51",
     "@tanstack/solid-devtools": "^0.7.13",
     "@tanstack/solid-query": "^5.90.14",
     "@tanstack/solid-query-devtools": "^5.90.3",
-    "@tanstack/solid-router": "^1.132.33",
-    "@tanstack/solid-router-devtools": "^1.132.33",
+    "@tanstack/solid-router": "^1.133.20",
+    "@tanstack/solid-router-devtools": "^1.133.20",
+    "@tanstack/solid-router-ssr-query": "^1.132.25",
+    "@tanstack/solid-start": "^1.132.25",
     "better-auth": "catalog:",
     "daisyui": "^5.1.27",
-    "lucide-solid": "^0.552.0",
+    "lucide-solid": "^0.544.0",
+    "nitro": "latest",
     "posthog-js": "^1.270.1",
     "solid-js": "^1.9.9",
     "tailwind-merge": "^3.3.1",
@@ -38,8 +42,10 @@
   },
   "devDependencies": {
     "@tailwindcss/vite": "^4.1.14",
+    "@tanstack/devtools-vite": "^0.3.11",
     "typescript": "catalog:",
     "vite": "^7.1.9",
-    "vite-plugin-solid": "^2.11.9"
+    "vite-plugin-solid": "^2.11.10",
+    "vite-tsconfig-paths": "^5.1.4"
   }
 }
