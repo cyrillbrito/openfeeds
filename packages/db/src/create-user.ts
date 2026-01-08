@@ -1,11 +1,10 @@
 import path from 'path';
+import { fileURLToPath } from 'url';
 import { migrate } from 'drizzle-orm/bun-sqlite/migrator';
 import type { DbProvider } from './db-provider';
 
-/**
- * Will be executed in the context of the API,
- * so the path needs to be relative to that.
- */
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+
 export async function createUserDb(dbProvider: DbProvider, userId: string) {
   const db = dbProvider.userDb(userId);
   await migrate(db, {

@@ -17,6 +17,7 @@ import { Route as FrameSettingsRouteImport } from './routes/_frame.settings'
 import { Route as FrameTagsIndexRouteImport } from './routes/_frame.tags.index'
 import { Route as FrameInboxIndexRouteImport } from './routes/_frame.inbox.index'
 import { Route as FrameFeedsIndexRouteImport } from './routes/_frame.feeds.index'
+import { Route as ApiAuthSplatRouteImport } from './routes/api/auth/$'
 import { Route as FrameTagsTagIdRouteImport } from './routes/_frame.tags.$tagId'
 import { Route as FrameArticlesArticleIdRouteImport } from './routes/_frame.articles.$articleId'
 import { Route as FrameInboxShortsIndexRouteImport } from './routes/_frame.inbox.shorts.index'
@@ -62,6 +63,11 @@ const FrameFeedsIndexRoute = FrameFeedsIndexRouteImport.update({
   path: '/feeds/',
   getParentRoute: () => FrameRoute,
 } as any)
+const ApiAuthSplatRoute = ApiAuthSplatRouteImport.update({
+  id: '/api/auth/$',
+  path: '/api/auth/$',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const FrameTagsTagIdRoute = FrameTagsTagIdRouteImport.update({
   id: '/tags/$tagId',
   path: '/tags/$tagId',
@@ -96,6 +102,7 @@ export interface FileRoutesByFullPath {
   '/settings': typeof FrameSettingsRoute
   '/articles/$articleId': typeof FrameArticlesArticleIdRoute
   '/tags/$tagId': typeof FrameTagsTagIdRoute
+  '/api/auth/$': typeof ApiAuthSplatRoute
   '/feeds': typeof FrameFeedsIndexRoute
   '/inbox': typeof FrameInboxIndexRoute
   '/tags': typeof FrameTagsIndexRoute
@@ -110,6 +117,7 @@ export interface FileRoutesByTo {
   '/settings': typeof FrameSettingsRoute
   '/articles/$articleId': typeof FrameArticlesArticleIdRoute
   '/tags/$tagId': typeof FrameTagsTagIdRoute
+  '/api/auth/$': typeof ApiAuthSplatRoute
   '/feeds': typeof FrameFeedsIndexRoute
   '/inbox': typeof FrameInboxIndexRoute
   '/tags': typeof FrameTagsIndexRoute
@@ -126,6 +134,7 @@ export interface FileRoutesById {
   '/_frame/settings': typeof FrameSettingsRoute
   '/_frame/articles/$articleId': typeof FrameArticlesArticleIdRoute
   '/_frame/tags/$tagId': typeof FrameTagsTagIdRoute
+  '/api/auth/$': typeof ApiAuthSplatRoute
   '/_frame/feeds/': typeof FrameFeedsIndexRoute
   '/_frame/inbox/': typeof FrameInboxIndexRoute
   '/_frame/tags/': typeof FrameTagsIndexRoute
@@ -142,6 +151,7 @@ export interface FileRouteTypes {
     | '/settings'
     | '/articles/$articleId'
     | '/tags/$tagId'
+    | '/api/auth/$'
     | '/feeds'
     | '/inbox'
     | '/tags'
@@ -156,6 +166,7 @@ export interface FileRouteTypes {
     | '/settings'
     | '/articles/$articleId'
     | '/tags/$tagId'
+    | '/api/auth/$'
     | '/feeds'
     | '/inbox'
     | '/tags'
@@ -171,6 +182,7 @@ export interface FileRouteTypes {
     | '/_frame/settings'
     | '/_frame/articles/$articleId'
     | '/_frame/tags/$tagId'
+    | '/api/auth/$'
     | '/_frame/feeds/'
     | '/_frame/inbox/'
     | '/_frame/tags/'
@@ -184,6 +196,7 @@ export interface RootRouteChildren {
   FrameRoute: typeof FrameRouteWithChildren
   SigninRoute: typeof SigninRoute
   SignupRoute: typeof SignupRoute
+  ApiAuthSplatRoute: typeof ApiAuthSplatRoute
 }
 
 declare module '@tanstack/solid-router' {
@@ -243,6 +256,13 @@ declare module '@tanstack/solid-router' {
       fullPath: '/feeds'
       preLoaderRoute: typeof FrameFeedsIndexRouteImport
       parentRoute: typeof FrameRoute
+    }
+    '/api/auth/$': {
+      id: '/api/auth/$'
+      path: '/api/auth/$'
+      fullPath: '/api/auth/$'
+      preLoaderRoute: typeof ApiAuthSplatRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/_frame/tags/$tagId': {
       id: '/_frame/tags/$tagId'
@@ -313,6 +333,7 @@ const rootRouteChildren: RootRouteChildren = {
   FrameRoute: FrameRouteWithChildren,
   SigninRoute: SigninRoute,
   SignupRoute: SignupRoute,
+  ApiAuthSplatRoute: ApiAuthSplatRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

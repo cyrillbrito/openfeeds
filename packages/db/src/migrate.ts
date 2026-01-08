@@ -1,8 +1,10 @@
 import { mkdirSync } from 'fs';
 import { dirname, join } from 'path';
+import { fileURLToPath } from 'url';
 import { migrate } from 'drizzle-orm/bun-sqlite/migrator';
 import type { DbProvider } from './db-provider';
 
+const __dirname = dirname(fileURLToPath(import.meta.url));
 const authMigrationsFolder = join(__dirname, '../drizzle-auth');
 const userMigrationsFolder = join(__dirname, '../drizzle');
 

@@ -1,11 +1,8 @@
 import { useMutation, useQuery } from '@tanstack/solid-query';
 import { queryClient } from '~/query-client';
 import { createAuthClient } from 'better-auth/solid';
-import { environment } from '../environment';
 
-export const authClient = createAuthClient({
-  baseURL: environment.apiUrl,
-});
+export const authClient = createAuthClient();
 
 // Shareable query options for user session
 export const userQueryOptions = {

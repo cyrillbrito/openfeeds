@@ -3,9 +3,9 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "vite dev --port 3000",
-    "build": "vite build",
-    "preview": "vite preview",
+    "dev": "bun --bun vite dev --port 3000",
+    "build": "bun --bun vite build",
+    "preview": "bun --bun vite preview",
     "test": "vitest run",
     "start": "bun .output/server/index.mjs",
     "check-types": "tsc --noEmit"
@@ -13,7 +13,9 @@
   "dependencies": {
     "@better-fetch/fetch": "^1.1.18",
     "@elysiajs/eden": "^1.4.4",
+    "@repo/db": "workspace:*",
     "@repo/discovery": "workspace:*",
+    "@repo/domain": "workspace:*",
     "@repo/server": "workspace:*",
     "@repo/shared": "workspace:*",
     "@solid-primitives/autofocus": "^0.1.3",

@@ -1,5 +1,6 @@
-import { createFileRoute, Link, Outlet, redirect, useLocation } from '@tanstack/solid-router';
+import { createFileRoute, Link, Outlet, useLocation } from '@tanstack/solid-router';
 import { useTags } from '~/entities/tags';
+import { authMiddleware } from '~/server/middleware/auth.ts';
 import InboxIcon from 'lucide-solid/icons/inbox';
 import LibraryIcon from 'lucide-solid/icons/library';
 import PlusIcon from 'lucide-solid/icons/plus';
@@ -11,20 +12,11 @@ import { type ModalController } from '../components/LazyModal';
 import { CenterLoader, Loader } from '../components/Loader.tsx';
 import { TagModal } from '../components/TagModal.tsx';
 import { UserMenu } from '../components/UserMenu.tsx';
-import { fetchUser } from '../hooks/use-auth.ts';
 import { getTagDotColor } from '../utils/tagColors';
 
 export const Route = createFileRoute('/_frame')({
-  beforeLoad: async ({ location }) => {
-    const userData = await fetchUser();
-    if (!userData) {
-      throw redirect({
-        to: '/signin',
-        search: {
-          redirect: location.href,
-        },
-      });
-    }
+  server: {
+    middleware: [authMiddleware],
   },
   component: FrameLayout,
 });

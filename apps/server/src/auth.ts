@@ -12,7 +12,7 @@ function createBetterAuth(): ReturnType<typeof betterAuth> {
     emailAndPassword: {
       enabled: true,
       requireEmailVerification: !environment.simpleAuth,
-      minPasswordLength: environment.simpleAuth ? 1 : undefined,
+      minPasswordLength: environment.simpleAuth ? 5 : undefined,
     },
     basePath: 'auth',
     trustedOrigins: [environment.clientDomain],
