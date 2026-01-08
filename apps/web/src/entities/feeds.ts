@@ -1,10 +1,44 @@
-import { FeedSchema } from '@repo/shared/schemas';
+import { dbProvider } from '@repo/domain';
+import * as feedsDomain from '@repo/domain';
+import { CreateFeedSchema, FeedSchema, UpdateFeedSchema } from '@repo/shared/schemas';
 import type { Feed } from '@repo/shared/types';
 import { queryCollectionOptions } from '@tanstack/query-db-collection';
 import { createCollection, useLiveQuery } from '@tanstack/solid-db';
+import { createServerFn } from '@tanstack/solid-start';
 import { queryClient } from '~/query-client';
-import { useApi } from '../hooks/api';
-import { getErrorMessage } from './utils';
+import { authMiddleware } from '~/server/middleware/auth';
+import { z } from 'zod';
+
+const $$getAllFeeds = createServerFn({ method: 'GET' })
+  .middleware([authMiddleware])
+  .handler(({ context }) => {
+    const db = dbProvider.userDb(context.user.id);
+    return feedsDomain.getAllFeeds(db);
+  });
+
+const $$createFeeds = createServerFn({ method: 'POST' })
+  .middleware([authMiddleware])
+  .inputValidator(z.array(CreateFeedSchema))
+  .handler(({ context, data }) => {
+    const db = dbProvider.userDb(context.user.id);
+    return Promise.all(data.map((feed) => feedsDomain.createFeed(feed, db)));
+  });
+
+const $$updateFeeds = createServerFn({ method: 'POST' })
+  .middleware([authMiddleware])
+  .inputValidator(z.array(UpdateFeedSchema.extend({ id: z.number() })))
+  .handler(({ context, data }) => {
+    const db = dbProvider.userDb(context.user.id);
+    return Promise.all(data.map(({ id, ...updates }) => feedsDomain.updateFeed(id, updates, db)));
+  });
+
+const $$deleteFeeds = createServerFn({ method: 'POST' })
+  .middleware([authMiddleware])
+  .inputValidator(z.array(z.number()))
+  .handler(({ context, data: ids }) => {
+    const db = dbProvider.userDb(context.user.id);
+    return Promise.all(ids.map((id) => feedsDomain.deleteFeed(id, db)));
+  });
 
 // Feeds Collection
 export const feedsCollection = createCollection(
@@ -14,134 +48,31 @@ export const feedsCollection = createCollection(
     queryClient,
     getKey: (item: Feed) => item.id,
     schema: FeedSchema,
-    queryFn: async ({ signal }) => {
-      const api = useApi();
-      const { data, error } = await api.feeds.get({ fetch: { signal } });
-      if (error) {
-        throw new Error(getErrorMessage(error));
-      }
-      return data || [];
-    },
+    queryFn: () => $$getAllFeeds(),
 
     onInsert: async ({ transaction }) => {
-      const api = useApi();
-
-      await Promise.all(
-        transaction.mutations.map(async (mutation) => {
-          const feed = mutation.modified;
-          const { data, error } = await api.feeds.post({
-            url: feed.url,
-          });
-          if (error) {
-            throw new Error(getErrorMessage(error));
-          }
-          return data;
-        }),
-      );
+      const feeds = transaction.mutations.map((mutation) => {
+        const feed = mutation.modified;
+        return { url: feed.url };
+      });
+      await $$createFeeds({ data: feeds });
     },
 
     onUpdate: async ({ transaction }) => {
-      const api = useApi();
-      await Promise.all(
-        transaction.mutations.map(async (mutation) => {
-          const feed = mutation.modified as Feed;
-          const changes = mutation.changes as {
-            title?: string;
-            description?: string | null;
-            url?: string;
-            icon?: string | null;
-            tags?: number[];
-          };
-          const { data, error } = await api.feeds({ id: feed.id }).put(changes);
-          if (error) {
-            throw new Error(getErrorMessage(error));
-          }
-          return data;
-        }),
-      );
+      const updates = transaction.mutations.map((mutation) => ({
+        id: mutation.key as number,
+        ...mutation.changes,
+      }));
+      await $$updateFeeds({ data: updates });
     },
 
     onDelete: async ({ transaction }) => {
-      const api = useApi();
-      await Promise.all(
-        transaction.mutations.map(async (mutation) => {
-          const feedId = mutation.key as number;
-          const { error } = await api.feeds({ id: feedId }).delete();
-          if (error) {
-            throw new Error(getErrorMessage(error));
-          }
-        }),
-      );
+      const ids = transaction.mutations.map((mutation) => mutation.key as number);
+      await $$deleteFeeds({ data: ids });
     },
   }),
 );
 
 export function useFeeds() {
   return useLiveQuery((q) => q.from({ feed: feedsCollection }));
-}
-
-/**
- * Create a new feed
- * Awaits server response to get real feed ID (needed for tag assignment)
- * Returns the created feed with server-generated ID
- */
-export async function createFeed(data: { url: string }): Promise<Feed> {
-  const api = useApi();
-
-  // Call API directly to get real feed ID (bypasses temp ID issue)
-  const { data: feed, error } = await api.feeds.post({ url: data.url });
-
-  if (error) {
-    throw new Error(getErrorMessage(error));
-  }
-
-  if (!feed) {
-    throw new Error('Failed to create feed - no data returned');
-  }
-
-  // Add the real feed to collection
-  feedsCollection.utils.writeInsert(feed);
-
-  return feed;
-}
-
-/**
- * Update an existing feed
- * Applies optimistic update immediately - UI updates via live queries
- */
-export function updateFeed(
-  id: number,
-  changes: {
-    title?: string;
-    description?: string | null;
-    url?: string;
-    icon?: string | null;
-    tags?: number[];
-  },
-): void {
-  feedsCollection.update(id, (draft) => {
-    if (changes.title !== undefined) {
-      draft.title = changes.title;
-    }
-    if (changes.description !== undefined) {
-      draft.description = changes.description;
-    }
-    if (changes.url !== undefined) {
-      draft.url = changes.url;
-    }
-    if (changes.icon !== undefined) {
-      draft.icon = changes.icon;
-    }
-    if (changes.tags !== undefined) {
-      draft.tags = changes.tags;
-    }
-  });
-}
-
-/**
- * Delete a feed
- * Applies optimistic delete immediately - syncs in background
- */
-export function deleteFeed(id: number): void {
-  feedsCollection.delete(id);
 }

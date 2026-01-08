@@ -1,6 +1,6 @@
 import type { Feed } from '@repo/shared/types';
 import { Link } from '@tanstack/solid-router';
-import { updateFeed } from '~/entities/feeds';
+import { feedsCollection } from '~/entities/feeds';
 import { useTags } from '~/entities/tags';
 import { createEffect, createMemo, createSignal, Match, Show, Suspense, Switch } from 'solid-js';
 import { LazyModal, type ModalController } from './LazyModal';
@@ -48,8 +48,8 @@ function EditFeedForm(props: EditFeedFormProps) {
   });
 
   const handleUpdateTags = () => {
-    updateFeed(props.feed.id, {
-      tags: selectedTagIds(),
+    feedsCollection.update(props.feed.id, (draft) => {
+      draft.tags = selectedTagIds();
     });
   };
 

@@ -1,5 +1,5 @@
 import type { Feed } from '@repo/shared/types';
-import { deleteFeed } from '~/entities/feeds';
+import { feedsCollection } from '~/entities/feeds';
 import TriangleAlertIcon from 'lucide-solid/icons/triangle-alert';
 import { Show } from 'solid-js';
 import { LazyModal, type ModalController } from './LazyModal';
@@ -43,7 +43,7 @@ interface DeleteFeedFormProps {
 
 function DeleteFeedForm(props: DeleteFeedFormProps) {
   const handleDeleteConfirm = () => {
-    deleteFeed(props.feed.id);
+    feedsCollection.delete(props.feed.id);
     props.onDeleteComplete?.();
     props.onClose();
   };

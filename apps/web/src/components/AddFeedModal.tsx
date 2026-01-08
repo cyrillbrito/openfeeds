@@ -1,6 +1,7 @@
 import type { DiscoveredFeed } from '@repo/shared/types';
-import { createFeed, updateFeed } from '~/entities/feeds';
+import { feedsCollection } from '~/entities/feeds';
 import { useTags } from '~/entities/tags';
+import { generateTempId } from '~/entities/utils';
 import CircleAlertIcon from 'lucide-solid/icons/circle-alert';
 import { createSignal, For, Show } from 'solid-js';
 import { useApi } from '../hooks/api';
@@ -44,7 +45,6 @@ function AddFeedForm(props: AddFeedFormProps) {
   const [discoveredFeeds, setDiscoveredFeeds] = createSignal<DiscoveredFeed[]>([]);
   const [selectedTags, setSelectedTags] = createSignal<number[]>([]);
   const [feedTagSelections, setFeedTagSelections] = createSignal<Record<string, number[]>>({});
-  const [addingFeeds, setAddingFeeds] = createSignal(new Set<string>());
   const [addedFeeds, setAddedFeeds] = createSignal(new Set<string>());
   const [error, setError] = createSignal<string | null>(null);
 
@@ -84,60 +84,44 @@ function AddFeedForm(props: AddFeedFormProps) {
     }
   };
 
-  const handleAddFeed = async (feed: DiscoveredFeed) => {
-    setAddingFeeds((prev) => new Set([...prev, feed.url]));
-    setError(null);
+  const handleAddFeed = (feed: DiscoveredFeed) => {
+    const tags = feedTagSelections()[feed.url] || selectedTags();
 
-    try {
-      const createdFeed = await createFeed({ url: feed.url });
+    feedsCollection.insert({
+      id: generateTempId(),
+      url: feed.url,
+      feedUrl: feed.url,
+      title: feed.title || feed.url,
+      description: null,
+      icon: null,
+      createdAt: new Date().toISOString(),
+      lastSyncAt: null,
+      tags,
+    });
 
-      // Assign tags if selected for this feed
-      const tags = feedTagSelections()[feed.url] || selectedTags();
-      if (tags.length > 0) {
-        updateFeed(createdFeed.id, { tags });
-      }
+    setAddedFeeds((prev) => new Set([...prev, feed.url]));
 
-      setAddedFeeds((prev) => new Set([...prev, feed.url]));
-
-      // If this is the only feed, close the modal
-      if (discoveredFeeds().length === 1) {
-        props.onClose();
-      }
-    } catch (err) {
-      console.error('Failed to add feed:', err);
-      setError(err instanceof Error ? err.message : 'Failed to add feed');
-    } finally {
-      setAddingFeeds((prev) => {
-        const newSet = new Set(prev);
-        newSet.delete(feed.url);
-        return newSet;
-      });
+    if (discoveredFeeds().length === 1) {
+      props.onClose();
     }
   };
 
-  const handleAddManually = async () => {
+  const handleAddManually = () => {
     const url = feedUrl().trim();
-    setAddingFeeds((prev) => new Set([...prev, url]));
-    setError(null);
 
-    try {
-      const createdFeed = await createFeed({ url });
+    feedsCollection.insert({
+      id: generateTempId(),
+      url,
+      feedUrl: url,
+      title: url,
+      description: null,
+      icon: null,
+      createdAt: new Date().toISOString(),
+      lastSyncAt: null,
+      tags: selectedTags(),
+    });
 
-      // Assign tags if selected
-      if (selectedTags().length > 0) {
-        updateFeed(createdFeed.id, { tags: selectedTags() });
-      }
-
-      props.onClose();
-    } catch (err) {
-      console.error('Failed to add feed:', err);
-      setError(err instanceof Error ? err.message : 'Failed to add feed');
-      setAddingFeeds((prev) => {
-        const newSet = new Set(prev);
-        newSet.delete(url);
-        return newSet;
-      });
-    }
+    props.onClose();
   };
 
   return (
@@ -220,14 +204,12 @@ function AddFeedForm(props: AddFeedFormProps) {
               <div class="space-y-4">
                 <For each={discoveredFeeds()}>
                   {(feed) => {
-                    const isAdding = () => addingFeeds().has(feed.url);
                     const isAdded = () => addedFeeds().has(feed.url);
 
                     return (
                       <div class="card bg-base-200 space-y-3 p-4">
                         <div class="flex items-center justify-between">
                           <div class="flex-1">
-                            {/* <div class="font-medium">{feed.title}</div> */}
                             <div class="text-base-content/70 text-sm break-all">{feed.url}</div>
                             <Show when={feed.type}>
                               <div class="badge badge-sm badge-outline mt-1">{feed.type}</div>
@@ -239,11 +221,7 @@ function AddFeedForm(props: AddFeedFormProps) {
                               type="button"
                               class="btn btn-primary btn-sm ml-4"
                               onClick={() => handleAddFeed(feed)}
-                              disabled={isAdding()}
                             >
-                              <Show when={isAdding()}>
-                                <span class="loading loading-spinner loading-xs"></span>
-                              </Show>
                               Add
                             </button>
                           </Show>
@@ -289,7 +267,6 @@ function AddFeedForm(props: AddFeedFormProps) {
               tags={tagsQuery.data || []}
               selectedIds={selectedTags()}
               onSelectionChange={setSelectedTags}
-              disabled={addingFeeds().has(discoveredFeeds()[0]?.url || '')}
             />
           </Show>
 
@@ -301,26 +278,13 @@ function AddFeedForm(props: AddFeedFormProps) {
           </Show>
 
           <div class="modal-action">
-            <button
-              type="button"
-              class="btn"
-              onClick={() => setCurrentStep('url-input')}
-              disabled={addingFeeds().size > 0}
-            >
+            <button type="button" class="btn" onClick={() => setCurrentStep('url-input')}>
               Back
             </button>
 
             <Show when={discoveredFeeds().length === 0}>
-              <button
-                type="button"
-                class="btn btn-secondary"
-                onClick={handleAddManually}
-                disabled={addingFeeds().has(feedUrl())}
-              >
-                <Show when={addingFeeds().has(feedUrl())}>
-                  <span class="loading loading-spinner"></span>
-                </Show>
-                {addingFeeds().has(feedUrl()) ? 'Adding...' : 'Add URL Directly'}
+              <button type="button" class="btn btn-secondary" onClick={handleAddManually}>
+                Add URL Directly
               </button>
             </Show>
 
@@ -329,12 +293,8 @@ function AddFeedForm(props: AddFeedFormProps) {
                 type="button"
                 class="btn btn-primary"
                 onClick={() => handleAddFeed(discoveredFeeds()[0])}
-                disabled={addingFeeds().has(discoveredFeeds()[0].url)}
               >
-                <Show when={addingFeeds().has(discoveredFeeds()[0].url)}>
-                  <span class="loading loading-spinner"></span>
-                </Show>
-                {addingFeeds().has(discoveredFeeds()[0].url) ? 'Adding...' : 'Add Feed'}
+                Add Feed
               </button>
             </Show>
           </div>
