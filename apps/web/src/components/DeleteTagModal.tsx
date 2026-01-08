@@ -1,5 +1,5 @@
 import type { Tag } from '@repo/shared/types';
-import { deleteTag } from '~/entities/tags';
+import { tagsCollection } from '~/entities/tags';
 import { Show } from 'solid-js';
 import { LazyModal, type ModalController } from './LazyModal';
 import { TagBadge } from './TagBadge';
@@ -45,7 +45,7 @@ interface DeleteTagFormProps {
 
 function DeleteTagForm(props: DeleteTagFormProps) {
   const handleDeleteConfirm = () => {
-    deleteTag(props.tag.id);
+    tagsCollection.delete(props.tag.id);
     props.onDeleteComplete?.();
     props.onClose();
   };

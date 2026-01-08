@@ -13,5 +13,5 @@ export const authMiddleware = createMiddleware().server(async ({ request, next }
       search: { redirect: url.pathname + url.search },
     });
   }
-  return await next();
+  return next({ context: { user: session.user, session: session.session } });
 });
