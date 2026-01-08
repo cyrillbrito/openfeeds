@@ -3,7 +3,7 @@ import { eq } from '@tanstack/db';
 import { useLiveQuery } from '@tanstack/solid-db';
 import { createFileRoute, Link, useSearch } from '@tanstack/solid-router';
 import { markManyArchived } from '~/entities/actions';
-import { articlesCollection, updateArticle } from '~/entities/articles';
+import { articlesCollection } from '~/entities/articles';
 import { useFeeds } from '~/entities/feeds';
 import { useTags } from '~/entities/tags';
 import MoreVerticalIcon from 'lucide-solid/icons/more-vertical';
@@ -83,7 +83,10 @@ function FeedArticles() {
     articleId: number,
     updates: { isRead?: boolean; tags?: number[] },
   ) => {
-    updateArticle(articleId, updates);
+    articlesCollection.update(articleId, (draft) => {
+      if (updates.isRead !== undefined) draft.isRead = updates.isRead;
+      if (updates.tags !== undefined) draft.tags = updates.tags;
+    });
   };
 
   const articles = () => articlesQuery.data || [];

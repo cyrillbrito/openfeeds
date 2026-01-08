@@ -1,7 +1,7 @@
 import { eq, ilike } from '@tanstack/db';
 import { useLiveQuery } from '@tanstack/solid-db';
 import { createFileRoute, useSearch } from '@tanstack/solid-router';
-import { articlesCollection, updateArticle } from '~/entities/articles';
+import { articlesCollection } from '~/entities/articles';
 import { useFeeds } from '~/entities/feeds';
 import { validateReadStatusSearch } from '../common/routing';
 import { type ReadStatus } from '../components/ReadStatusToggle';
@@ -41,11 +41,15 @@ function FocusedShorts() {
   const shorts = () => shortsQuery.data || [];
 
   const markAsRead = (articleId: number) => {
-    updateArticle(articleId, { isRead: true });
+    articlesCollection.update(articleId, (draft) => {
+      draft.isRead = true;
+    });
   };
 
   const toggleRead = (articleId: number, isRead: boolean) => {
-    updateArticle(articleId, { isRead });
+    articlesCollection.update(articleId, (draft) => {
+      draft.isRead = isRead;
+    });
   };
 
   return (

@@ -1,7 +1,7 @@
 import type { ArchiveResult } from '@repo/shared/types';
 import { createFileRoute } from '@tanstack/solid-router';
 import { createSignal, Show } from 'solid-js';
-import { triggerAutoArchive, updateSettings, useSettings } from '~/entities/settings';
+import { settingsCollection, triggerAutoArchive, useSettings } from '~/entities/settings';
 import { Card } from '../components/Card';
 import { Header } from '../components/Header';
 
@@ -19,7 +19,11 @@ export default function SettingsPage() {
   const [archiveError, setArchiveError] = createSignal<string | null>(null);
 
   const handleUpdate = () => {
-    updateSettings(formData());
+    const changes = formData();
+    settingsCollection.update(1, (draft) => {
+      if (changes.theme !== undefined) draft.theme = changes.theme;
+      if (changes.autoArchiveDays !== undefined) draft.autoArchiveDays = changes.autoArchiveDays;
+    });
     setEditMode(false);
     setFormData({});
   };

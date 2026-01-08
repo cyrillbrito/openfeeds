@@ -1,6 +1,6 @@
 import { createFileRoute, Link, useRouter } from '@tanstack/solid-router';
 import { useArticleDetails } from '~/entities/article-details';
-import { updateArticle } from '~/entities/articles';
+import { articlesCollection } from '~/entities/articles';
 import { useFeeds } from '~/entities/feeds';
 import { useTags } from '~/entities/tags';
 import ArchiveIcon from 'lucide-solid/icons/archive';
@@ -108,13 +108,17 @@ function ArticleView() {
                           read={art().isRead || false}
                           archived={art().isArchived || false}
                           setArchived={(isArchived) => {
-                            void updateArticle(art().id, { isArchived });
+                            articlesCollection.update(art().id, (draft) => {
+                              draft.isArchived = isArchived;
+                            });
                           }}
                         />
                         <ReadIconButton
                           read={art().isRead || false}
                           setRead={(isRead) => {
-                            void updateArticle(art().id, { isRead });
+                            articlesCollection.update(art().id, (draft) => {
+                              draft.isRead = isRead;
+                            });
                           }}
                         />
                       </div>
@@ -169,7 +173,9 @@ function ArticleView() {
                           tags={tagsQuery.data!}
                           selectedIds={art().tags}
                           onSelectionChange={(tagIds) => {
-                            void updateArticle(art().id, { tags: tagIds });
+                            articlesCollection.update(art().id, (draft) => {
+                              draft.tags = tagIds;
+                            });
                           }}
                         />
                       </div>

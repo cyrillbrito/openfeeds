@@ -9,6 +9,13 @@ import { and, eq } from 'drizzle-orm';
 import { filterRuleDbToApi } from './db-utils';
 import { assert, NotFoundError, UnexpectedError } from './errors';
 
+export async function getAllFilterRules(db: UserDb): Promise<FilterRule[]> {
+  const rules = await db.query.filterRules.findMany({
+    orderBy: (filterRules, { desc }) => [desc(filterRules.createdAt)],
+  });
+  return rules.map(filterRuleDbToApi);
+}
+
 export async function getFilterRulesByFeedId(feedId: number, db: UserDb): Promise<FilterRule[]> {
   // Check if feed exists
   const feed = await db.query.feeds.findFirst({

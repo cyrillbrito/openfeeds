@@ -1,11 +1,41 @@
-import { ArticleSchema } from '@repo/shared/schemas';
+import { dbProvider } from '@repo/domain';
+import * as articlesDomain from '@repo/domain';
+import { ArticleSchema, UpdateArticleSchema } from '@repo/shared/schemas';
 import type { Article } from '@repo/shared/types';
 import { parseLoadSubsetOptions } from '@tanstack/db';
 import { queryCollectionOptions } from '@tanstack/query-db-collection';
 import { createCollection } from '@tanstack/solid-db';
+import { createServerFn } from '@tanstack/solid-start';
 import { queryClient } from '~/query-client';
-import { useApi } from '../hooks/api';
-import { getErrorMessage } from './utils';
+import { authMiddleware } from '~/server/middleware/auth';
+import { z } from 'zod';
+
+const ArticleQuerySchema = z.object({
+  feedId: z.number().optional(),
+  tagId: z.number().optional(),
+  isRead: z.boolean().optional(),
+  isArchived: z.boolean().optional(),
+  type: z.enum(['all', 'shorts']).optional(),
+  limit: z.number().optional(),
+});
+
+const $$getArticles = createServerFn({ method: 'GET' })
+  .middleware([authMiddleware])
+  .inputValidator(ArticleQuerySchema)
+  .handler(({ context, data: query }) => {
+    const db = dbProvider.userDb(context.user.id);
+    return articlesDomain.getArticles(query, db);
+  });
+
+const $$updateArticles = createServerFn({ method: 'POST' })
+  .middleware([authMiddleware])
+  .inputValidator(z.array(UpdateArticleSchema.extend({ id: z.number() })))
+  .handler(({ context, data }) => {
+    const db = dbProvider.userDb(context.user.id);
+    return Promise.all(
+      data.map(({ id, ...updates }) => articlesDomain.updateArticle(id, updates, db)),
+    );
+  });
 
 // Articles Collection
 export const articlesCollection = createCollection(
@@ -21,9 +51,6 @@ export const articlesCollection = createCollection(
     // When views create live queries with .where() clauses, those filters
     // are passed here via ctx.meta.loadSubsetOptions
     queryFn: async (ctx) => {
-      const api = useApi();
-      const { signal } = ctx;
-
       // Parse filters from live queries
       const loadSubsetOptions = ctx.meta?.loadSubsetOptions as
         | { where?: any; orderBy?: any; limit?: number }
@@ -34,34 +61,21 @@ export const articlesCollection = createCollection(
         limit: loadSubsetOptions?.limit,
       });
 
-      // Build API query parameters from parsed filters
+      // Build query parameters from parsed filters
       const query: Record<string, any> = {
         limit: parsed.limit || 10000,
       };
 
-      // Map filters to API parameters
+      // Map filters to query parameters
       parsed.filters.forEach(({ field, operator, value }) => {
-        const fieldName = field[field.length - 1]; // Get last part of path (e.g., 'feedId' from ['articles', 'feedId'])
-
+        const fieldName = field[field.length - 1];
         if (operator === 'eq') {
           query[fieldName] = value;
         }
-        // Add other operators as needed (gt, lt, etc.)
       });
 
-      // Map sorting (API uses cursor pagination, may not need explicit sort)
-      // parsed.sorts can be used if API supports orderBy parameter
-
-      const { data, error } = await api.articles.get({
-        query,
-        fetch: { signal },
-      });
-
-      if (error) {
-        throw new Error(getErrorMessage(error));
-      }
-
-      return data?.data || [];
+      const result = await $$getArticles({ data: query });
+      return result?.data || [];
     },
 
     // Articles are created server-side via RSS fetch
@@ -72,24 +86,15 @@ export const articlesCollection = createCollection(
 
     // Handle client-side updates (isRead, isArchived, tags)
     onUpdate: async ({ transaction }) => {
-      const api = useApi();
-      await Promise.all(
-        transaction.mutations.map(async (mutation) => {
-          const article = mutation.modified as Article;
-          const changes = mutation.changes as {
-            isRead?: boolean;
-            isArchived?: boolean;
-            tags?: number[];
-          };
-
-          // Send only changed fields to server
-          const { data, error } = await api.articles({ id: article.id }).put(changes);
-          if (error) {
-            throw new Error(getErrorMessage(error));
-          }
-          return data;
-        }),
-      );
+      const updates = transaction.mutations.map((mutation) => {
+        return {
+          id: mutation.key as number,
+          isRead: mutation.changes.isRead ?? undefined,
+          isArchived: mutation.changes.isArchived ?? undefined,
+          tags: mutation.changes.tags ?? undefined,
+        };
+      });
+      await $$updateArticles({ data: updates });
     },
 
     // Articles are archived, not deleted
@@ -99,69 +104,3 @@ export const articlesCollection = createCollection(
     },
   }),
 );
-
-/**
- * Update an existing article
- * Applies optimistic update immediately - UI updates via live queries
- */
-export function updateArticle(
-  id: number,
-  changes: {
-    isRead?: boolean;
-    isArchived?: boolean;
-    tags?: number[];
-  },
-): void {
-  articlesCollection.update(id, (draft) => {
-    if (changes.isRead !== undefined) {
-      draft.isRead = changes.isRead;
-    }
-    if (changes.isArchived !== undefined) {
-      draft.isArchived = changes.isArchived;
-    }
-    if (changes.tags !== undefined) {
-      draft.tags = changes.tags;
-    }
-  });
-}
-
-/**
- * Manually load more articles (pagination)
- * NOTE: With syncMode: 'on-demand', the collection automatically fetches
- * filtered data when live queries are created. This function is for manual
- * loading if needed, but typically not required.
- */
-export async function loadMoreArticles(
-  filters?: {
-    feedId?: number;
-    tagId?: number;
-    isRead?: boolean;
-    isArchived?: boolean;
-    type?: 'all' | 'shorts';
-  },
-  cursor?: string,
-  limit: number = 100,
-): Promise<void> {
-  const api = useApi();
-
-  const { data, error } = await api.articles.get({
-    query: {
-      ...filters,
-      cursor,
-      limit,
-    },
-  });
-
-  if (error) {
-    throw new Error(getErrorMessage(error));
-  }
-
-  const newArticles = data?.data || [];
-
-  // Add new items without affecting existing ones
-  articlesCollection.utils.writeBatch(() => {
-    newArticles.forEach((article) => {
-      articlesCollection.utils.writeInsert(article);
-    });
-  });
-}

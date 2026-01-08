@@ -4,7 +4,7 @@ import { useLiveQuery } from '@tanstack/solid-db';
 import { createFileRoute, Link, useSearch } from '@tanstack/solid-router';
 import { markManyArchived } from '~/entities/actions';
 import { articleTagsCollection } from '~/entities/article-tags';
-import { articlesCollection, updateArticle } from '~/entities/articles';
+import { articlesCollection } from '~/entities/articles';
 import { useFeeds } from '~/entities/feeds';
 import { useTags } from '~/entities/tags';
 import ShuffleIcon from 'lucide-solid/icons/shuffle';
@@ -80,7 +80,10 @@ function TagArticles() {
     articleId: number,
     updates: { isRead?: boolean; tags?: number[] },
   ) => {
-    updateArticle(articleId, updates);
+    articlesCollection.update(articleId, (draft) => {
+      if (updates.isRead !== undefined) draft.isRead = updates.isRead;
+      if (updates.tags !== undefined) draft.tags = updates.tags;
+    });
   };
 
   const articles = () => articlesQuery.data || [];

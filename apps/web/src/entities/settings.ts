@@ -1,15 +1,45 @@
-import { AppSettingsSchema } from '@repo/shared/schemas';
+import {
+  dbProvider,
+  getUserSettings as domainGetUserSettings,
+  performArchiveArticles as domainPerformArchiveArticles,
+  updateUserSettings as domainUpdateUserSettings,
+} from '@repo/domain';
+import { AppSettingsSchema, UpdateSettingsSchema } from '@repo/shared/schemas';
 import type { AppSettings, ArchiveResult } from '@repo/shared/types';
 import { queryCollectionOptions } from '@tanstack/query-db-collection';
 import { createCollection, useLiveQuery } from '@tanstack/solid-db';
+import { createServerFn } from '@tanstack/solid-start';
 import { queryClient } from '~/query-client';
+import { authMiddleware } from '~/server/middleware/auth';
 import { z } from 'zod';
-import { useApi } from '../hooks/api';
 import { articlesCollection } from './articles';
-import { getErrorMessage } from './utils';
 
 // Settings is a singleton - we use a fixed ID
 const SETTINGS_ID = 1;
+
+const $$getUserSettings = createServerFn({ method: 'GET' })
+  .middleware([authMiddleware])
+  .handler(({ context }) => {
+    const db = dbProvider.userDb(context.user.id);
+    return domainGetUserSettings(db);
+  });
+
+const $$updateSettings = createServerFn({ method: 'POST' })
+  .middleware([authMiddleware])
+  .inputValidator(z.array(UpdateSettingsSchema))
+  .handler(({ context, data }) => {
+    const db = dbProvider.userDb(context.user.id);
+    // Settings is a singleton, so we just take the first update
+    const updates = data[0] || {};
+    return domainUpdateUserSettings(db, updates);
+  });
+
+const $$triggerAutoArchive = createServerFn({ method: 'POST' })
+  .middleware([authMiddleware])
+  .handler(({ context }) => {
+    const db = dbProvider.userDb(context.user.id);
+    return domainPerformArchiveArticles(db);
+  });
 
 // Extend the schema to include an ID for collection compatibility
 const SettingsWithIdSchema = AppSettingsSchema.extend({
@@ -26,28 +56,16 @@ export const settingsCollection = createCollection(
     queryClient,
     getKey: (item: SettingsWithId) => item.id,
     schema: SettingsWithIdSchema,
-    queryFn: async ({ signal }) => {
-      const api = useApi();
-      const { data, error } = await api.settings.get({ fetch: { signal } });
-      if (error) {
-        throw new Error(getErrorMessage(error));
-      }
-      // Wrap the singleton settings in an array with ID
+    queryFn: async () => {
+      const data = await $$getUserSettings();
       return data ? [{ ...data, id: SETTINGS_ID }] : [];
     },
 
     onUpdate: async ({ transaction }) => {
-      const api = useApi();
-      await Promise.all(
-        transaction.mutations.map(async (mutation) => {
-          const changes = mutation.changes as Partial<AppSettings>;
-          const { data, error } = await api.settings.put(changes);
-          if (error) {
-            throw new Error(getErrorMessage(error));
-          }
-          return data;
-        }),
+      const updates = transaction.mutations.map(
+        (mutation) => mutation.changes as Partial<AppSettings>,
       );
+      await $$updateSettings({ data: updates });
     },
 
     // Settings cannot be inserted or deleted by clients
@@ -85,33 +103,13 @@ export function useSettings() {
 }
 
 /**
- * Update application settings
- * Applies optimistic update immediately - UI updates via live queries
- */
-export function updateSettings(changes: Partial<AppSettings>): void {
-  settingsCollection.update(SETTINGS_ID, (draft) => {
-    if (changes.theme !== undefined) {
-      draft.theme = changes.theme;
-    }
-    if (changes.autoArchiveDays !== undefined) {
-      draft.autoArchiveDays = changes.autoArchiveDays;
-    }
-  });
-}
-
-/**
  * Trigger auto-archive for old articles based on settings
  */
 export async function triggerAutoArchive(): Promise<ArchiveResult> {
-  const api = useApi();
-
-  const { data, error } = await api.settings['auto-archive'].post();
-  if (error) {
-    throw new Error(getErrorMessage(error));
-  }
+  const result = await $$triggerAutoArchive();
 
   // Refetch articles to reflect archived status
   articlesCollection.utils.refetch();
 
-  return data;
+  return result;
 }

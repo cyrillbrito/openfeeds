@@ -1,5 +1,5 @@
 import { FilterOperator, type FilterRule } from '@repo/shared/types';
-import { deleteFilterRule, updateFilterRule } from '~/entities/filter-rules';
+import { filterRulesCollection } from '~/entities/filter-rules';
 import CircleAlertIcon from 'lucide-solid/icons/circle-alert';
 import { createSignal, For, Show } from 'solid-js';
 
@@ -48,10 +48,11 @@ export function RuleItem(props: RuleItemProps) {
     }
 
     setError(null);
-    updateFilterRule(props.rule.feedId, props.rule.id, {
-      pattern: trimmedPattern,
-      operator: editOperator(),
-      isActive: editIsActive(),
+    filterRulesCollection.update(props.rule.id, (draft) => {
+      draft.pattern = trimmedPattern;
+      draft.operator = editOperator();
+      draft.isActive = editIsActive();
+      draft.updatedAt = new Date().toISOString();
     });
 
     setIsEditing(false);
@@ -63,13 +64,14 @@ export function RuleItem(props: RuleItemProps) {
       return;
     }
 
-    deleteFilterRule(props.rule.feedId, props.rule.id);
+    filterRulesCollection.delete(props.rule.id);
     props.onDelete?.();
   };
 
   const handleToggleActive = () => {
-    updateFilterRule(props.rule.feedId, props.rule.id, {
-      isActive: !props.rule.isActive,
+    filterRulesCollection.update(props.rule.id, (draft) => {
+      draft.isActive = !props.rule.isActive;
+      draft.updatedAt = new Date().toISOString();
     });
     props.onUpdate?.();
   };

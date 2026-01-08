@@ -3,7 +3,7 @@ import { eq } from '@tanstack/db';
 import { useLiveQuery } from '@tanstack/solid-db';
 import { createFileRoute, Link } from '@tanstack/solid-router';
 import { markManyArchived } from '~/entities/actions';
-import { articlesCollection, updateArticle } from '~/entities/articles';
+import { articlesCollection } from '~/entities/articles';
 import { useFeeds } from '~/entities/feeds';
 import { useTags } from '~/entities/tags';
 import VideoIcon from 'lucide-solid/icons/video';
@@ -82,15 +82,19 @@ function Inbox() {
         action: {
           label: 'Undo',
           onClick: () => {
-            updateArticle(articleId, {
-              isArchived: false,
+            articlesCollection.update(articleId, (draft) => {
+              draft.isArchived = false;
             });
           },
         },
       });
     }
 
-    updateArticle(articleId, updates);
+    articlesCollection.update(articleId, (draft) => {
+      if (updates.isRead !== undefined) draft.isRead = updates.isRead;
+      if (updates.isArchived !== undefined) draft.isArchived = updates.isArchived;
+      if (updates.tags !== undefined) draft.tags = updates.tags;
+    });
   };
 
   return (
