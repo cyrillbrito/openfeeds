@@ -39,13 +39,12 @@ function RootComponent() {
   });
 
   return (
-    <html lang="en">
+    <html>
       <head>
+        <HeadContent />
         <HydrationScript />
       </head>
       <body>
-        <HeadContent />
-
         <Suspense>
           <ThemeProvider>
             <ToastProvider>
