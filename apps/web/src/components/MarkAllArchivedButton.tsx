@@ -1,16 +1,12 @@
-import type { MarkManyArchivedRequest } from '@repo/shared/types';
 import TriangleAlertIcon from 'lucide-solid/icons/triangle-alert';
 import { createSignal, Show } from 'solid-js';
-import { markManyArchived } from '~/entities/actions';
 import { LazyModal, type ModalController } from './LazyModal';
 
 interface MarkAllArchivedButtonProps {
-  context: MarkManyArchivedRequest['context'];
-  feedId?: number;
-  tagId?: number;
   totalCount?: number;
   contextLabel?: string; // e.g., "in this feed", "in this tag", "globally"
   disabled?: boolean;
+  onConfirm: () => Promise<void>;
 }
 
 export function MarkAllArchivedButton(props: MarkAllArchivedButtonProps) {
@@ -67,32 +63,10 @@ interface MarkAllArchivedConfirmationProps extends MarkAllArchivedButtonProps {
 function MarkAllArchivedConfirmation(props: MarkAllArchivedConfirmationProps) {
   const [isProcessing, setIsProcessing] = createSignal(false);
 
-  const getContextLabel = () => {
-    if (props.contextLabel) return props.contextLabel;
-
-    switch (props.context) {
-      case 'all':
-        return 'globally';
-      case 'feed':
-        return 'in this feed';
-      case 'tag':
-        return 'in this tag';
-      default:
-        return '';
-    }
-  };
-
   const handleConfirmMarkArchived = async () => {
     try {
       setIsProcessing(true);
-
-      const request: MarkManyArchivedRequest = {
-        context: props.context,
-        ...(props.feedId && { feedId: props.feedId }),
-        ...(props.tagId && { tagId: props.tagId }),
-      };
-
-      await markManyArchived(request);
+      await props.onConfirm();
       props.onClose();
     } catch (err) {
       console.error('Mark many archived failed:', err);
@@ -105,8 +79,8 @@ function MarkAllArchivedConfirmation(props: MarkAllArchivedConfirmationProps) {
     <>
       <div class="mb-6">
         <p class="mb-4">
-          Are you sure you want to mark all unarchived articles as archived {getContextLabel()}?
-          This action cannot be undone.
+          Are you sure you want to mark all unarchived articles as archived{' '}
+          {props.contextLabel || ''}? This action cannot be undone.
         </p>
 
         <Show when={props.totalCount && props.totalCount > 0}>

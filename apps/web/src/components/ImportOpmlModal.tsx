@@ -1,10 +1,9 @@
-import { feedsCollection } from '~/entities/feeds';
-import { tagsCollection } from '~/entities/tags';
 import CircleAlertIcon from 'lucide-solid/icons/circle-alert';
 import CircleCheckIcon from 'lucide-solid/icons/circle-check';
 import TriangleAlertIcon from 'lucide-solid/icons/triangle-alert';
 import { createSignal, Match, Show, Switch } from 'solid-js';
-import { useApi } from '../hooks/api';
+import { feedsCollection, importOpml } from '~/entities/feeds';
+import { tagsCollection } from '~/entities/tags';
 import { LazyModal, type ModalController } from './LazyModal';
 
 interface ImportOpmlModalProps {
@@ -32,7 +31,6 @@ interface ImportOpmlFormProps {
 }
 
 function ImportOpmlForm(props: ImportOpmlFormProps) {
-  const api = useApi();
   const [isImporting, setIsImporting] = createSignal(false);
   const [importError, setImportError] = createSignal<string | null>(null);
   const [importResult, setImportResult] = createSignal<{
@@ -46,12 +44,7 @@ function ImportOpmlForm(props: ImportOpmlFormProps) {
       setImportError(null);
       setImportResult(null);
 
-      const { data, error } = await api.import.opml.post({ opmlContent: content });
-      if (error) {
-        const errVal = error.value as { summary?: string; message?: string } | undefined;
-        setImportError(errVal?.summary || errVal?.message || 'Request failed');
-        return;
-      }
+      const data = await importOpml(content);
 
       setImportResult(data);
 

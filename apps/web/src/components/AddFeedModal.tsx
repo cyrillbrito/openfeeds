@@ -1,10 +1,9 @@
 import type { DiscoveredFeed } from '@repo/shared/types';
-import { feedsCollection } from '~/entities/feeds';
-import { useTags } from '~/entities/tags';
-import { generateTempId } from '~/entities/utils';
 import CircleAlertIcon from 'lucide-solid/icons/circle-alert';
 import { createSignal, For, Show } from 'solid-js';
-import { useApi } from '../hooks/api';
+import { discoverFeeds, feedsCollection } from '~/entities/feeds';
+import { useTags } from '~/entities/tags';
+import { generateTempId } from '~/entities/utils';
 import { LazyModal, type ModalController } from './LazyModal';
 import { MultiSelectTag } from './MultiSelectTag';
 
@@ -37,7 +36,6 @@ interface AddFeedFormProps {
 function AddFeedForm(props: AddFeedFormProps) {
   console.log(`🎯 AddFeedForm: FRESH component created! Timestamp: ${Date.now()}`);
 
-  const api = useApi();
   const [isDiscovering, setIsDiscovering] = createSignal(false);
 
   const [feedUrl, setFeedUrl] = createSignal('');
@@ -62,12 +60,7 @@ function AddFeedForm(props: AddFeedFormProps) {
     try {
       setError(null);
       setIsDiscovering(true);
-      const { data, error } = await api.feeds.discover.post({ url });
-      if (error) {
-        const errVal = error.value as { summary?: string; message?: string } | undefined;
-        setError(errVal?.summary || errVal?.message || 'Request failed');
-        return;
-      }
+      const data = await discoverFeeds(url);
 
       setDiscoveredFeeds(data);
 

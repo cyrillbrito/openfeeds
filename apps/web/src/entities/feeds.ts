@@ -1,13 +1,36 @@
 import { dbProvider } from '@repo/domain';
 import * as feedsDomain from '@repo/domain';
 import { CreateFeedSchema, FeedSchema, UpdateFeedSchema } from '@repo/shared/schemas';
-import type { Feed } from '@repo/shared/types';
+import type { DiscoveredFeed, Feed } from '@repo/shared/types';
 import { queryCollectionOptions } from '@tanstack/query-db-collection';
 import { createCollection, useLiveQuery } from '@tanstack/solid-db';
 import { createServerFn } from '@tanstack/solid-start';
 import { queryClient } from '~/query-client';
 import { authMiddleware } from '~/server/middleware/auth';
 import { z } from 'zod';
+
+export const $$discoverFeeds = createServerFn({ method: 'POST' })
+  .middleware([authMiddleware])
+  .inputValidator(z.object({ url: z.string().url() }))
+  .handler(({ data }) => {
+    return feedsDomain.discoverRssFeeds(data.url);
+  });
+
+export async function discoverFeeds(url: string): Promise<DiscoveredFeed[]> {
+  return $$discoverFeeds({ data: { url } });
+}
+
+export const $$importOpml = createServerFn({ method: 'POST' })
+  .middleware([authMiddleware])
+  .inputValidator(z.object({ opmlContent: z.string() }))
+  .handler(({ context, data }) => {
+    const db = dbProvider.userDb(context.user.id);
+    return feedsDomain.importOpmlFeeds(data.opmlContent, context.user.id, db);
+  });
+
+export async function importOpml(opmlContent: string) {
+  return $$importOpml({ data: { opmlContent } });
+}
 
 const $$getAllFeeds = createServerFn({ method: 'GET' })
   .middleware([authMiddleware])

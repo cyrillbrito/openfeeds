@@ -1,13 +1,11 @@
-import type { MarkManyArchivedRequest } from '@repo/shared/types';
 import { eq } from '@tanstack/db';
 import { useLiveQuery } from '@tanstack/solid-db';
 import { createFileRoute, Link } from '@tanstack/solid-router';
-import { markManyArchived } from '~/entities/actions';
+import VideoIcon from 'lucide-solid/icons/video';
+import { createSignal, Show, Suspense } from 'solid-js';
 import { articlesCollection } from '~/entities/articles';
 import { useFeeds } from '~/entities/feeds';
 import { useTags } from '~/entities/tags';
-import VideoIcon from 'lucide-solid/icons/video';
-import { createSignal, Show, Suspense } from 'solid-js';
 import { validateReadStatusSearch } from '../common/routing';
 import { ArticleList } from '../components/ArticleList';
 import { ArticleListToolbar } from '../components/ArticleListToolbar';
@@ -52,10 +50,12 @@ function Inbox() {
   const handleMarkAllArchived = async () => {
     try {
       setIsMarkingAllArchived(true);
-      const request: MarkManyArchivedRequest = {
-        context: 'all',
-      };
-      await markManyArchived(request);
+      const articleIds = (articlesQuery.data || []).map((a) => a.id);
+      if (articleIds.length > 0) {
+        articlesCollection.update(articleIds, (drafts) => {
+          drafts.forEach((d) => (d.isArchived = true));
+        });
+      }
       markAllModalController.close();
     } catch (err) {
       console.error('Mark many archived failed:', err);
@@ -124,9 +124,9 @@ function Inbox() {
           <>
             <Show when={totalCount() > 0 && readStatus() === 'unread'}>
               <MarkAllArchivedButton
-                context="all"
                 totalCount={totalCount()}
                 contextLabel="globally"
+                onConfirm={handleMarkAllArchived}
               />
             </Show>
           </>

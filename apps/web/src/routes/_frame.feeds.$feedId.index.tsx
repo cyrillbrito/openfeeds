@@ -1,15 +1,14 @@
-import type { Feed, MarkManyArchivedRequest } from '@repo/shared/types';
+import type { Feed } from '@repo/shared/types';
 import { eq } from '@tanstack/db';
 import { useLiveQuery } from '@tanstack/solid-db';
 import { createFileRoute, Link, useSearch } from '@tanstack/solid-router';
-import { markManyArchived } from '~/entities/actions';
-import { articlesCollection } from '~/entities/articles';
-import { useFeeds } from '~/entities/feeds';
-import { useTags } from '~/entities/tags';
 import MoreVerticalIcon from 'lucide-solid/icons/more-vertical';
 import ShuffleIcon from 'lucide-solid/icons/shuffle';
 import VideoIcon from 'lucide-solid/icons/video';
 import { createSignal, For, Show, Suspense } from 'solid-js';
+import { articlesCollection } from '~/entities/articles';
+import { useFeeds } from '~/entities/feeds';
+import { useTags } from '~/entities/tags';
 import { validateReadStatusSearch } from '../common/routing';
 import { ArticleList } from '../components/ArticleList';
 import { ArticleListToolbar } from '../components/ArticleListToolbar';
@@ -66,11 +65,12 @@ function FeedArticles() {
   const handleMarkAllArchived = async () => {
     try {
       setIsMarkingAllArchived(true);
-      const request: MarkManyArchivedRequest = {
-        context: 'feed',
-        feedId: feedId(),
-      };
-      await markManyArchived(request);
+      const articleIds = (articlesQuery.data || []).map((a) => a.id);
+      if (articleIds.length > 0) {
+        articlesCollection.update(articleIds, (drafts) => {
+          drafts.forEach((d) => (d.isArchived = true));
+        });
+      }
       markAllModalController.close();
     } catch (err) {
       console.error('Mark many archived failed:', err);
@@ -214,10 +214,9 @@ function FeedArticles() {
             <ShuffleButton currentSeed={seed()} />
             <Show when={unreadCount() > 0 && readStatus() === 'unread'}>
               <MarkAllArchivedButton
-                context="feed"
-                feedId={feedId()}
                 totalCount={unreadCount()}
                 contextLabel="in this feed"
+                onConfirm={handleMarkAllArchived}
               />
             </Show>
           </>

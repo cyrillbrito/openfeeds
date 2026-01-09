@@ -1,14 +1,12 @@
-import type { MarkManyArchivedRequest } from '@repo/shared/types';
 import { eq } from '@tanstack/db';
 import { useLiveQuery } from '@tanstack/solid-db';
 import { createFileRoute, Link, useSearch } from '@tanstack/solid-router';
-import { markManyArchived } from '~/entities/actions';
+import ShuffleIcon from 'lucide-solid/icons/shuffle';
+import { createSignal, Show, Suspense } from 'solid-js';
 import { articleTagsCollection } from '~/entities/article-tags';
 import { articlesCollection } from '~/entities/articles';
 import { useFeeds } from '~/entities/feeds';
 import { useTags } from '~/entities/tags';
-import ShuffleIcon from 'lucide-solid/icons/shuffle';
-import { createSignal, Show, Suspense } from 'solid-js';
 import { validateReadStatusSearch } from '../common/routing';
 import { ArticleList } from '../components/ArticleList';
 import { ArticleListToolbar } from '../components/ArticleListToolbar';
@@ -61,11 +59,12 @@ function TagArticles() {
   const handleMarkAllArchived = async () => {
     try {
       setIsMarkingAllArchived(true);
-      const request: MarkManyArchivedRequest = {
-        context: 'tag',
-        tagId: tagId(),
-      };
-      await markManyArchived(request);
+      const articleIds = (articlesQuery.data || []).map((a) => a.id);
+      if (articleIds.length > 0) {
+        articlesCollection.update(articleIds, (drafts) => {
+          drafts.forEach((d) => (d.isArchived = true));
+        });
+      }
       markAllModalController.close();
     } catch (err) {
       console.error('Mark many archived failed:', err);
@@ -109,10 +108,9 @@ function TagArticles() {
             <ShuffleButton currentSeed={seed()} />
             <Show when={unreadCount() > 0 && readStatus() === 'unread'}>
               <MarkAllArchivedButton
-                context="tag"
-                tagId={tagId()}
                 totalCount={unreadCount()}
                 contextLabel="in this tag"
+                onConfirm={handleMarkAllArchived}
               />
             </Show>
           </>

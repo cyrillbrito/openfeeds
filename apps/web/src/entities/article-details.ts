@@ -1,11 +1,22 @@
+import { dbProvider } from '@repo/domain';
+import * as articlesDomain from '@repo/domain';
 import { ArticleWithContentSchema } from '@repo/shared/schemas';
 import type { ArticleWithContent } from '@repo/shared/types';
 import { eq } from '@tanstack/db';
 import { queryCollectionOptions } from '@tanstack/query-db-collection';
 import { createCollection, useLiveQuery } from '@tanstack/solid-db';
+import { createServerFn } from '@tanstack/solid-start';
 import { queryClient } from '~/query-client';
-import { useApi } from '../hooks/api';
-import { getErrorMessage } from './utils';
+import { authMiddleware } from '~/server/middleware/auth';
+import { z } from 'zod';
+
+const $$getArticleWithContent = createServerFn({ method: 'GET' })
+  .middleware([authMiddleware])
+  .inputValidator(z.object({ id: z.number() }))
+  .handler(({ context, data }) => {
+    const db = dbProvider.userDb(context.user.id);
+    return articlesDomain.getArticleWithContent(data.id, db);
+  });
 
 /**
  * Article Details Collection
@@ -23,9 +34,6 @@ export const articleDetailsCollection = createCollection(
     syncMode: 'on-demand',
 
     queryFn: async (ctx) => {
-      const api = useApi();
-      const { signal } = ctx;
-
       // Parse the ID filter from live query
       const loadSubsetOptions = ctx.meta?.loadSubsetOptions as { where?: any } | undefined;
 
@@ -49,13 +57,7 @@ export const articleDetailsCollection = createCollection(
         return [];
       }
 
-      const { data, error } = await api.articles({ id: articleId }).get({
-        fetch: { signal },
-      });
-
-      if (error) {
-        throw new Error(getErrorMessage(error));
-      }
+      const data = await $$getArticleWithContent({ data: { id: articleId } });
 
       // Return as array for collection
       return data ? [data] : [];
