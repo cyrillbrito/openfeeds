@@ -8,10 +8,10 @@ export function Card(props: {
 }) {
   return (
     <div
-      class={twMerge('card bg-base-100 border-base-300 border shadow-sm rounded-md sm:rounded-xl', props.class)}
+      class={twMerge('card bg-base-100 border-base-300 border shadow-sm rounded-lg sm:rounded-2xl', props.class)}
       onClick={props.onClick}
     >
-      <div class="card-body p-2.5 sm:p-6">{props.children}</div>
+      <div class="card-body p-3 sm:p-6">{props.children}</div>
     </div>
   );
 }

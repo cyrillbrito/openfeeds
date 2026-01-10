@@ -140,7 +140,7 @@ export function ArticleList(props: ArticleListProps) {
         </div>
       }
     >
-      <div class="grid gap-1.5 sm:gap-4">
+      <div class="grid gap-2 sm:gap-6">
         <Index each={props.articles.slice(0, 30)}>
           {(article) => (
             <ArticleCard
