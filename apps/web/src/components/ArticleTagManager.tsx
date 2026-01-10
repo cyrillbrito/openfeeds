@@ -1,8 +1,7 @@
 import type { Tag } from '@repo/shared/types';
 import { Link } from '@tanstack/solid-router';
 import PlusIcon from 'lucide-solid/icons/plus';
-import { createSignal, For, Show, type JSX } from 'solid-js';
-import { Portal } from 'solid-js/web';
+import { For } from 'solid-js';
 import { getTagDotColor } from '../utils/tagColors';
 import { ColorIndicator } from './ColorIndicator';
 
@@ -13,29 +12,39 @@ interface ArticleTagManagerProps {
 }
 
 export function ArticleTagManager(props: ArticleTagManagerProps) {
-  const [isOpen, setIsOpen] = createSignal(false);
-  const [triggerEl, setTriggerEl] = createSignal<HTMLElement>();
-  const [dropdownStyle, setDropdownStyle] = createSignal<JSX.CSSProperties>({});
+  let triggerRef: HTMLButtonElement | undefined;
+  let popoverRef: HTMLDivElement | undefined;
 
   const selectedTags = () => props.tags.filter((t) => props.selectedIds.includes(t.id));
+  const availableTags = () => props.tags.filter((tag) => !props.selectedIds.includes(tag.id));
 
   const removeTag = (tagId: string) => {
     const newIds = props.selectedIds.filter((id) => id !== tagId);
     props.onSelectionChange(newIds);
   };
 
-  const openDropdown = () => {
-    setIsOpen(true);
-    const bounds = triggerEl()!.getBoundingClientRect();
-    setDropdownStyle({
-      top: `${bounds.bottom + 4}px`,
-      left: `${bounds.left}px`,
-      'min-width': '200px',
-    });
+  const addTag = (tagId: string) => {
+    const newIds = [...props.selectedIds, tagId];
+    props.onSelectionChange(newIds);
+    popoverRef?.hidePopover();
+  };
+
+  const updatePosition = () => {
+    if (!triggerRef || !popoverRef) return;
+    const bounds = triggerRef.getBoundingClientRect();
+    popoverRef.style.top = `${bounds.bottom + 4}px`;
+    popoverRef.style.left = `${bounds.left}px`;
+    popoverRef.style.minWidth = '200px';
+  };
+
+  const openPopover = () => {
+    if (!popoverRef) return;
+    popoverRef.showPopover();
+    updatePosition();
   };
 
   return (
-    <>
+    <div class="relative">
       <div class="flex flex-wrap items-center gap-1.5">
         <For each={selectedTags()}>
           {(tag) => (
@@ -61,56 +70,21 @@ export function ArticleTagManager(props: ArticleTagManagerProps) {
         </For>
 
         <button
-          ref={setTriggerEl}
+          ref={triggerRef}
           type="button"
           class="btn btn-ghost btn-xs gap-1"
-          onClick={openDropdown}
+          onClick={openPopover}
         >
           <PlusIcon size={12} />
           <span>Tag</span>
         </button>
       </div>
 
-      <Show when={isOpen()}>
-        <Portal>
-          <ArticleTagDropdown
-            tags={props.tags}
-            selectedIds={props.selectedIds}
-            onSelectionChange={(ids) => {
-              props.onSelectionChange(ids);
-              setIsOpen(false);
-            }}
-            onClose={() => setIsOpen(false)}
-            style={dropdownStyle()}
-          />
-        </Portal>
-      </Show>
-    </>
-  );
-}
-
-interface ArticleTagDropdownProps {
-  tags: Tag[];
-  selectedIds: string[];
-  onSelectionChange: (ids: string[]) => void;
-  onClose: () => void;
-  style: JSX.CSSProperties;
-}
-
-function ArticleTagDropdown(props: ArticleTagDropdownProps) {
-  const availableTags = () => props.tags.filter((tag) => !props.selectedIds.includes(tag.id));
-
-  const addTag = (tagId: string) => {
-    const newIds = [...props.selectedIds, tagId];
-    props.onSelectionChange(newIds);
-  };
-
-  return (
-    <>
-      <div class="fixed inset-0 z-30" onClick={() => props.onClose()}></div>
+      {/* Popover Dropdown - renders in top-layer */}
       <div
-        class="dropdown-content border-base-300 bg-base-100 fixed z-30 rounded-lg border shadow-lg"
-        style={props.style}
+        ref={popoverRef}
+        popover="auto"
+        class="dropdown-content border-base-300 bg-base-100 m-0 rounded-lg border p-0 shadow-lg"
       >
         <div class="max-h-60 overflow-y-auto py-2">
           <For
@@ -130,6 +104,6 @@ function ArticleTagDropdown(props: ArticleTagDropdownProps) {
           </For>
         </div>
       </div>
-    </>
+    </div>
   );
 }
