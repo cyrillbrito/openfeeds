@@ -17,12 +17,8 @@ export default defineConfig({
     routes: {
       extend: {
         exclude: [
+          // For email use
           { pattern: '/logo.png' },
-          { pattern: '/logo.svg' },
-          { pattern: '/logo-alt.svg' },
-          { pattern: '/logo-alt-simple.svg' },
-          { pattern: '/favicon.svg' },
-          { pattern: '/fonts/*' },
         ],
       },
     },
