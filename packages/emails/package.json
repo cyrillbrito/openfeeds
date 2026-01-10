@@ -1,0 +1,19 @@
+{
+  "name": "@repo/emails",
+  "scripts": {
+    "dev": "email dev --port 3002",
+    "build": "email build",
+    "export": "email export"
+  },
+  "dependencies": {
+    "@react-email/components": "1.0.4",
+    "react-dom": "^19.0.0",
+    "react": "^19.0.0"
+  },
+  "devDependencies": {
+    "@react-email/preview-server": "5.2.1",
+    "@types/react": "^19.0.1",
+    "@types/react-dom": "^19.0.1",
+    "react-email": "5.2.1"
+  }
+}
