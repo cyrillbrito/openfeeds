@@ -26,10 +26,12 @@ export const VerifyEmail = ({ verificationUrl }: VerifyEmailProps) => (
         <Section style={logoContainer}>
           <Img
             src="https://openfeeds.app/logo.png"
-            width="60"
-            height="45"
+            width="40"
+            height="30"
             alt="OpenFeeds"
+            style={logoImg}
           />
+          <Text style={logoText}>OpenFeeds</Text>
         </Section>
         <Heading style={h1}>Verify your email</Heading>
         <Text style={text}>
@@ -84,8 +86,22 @@ const logoContainer = {
   marginBottom: '24px',
 };
 
+const logoImg = {
+  display: 'inline-block' as const,
+  verticalAlign: 'middle' as const,
+};
+
+const logoText = {
+  display: 'inline-block' as const,
+  verticalAlign: 'middle' as const,
+  fontSize: '20px',
+  fontWeight: '700' as const,
+  color: '#2e2e2e',
+  margin: '0 0 0 8px',
+};
+
 const h1 = {
-  color: '#1a1a1a',
+  color: '#2e2e2e',
   fontSize: '24px',
   fontWeight: '600' as const,
   lineHeight: '32px',
@@ -107,7 +123,7 @@ const buttonContainer = {
 };
 
 const button = {
-  backgroundColor: '#f97316',
+  backgroundColor: '#f76f53',
   borderRadius: '6px',
   color: '#fff',
   fontSize: '14px',
@@ -118,7 +134,7 @@ const button = {
 };
 
 const link = {
-  color: '#f97316',
+  color: '#f76f53',
   fontSize: '12px',
   textDecoration: 'underline',
   wordBreak: 'break-all' as const,

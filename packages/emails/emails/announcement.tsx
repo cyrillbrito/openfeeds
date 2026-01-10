@@ -13,11 +13,7 @@ import {
   Text,
 } from '@react-email/components';
 
-interface AnnouncementProps {
-  name?: string;
-}
-
-export const Announcement = ({ name }: AnnouncementProps) => (
+export const Announcement = () => (
   <Html>
     <Head />
     <Body style={main}>
@@ -26,18 +22,18 @@ export const Announcement = ({ name }: AnnouncementProps) => (
         <Section style={logoContainer}>
           <Img
             src="https://openfeeds.app/logo.png"
-            width="60"
-            height="45"
+            width="40"
+            height="30"
             alt="OpenFeeds"
+            style={logoImg}
           />
+          <Text style={logoText}>OpenFeeds</Text>
         </Section>
         <Section style={badge}>
           <Text style={badgeText}>Early Access</Text>
         </Section>
         <Heading style={h1}>We're live!</Heading>
-        <Text style={text}>
-          {name ? `Hey ${name},` : 'Hey there,'}
-        </Text>
+        <Text style={text}>Hey there,</Text>
         <Text style={text}>
           Thanks for your interest in OpenFeeds. We're excited to announce that
           our early access is now open!
@@ -48,7 +44,7 @@ export const Announcement = ({ name }: AnnouncementProps) => (
           content you care about.
         </Text>
         <Section style={features}>
-          <Text style={featureItem}>Follow unlimited feeds</Text>
+          <Text style={featureItem}>RSS, YouTube, newsletters & more</Text>
           <Text style={featureItem}>Smart tagging & organization</Text>
           <Text style={featureItem}>Fast & clean reading experience</Text>
         </Section>
@@ -72,10 +68,6 @@ export const Announcement = ({ name }: AnnouncementProps) => (
     </Body>
   </Html>
 );
-
-Announcement.PreviewProps = {
-  name: 'John',
-} as AnnouncementProps;
 
 export default Announcement;
 
@@ -116,8 +108,22 @@ const logoContainer = {
   marginBottom: '24px',
 };
 
+const logoImg = {
+  display: 'inline-block' as const,
+  verticalAlign: 'middle' as const,
+};
+
+const logoText = {
+  display: 'inline-block' as const,
+  verticalAlign: 'middle' as const,
+  fontSize: '20px',
+  fontWeight: '700' as const,
+  color: '#2e2e2e',
+  margin: '0 0 0 8px',
+};
+
 const h1 = {
-  color: '#1a1a1a',
+  color: '#2e2e2e',
   fontSize: '28px',
   fontWeight: '600' as const,
   lineHeight: '36px',
@@ -162,7 +168,7 @@ const buttonContainer = {
 };
 
 const button = {
-  backgroundColor: '#f97316',
+  backgroundColor: '#f76f53',
   borderRadius: '6px',
   color: '#fff',
   fontSize: '15px',
