@@ -6,6 +6,7 @@ import {
   Heading,
   Hr,
   Html,
+  Img,
   Link,
   Preview,
   Section,
@@ -22,10 +23,17 @@ export const Announcement = ({ name }: AnnouncementProps) => (
     <Body style={main}>
       <Preview>OpenFeeds is now live - Your early access is ready</Preview>
       <Container style={container}>
+        <Section style={logoContainer}>
+          <Img
+            src="https://openfeeds.app/logo.png"
+            width="60"
+            height="45"
+            alt="OpenFeeds"
+          />
+        </Section>
         <Section style={badge}>
           <Text style={badgeText}>Early Access</Text>
         </Section>
-        <Heading style={logo}>OpenFeeds</Heading>
         <Heading style={h1}>We're live!</Heading>
         <Text style={text}>
           {name ? `Hey ${name},` : 'Hey there,'}
@@ -103,12 +111,9 @@ const badgeText = {
   margin: '0',
 };
 
-const logo = {
-  color: '#f97316',
-  fontSize: '28px',
-  fontWeight: '700' as const,
+const logoContainer = {
   textAlign: 'center' as const,
-  margin: '0 0 32px',
+  marginBottom: '24px',
 };
 
 const h1 = {

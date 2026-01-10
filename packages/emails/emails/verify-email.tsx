@@ -6,6 +6,7 @@ import {
   Heading,
   Hr,
   Html,
+  Img,
   Link,
   Preview,
   Section,
@@ -22,7 +23,14 @@ export const VerifyEmail = ({ verificationUrl }: VerifyEmailProps) => (
     <Body style={main}>
       <Preview>Verify your email address for OpenFeeds</Preview>
       <Container style={container}>
-        <Heading style={logo}>OpenFeeds</Heading>
+        <Section style={logoContainer}>
+          <Img
+            src="https://openfeeds.app/logo.png"
+            width="60"
+            height="45"
+            alt="OpenFeeds"
+          />
+        </Section>
         <Heading style={h1}>Verify your email</Heading>
         <Text style={text}>
           Thanks for signing up! Please verify your email address by clicking
@@ -71,12 +79,9 @@ const container = {
   maxWidth: '480px',
 };
 
-const logo = {
-  color: '#f97316',
-  fontSize: '24px',
-  fontWeight: '700' as const,
+const logoContainer = {
   textAlign: 'center' as const,
-  margin: '0 0 24px',
+  marginBottom: '24px',
 };
 
 const h1 = {
