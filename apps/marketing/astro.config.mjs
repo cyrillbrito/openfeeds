@@ -13,6 +13,15 @@ export default defineConfig({
 
     // cloudflare's service requires some more config, disabled for now
     imageService: 'compile',
+
+    routes: {
+      extend: {
+        exclude: [
+          // For email use
+          { pattern: '/logo.png' },
+        ],
+      },
+    },
   }),
 
   integrations: [solidJs()],
