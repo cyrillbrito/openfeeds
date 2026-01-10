@@ -38,28 +38,25 @@ export const articleDetailsCollection = createCollection(
       const loadSubsetOptions = ctx.meta?.loadSubsetOptions as { where?: any } | undefined;
 
       // Extract article ID from filters
+      // The filter is a Func object: { name: 'eq', args: [PropRef, Value], type: 'func' }
+      // args[0] = PropRef { path: ['id'], type: 'ref' }
+      // args[1] = Value { value: '1039', type: 'val' }
       let articleId: string | undefined;
       if (loadSubsetOptions?.where) {
         const filters = loadSubsetOptions.where;
-        // The filter structure from eq(article.id, value) creates a filter we need to parse
-        if (Array.isArray(filters)) {
-          for (const filter of filters) {
-            if (filter.field?.[1] === 'id' && filter.operator === 'eq') {
-              articleId = filter.value;
-              break;
-            }
+        if (filters.type === 'func' && filters.name === 'eq' && filters.args?.length === 2) {
+          const [propRef, valueRef] = filters.args;
+          if (propRef?.path?.[0] === 'id' && valueRef?.value) {
+            articleId = valueRef.value;
           }
         }
       }
 
       if (!articleId) {
-        // No ID filter - return empty (shouldn't happen in normal usage)
         return [];
       }
 
       const data = await $$getArticleWithContent({ data: { id: articleId } });
-
-      // Return as array for collection
       return data ? [data] : [];
     },
 
@@ -84,9 +81,6 @@ export const articleDetailsCollection = createCollection(
  */
 export function useArticleDetails(articleId: () => string) {
   return useLiveQuery((q) =>
-    q
-      .from({ article: articleDetailsCollection })
-      .where(({ article }) => eq(article.id, articleId()))
-      .select(({ article }) => article),
+    q.from({ article: articleDetailsCollection }).where(({ article }) => eq(article.id, articleId())),
   );
 }
