@@ -19,23 +19,27 @@ TanStack DB provides an **abstraction layer** over data synchronization:
 
 ```
 Frontend (TanStack DB Collections)
-         ↓ sync
-    Sync Layer (pluggable)
+         ↓ sync via server functions
+    TanStack Start Server Functions
          ↓
-    Backend / Database
+    Domain Logic (@repo/domain)
+         ↓
+    Database (SQLite)
 ```
 
-**Key principle**: Frontend code only interacts with TanStack DB collections. The sync mechanism is abstracted away.
+**Key principle**: Frontend code only interacts with TanStack DB collections. The sync mechanism is abstracted away via server functions.
 
 ## Collections
 
-All entities use TanStack DB collections:
+All entities use TanStack DB collections defined in `apps/web/src/entities/`:
 
 - **Feeds**: `feedsCollection`
 - **Tags**: `tagsCollection`
 - **Articles**: `articlesCollection`
+- **Settings**: `settingsCollection`
+- **Filter Rules**: `filterRulesCollection`
 
-Mutations go through collections → optimistic update → background sync → confirmed state (or rollback on failure).
+Mutations go through collections → optimistic update → server function sync → confirmed state (or rollback on failure).
 
 ## Data Modeling: Junction Tables
 
@@ -45,34 +49,45 @@ Mutations go through collections → optimistic update → background sync → c
 
 Article-tag relationships are exposed in two ways:
 
-1. **`tags` array on Article** - Convenient for API consumers, keeps article responses self-contained
-2. **`/article-tags` endpoint** - Returns junction table rows (`{ id, articleId, tagId }`) for TanStack DB collections
+1. **`tags` array on Article** - Convenient, keeps article responses self-contained
+2. **`articleTagsCollection`** - Returns junction table rows (`{ id, articleId, tagId }`) for TanStack DB client-side joins
 
 This duplication allows:
-- Traditional API usage with embedded tags
+- Simple usage with embedded tags
 - Local-first collections with proper relational structure for client-side joins
 
 Same pattern applies to feed-tags if needed later.
 
 ## Current Implementation
 
-Using **query-based collections** (`queryCollectionOptions`) - data loaded via API endpoints into TanStack DB collections.
+Using **query-based collections** (`queryCollectionOptions`) with TanStack Start server functions.
 
 ```typescript
-const articlesCollection = createCollection(
+// Server function (runs on server)
+const $$getAllFeeds = createServerFn({ method: 'GET' })
+  .middleware([authMiddleware])
+  .handler(({ context }) => {
+    const db = dbProvider.userDb(context.user.id);
+    return feedsDomain.getAllFeeds(db);
+  });
+
+// Collection (client-side with sync)
+export const feedsCollection = createCollection(
   queryCollectionOptions({
-    queryKey: ['articles'],
-    queryFn: async () => api.articles.get(),
+    id: 'feeds',
+    queryKey: ['feeds'],
     queryClient,
     getKey: (item) => item.id,
-    onUpdate: async ({ transaction }) => {
-      // Sync mutations to backend
-    },
+    schema: FeedSchema,
+    queryFn: () => $$getAllFeeds(),
+    onInsert: async ({ transaction }) => { /* sync to server */ },
+    onUpdate: async ({ transaction }) => { /* sync to server */ },
+    onDelete: async ({ transaction }) => { /* sync to server */ },
   }),
 );
 ```
 
-Not fully optimized yet - still HTTP request/response pattern. But abstracts the sync mechanism so frontend code remains unchanged when upgrading.
+Server functions provide type-safe RPC calls with auth middleware, replacing traditional REST endpoints.
 
 ## Fire-and-Forget Mutations
 
@@ -92,7 +107,7 @@ await tx.isPersisted.promise; // Don't do this
 
 1. **Optimistic updates**: TanStack DB applies changes immediately to local state
 2. **Live queries**: UI updates automatically via reactive live queries
-3. **Background sync**: Collection handlers (`onUpdate`, `onInsert`, `onDelete`) sync to backend
+3. **Background sync**: Collection handlers (`onUpdate`, `onInsert`, `onDelete`) call server functions
 4. **Auto-rollback**: If sync fails, TanStack DB reverts optimistic state
 
 **Future enhancement**: Client-generated UUIDs for inserts would eliminate temp ID mapping entirely, making inserts truly fire-and-forget without server round-trip for ID resolution.
