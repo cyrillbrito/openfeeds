@@ -40,7 +40,8 @@ function FrameLayout() {
 
       <div class="drawer lg:drawer-open">
         <input id="my-drawer" type="checkbox" class="drawer-toggle" />
-        <div class="drawer-content flex min-h-screen flex-col">
+        {/* min-h-dvh instead of min-h-screen to handle mobile browser UI (address bar) correctly on rotation */}
+        <div class="drawer-content flex min-h-dvh flex-col">
           <Suspense
             fallback={
               <>
@@ -57,7 +58,8 @@ function FrameLayout() {
 
         <div class="drawer-side z-10 shadow-sm">
           <label for="my-drawer" aria-label="close sidebar" class="drawer-overlay"></label>
-          <aside class="menu bg-base-100 border-base-300 flex h-screen w-80 flex-col flex-nowrap border-r p-4">
+          {/* h-dvh instead of h-screen to handle mobile browser UI correctly on rotation */}
+          <aside class="menu bg-base-100 border-base-300 flex h-dvh w-80 flex-col flex-nowrap border-r p-4">
             {/* Menu Header */}
 
             <div class="mt-2 flex items-center justify-center gap-2">

@@ -112,7 +112,8 @@ export function ShortsViewer(props: ShortsViewerProps) {
   });
 
   return (
-    <div class="relative flex h-screen flex-col bg-black text-white">
+    {/* h-dvh instead of h-screen to handle mobile browser UI (address bar) correctly on rotation */}
+    <div class="relative flex h-dvh flex-col bg-black text-white">
       <div class="flex items-center justify-between gap-2 p-2 sm:p-4">
         {/* Left: Back button */}
         <div class="flex items-center gap-2">
