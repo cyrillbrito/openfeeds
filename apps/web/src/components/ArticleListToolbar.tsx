@@ -29,7 +29,7 @@ export function ArticleListToolbar(props: ArticleListToolbarProps) {
 
   return (
     <div class="mb-4">
-      <div class="container mx-auto flex items-center justify-between gap-3 px-4 sm:px-6">
+      <div class="container mx-auto flex items-center justify-between gap-3 px-2 sm:px-6">
         <div class="flex flex-wrap items-center gap-2">
           {props.leftContent}
           <Show when={getCountLabel()}>
@@ -51,7 +51,7 @@ export function ArticleListToolbar(props: ArticleListToolbarProps) {
           </div>
         </Show>
       </div>
-      <div class="container mx-auto px-4 sm:px-6">
+      <div class="container mx-auto px-2 sm:px-6">
         <div class="border-base-300/50 mt-2.5 border-t" />
       </div>
     </div>

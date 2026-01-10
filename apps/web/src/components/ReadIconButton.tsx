@@ -10,14 +10,14 @@ export function ReadIconButton(props: { read?: boolean; setRead?: (read: boolean
   return (
     <button
       class={twMerge(
-        'btn btn-ghost btn-lg btn-square flex items-center justify-center',
+        'btn btn-ghost btn-square btn-sm sm:btn-lg flex items-center justify-center',
         props.read && 'text-base-content/40',
       )}
       onClick={handleClick}
       title={props.read ? 'Mark as unread' : 'Mark as read'}
     >
-      <Show when={props.read} fallback={<CircleDotIcon class="size-8" />}>
-        <CircleIcon class="size-8" />
+      <Show when={props.read} fallback={<CircleDotIcon class="size-5 sm:size-8" />}>
+        <CircleIcon class="size-5 sm:size-8" />
       </Show>
     </button>
   );

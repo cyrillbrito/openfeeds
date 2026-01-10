@@ -132,7 +132,7 @@ function FeedArticles() {
         </div>
       </Header>
 
-      <div class="container mx-auto p-3 sm:p-6">
+      <div class="container mx-auto px-2 py-3 sm:p-6">
         <div class="mb-6">
           <Show when={currentFeed()}>
             {(feed) => (
@@ -247,7 +247,7 @@ function FeedArticles() {
         readStatus={readStatus()}
       />
 
-      <div class="container mx-auto px-3 pb-3 sm:px-6 sm:pb-6">
+      <div class="container mx-auto px-2 pb-3 sm:px-6 sm:pb-6">
         <Suspense
           fallback={
             <div class="flex justify-center py-12">

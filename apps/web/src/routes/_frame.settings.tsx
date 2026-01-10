@@ -47,7 +47,7 @@ export default function SettingsPage() {
     <>
       <Header title="Settings" />
 
-      <div class="container mx-auto p-3 sm:p-6">
+      <div class="container mx-auto px-2 py-3 sm:p-6">
         <div class="mb-6">
           <p class="text-base-content-gray">
             Manage your application preferences and configuration.
