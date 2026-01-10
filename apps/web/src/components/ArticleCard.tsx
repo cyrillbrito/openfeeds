@@ -71,7 +71,7 @@ export function ArticleCard(props: ArticleCardProps) {
       {/* Header with title and read button */}
       <div class="mb-2">
         <div class="flex gap-3">
-          <h2 class="card-title line-clamp-2 flex-1 text-base leading-tight sm:text-xl">
+          <h2 class="card-title line-clamp-2 flex-1 text-sm leading-tight sm:text-xl">
             <Show
               when={shouldOpenInArticleView()}
               fallback={
@@ -172,7 +172,7 @@ export function ArticleCard(props: ArticleCardProps) {
 
       {/* Description/content */}
       <Show when={props.article.description || props.article.content}>
-        <div class="text-base-content/80 line-clamp-5 text-sm leading-relaxed sm:text-base">
+        <div class="text-base-content/80 line-clamp-2 text-xs leading-relaxed sm:line-clamp-5 sm:text-base">
           {props.article.description || props.article.content}
         </div>
       </Show>

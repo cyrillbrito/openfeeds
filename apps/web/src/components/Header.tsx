@@ -9,7 +9,7 @@ interface HeaderProps {
 export function Header(props: HeaderProps) {
   return (
     <header class="bg-base-100 border-base-300 sticky top-0 z-10 border-b shadow">
-      <div class="container mx-auto flex items-center justify-between px-4 py-3 sm:px-6">
+      <div class="container mx-auto flex items-center justify-between px-2 py-3 sm:px-6">
         <div class="flex items-center gap-3">
           <label for="my-drawer" class="btn btn-square btn-ghost lg:hidden">
             <MenuIcon size={24} />
