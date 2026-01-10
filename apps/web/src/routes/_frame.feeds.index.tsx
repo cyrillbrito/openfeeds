@@ -89,7 +89,7 @@ function FeedsComponent() {
         </div>
       </Header>
 
-      <div class="container mx-auto p-3 sm:p-6">
+      <div class="container mx-auto px-2 py-3 sm:p-6">
         <div class="mb-6">
           <p class="text-base-content-gray mb-4">View and organize your RSS feeds</p>
 

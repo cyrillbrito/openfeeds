@@ -92,7 +92,7 @@ function TagArticles() {
     <>
       <Header title={tag()?.name || `Tag #${tagId()}`} />
 
-      <div class="container mx-auto p-3 sm:p-6">
+      <div class="container mx-auto px-2 py-3 sm:p-6">
         <div class="mb-6">
           <p class="text-base-content-gray">Articles from feeds tagged with this label</p>
         </div>
@@ -141,7 +141,7 @@ function TagArticles() {
         readStatus={readStatus()}
       />
 
-      <div class="container mx-auto px-3 pb-3 sm:px-6 sm:pb-6">
+      <div class="container mx-auto px-2 pb-3 sm:px-6 sm:pb-6">
         <Suspense fallback={<CenterLoader />}>
           <Show
             when={feedsQuery.data && tagsQuery.data}
