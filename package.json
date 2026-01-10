@@ -9,7 +9,7 @@
     ],
     "catalog": {
       "better-auth": "^1.4.9",
-      "drizzle-orm": "^0.44.7",
+      "drizzle-orm": "^0.45.1",
       "zod": "^4.1.13",
       "typescript": "^5"
     }
@@ -25,7 +25,8 @@
     "create-user": "bun --cwd=packages/scripts create-user",
     "test-ui": "bun --cwd=apps/e2e test-ui",
     "test-update-snapshots": "cd packages/e2e test-update-snapshots",
-    "clean-install": "find . -name \"node_modules\" -type d -exec rm -rf {} + && rm bun.lock && bun install"
+    "clean-install": "find . -name \"node_modules\" -type d -exec rm -rf {} + && rm bun.lock && bun install",
+    "test": "echo '123'"
   },
   "devDependencies": {
     "@ianvs/prettier-plugin-sort-imports": "^4.7.0",
@@ -38,5 +39,8 @@
   "packageManager": "bun@1.3.0",
   "patchedDependencies": {
     "better-auth@1.4.10": "patches/better-auth@1.4.10.patch"
+  },
+  "dependencies": {
+    "npm-check-updates": "^19.3.1"
   }
 }
