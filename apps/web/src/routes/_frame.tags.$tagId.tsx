@@ -25,10 +25,7 @@ export const Route = createFileRoute('/_frame/tags/$tagId')({
 function TagArticles() {
   const params = Route.useParams();
   const search = useSearch({ from: '/_frame/tags/$tagId' });
-  const tagId = () => {
-    const id = params().tagId;
-    return id ? Number(id) : 0;
-  };
+  const tagId = () => params().tagId;
   const readStatus = (): ReadStatus => search().readStatus || 'unread';
   const seed = () => search().seed;
 
@@ -76,8 +73,8 @@ function TagArticles() {
   const tag = () => tagsQuery.data?.find((t) => t.id === tagId());
 
   const handleUpdateArticle = (
-    articleId: number,
-    updates: { isRead?: boolean; tags?: number[] },
+    articleId: string,
+    updates: { isRead?: boolean; tags?: string[] },
   ) => {
     articlesCollection.update(articleId, (draft) => {
       if (updates.isRead !== undefined) draft.isRead = updates.isRead;

@@ -23,7 +23,7 @@ export const Route = createFileRoute('/_frame/articles/$articleId')({
 function ArticleView() {
   const params = Route.useParams();
   const router = useRouter();
-  const articleId = () => Number(params().articleId);
+  const articleId = () => params().articleId;
 
   // Use article details collection for detailed view with cleanContent
   const articleQuery = useArticleDetails(articleId);

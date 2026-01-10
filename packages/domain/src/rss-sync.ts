@@ -1,6 +1,6 @@
 import { Readability } from '@mozilla/readability';
 import { articles, articleTags, feeds, feedTags, type UserDb } from '@repo/db';
-import { attempt, attemptAsync } from '@repo/shared/utils';
+import { attempt, attemptAsync, createId } from '@repo/shared/utils';
 import { eq, isNull, lt, or } from 'drizzle-orm';
 import { parseFeed } from 'feedsmith';
 import { JSDOM } from 'jsdom';
@@ -133,7 +133,7 @@ export async function fetchRss(url: string): Promise<ParseFeedResult> {
  */
 export async function syncFeedArticles(
   feedResult: ParseFeedResult,
-  feedId: number,
+  feedId: string,
   db: UserDb,
   autoArchiveCutoffDate?: Date,
 ): Promise<{
@@ -181,6 +181,7 @@ export async function syncFeedArticles(
     const [newArticle] = await db
       .insert(articles)
       .values({
+        id: createId(),
         feedId: feedId,
         guid: item.guid,
         title: item.title,
@@ -207,6 +208,7 @@ export async function syncFeedArticles(
       if (feedTagsList.length > 0) {
         await db.insert(articleTags).values(
           feedTagsList.map((ft) => ({
+            id: createId(),
             articleId: newArticle.id,
             tagId: ft.tagId,
           })),
@@ -227,7 +229,7 @@ const LIMIT = 15;
  * Sync a single feed by ID.
  * This is the core worker function for individual feed sync jobs.
  */
-export async function syncSingleFeed(db: UserDb, feedId: number): Promise<void> {
+export async function syncSingleFeed(db: UserDb, feedId: string): Promise<void> {
   const [feedErr, feed] = await attemptAsync(
     db.query.feeds.findFirst({
       where: eq(feeds.id, feedId),

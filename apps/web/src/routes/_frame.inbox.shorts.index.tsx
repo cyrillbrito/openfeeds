@@ -37,13 +37,13 @@ function InboxShorts() {
     return shortsQuery.data || [];
   };
 
-  const markAsRead = (articleId: number) => {
+  const markAsRead = (articleId: string) => {
     articlesCollection.update(articleId, (draft) => {
       draft.isRead = true;
     });
   };
 
-  const toggleRead = (articleId: number, isRead: boolean) => {
+  const toggleRead = (articleId: string, isRead: boolean) => {
     articlesCollection.update(articleId, (draft) => {
       draft.isRead = isRead;
     });

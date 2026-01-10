@@ -1,11 +1,11 @@
 import { FilterOperator } from '@repo/shared/types';
+import { createId } from '@repo/shared/utils';
 import { filterRulesCollection } from '~/entities/filter-rules';
-import { generateTempId } from '~/entities/utils';
 import CircleAlertIcon from 'lucide-solid/icons/circle-alert';
 import { createSignal, For, Show } from 'solid-js';
 
 interface AddRuleFormProps {
-  feedId: number;
+  feedId: string;
   onSuccess?: () => void;
   onCancel?: () => void;
 }
@@ -42,7 +42,7 @@ export function AddRuleForm(props: AddRuleFormProps) {
 
     setError(null);
     filterRulesCollection.insert({
-      id: generateTempId(),
+      id: createId(),
       feedId: props.feedId,
       pattern: trimmedPattern,
       operator: operator(),

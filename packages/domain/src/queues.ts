@@ -3,7 +3,7 @@ import { QUEUE_NAMES, redisConnection } from './queue-config';
 
 export interface UserFeedJobData {
   userId: string;
-  feedId: number;
+  feedId: string;
 }
 
 // Queue instances for enqueueing jobs (domain owns the business logic of when to enqueue)
@@ -28,7 +28,7 @@ export const autoArchiveQueue = new Queue(QUEUE_NAMES.AUTO_ARCHIVE, {
 /**
  * Enqueue a single feed sync job
  */
-export async function enqueueFeedSync(userId: string, feedId: number) {
+export async function enqueueFeedSync(userId: string, feedId: string) {
   return singleFeedSyncQueue.add(
     `${userId}-${feedId}`,
     {
@@ -45,7 +45,7 @@ export async function enqueueFeedSync(userId: string, feedId: number) {
 /**
  * Enqueue a feed detail/metadata update job
  */
-export async function enqueueFeedDetail(userId: string, feedId: number) {
+export async function enqueueFeedDetail(userId: string, feedId: string) {
   return feedDetailQueue.add(
     `${userId}-${feedId}`,
     {

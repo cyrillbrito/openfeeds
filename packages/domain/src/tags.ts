@@ -1,6 +1,6 @@
 import { tags, type UserDb } from '@repo/db';
 import { type CreateTag, type Tag, type UpdateTag } from '@repo/shared/types';
-import { attemptAsync } from '@repo/shared/utils';
+import { attemptAsync, createId } from '@repo/shared/utils';
 import { eq, sql } from 'drizzle-orm';
 import { tagDbToApi } from './db-utils';
 import { assert, ConflictError, NotFoundError, UnexpectedError } from './errors';
@@ -14,7 +14,7 @@ export async function getAllTags(db: UserDb): Promise<Tag[]> {
  * Get tag by ID
  * Used for business logic that needs a single tag
  */
-export async function getTagById(id: number, db: UserDb): Promise<Tag> {
+export async function getTagById(id: string, db: UserDb): Promise<Tag> {
   const tag = await db.query.tags.findFirst({
     where: eq(tags.id, id),
   });
@@ -26,7 +26,7 @@ export async function getTagById(id: number, db: UserDb): Promise<Tag> {
   return tagDbToApi(tag);
 }
 
-export async function createTag(data: CreateTag, db: UserDb): Promise<Tag> {
+export async function createTag(data: CreateTag & { id?: string }, db: UserDb): Promise<Tag> {
   // Check if tag name already exists (case-insensitive)
   const existingTag = await db.query.tags.findFirst({
     where: sql`lower(${tags.name}) = lower(${data.name})`,
@@ -40,6 +40,7 @@ export async function createTag(data: CreateTag, db: UserDb): Promise<Tag> {
     db
       .insert(tags)
       .values({
+        id: data.id ?? createId(),
         name: data.name,
         color: data.color,
       })
@@ -57,7 +58,7 @@ export async function createTag(data: CreateTag, db: UserDb): Promise<Tag> {
   return tagDbToApi(newTag);
 }
 
-export async function updateTag(id: number, data: UpdateTag, db: UserDb): Promise<Tag> {
+export async function updateTag(id: string, data: UpdateTag, db: UserDb): Promise<Tag> {
   // Verify tag exists
   await getTagById(id, db);
 
@@ -92,7 +93,7 @@ export async function updateTag(id: number, data: UpdateTag, db: UserDb): Promis
   return tagDbToApi(updatedTag);
 }
 
-export async function deleteTag(id: number, db: UserDb): Promise<void> {
+export async function deleteTag(id: string, db: UserDb): Promise<void> {
   // Verify tag exists
   await getTagById(id, db);
 

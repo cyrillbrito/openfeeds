@@ -46,7 +46,7 @@ export const tagsApp = new Elysia({ prefix: '/tags' })
       return updatedTag;
     },
     {
-      params: z.object({ id: z.coerce.number() }),
+      params: z.object({ id: z.string() }),
       body: UpdateTagSchema,
       response: TagSchema,
       detail: {
@@ -62,7 +62,7 @@ export const tagsApp = new Elysia({ prefix: '/tags' })
       return status(204);
     },
     {
-      params: z.object({ id: z.coerce.number() }),
+      params: z.object({ id: z.string() }),
       detail: {
         tags: ['Tags'],
         summary: 'Delete tag',

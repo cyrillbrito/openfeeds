@@ -6,7 +6,7 @@ import { AddRuleForm } from './AddRuleForm';
 import { RuleItem } from './RuleItem';
 
 interface RuleManagerProps {
-  feedId: number;
+  feedId: string;
 }
 
 export function RuleManager(props: RuleManagerProps) {

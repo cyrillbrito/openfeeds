@@ -45,7 +45,7 @@ export const articlesApp = new Elysia({ prefix: '/articles' })
       return updatedArticle;
     },
     {
-      params: z.object({ id: z.coerce.number() }),
+      params: z.object({ id: z.string() }),
       body: UpdateArticleSchema,
       response: ArticleSchema,
       detail: {
@@ -76,7 +76,7 @@ export const articlesApp = new Elysia({ prefix: '/articles' })
       return article;
     },
     {
-      params: z.object({ id: z.coerce.number() }),
+      params: z.object({ id: z.string() }),
       response: ArticleWithContentSchema,
       detail: {
         tags: ['Articles'],

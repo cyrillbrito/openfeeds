@@ -31,10 +31,7 @@ export const Route = createFileRoute('/_frame/feeds/$feedId/')({
 function FeedArticles() {
   const params = Route.useParams();
   const search = useSearch({ from: '/_frame/feeds/$feedId/' });
-  const feedId = () => {
-    const id = params().feedId;
-    return id ? Number(id) : 0;
-  };
+  const feedId = () => params().feedId;
   const readStatus = (): ReadStatus => search().readStatus || 'unread';
   const seed = () => search().seed;
 
@@ -80,8 +77,8 @@ function FeedArticles() {
   };
 
   const handleUpdateArticle = (
-    articleId: number,
-    updates: { isRead?: boolean; tags?: number[] },
+    articleId: string,
+    updates: { isRead?: boolean; tags?: string[] },
   ) => {
     articlesCollection.update(articleId, (draft) => {
       if (updates.isRead !== undefined) draft.isRead = updates.isRead;

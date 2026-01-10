@@ -30,7 +30,7 @@ export const filterRulesApp = new Elysia()
       return rules;
     },
     {
-      params: z.object({ id: z.coerce.number() }),
+      params: z.object({ id: z.string() }),
       response: filterRuleSchema.array(),
       detail: {
         tags: ['Filter Rules'],
@@ -45,7 +45,7 @@ export const filterRulesApp = new Elysia()
       return status(201, newRule);
     },
     {
-      params: z.object({ id: z.coerce.number() }),
+      params: z.object({ id: z.string() }),
       body: createFilterRuleApiSchema,
       response: {
         201: filterRuleSchema,
@@ -63,7 +63,7 @@ export const filterRulesApp = new Elysia()
       return updatedRule;
     },
     {
-      params: z.object({ id: z.coerce.number(), ruleId: z.coerce.number() }),
+      params: z.object({ id: z.string(), ruleId: z.string() }),
       body: updateFilterRuleSchema,
       response: filterRuleSchema,
       detail: {
@@ -79,7 +79,7 @@ export const filterRulesApp = new Elysia()
       return status(204);
     },
     {
-      params: z.object({ id: z.coerce.number(), ruleId: z.coerce.number() }),
+      params: z.object({ id: z.string(), ruleId: z.string() }),
       detail: {
         tags: ['Filter Rules'],
         summary: 'Delete filter rule',
@@ -93,7 +93,7 @@ export const filterRulesApp = new Elysia()
       return result;
     },
     {
-      params: z.object({ id: z.coerce.number() }),
+      params: z.object({ id: z.string() }),
       response: ApplyRulesResultSchema,
       detail: {
         tags: ['Filter Rules'],

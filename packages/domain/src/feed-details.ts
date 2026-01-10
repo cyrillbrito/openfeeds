@@ -142,7 +142,7 @@ export async function fetchFeedMetadata(feed: ParseFeedResult): Promise<Partial<
   };
 }
 
-export async function updateFeedMetadata(userId: string, feedId: number) {
+export async function updateFeedMetadata(userId: string, feedId: string) {
   const db = dbProvider.userDb(userId);
 
   const [feedErr, feed] = await attemptAsync(

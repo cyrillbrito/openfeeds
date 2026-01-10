@@ -8,8 +8,8 @@ import { ColorIndicator } from './ColorIndicator';
 
 interface ArticleTagManagerProps {
   tags: Tag[];
-  selectedIds: number[];
-  onSelectionChange: (ids: number[]) => void;
+  selectedIds: string[];
+  onSelectionChange: (ids: string[]) => void;
 }
 
 export function ArticleTagManager(props: ArticleTagManagerProps) {
@@ -19,7 +19,7 @@ export function ArticleTagManager(props: ArticleTagManagerProps) {
 
   const selectedTags = () => props.tags.filter((t) => props.selectedIds.includes(t.id));
 
-  const removeTag = (tagId: number) => {
+  const removeTag = (tagId: string) => {
     const newIds = props.selectedIds.filter((id) => id !== tagId);
     props.onSelectionChange(newIds);
   };
@@ -91,8 +91,8 @@ export function ArticleTagManager(props: ArticleTagManagerProps) {
 
 interface ArticleTagDropdownProps {
   tags: Tag[];
-  selectedIds: number[];
-  onSelectionChange: (ids: number[]) => void;
+  selectedIds: string[];
+  onSelectionChange: (ids: string[]) => void;
   onClose: () => void;
   style: JSX.CSSProperties;
 }
@@ -100,7 +100,7 @@ interface ArticleTagDropdownProps {
 function ArticleTagDropdown(props: ArticleTagDropdownProps) {
   const availableTags = () => props.tags.filter((tag) => !props.selectedIds.includes(tag.id));
 
-  const addTag = (tagId: number) => {
+  const addTag = (tagId: string) => {
     const newIds = [...props.selectedIds, tagId];
     props.onSelectionChange(newIds);
   };

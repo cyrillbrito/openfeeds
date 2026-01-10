@@ -73,8 +73,8 @@ function Inbox() {
   };
 
   const handleUpdateArticle = (
-    articleId: number,
-    updates: { isRead?: boolean; isArchived?: boolean; tags?: number[] },
+    articleId: string,
+    updates: { isRead?: boolean; isArchived?: boolean; tags?: string[] },
   ) => {
     // If archiving in the inbox view, show toast with undo
     if (updates.isArchived === true) {

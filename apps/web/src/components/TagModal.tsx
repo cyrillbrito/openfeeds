@@ -1,6 +1,6 @@
 import type { Tag, TagColor } from '@repo/shared/types';
+import { createId } from '@repo/shared/utils';
 import { tagsCollection } from '~/entities/tags';
-import { generateTempId } from '~/entities/utils';
 import CircleAlertIcon from 'lucide-solid/icons/circle-alert';
 import { createEffect, createSignal, For, Show } from 'solid-js';
 import { availableTagColors, getTagDotColor } from '../utils/tagColors';
@@ -82,7 +82,7 @@ export function TagForm(props: TagFormProps) {
       props.onEditComplete?.();
     } else {
       tagsCollection.insert({
-        id: generateTempId(),
+        id: createId(),
         name,
         color: tagColor(),
         createdAt: new Date().toISOString(),

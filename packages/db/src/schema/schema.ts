@@ -2,7 +2,7 @@ import { relations, sql } from 'drizzle-orm';
 import { index, integer, sqliteTable, text, uniqueIndex } from 'drizzle-orm/sqlite-core';
 
 export const feeds = sqliteTable('feeds', {
-  id: integer().primaryKey({ autoIncrement: true }),
+  id: text().primaryKey(),
   title: text().notNull(),
   description: text(),
   /** Webpage url */
@@ -19,8 +19,8 @@ export const feeds = sqliteTable('feeds', {
 });
 
 export const articles = sqliteTable('articles', {
-  id: integer().primaryKey({ autoIncrement: true }),
-  feedId: integer()
+  id: text().primaryKey(),
+  feedId: text()
     .notNull()
     .references(() => feeds.id, { onDelete: 'cascade' }),
   title: text().notNull(),
@@ -39,7 +39,7 @@ export const articles = sqliteTable('articles', {
 });
 
 export const tags = sqliteTable('tags', {
-  id: integer().primaryKey({ autoIncrement: true }),
+  id: text().primaryKey(),
   name: text().notNull().unique(),
   // TODO Enum the color
   // FIXME: Should we validate color values at the database level?
@@ -54,11 +54,11 @@ export const tags = sqliteTable('tags', {
 export const feedTags = sqliteTable(
   'feed_tags',
   {
-    id: integer().primaryKey({ autoIncrement: true }),
-    feedId: integer()
+    id: text().primaryKey(),
+    feedId: text()
       .notNull()
       .references(() => feeds.id, { onDelete: 'cascade' }),
-    tagId: integer()
+    tagId: text()
       .notNull()
       .references(() => tags.id, { onDelete: 'cascade' }),
   },
@@ -69,11 +69,11 @@ export const feedTags = sqliteTable(
 export const articleTags = sqliteTable(
   'article_tags',
   {
-    id: integer().primaryKey({ autoIncrement: true }),
-    articleId: integer()
+    id: text().primaryKey(),
+    articleId: text()
       .notNull()
       .references(() => articles.id, { onDelete: 'cascade' }),
-    tagId: integer()
+    tagId: text()
       .notNull()
       .references(() => tags.id, { onDelete: 'cascade' }),
   },
@@ -99,8 +99,8 @@ export const settings = sqliteTable('settings', {
 export const filterRules = sqliteTable(
   'filter_rules',
   {
-    id: integer().primaryKey({ autoIncrement: true }),
-    feedId: integer()
+    id: text().primaryKey(),
+    feedId: text()
       .notNull()
       .references(() => feeds.id, { onDelete: 'cascade' }),
     pattern: text().notNull(),

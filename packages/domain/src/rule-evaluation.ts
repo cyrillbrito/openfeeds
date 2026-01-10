@@ -11,7 +11,7 @@ export type Database = UserDb;
  */
 export async function evaluateFilterRules(
   db: Database,
-  feedId: number,
+  feedId: string,
   articleTitle: string,
 ): Promise<boolean> {
   const [error, result] = await attemptAsyncFn(async () => {
@@ -43,7 +43,7 @@ export async function evaluateFilterRules(
  */
 export async function applyFilterRulesToExistingArticles(
   db: Database,
-  feedId: number,
+  feedId: string,
 ): Promise<{ articlesProcessed: number; articlesMarkedAsRead: number }> {
   const [error, result] = await attemptAsyncFn(async () => {
     // Get all active filter rules for this feed
@@ -91,7 +91,7 @@ export async function applyFilterRulesToExistingArticles(
  */
 export async function applyFilterRulesToArticle(
   db: Database,
-  feedId: number,
+  feedId: string,
   articleTitle: string,
 ): Promise<boolean> {
   return evaluateFilterRules(db, feedId, articleTitle);

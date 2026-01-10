@@ -12,7 +12,7 @@ import { z } from 'zod';
 
 const $$getArticleWithContent = createServerFn({ method: 'GET' })
   .middleware([authMiddleware])
-  .inputValidator(z.object({ id: z.number() }))
+  .inputValidator(z.object({ id: z.string() }))
   .handler(({ context, data }) => {
     const db = dbProvider.userDb(context.user.id);
     return articlesDomain.getArticleWithContent(data.id, db);
@@ -38,7 +38,7 @@ export const articleDetailsCollection = createCollection(
       const loadSubsetOptions = ctx.meta?.loadSubsetOptions as { where?: any } | undefined;
 
       // Extract article ID from filters
-      let articleId: number | undefined;
+      let articleId: string | undefined;
       if (loadSubsetOptions?.where) {
         const filters = loadSubsetOptions.where;
         // The filter structure from eq(article.id, value) creates a filter we need to parse
@@ -82,7 +82,7 @@ export const articleDetailsCollection = createCollection(
  * Hook to fetch detailed article data by ID
  * Returns article with cleanContent for the reader view
  */
-export function useArticleDetails(articleId: () => number) {
+export function useArticleDetails(articleId: () => string) {
   return useLiveQuery((q) =>
     q
       .from({ article: articleDetailsCollection })

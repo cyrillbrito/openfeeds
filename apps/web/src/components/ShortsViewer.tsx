@@ -43,10 +43,10 @@ interface ShortsViewerProps {
   loadMore?: () => void;
   isLoadingMore?: boolean;
   /** Called when user clicks to watch a video, to mark article as read */
-  onMarkAsRead?: (articleId: number) => void;
+  onMarkAsRead?: (articleId: string) => void;
 
   /** Called when user manually toggles read status */
-  onToggleRead?: (articleId: number, isRead: boolean) => void;
+  onToggleRead?: (articleId: string, isRead: boolean) => void;
 }
 
 export function ShortsViewer(props: ShortsViewerProps) {

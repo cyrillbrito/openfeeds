@@ -18,7 +18,7 @@ export function isoToDate(iso: string | null): Date | null {
  * These interfaces represent database query results that include joined relation data
  */
 export interface DbArticleWithTags extends DbArticle {
-  articleTags: { tagId: number }[];
+  articleTags: { tagId: string }[];
 }
 
 /**
@@ -43,7 +43,7 @@ export function articleDbToApi(dbArticle: DbArticleWithTags): Article {
 }
 
 export interface DbFeedWithTags extends DbFeed {
-  feedTags: { tagId: number }[];
+  feedTags: { tagId: string }[];
 }
 
 /**

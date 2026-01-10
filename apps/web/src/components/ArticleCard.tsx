@@ -18,8 +18,8 @@ interface ArticleCardProps {
   feeds: Feed[];
   tags: Tag[];
   onUpdateArticle: (
-    articleId: number,
-    updates: { isRead?: boolean; isArchived?: boolean; tags?: number[] },
+    articleId: string,
+    updates: { isRead?: boolean; isArchived?: boolean; tags?: string[] },
   ) => void;
 }
 

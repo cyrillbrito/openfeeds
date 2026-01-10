@@ -57,6 +57,13 @@
       "when": 1759668650580,
       "tag": "0007_condemned_sinister_six",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "6",
+      "when": 1767989842541,
+      "tag": "0008_tranquil_steel_serpent",
+      "breakpoints": true
     }
   ]
 }

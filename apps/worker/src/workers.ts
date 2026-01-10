@@ -13,7 +13,7 @@ import { Worker, type Job } from 'bullmq';
 
 export interface UserFeedJobData {
   userId: string;
-  feedId: number;
+  feedId: string;
 }
 
 export function createFeedSyncOrchestratorWorker() {

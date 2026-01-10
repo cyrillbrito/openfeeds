@@ -3,18 +3,17 @@ import { CursorQuerySchema } from './common';
 import { FeedSchema } from './feed';
 
 export const ArticleQuerySchema = CursorQuerySchema.extend({
-  feedId: z.coerce.number().optional(),
-  tagId: z.coerce.number().optional(),
+  feedId: z.string().optional(),
+  tagId: z.string().optional(),
   isRead: z.stringbool().optional(),
   isArchived: z.stringbool().optional(),
   type: z.enum(['all', 'shorts']).default('all').optional(),
   search: z.string().optional(),
-  seed: z.coerce.number().optional(),
 });
 
 export const ArticleSchema = z.object({
-  id: z.number(),
-  feedId: z.number(),
+  id: z.string(),
+  feedId: z.string(),
   title: z.string(),
   url: z.string().nullable(),
   description: z.string().nullable(),
@@ -24,12 +23,12 @@ export const ArticleSchema = z.object({
   isRead: z.boolean().nullable(),
   isArchived: z.boolean().nullable(),
   hasCleanContent: z.boolean(),
-  tags: z.array(z.number()),
+  tags: z.array(z.string()),
   createdAt: z.coerce.date(),
 });
 
 export const CreateArticleSchema = z.object({
-  feedId: z.number(),
+  feedId: z.string(),
   title: z.string(),
   url: z.string().nullable().optional(),
   description: z.string().nullable().optional(),
@@ -42,7 +41,7 @@ export const CreateArticleSchema = z.object({
 export const UpdateArticleSchema = z.object({
   isRead: z.boolean().optional(),
   isArchived: z.boolean().optional(),
-  tags: z.array(z.number()).optional(),
+  tags: z.array(z.string()).optional(),
 });
 
 // Article with feed information
@@ -52,7 +51,7 @@ export const ArticleWithFeedSchema = ArticleSchema.extend({
 
 // Bulk operations
 export const BulkUpdateArticlesSchema = z.object({
-  articleIds: z.array(z.number()),
+  articleIds: z.array(z.string()),
   updates: z.object({
     isRead: z.boolean().optional(),
   }),
@@ -69,8 +68,8 @@ export const ArticleStatsSchema = z.object({
 // Mark many as archived (context-aware)
 export const MarkManyArchivedRequestSchema = z.object({
   context: z.enum(['all', 'feed', 'tag']),
-  feedId: z.number().optional(), // Required when context is 'feed'
-  tagId: z.number().optional(), // Required when context is 'tag'
+  feedId: z.string().optional(), // Required when context is 'feed'
+  tagId: z.string().optional(), // Required when context is 'tag'
 });
 
 export const MarkManyArchivedResponseSchema = z.object({

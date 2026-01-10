@@ -6,7 +6,7 @@ import {
   type Feed,
   type UpdateFeed,
 } from '@repo/shared/types';
-import { attemptAsync } from '@repo/shared/utils';
+import { attemptAsync, createId } from '@repo/shared/utils';
 import { eq } from 'drizzle-orm';
 import { feedDbToApi, type DbFeedWithTags } from './db-utils';
 import { assert, BadRequestError, ConflictError, NotFoundError, UnexpectedError } from './errors';
@@ -29,7 +29,7 @@ export async function getAllFeeds(db: UserDb): Promise<Feed[]> {
  * Get feed by ID with tags
  * Used for business logic that needs a single feed
  */
-export async function getFeedById(id: number, db: UserDb): Promise<Feed> {
+export async function getFeedById(id: string, db: UserDb): Promise<Feed> {
   const feed = await db.query.feeds.findFirst({
     where: eq(feeds.id, id),
     with: {
@@ -46,7 +46,7 @@ export async function getFeedById(id: number, db: UserDb): Promise<Feed> {
   return feedDbToApi(feed);
 }
 
-export async function createFeed(data: CreateFeed, db: UserDb): Promise<Feed> {
+export async function createFeed(data: CreateFeed & { id?: string }, db: UserDb): Promise<Feed> {
   // Check if feed with this URL already exists
   const existingFeed = await db.query.feeds.findFirst({
     where: eq(feeds.feedUrl, data.url),
@@ -61,6 +61,7 @@ export async function createFeed(data: CreateFeed, db: UserDb): Promise<Feed> {
   const metadata = await fetchFeedMetadata(feedResult);
   const feed: DbInsertFeed = Object.assign(
     {
+      id: data.id ?? createId(),
       title: 'Unknown',
       description: '',
       url: data.url,
@@ -92,7 +93,7 @@ export async function createFeed(data: CreateFeed, db: UserDb): Promise<Feed> {
   return feedDbToApi(dbFeedWithTags);
 }
 
-export async function updateFeed(id: number, data: UpdateFeed, db: UserDb): Promise<Feed> {
+export async function updateFeed(id: string, data: UpdateFeed, db: UserDb): Promise<Feed> {
   // Verify feed exists
   await getFeedById(id, db);
 
@@ -117,7 +118,8 @@ export async function updateFeed(id: number, data: UpdateFeed, db: UserDb): Prom
     await db.delete(feedTags).where(eq(feedTags.feedId, id));
 
     if (data.tags.length > 0) {
-      const tagAssociations = data.tags.map((tagId: number) => ({
+      const tagAssociations = data.tags.map((tagId: string) => ({
+        id: createId(),
         feedId: id,
         tagId,
       }));
@@ -129,7 +131,7 @@ export async function updateFeed(id: number, data: UpdateFeed, db: UserDb): Prom
   return getFeedById(id, db);
 }
 
-export async function deleteFeed(id: number, db: UserDb): Promise<void> {
+export async function deleteFeed(id: string, db: UserDb): Promise<void> {
   const existingFeed = await db.query.feeds.findFirst({
     columns: { id: true },
     where: eq(feeds.id, id),
@@ -142,7 +144,7 @@ export async function deleteFeed(id: number, db: UserDb): Promise<void> {
   await db.delete(feeds).where(eq(feeds.id, id));
 }
 
-export async function syncFeed(id: number, db: UserDb): Promise<any> {
+export async function syncFeed(id: string, db: UserDb): Promise<any> {
   const feed = await db.query.feeds.findFirst({
     where: eq(feeds.id, id),
   });

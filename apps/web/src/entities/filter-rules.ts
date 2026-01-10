@@ -28,7 +28,7 @@ const $$getAllFilterRules = createServerFn({ method: 'GET' })
 
 const $$createFilterRules = createServerFn({ method: 'POST' })
   .middleware([authMiddleware])
-  .inputValidator(z.array(createFilterRuleApiSchema.extend({ feedId: z.number() })))
+  .inputValidator(z.array(createFilterRuleApiSchema.extend({ feedId: z.string() })))
   .handler(({ context, data }) => {
     const db = dbProvider.userDb(context.user.id);
     return Promise.all(data.map(({ feedId, ...rule }) => createFilterRule(feedId, rule, db)));
@@ -36,7 +36,7 @@ const $$createFilterRules = createServerFn({ method: 'POST' })
 
 const $$updateFilterRules = createServerFn({ method: 'POST' })
   .middleware([authMiddleware])
-  .inputValidator(z.array(updateFilterRuleSchema.extend({ feedId: z.number(), id: z.number() })))
+  .inputValidator(z.array(updateFilterRuleSchema.extend({ feedId: z.string(), id: z.string() })))
   .handler(({ context, data }) => {
     const db = dbProvider.userDb(context.user.id);
     return Promise.all(
@@ -46,7 +46,7 @@ const $$updateFilterRules = createServerFn({ method: 'POST' })
 
 const $$deleteFilterRules = createServerFn({ method: 'POST' })
   .middleware([authMiddleware])
-  .inputValidator(z.array(z.object({ feedId: z.number(), id: z.number() })))
+  .inputValidator(z.array(z.object({ feedId: z.string(), id: z.string() })))
   .handler(({ context, data }) => {
     const db = dbProvider.userDb(context.user.id);
     return Promise.all(data.map(({ feedId, id }) => deleteFilterRule(feedId, id, db)));
@@ -79,7 +79,7 @@ export const filterRulesCollection = createCollection(
         const rule = mutation.modified as FilterRule;
         return {
           feedId: rule.feedId,
-          id: mutation.key as number,
+          id: mutation.key as string,
           ...mutation.changes,
         };
       });
@@ -91,7 +91,7 @@ export const filterRulesCollection = createCollection(
         const rule = mutation.original as FilterRule;
         return {
           feedId: rule.feedId,
-          id: mutation.key as number,
+          id: mutation.key as string,
         };
       });
       await $$deleteFilterRules({ data: items });
@@ -99,7 +99,7 @@ export const filterRulesCollection = createCollection(
   }),
 );
 
-export function useFilterRules(feedId: number) {
+export function useFilterRules(feedId: string) {
   return useLiveQuery((q) =>
     q.from({ rule: filterRulesCollection }).where(({ rule }) => eq(rule.feedId, feedId)),
   );

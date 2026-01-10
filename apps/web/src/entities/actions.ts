@@ -7,7 +7,7 @@ import { articlesCollection } from './articles';
 
 const $$applyFilterRules = createServerFn({ method: 'POST' })
   .middleware([authMiddleware])
-  .inputValidator(z.object({ feedId: z.number() }))
+  .inputValidator(z.object({ feedId: z.string() }))
   .handler(({ context, data }) => {
     const db = dbProvider.userDb(context.user.id);
     return ruleEvalDomain.applyFilterRulesToExistingArticles(db, data.feedId);
@@ -18,7 +18,7 @@ const $$applyFilterRules = createServerFn({ method: 'POST' })
  * This marks articles as read based on the configured rules
  */
 export async function applyFilterRules(
-  feedId: number,
+  feedId: string,
 ): Promise<{ articlesProcessed: number; articlesMarkedAsRead: number }> {
   const result = await $$applyFilterRules({ data: { feedId } });
 

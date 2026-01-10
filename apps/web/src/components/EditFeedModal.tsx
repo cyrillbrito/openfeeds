@@ -40,7 +40,7 @@ function EditFeedForm(props: EditFeedFormProps) {
   const tagsQuery = useTags();
 
   const [activeTab, setActiveTab] = createSignal<'tags' | 'rules'>('tags');
-  const [selectedTagIds, setSelectedTagIds] = createSignal<number[]>([]);
+  const [selectedTagIds, setSelectedTagIds] = createSignal<string[]>([]);
 
   // Initialize selected tags when component is created
   createEffect(() => {
@@ -54,10 +54,8 @@ function EditFeedForm(props: EditFeedFormProps) {
   };
 
   const hasTagChanges = createMemo(() => {
-    const current = selectedTagIds()
-      .slice()
-      .sort((a, b) => a - b);
-    const original = props.feed.tags.slice().sort((a, b) => a - b);
+    const current = selectedTagIds().slice().sort();
+    const original = props.feed.tags.slice().sort();
 
     if (current.length !== original.length) return true;
     return current.some((id, index) => id !== original[index]);

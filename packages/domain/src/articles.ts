@@ -7,6 +7,7 @@ import {
   type PaginatedResponse,
   type UpdateArticle,
 } from '@repo/shared/types';
+import { createId } from '@repo/shared/utils';
 import { and, count, desc, eq, inArray, isNull, like, lt, or, sql } from 'drizzle-orm';
 import { articleDbToApi } from './db-utils';
 import { BadRequestError, NotFoundError } from './errors';
@@ -15,7 +16,7 @@ export async function getArticles(
   filters: ArticleQuery,
   db: UserDb,
 ): Promise<PaginatedResponse<Article>> {
-  const { cursor, limit, feedId, tagId, isRead, isArchived, type, search, seed } = filters;
+  const { cursor, limit, feedId, tagId, isRead, isArchived, type, search } = filters;
 
   const queryLimit = limit ? limit + 1 : undefined;
 
@@ -72,67 +73,31 @@ export async function getArticles(
 
   const totalCount = totalResult[0]?.count || 0;
 
-  // Query articles based on mode
-  let results;
+  // Add cursor pagination
+  if (cursor) {
+    const cursorCondition = lt(articles.pubDate, new Date(cursor));
+    whereConditions.push(cursorCondition);
+  }
+
+  // Execute query using Drizzle with article tags
+  const results = await db.query.articles.findMany({
+    where: whereConditions.length ? and(...whereConditions) : undefined,
+    orderBy: desc(articles.pubDate),
+    limit: queryLimit || 10000,
+    with: {
+      articleTags: {
+        columns: {
+          tagId: true,
+        },
+      },
+    },
+  });
+
+  // Handle pagination
   let nextCursor: string | null = null;
-
-  if (seed) {
-    // SHUFFLE MODE: Deterministic random ordering
-
-    // Add cursor pagination for shuffle mode
-    if (cursor) {
-      const cursorValue = +cursor;
-      const cursorCondition = sql`(${articles.id} * ${seed}) % 2147483647 > ${cursorValue}`;
-      whereConditions.push(cursorCondition);
-    }
-
-    // Execute shuffle query using Drizzle with article tags
-    results = await db.query.articles.findMany({
-      where: whereConditions.length ? and(...whereConditions) : undefined,
-      orderBy: sql`(${articles.id} * ${seed}) % 2147483647`,
-      limit: queryLimit || 10000,
-      with: {
-        articleTags: {
-          columns: {
-            tagId: true,
-          },
-        },
-      },
-    });
-
-    // Handle shuffle pagination
-    if (limit && results.length > limit) {
-      results.pop();
-      nextCursor = ((results.at(-1)!.id * seed) % 2147483647).toString();
-    }
-  } else {
-    // NORMAL MODE: Publication date ordering
-
-    // Add cursor pagination for normal mode
-    if (cursor) {
-      const cursorCondition = lt(articles.pubDate, new Date(cursor));
-      whereConditions.push(cursorCondition);
-    }
-
-    // Execute normal query using Drizzle with article tags
-    results = await db.query.articles.findMany({
-      where: whereConditions.length ? and(...whereConditions) : undefined,
-      orderBy: desc(articles.pubDate),
-      limit: queryLimit || 10000,
-      with: {
-        articleTags: {
-          columns: {
-            tagId: true,
-          },
-        },
-      },
-    });
-
-    // Handle normal pagination
-    if (limit && results.length > limit) {
-      results.pop();
-      nextCursor = results.at(-1)?.pubDate?.toISOString() || null;
-    }
+  if (limit && results.length > limit) {
+    results.pop();
+    nextCursor = results.at(-1)?.pubDate?.toISOString() || null;
   }
 
   const apiArticles = results.map(articleDbToApi);
@@ -148,7 +113,7 @@ export async function getArticles(
  * Get article by ID with just the base data (no cleanContent)
  * Used for business logic that needs a single article (e.g., after updates)
  */
-export async function getArticleById(id: number, db: UserDb): Promise<Article> {
+export async function getArticleById(id: string, db: UserDb): Promise<Article> {
   const article = await db.query.articles.findFirst({
     where: eq(articles.id, id),
     with: {
@@ -172,7 +137,7 @@ export async function getArticleById(id: number, db: UserDb): Promise<Article> {
  * Used for the reader view where we need the processed article content
  */
 export async function getArticleWithContent(
-  id: number,
+  id: string,
   db: UserDb,
 ): Promise<Article & { cleanContent: string | null }> {
   const article = await db.query.articles.findFirst({
@@ -198,7 +163,7 @@ export async function getArticleWithContent(
   };
 }
 
-export async function updateArticle(id: number, data: UpdateArticle, db: UserDb): Promise<Article> {
+export async function updateArticle(id: string, data: UpdateArticle, db: UserDb): Promise<Article> {
   // Update article fields (excluding tags)
   const { tags, ...articleData } = data;
 
@@ -223,6 +188,7 @@ export async function updateArticle(id: number, data: UpdateArticle, db: UserDb)
     if (tags.length > 0) {
       await db.insert(articleTags).values(
         tags.map((tagId) => ({
+          id: createId(),
           articleId: id,
           tagId,
         })),

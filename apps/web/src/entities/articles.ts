@@ -11,8 +11,8 @@ import { authMiddleware } from '~/server/middleware/auth';
 import { z } from 'zod';
 
 const ArticleQuerySchema = z.object({
-  feedId: z.number().optional(),
-  tagId: z.number().optional(),
+  feedId: z.string().optional(),
+  tagId: z.string().optional(),
   isRead: z.boolean().optional(),
   isArchived: z.boolean().optional(),
   type: z.enum(['all', 'shorts']).optional(),
@@ -29,7 +29,7 @@ const $$getArticles = createServerFn({ method: 'GET' })
 
 const $$updateArticles = createServerFn({ method: 'POST' })
   .middleware([authMiddleware])
-  .inputValidator(z.array(UpdateArticleSchema.extend({ id: z.number() })))
+  .inputValidator(z.array(UpdateArticleSchema.extend({ id: z.string() })))
   .handler(({ context, data }) => {
     const db = dbProvider.userDb(context.user.id);
     return Promise.all(
@@ -88,7 +88,7 @@ export const articlesCollection = createCollection(
     onUpdate: async ({ transaction }) => {
       const updates = transaction.mutations.map((mutation) => {
         return {
-          id: mutation.key as number,
+          id: mutation.key as string,
           isRead: mutation.changes.isRead ?? undefined,
           isArchived: mutation.changes.isArchived ?? undefined,
           tags: mutation.changes.tags ?? undefined,

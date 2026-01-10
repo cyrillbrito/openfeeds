@@ -26,7 +26,7 @@ const $$createTags = createServerFn({ method: 'POST' })
 
 const $$updateTags = createServerFn({ method: 'POST' })
   .middleware([authMiddleware])
-  .inputValidator(z.array(UpdateTagSchema.extend({ id: z.number() })))
+  .inputValidator(z.array(UpdateTagSchema.extend({ id: z.string() })))
   .handler(({ context, data }) => {
     const db = dbProvider.userDb(context.user.id);
     return Promise.all(data.map(({ id, ...updates }) => tagsDomain.updateTag(id, updates, db)));
@@ -34,7 +34,7 @@ const $$updateTags = createServerFn({ method: 'POST' })
 
 const $$deleteTags = createServerFn({ method: 'POST' })
   .middleware([authMiddleware])
-  .inputValidator(z.array(z.number()))
+  .inputValidator(z.array(z.string()))
   .handler(({ context, data: ids }) => {
     const db = dbProvider.userDb(context.user.id);
     return Promise.all(ids.map((id) => tagsDomain.deleteTag(id, db)));
@@ -67,7 +67,7 @@ export const tagsCollection = createCollection(
     },
 
     onDelete: async ({ transaction }) => {
-      const ids = transaction.mutations.map((mutation) => mutation.key as number);
+      const ids = transaction.mutations.map((mutation) => mutation.key as string);
       await $$deleteTags({ data: ids });
     },
   }),

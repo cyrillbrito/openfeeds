@@ -11,8 +11,8 @@ void autofocus;
 
 interface MultiSelectTagProps {
   tags: Tag[];
-  selectedIds: number[];
-  onSelectionChange: (ids: number[]) => void;
+  selectedIds: string[];
+  onSelectionChange: (ids: string[]) => void;
   placeholder?: string;
   disabled?: boolean;
 }
@@ -77,8 +77,8 @@ export function MultiSelectTag(props: MultiSelectTagProps) {
 
 interface MultiSelectTagDropdownProps {
   tags: Tag[];
-  selectedIds: number[];
-  onSelectionChange: (ids: number[]) => void;
+  selectedIds: string[];
+  onSelectionChange: (ids: string[]) => void;
   onClose: () => void;
 
   // x: number;
@@ -98,7 +98,7 @@ function MultiSelectTagDropdown(props: MultiSelectTagDropdownProps) {
     return props.tags.filter((tag) => tag.name.toLowerCase().includes(query));
   };
 
-  const toggle = (isSelected: boolean, tagId: number) => {
+  const toggle = (isSelected: boolean, tagId: string) => {
     setSelectedIds((prev) => {
       if (isSelected) {
         return prev.filter((id) => id !== tagId);

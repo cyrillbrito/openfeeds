@@ -49,7 +49,7 @@ const $$createFeeds = createServerFn({ method: 'POST' })
 
 const $$updateFeeds = createServerFn({ method: 'POST' })
   .middleware([authMiddleware])
-  .inputValidator(z.array(UpdateFeedSchema.extend({ id: z.number() })))
+  .inputValidator(z.array(UpdateFeedSchema.extend({ id: z.string() })))
   .handler(({ context, data }) => {
     const db = dbProvider.userDb(context.user.id);
     return Promise.all(data.map(({ id, ...updates }) => feedsDomain.updateFeed(id, updates, db)));
@@ -57,7 +57,7 @@ const $$updateFeeds = createServerFn({ method: 'POST' })
 
 const $$deleteFeeds = createServerFn({ method: 'POST' })
   .middleware([authMiddleware])
-  .inputValidator(z.array(z.number()))
+  .inputValidator(z.array(z.string()))
   .handler(({ context, data: ids }) => {
     const db = dbProvider.userDb(context.user.id);
     return Promise.all(ids.map((id) => feedsDomain.deleteFeed(id, db)));
@@ -83,14 +83,14 @@ export const feedsCollection = createCollection(
 
     onUpdate: async ({ transaction }) => {
       const updates = transaction.mutations.map((mutation) => ({
-        id: mutation.key as number,
+        id: mutation.key as string,
         ...mutation.changes,
       }));
       await $$updateFeeds({ data: updates });
     },
 
     onDelete: async ({ transaction }) => {
-      const ids = transaction.mutations.map((mutation) => mutation.key as number);
+      const ids = transaction.mutations.map((mutation) => mutation.key as string);
       await $$deleteFeeds({ data: ids });
     },
   }),

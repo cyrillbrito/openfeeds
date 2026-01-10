@@ -6,8 +6,8 @@ export const FilterOperator = {
 } as const;
 
 export const filterRuleSchema = z.object({
-  id: z.number().int().positive(),
-  feedId: z.number().int().positive(),
+  id: z.string(),
+  feedId: z.string(),
   pattern: z.string().min(1),
   operator: z.enum([FilterOperator.INCLUDES, FilterOperator.NOT_INCLUDES]),
   isActive: z.boolean(),

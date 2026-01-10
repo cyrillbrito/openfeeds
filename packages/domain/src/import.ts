@@ -1,6 +1,6 @@
 import { feeds, feedTags, tags, type UserDb } from '@repo/db';
 import { type ImportResult } from '@repo/shared/types';
-import { attemptAsync } from '@repo/shared/utils';
+import { attemptAsync, createId } from '@repo/shared/utils';
 import { eq } from 'drizzle-orm';
 import { parseOpml } from 'feedsmith';
 import { assert } from './errors';
@@ -71,20 +71,20 @@ export async function importOpmlFeeds(
     columns: { id: true, name: true },
   });
 
-  const tagLookup = existingTags.reduce<Record<string, number>>((obj, tag) => {
+  const tagLookup = existingTags.reduce<Record<string, string>>((obj, tag) => {
     obj[tag.name] = tag.id;
     return obj;
   }, {});
 
   for (const feed of feedsToImport) {
     try {
-      let tagId: number | undefined;
+      let tagId: string | undefined;
       if (feed.category) {
         tagId = tagLookup[feed.category];
 
         if (!tagId) {
           const [tagErr, tagResult] = await attemptAsync(
-            db.insert(tags).values({ name: feed.category }).returning(),
+            db.insert(tags).values({ id: createId(), name: feed.category }).returning(),
           );
           if (tagErr) {
             logger.error(tagErr, {
@@ -127,6 +127,7 @@ export async function importOpmlFeeds(
         db
           .insert(feeds)
           .values({
+            id: createId(),
             title: feed.title,
             url: feed.htmlUrl,
             feedUrl: feed.xmlUrl,
@@ -151,6 +152,7 @@ export async function importOpmlFeeds(
         const [feedTagErr] = await attemptAsync(
           db.insert(feedTags).values([
             {
+              id: createId(),
               feedId: feedId,
               tagId: tagId,
             },

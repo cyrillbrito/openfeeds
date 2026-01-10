@@ -4,7 +4,7 @@ import {
   type FilterRule,
   type UpdateFilterRule,
 } from '@repo/shared/types';
-import { attemptAsync, shouldMarkAsRead } from '@repo/shared/utils';
+import { attemptAsync, createId, shouldMarkAsRead } from '@repo/shared/utils';
 import { and, eq } from 'drizzle-orm';
 import { filterRuleDbToApi } from './db-utils';
 import { assert, NotFoundError, UnexpectedError } from './errors';
@@ -16,7 +16,7 @@ export async function getAllFilterRules(db: UserDb): Promise<FilterRule[]> {
   return rules.map(filterRuleDbToApi);
 }
 
-export async function getFilterRulesByFeedId(feedId: number, db: UserDb): Promise<FilterRule[]> {
+export async function getFilterRulesByFeedId(feedId: string, db: UserDb): Promise<FilterRule[]> {
   // Check if feed exists
   const feed = await db.query.feeds.findFirst({
     where: eq(feeds.id, feedId),
@@ -36,8 +36,8 @@ export async function getFilterRulesByFeedId(feedId: number, db: UserDb): Promis
 }
 
 export async function createFilterRule(
-  feedId: number,
-  data: CreateFilterRuleApi,
+  feedId: string,
+  data: CreateFilterRuleApi & { id?: string },
   db: UserDb,
 ): Promise<FilterRule> {
   // Check if feed exists
@@ -54,6 +54,7 @@ export async function createFilterRule(
     db
       .insert(filterRules)
       .values({
+        id: data.id ?? createId(),
         feedId,
         pattern: data.pattern,
         operator: data.operator,
@@ -74,8 +75,8 @@ export async function createFilterRule(
 }
 
 export async function updateFilterRule(
-  feedId: number,
-  ruleId: number,
+  feedId: string,
+  ruleId: string,
   data: UpdateFilterRule,
   db: UserDb,
 ): Promise<FilterRule> {
@@ -119,7 +120,7 @@ export async function updateFilterRule(
   return filterRuleDbToApi(updatedRule);
 }
 
-export async function deleteFilterRule(feedId: number, ruleId: number, db: UserDb): Promise<void> {
+export async function deleteFilterRule(feedId: string, ruleId: string, db: UserDb): Promise<void> {
   // Check if rule exists and belongs to the feed
   const existingRule = await db.query.filterRules.findFirst({
     where: and(eq(filterRules.id, ruleId), eq(filterRules.feedId, feedId)),
@@ -134,7 +135,7 @@ export async function deleteFilterRule(feedId: number, ruleId: number, db: UserD
 }
 
 export async function applyFilterRulesToFeed(
-  feedId: number,
+  feedId: string,
   db: UserDb,
 ): Promise<{ articlesProcessed: number; articlesMarkedAsRead: number }> {
   // Check if feed exists
@@ -161,7 +162,7 @@ export async function applyFilterRulesToFeed(
   });
 
   let articlesMarkedAsRead = 0;
-  const articlesToUpdate: number[] = [];
+  const articlesToUpdate: string[] = [];
 
   // Apply rules to each article
   for (const article of feedArticles) {

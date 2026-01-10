@@ -15,10 +15,7 @@ export const Route = createFileRoute('/_frame/feeds/$feedId/shorts/')({
 function FocusedShorts() {
   const params = Route.useParams();
   const search = useSearch({ from: '/_frame/feeds/$feedId/shorts/' });
-  const feedId = () => {
-    const id = params().feedId;
-    return id ? Number(id) : 0;
-  };
+  const feedId = () => params().feedId;
   const readStatus = (): ReadStatus => search().readStatus || 'unread';
 
   const isRead = () => (readStatus() === 'read' ? true : readStatus() === 'unread' ? false : null);
@@ -40,13 +37,13 @@ function FocusedShorts() {
 
   const shorts = () => shortsQuery.data || [];
 
-  const markAsRead = (articleId: number) => {
+  const markAsRead = (articleId: string) => {
     articlesCollection.update(articleId, (draft) => {
       draft.isRead = true;
     });
   };
 
-  const toggleRead = (articleId: number, isRead: boolean) => {
+  const toggleRead = (articleId: string, isRead: boolean) => {
     articlesCollection.update(articleId, (draft) => {
       draft.isRead = isRead;
     });

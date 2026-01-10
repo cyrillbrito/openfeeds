@@ -23,7 +23,7 @@ const chromaticColors = [
 export const TagColorSchema = z.enum(chromaticColors).nullable();
 
 export const TagSchema = z.object({
-  id: z.number(),
+  id: z.string(),
   name: z.string(),
   color: TagColorSchema,
   createdAt: z.iso.datetime(),

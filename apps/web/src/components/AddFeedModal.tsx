@@ -1,9 +1,9 @@
 import type { DiscoveredFeed } from '@repo/shared/types';
+import { createId } from '@repo/shared/utils';
 import CircleAlertIcon from 'lucide-solid/icons/circle-alert';
 import { createSignal, For, Show } from 'solid-js';
 import { discoverFeeds, feedsCollection } from '~/entities/feeds';
 import { useTags } from '~/entities/tags';
-import { generateTempId } from '~/entities/utils';
 import { LazyModal, type ModalController } from './LazyModal';
 import { MultiSelectTag } from './MultiSelectTag';
 
@@ -41,8 +41,8 @@ function AddFeedForm(props: AddFeedFormProps) {
   const [feedUrl, setFeedUrl] = createSignal('');
   const [currentStep, setCurrentStep] = createSignal<ModalStep>('url-input');
   const [discoveredFeeds, setDiscoveredFeeds] = createSignal<DiscoveredFeed[]>([]);
-  const [selectedTags, setSelectedTags] = createSignal<number[]>([]);
-  const [feedTagSelections, setFeedTagSelections] = createSignal<Record<string, number[]>>({});
+  const [selectedTags, setSelectedTags] = createSignal<string[]>([]);
+  const [feedTagSelections, setFeedTagSelections] = createSignal<Record<string, string[]>>({});
   const [addedFeeds, setAddedFeeds] = createSignal(new Set<string>());
   const [error, setError] = createSignal<string | null>(null);
 
@@ -81,7 +81,7 @@ function AddFeedForm(props: AddFeedFormProps) {
     const tags = feedTagSelections()[feed.url] || selectedTags();
 
     feedsCollection.insert({
-      id: generateTempId(),
+      id: createId(),
       url: feed.url,
       feedUrl: feed.url,
       title: feed.title || feed.url,
@@ -103,7 +103,7 @@ function AddFeedForm(props: AddFeedFormProps) {
     const url = feedUrl().trim();
 
     feedsCollection.insert({
-      id: generateTempId(),
+      id: createId(),
       url,
       feedUrl: url,
       title: url,

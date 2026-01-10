@@ -60,7 +60,7 @@ export const feedsApp = new Elysia({ prefix: '/feeds' })
       return updatedFeed;
     },
     {
-      params: z.object({ id: z.coerce.number() }),
+      params: z.object({ id: z.string() }),
       body: UpdateFeedSchema,
       response: FeedSchema,
       detail: {
@@ -76,7 +76,7 @@ export const feedsApp = new Elysia({ prefix: '/feeds' })
       return status(204);
     },
     {
-      params: z.object({ id: z.coerce.number() }),
+      params: z.object({ id: z.string() }),
       detail: {
         tags: ['Feeds'],
         summary: 'Delete feed',
@@ -105,7 +105,7 @@ export const feedsApp = new Elysia({ prefix: '/feeds' })
       return result;
     },
     {
-      params: z.object({ id: z.coerce.number() }),
+      params: z.object({ id: z.string() }),
       response: SyncResultSchema,
       detail: {
         tags: ['Feeds'],
