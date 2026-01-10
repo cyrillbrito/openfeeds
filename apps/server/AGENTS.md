@@ -1,4 +1,6 @@
-# API Server - Elysia HTTP Server
+# API Server - Elysia (Secondary)
+
+Elysia server handles **auth** and **background job management**. Most data operations are now handled by server functions in `apps/web`.
 
 ## Commands
 
@@ -9,38 +11,25 @@ bun start        # Start prod
 bun check-types  # TypeScript check
 ```
 
-## Architecture
+## Responsibilities
 
-**Responsibilities:**
-- HTTP API endpoints
-- Authentication (Better Auth)
-- Job enqueueing via `@repo/domain`
-- Bull Board dashboard at `/admin/queues` (monitoring only)
+**What this server does:**
+- Better Auth API (`/api/auth/*`)
+- Background job enqueueing
+- Bull Board dashboard at `/admin/queues`
 
-**Does NOT:**
-- Create Worker instances → `apps/worker`
-- Contain business logic → `@repo/domain`
+**What it does NOT do:**
+- Data CRUD operations → handled by `apps/web` server functions
+- Worker job processing → `apps/worker`
+- Business logic → `@repo/domain`
 
 ## Key Files
 
-- `src/index.ts` - Server entry, runs migrations, Bull Board setup
+- `src/index.ts` - Server entry, migrations, Bull Board
 - `src/setup-elysia.ts` - App config + middleware
-- `src/bull-board.ts` - Queue monitoring dashboard
-- `src/auth-plugin.ts` - Auth middleware (provides db, user, session)
-- `src/error-handler-plugin.ts` - Global error handling
-- `src/apps/` - API route handlers
-
-## Route Pattern
-
-```typescript
-import { createFeed, getAllFeeds } from '@repo/domain';
-
-const app = new Elysia({ prefix: '/feeds' })
-  .use(authPlugin)  // Provides { db, user, session }
-  .get('/', async ({ db }) => getAllFeeds(db), {
-    response: FeedSchema.array(),
-  });
-```
+- `src/bull-board.ts` - Queue monitoring
+- `src/auth-plugin.ts` - Auth middleware
+- `src/apps/` - Route handlers (minimal now)
 
 ## Background Jobs
 
@@ -61,13 +50,12 @@ await enqueueFeedDetail(userId, feedId);
 - `CLIENT_DOMAIN` - Client domain for CORS
 
 **Optional:**
-- `POSTHOG_PUBLIC_KEY` - PostHog analytics
-- `SIMPLE_AUTH` - Simple auth mode (dev only)
 - `REDIS_HOST`, `REDIS_PORT` - Redis connection
+- `POSTHOG_PUBLIC_KEY` - Analytics
+- `SIMPLE_AUTH` - Dev auth mode
 
-## Best Practices
+## Notes
 
-- **Use `@repo/domain` for all business logic** - Never duplicate
-- **Only enqueue jobs** - Never create Worker instances
-- Middleware order: Error handler → Auth → Routes
+- Use `@repo/domain` for all business logic
+- Only enqueue jobs, never create Workers
 - OpenAPI documentation enabled

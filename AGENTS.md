@@ -1,4 +1,9 @@
-# OpenFeeds Development Rules
+
+# OpenFeeds
+
+A **local-first RSS reader** built with SolidJS and TanStack Start. Data syncs optimistically to a local database with server persistence.
+
+# Development Rules
 
 ## Commands
 
@@ -14,117 +19,61 @@ bun checks       # Type check + lint
 
 When DB migrations are needed, ask the user to run them for security reasons.
 
-## Architecture Overview
+## Monorepo Structure
 
-**Monorepo Structure:**
+Each app/package has its own `AGENTS.md` with specific patterns and guidelines.
 
-- `apps/web/` - SolidJS frontend with TanStack Router
-- `apps/server/` - Elysia API server with Bun runtime
-- `apps/e2e/` - Playwright tests with visual regression
-- `packages/db/` - Drizzle ORM + SQLite3
-- `packages/discovery/` - RSS feed discovery
-- `packages/shared/` - Shared utilities
+### Apps
 
-**Tech Stack:**
+| App | Description | Details |
+|-----|-------------|---------|
+| `apps/web/` | SolidJS + TanStack Start frontend | See `apps/web/AGENTS.md` |
+| `apps/server/` | Elysia API (auth, background jobs) | See `apps/server/AGENTS.md` |
+| `apps/worker/` | BullMQ background job processor | See `apps/worker/AGENTS.md` |
+| `apps/e2e/` | Playwright tests + visual regression | See `apps/e2e/AGENTS.md` |
 
-- **Frontend:** SolidJS, TanStack Router, Tailwind v4, DaisyUI, Eden Treaty
-- **Backend:** Elysia, Bun, Better Auth, Zod, BullMQ
+### Packages
+
+| Package | Description | Details |
+|---------|-------------|---------|
+| `packages/db/` | Drizzle ORM + SQLite3 schemas | See `packages/db/AGENTS.md` |
+| `packages/domain/` | Business logic + queue management | See `packages/domain/AGENTS.md` |
+| `packages/discovery/` | RSS/Atom feed discovery | See `packages/discovery/AGENTS.md` |
+| `packages/shared/` | Cross-app utilities, types, schemas | - |
+
+## Architecture
+
+**Local-First Pattern:**
+
+- Client-side TanStack Solid DB with collections
+- Optimistic updates → server sync via server functions
+- Entities defined in `apps/web/src/entities/`
+
+**Server Functions:**
+
+- TanStack Start `createServerFn` for data operations
+- Auth middleware provides user context
+- Calls `@repo/domain` for business logic
+
+**Background Processing:**
+
+- Elysia server handles auth and job enqueueing
+- Worker app processes BullMQ jobs
+- Redis for queue persistence
+
+## Tech Stack
+
+- **Frontend:** SolidJS, TanStack Start, TanStack Solid DB, Tailwind v4, DaisyUI
+- **Server:** TanStack Start server functions, Elysia (auth/jobs), Bun runtime
 - **Database:** SQLite3, Drizzle ORM
-- **Build:** Turborepo, Vite (web), Bun (API)
-- **Testing:** Playwright with screenshots
 - **Queue:** BullMQ + Redis
-
-**Database:**
-
-- User DB: feeds, articles, tags, read status
-- Auth DB: Better Auth schema
-- Separate Drizzle configs for user/auth
-- Migrations in packages/db
-
-## SolidJS Guidelines
-
-**Reactive Patterns:**
-
-- Use `createSignal()` for local reactive state
-- Use `createContext()` with TypeScript for shared state
-- Prefer SolidJS patterns over React patterns
-
-**JSX Rendering (NOT React patterns):**
-
-```tsx
-// Conditional rendering - use Show, not &&
-<Show when={user.isLoggedIn} fallback={<LoginButton />}>
-  <WelcomeMessage user={user} />
-</Show>
-
-// List rendering - use For, not map
-<For each={items} fallback={<div>No items found</div>}>
-  {(item, index) => <ItemCard item={item} index={index()} />}
-</For>
-
-// Multiple conditions - use Switch
-<Switch>
-  <Match when={status === 'loading'}>Loading...</Match>
-  <Match when={status === 'error'}>Error occurred</Match>
-  <Match when={status === 'success'}>Success!</Match>
-</Switch>
-```
-
-## Styling Guidelines
-
-- Use Tailwind CSS v4 with utility-first approach
-- DaisyUI semantic colors: `base-100` (content bg), `base-200` (backdrop), `base-300` (borders)
-- Use `@apply` directive in CSS files for reusable styles
-- `.tsx` extension for JSX components
-
-## Backend Patterns
-
-**Elysia API:**
-
-- OpenAPI + Zod validation
-- Better Auth middleware
-- Eden Treaty for type-safe client
-- `src/environment.ts` - env config
-- `src/db-utils.ts` - DB utilities
-
-**BullMQ Jobs:**
-
-- `apps/server/src/queue/` - config, workers, scheduler
-- Feed Sync Orchestrator - Cron (every min), enqueues feed jobs
-- Single Feed Sync - Worker processes individual feeds
-- Auto Archive - Daily old article cleanup
-- Bull Board at `/admin/queues`
-
-## Packages
-
-- **shared:** Cross-app utilities, no internal API/DB details
-- **discovery:** RSS feed discovery and analysis
-- **db:** Drizzle schemas and migrations
-- **scripts:** Build scripts
+- **Auth:** Better Auth
+- **Build:** Turborepo, Vite
+- **Testing:** Playwright
 
 ## Code Quality
 
 - Never modify tsconfig or use `// @ts-ignore`
 - Run `bun check-types` after changes
-- Generate migrations after schema changes
 - TypeScript strict mode enabled
 - Lint with oxlint (type-aware)
-
-## Testing
-
-- E2E tests in `apps/e2e/`
-- Zero-trace - tests clean up all data
-- Visual regression + functional tests
-- Dynamic test data (timestamp emails)
-- Page Object Model pattern
-- Mock server for RSS feeds
-
-## Linear Integration
-
-When projects/issues are mentioned, use Linear MCP server.
-
-**IDs (avoid refetching):**
-
-- Team: `c41677a4-bded-49d7-b20d-b6bf1d8f1d4a` (Alpha)
-- Feed Discovery: `1bd4998c-428f-4023-a7d5-87c22cf2e5d1`
-- User: `5a1113d3-a2e4-4d14-ba44-bf8ae0ac9fc1` (Cyrill)
