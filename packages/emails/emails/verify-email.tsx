@@ -1,62 +1,30 @@
-import {
-  Body,
-  Button,
-  Container,
-  Head,
-  Heading,
-  Hr,
-  Html,
-  Img,
-  Link,
-  Preview,
-  Section,
-  Text,
-} from '@react-email/components';
+import { Button, Heading, Link, Section, Text } from '@react-email/components';
+import { EmailFrame } from './components/email-frame';
+import { button, buttonContainer, h1, link, text } from './styles';
 
 interface VerifyEmailProps {
   verificationUrl?: string;
 }
 
 export const VerifyEmail = ({ verificationUrl }: VerifyEmailProps) => (
-  <Html>
-    <Head />
-    <Body style={main}>
-      <Preview>Verify your email address for OpenFeeds</Preview>
-      <Container style={container}>
-        <Section style={logoContainer}>
-          <Img
-            src="https://openfeeds.app/logo.png"
-            width="40"
-            height="30"
-            alt="OpenFeeds"
-            style={logoImg}
-          />
-          <Text style={logoText}>OpenFeeds</Text>
-        </Section>
-        <Heading style={h1}>Verify your email</Heading>
-        <Text style={text}>
-          Thanks for signing up! Please verify your email address by clicking
-          the button below.
-        </Text>
-        <Section style={buttonContainer}>
-          <Button style={button} href={verificationUrl}>
-            Verify Email
-          </Button>
-        </Section>
-        <Text style={text}>
-          Or copy and paste this link into your browser:
-        </Text>
-        <Link href={verificationUrl} style={link}>
-          {verificationUrl}
-        </Link>
-        <Hr style={hr} />
-        <Text style={footer}>
-          If you didn't create an account on OpenFeeds, you can safely ignore
-          this email.
-        </Text>
-      </Container>
-    </Body>
-  </Html>
+  <EmailFrame
+    preview="Verify your email address for OpenFeeds"
+    footerText="If you didn't create an account on OpenFeeds, you can safely ignore this email."
+  >
+    <Heading style={h1}>Verify your email</Heading>
+    <Text style={text}>
+      Thanks for signing up! Please verify your email address by clicking the button below.
+    </Text>
+    <Section style={buttonContainer}>
+      <Button style={button} href={verificationUrl}>
+        Verify Email
+      </Button>
+    </Section>
+    <Text style={text}>Or copy and paste this link into your browser:</Text>
+    <Link href={verificationUrl} style={link}>
+      {verificationUrl}
+    </Link>
+  </EmailFrame>
 );
 
 VerifyEmail.PreviewProps = {
@@ -64,93 +32,3 @@ VerifyEmail.PreviewProps = {
 } as VerifyEmailProps;
 
 export default VerifyEmail;
-
-const main = {
-  backgroundColor: '#f6f9fc',
-  fontFamily:
-    "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Ubuntu, sans-serif",
-};
-
-const container = {
-  backgroundColor: '#ffffff',
-  margin: '0 auto',
-  padding: '40px 20px',
-  marginTop: '40px',
-  marginBottom: '40px',
-  borderRadius: '8px',
-  maxWidth: '480px',
-};
-
-const logoContainer = {
-  textAlign: 'center' as const,
-  marginBottom: '24px',
-};
-
-const logoImg = {
-  display: 'inline-block' as const,
-  verticalAlign: 'middle' as const,
-};
-
-const logoText = {
-  display: 'inline-block' as const,
-  verticalAlign: 'middle' as const,
-  fontSize: '20px',
-  fontWeight: '700' as const,
-  color: '#2e2e2e',
-  margin: '0 0 0 8px',
-};
-
-const h1 = {
-  color: '#2e2e2e',
-  fontSize: '24px',
-  fontWeight: '600' as const,
-  lineHeight: '32px',
-  margin: '0 0 16px',
-  textAlign: 'center' as const,
-};
-
-const text = {
-  color: '#525252',
-  fontSize: '14px',
-  lineHeight: '24px',
-  margin: '0 0 16px',
-  textAlign: 'center' as const,
-};
-
-const buttonContainer = {
-  textAlign: 'center' as const,
-  margin: '24px 0',
-};
-
-const button = {
-  backgroundColor: '#f76f53',
-  borderRadius: '6px',
-  color: '#fff',
-  fontSize: '14px',
-  fontWeight: '600' as const,
-  textDecoration: 'none',
-  textAlign: 'center' as const,
-  padding: '12px 24px',
-};
-
-const link = {
-  color: '#f76f53',
-  fontSize: '12px',
-  textDecoration: 'underline',
-  wordBreak: 'break-all' as const,
-  display: 'block',
-  textAlign: 'center' as const,
-};
-
-const hr = {
-  borderColor: '#e5e5e5',
-  margin: '32px 0',
-};
-
-const footer = {
-  color: '#a3a3a3',
-  fontSize: '12px',
-  lineHeight: '20px',
-  textAlign: 'center' as const,
-  margin: '0',
-};

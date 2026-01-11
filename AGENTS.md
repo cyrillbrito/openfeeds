@@ -40,6 +40,7 @@ Each app/package has its own `AGENTS.md` with specific patterns and guidelines.
 | `packages/domain/` | Business logic + queue management | See `packages/domain/AGENTS.md` |
 | `packages/discovery/` | RSS/Atom feed discovery | See `packages/discovery/AGENTS.md` |
 | `packages/shared/` | Cross-app utilities, types, schemas | - |
+| `packages/emails/` | React Email templates | See `packages/emails/AGENTS.md` |
 
 ## Architecture
 

@@ -1,62 +1,31 @@
-import {
-  Body,
-  Button,
-  Container,
-  Head,
-  Heading,
-  Hr,
-  Html,
-  Img,
-  Link,
-  Preview,
-  Section,
-  Text,
-} from '@react-email/components';
+import { Button, Heading, Link, Section, Text } from '@react-email/components';
+import { EmailFrame } from './components/email-frame';
+import { button, buttonContainer, h1, link, text } from './styles';
 
 interface ResetPasswordProps {
   resetUrl?: string;
 }
 
 export const ResetPassword = ({ resetUrl }: ResetPasswordProps) => (
-  <Html>
-    <Head />
-    <Body style={main}>
-      <Preview>Reset your OpenFeeds password</Preview>
-      <Container style={container}>
-        <Section style={logoContainer}>
-          <Img
-            src="https://openfeeds.app/logo.png"
-            width="40"
-            height="30"
-            alt="OpenFeeds"
-            style={logoImg}
-          />
-          <Text style={logoText}>OpenFeeds</Text>
-        </Section>
-        <Heading style={h1}>Reset your password</Heading>
-        <Text style={text}>
-          We received a request to reset your password. Click the button below
-          to choose a new one.
-        </Text>
-        <Section style={buttonContainer}>
-          <Button style={button} href={resetUrl}>
-            Reset Password
-          </Button>
-        </Section>
-        <Text style={text}>
-          Or copy and paste this link into your browser:
-        </Text>
-        <Link href={resetUrl} style={link}>
-          {resetUrl}
-        </Link>
-        <Hr style={hr} />
-        <Text style={footer}>
-          This link will expire in 1 hour. If you didn't request a password
-          reset, you can safely ignore this email.
-        </Text>
-      </Container>
-    </Body>
-  </Html>
+  <EmailFrame
+    preview="Reset your OpenFeeds password"
+    footerText="This link will expire in 1 hour. If you didn't request a password reset, you can safely ignore this email."
+  >
+    <Heading style={h1}>Reset your password</Heading>
+    <Text style={text}>
+      We received a request to reset your password. Click the button below to
+      choose a new one.
+    </Text>
+    <Section style={buttonContainer}>
+      <Button style={button} href={resetUrl}>
+        Reset Password
+      </Button>
+    </Section>
+    <Text style={text}>Or copy and paste this link into your browser:</Text>
+    <Link href={resetUrl} style={link}>
+      {resetUrl}
+    </Link>
+  </EmailFrame>
 );
 
 ResetPassword.PreviewProps = {
@@ -64,93 +33,3 @@ ResetPassword.PreviewProps = {
 } as ResetPasswordProps;
 
 export default ResetPassword;
-
-const main = {
-  backgroundColor: '#f6f9fc',
-  fontFamily:
-    "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Ubuntu, sans-serif",
-};
-
-const container = {
-  backgroundColor: '#ffffff',
-  margin: '0 auto',
-  padding: '40px 20px',
-  marginTop: '40px',
-  marginBottom: '40px',
-  borderRadius: '8px',
-  maxWidth: '480px',
-};
-
-const logoContainer = {
-  textAlign: 'center' as const,
-  marginBottom: '24px',
-};
-
-const logoImg = {
-  display: 'inline-block' as const,
-  verticalAlign: 'middle' as const,
-};
-
-const logoText = {
-  display: 'inline-block' as const,
-  verticalAlign: 'middle' as const,
-  fontSize: '20px',
-  fontWeight: '700' as const,
-  color: '#2e2e2e',
-  margin: '0 0 0 8px',
-};
-
-const h1 = {
-  color: '#2e2e2e',
-  fontSize: '24px',
-  fontWeight: '600' as const,
-  lineHeight: '32px',
-  margin: '0 0 16px',
-  textAlign: 'center' as const,
-};
-
-const text = {
-  color: '#525252',
-  fontSize: '14px',
-  lineHeight: '24px',
-  margin: '0 0 16px',
-  textAlign: 'center' as const,
-};
-
-const buttonContainer = {
-  textAlign: 'center' as const,
-  margin: '24px 0',
-};
-
-const button = {
-  backgroundColor: '#f76f53',
-  borderRadius: '6px',
-  color: '#fff',
-  fontSize: '14px',
-  fontWeight: '600' as const,
-  textDecoration: 'none',
-  textAlign: 'center' as const,
-  padding: '12px 24px',
-};
-
-const link = {
-  color: '#f76f53',
-  fontSize: '12px',
-  textDecoration: 'underline',
-  wordBreak: 'break-all' as const,
-  display: 'block',
-  textAlign: 'center' as const,
-};
-
-const hr = {
-  borderColor: '#e5e5e5',
-  margin: '32px 0',
-};
-
-const footer = {
-  color: '#a3a3a3',
-  fontSize: '12px',
-  lineHeight: '20px',
-  textAlign: 'center' as const,
-  margin: '0',
-};
