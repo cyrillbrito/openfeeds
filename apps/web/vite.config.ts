@@ -9,7 +9,7 @@ import viteTsConfigPaths from 'vite-tsconfig-paths';
 export default defineConfig({
   plugins: [
     devtools(),
-    nitro({ preset: 'bun' }),
+    nitro({ preset: 'bun', prerender: { routes: [] } }),
     viteTsConfigPaths({ projects: ['./tsconfig.json'] }),
     tailwindcss(),
     tanstackStart({ spa: { enabled: true } }),
