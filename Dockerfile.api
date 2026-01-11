@@ -5,7 +5,7 @@ FROM oven/bun:alpine AS base
 FROM base AS pruner
 
 # Install turbo globally
-RUN bun install -g turbo@canary
+RUN bun install -g turbo
 
 # Copy entire monorepo
 COPY . .
