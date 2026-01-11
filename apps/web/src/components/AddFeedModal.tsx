@@ -1,9 +1,9 @@
 import type { DiscoveredFeed } from '@repo/shared/types';
 import { createId } from '@repo/shared/utils';
-import CircleAlertIcon from 'lucide-solid/icons/circle-alert';
-import { createSignal, For, Show } from 'solid-js';
 import { discoverFeeds, feedsCollection } from '~/entities/feeds';
 import { useTags } from '~/entities/tags';
+import CircleAlertIcon from 'lucide-solid/icons/circle-alert';
+import { createSignal, For, Show } from 'solid-js';
 import { LazyModal, type ModalController } from './LazyModal';
 import { MultiSelectTag } from './MultiSelectTag';
 
@@ -34,8 +34,6 @@ interface AddFeedFormProps {
 }
 
 function AddFeedForm(props: AddFeedFormProps) {
-  console.log(`🎯 AddFeedForm: FRESH component created! Timestamp: ${Date.now()}`);
-
   const [isDiscovering, setIsDiscovering] = createSignal(false);
 
   const [feedUrl, setFeedUrl] = createSignal('');
