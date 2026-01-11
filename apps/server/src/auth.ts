@@ -1,5 +1,5 @@
 import { createUserDb } from '@repo/db';
-import { dbProvider } from '@repo/domain';
+import { dbProvider, sendPasswordResetEmail, sendVerificationEmail } from '@repo/domain';
 import { betterAuth } from 'better-auth';
 import { drizzleAdapter } from 'better-auth/adapters/drizzle';
 import { createAuthMiddleware } from 'better-auth/api';
@@ -13,6 +13,15 @@ function createBetterAuth(): ReturnType<typeof betterAuth> {
       enabled: true,
       requireEmailVerification: !environment.simpleAuth,
       minPasswordLength: environment.simpleAuth ? 5 : undefined,
+      sendResetPassword: async ({ user, url }) => {
+        await sendPasswordResetEmail(user.email, url);
+      },
+    },
+    emailVerification: {
+      sendVerificationEmail: async ({ user, url }) => {
+        await sendVerificationEmail(user.email, url);
+      },
+      sendOnSignUp: !environment.simpleAuth,
     },
     basePath: 'auth',
     trustedOrigins: [environment.clientDomain],
