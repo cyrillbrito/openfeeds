@@ -1,12 +1,4 @@
-import { runAllMigrations } from '@repo/db';
-import {
-  autoArchiveQueue,
-  dbProvider,
-  feedSyncOrchestratorQueue,
-  initializeScheduledJobs,
-  logger,
-  QUEUE_NAMES,
-} from '@repo/domain';
+import { initializeScheduledJobs, logger, QUEUE_NAMES } from '@repo/domain';
 import {
   createAutoArchiveWorker,
   createFeedDetailsWorker,

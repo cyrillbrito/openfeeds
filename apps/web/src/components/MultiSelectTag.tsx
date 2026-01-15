@@ -69,7 +69,7 @@ export function MultiSelectTag(props: MultiSelectTagProps) {
   return (
     <div class="relative">
       <div
-        ref={triggerRef}
+        ref={(el) => (triggerRef = el)}
         class="select flex cursor-pointer items-center overflow-hidden"
         tabIndex="0"
         role="combobox"
@@ -97,7 +97,7 @@ export function MultiSelectTag(props: MultiSelectTagProps) {
 
       {/* Popover Dropdown - renders in top-layer */}
       <div
-        ref={popoverRef}
+        ref={(el) => (popoverRef = el)}
         popover="auto"
         class="dropdown-content border-base-300 bg-base-100 m-0 rounded-lg border p-0 shadow-lg"
       >
