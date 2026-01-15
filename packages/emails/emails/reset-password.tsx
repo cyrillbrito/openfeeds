@@ -13,8 +13,7 @@ export const ResetPassword = ({ resetUrl }: ResetPasswordProps) => (
   >
     <Heading style={h1}>Reset your password</Heading>
     <Text style={text}>
-      We received a request to reset your password. Click the button below to
-      choose a new one.
+      We received a request to reset your password. Click the button below to choose a new one.
     </Text>
     <Section style={buttonContainer}>
       <Button style={button} href={resetUrl}>

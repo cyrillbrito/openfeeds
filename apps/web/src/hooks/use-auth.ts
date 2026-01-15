@@ -1,6 +1,6 @@
 import { useMutation, useQuery } from '@tanstack/solid-query';
-import { queryClient } from '~/query-client';
 import { createAuthClient } from 'better-auth/solid';
+import { queryClient } from '~/query-client';
 
 export const authClient = createAuthClient();
 

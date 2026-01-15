@@ -1,9 +1,9 @@
 import type { Tag } from '@repo/shared/types';
 import { createFileRoute } from '@tanstack/solid-router';
-import { useTags } from '~/entities/tags';
 import EllipsisVerticalIcon from 'lucide-solid/icons/ellipsis-vertical';
 import PlusIcon from 'lucide-solid/icons/plus';
 import { createSignal, For, Show, Suspense } from 'solid-js';
+import { useTags } from '~/entities/tags';
 import { Card } from '../components/Card';
 import { ColorIndicator } from '../components/ColorIndicator';
 import { DeleteTagModal } from '../components/DeleteTagModal';

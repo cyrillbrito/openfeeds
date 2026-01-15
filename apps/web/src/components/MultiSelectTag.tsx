@@ -69,7 +69,7 @@ export function MultiSelectTag(props: MultiSelectTagProps) {
   return (
     <div class="relative">
       <div
-        ref={triggerRef}
+        ref={(el) => (triggerRef = el)}
         class="select flex cursor-pointer items-center overflow-hidden"
         tabIndex="0"
         role="combobox"
@@ -97,7 +97,7 @@ export function MultiSelectTag(props: MultiSelectTagProps) {
 
       {/* Popover Dropdown - renders in top-layer */}
       <div
-        ref={popoverRef}
+        ref={(el) => (popoverRef = el)}
         popover="auto"
         class="dropdown-content border-base-300 bg-base-100 m-0 rounded-lg border p-0 shadow-lg"
       >
@@ -156,7 +156,11 @@ function MultiSelectTagDropdown(props: MultiSelectTagDropdownProps) {
       </Show>
 
       {/* Tag List */}
-      <div role="listbox" aria-multiselectable="true" class="max-h-60 space-y-1 overflow-y-auto py-2">
+      <div
+        role="listbox"
+        aria-multiselectable="true"
+        class="max-h-60 space-y-1 overflow-y-auto py-2"
+      >
         <For
           each={filteredTags()}
           fallback={<div class="text-base-content/60 py-4 text-center text-sm">No tags found</div>}
@@ -169,7 +173,7 @@ function MultiSelectTagDropdown(props: MultiSelectTagDropdownProps) {
                 role="option"
                 aria-selected={isSelected()}
                 tabIndex="0"
-                class="m-1 flex cursor-pointer items-center gap-2 rounded p-2 outline-none focus:ring-2 focus:ring-primary/50"
+                class="focus:ring-primary/50 m-1 flex cursor-pointer items-center gap-2 rounded p-2 outline-none focus:ring-2"
                 classList={{
                   'bg-primary/10': isSelected(),
                   'hover:bg-base-200 focus:bg-base-200': !isSelected(),

@@ -1,6 +1,6 @@
 import type { Tag } from '@repo/shared/types';
-import { tagsCollection } from '~/entities/tags';
 import { Show } from 'solid-js';
+import { tagsCollection } from '~/entities/tags';
 import { LazyModal, type ModalController } from './LazyModal';
 import { TagBadge } from './TagBadge';
 

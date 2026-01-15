@@ -20,12 +20,12 @@ const { sessionReadIds, addSessionRead, setViewKey } = useSessionRead();
 
 Each view has isolated tracking. Changing view key resets the set.
 
-| Route | View Key |
-|-------|----------|
-| `/inbox` | `inbox` |
-| `/feeds/$feedId` | `feed:${feedId}` |
-| `/tags/$tagId` | `tag:${tagId}` |
-| Shorts variants | `inbox-shorts`, `feed-shorts:${feedId}` |
+| Route            | View Key                                |
+| ---------------- | --------------------------------------- |
+| `/inbox`         | `inbox`                                 |
+| `/feeds/$feedId` | `feed:${feedId}`                        |
+| `/tags/$tagId`   | `tag:${tagId}`                          |
+| Shorts variants  | `inbox-shorts`, `feed-shorts:${feedId}` |
 
 ### Route Pattern
 
@@ -37,7 +37,7 @@ onMount(() => setViewKey('inbox'));
 const articles = () => {
   const all = articlesQuery.data || [];
   if (readStatus() !== 'unread') return all;
-  return all.filter(a => !a.isRead || sessionReadIds().has(a.id));
+  return all.filter((a) => !a.isRead || sessionReadIds().has(a.id));
 };
 
 // 3. Track on mark-as-read

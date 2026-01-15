@@ -1,8 +1,8 @@
 import { FilterOperator } from '@repo/shared/types';
 import { createId } from '@repo/shared/utils';
-import { filterRulesCollection } from '~/entities/filter-rules';
 import CircleAlertIcon from 'lucide-solid/icons/circle-alert';
 import { createSignal, For, Show } from 'solid-js';
+import { filterRulesCollection } from '~/entities/filter-rules';
 
 interface AddRuleFormProps {
   feedId: string;

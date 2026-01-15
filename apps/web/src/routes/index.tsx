@@ -1,7 +1,7 @@
 import { createFileRoute, useNavigate } from '@tanstack/solid-router';
+import { createEffect } from 'solid-js';
 import { useFeeds } from '~/entities/feeds';
 import { authMiddleware } from '~/server/middleware/auth';
-import { createEffect } from 'solid-js';
 
 export const Route = createFileRoute('/')({
   server: {

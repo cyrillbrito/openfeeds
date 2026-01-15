@@ -14,11 +14,13 @@ bun check-types  # TypeScript check
 ## Responsibilities
 
 **What this server does:**
+
 - Better Auth API (`/api/auth/*`)
 - Background job enqueueing
 - Bull Board dashboard at `/admin/queues`
 
 **What it does NOT do:**
+
 - Data CRUD operations → handled by `apps/web` server functions
 - Worker job processing → `apps/worker`
 - Business logic → `@repo/domain`
@@ -36,7 +38,7 @@ bun check-types  # TypeScript check
 Enqueue via `@repo/domain`:
 
 ```typescript
-import { enqueueFeedSync, enqueueFeedDetail } from '@repo/domain';
+import { enqueueFeedDetail, enqueueFeedSync } from '@repo/domain';
 
 await enqueueFeedSync(userId, feedId);
 await enqueueFeedDetail(userId, feedId);
@@ -45,11 +47,13 @@ await enqueueFeedDetail(userId, feedId);
 ## Environment Variables
 
 **Required:**
+
 - `DB_PATH` - SQLite database path
 - `BETTER_AUTH_SECRET` - Auth secret key
 - `CLIENT_DOMAIN` - Client domain for CORS
 
 **Optional:**
+
 - `REDIS_HOST`, `REDIS_PORT` - Redis connection
 - `POSTHOG_PUBLIC_KEY` - Analytics
 - `SIMPLE_AUTH` - Dev auth mode

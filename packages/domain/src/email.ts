@@ -1,6 +1,6 @@
-import { Resend } from 'resend';
 import { ResetPassword } from '@repo/emails/emails/reset-password';
 import { VerifyEmail } from '@repo/emails/emails/verify-email';
+import { Resend } from 'resend';
 import { environment } from './environment';
 
 const resend = environment.resendApiKey ? new Resend(environment.resendApiKey) : null;

@@ -53,6 +53,7 @@ Article-tag relationships are exposed in two ways:
 2. **`articleTagsCollection`** - Returns junction table rows (`{ id, articleId, tagId }`) for TanStack DB client-side joins
 
 This duplication allows:
+
 - Simple usage with embedded tags
 - Local-first collections with proper relational structure for client-side joins
 
@@ -80,9 +81,15 @@ export const feedsCollection = createCollection(
     getKey: (item) => item.id,
     schema: FeedSchema,
     queryFn: () => $$getAllFeeds(),
-    onInsert: async ({ transaction }) => { /* sync to server */ },
-    onUpdate: async ({ transaction }) => { /* sync to server */ },
-    onDelete: async ({ transaction }) => { /* sync to server */ },
+    onInsert: async ({ transaction }) => {
+      /* sync to server */
+    },
+    onUpdate: async ({ transaction }) => {
+      /* sync to server */
+    },
+    onDelete: async ({ transaction }) => {
+      /* sync to server */
+    },
   }),
 );
 ```

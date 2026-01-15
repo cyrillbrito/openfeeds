@@ -1,7 +1,7 @@
 import { FilterOperator, type FilterRule } from '@repo/shared/types';
-import { filterRulesCollection } from '~/entities/filter-rules';
 import CircleAlertIcon from 'lucide-solid/icons/circle-alert';
 import { createSignal, For, Show } from 'solid-js';
+import { filterRulesCollection } from '~/entities/filter-rules';
 
 interface RuleItemProps {
   rule: FilterRule;

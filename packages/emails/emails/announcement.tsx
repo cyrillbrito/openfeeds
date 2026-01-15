@@ -14,13 +14,12 @@ export const Announcement = () => (
     <Heading style={h1}>We're live!</Heading>
     <Text style={textLeft}>Hey there,</Text>
     <Text style={textLeft}>
-      Thanks for your interest in OpenFeeds. We're excited to announce that our
-      early access is now open!
+      Thanks for your interest in OpenFeeds. We're excited to announce that our early access is now
+      open!
     </Text>
     <Text style={textLeft}>
-      OpenFeeds is a modern RSS reader that helps you stay on top of your
-      favorite content without the noise. No algorithms, no ads — just the
-      content you care about.
+      OpenFeeds is a modern RSS reader that helps you stay on top of your favorite content without
+      the noise. No algorithms, no ads — just the content you care about.
     </Text>
     <Section style={features}>
       <Text style={featureItem}>RSS, YouTube, newsletters & more</Text>
@@ -33,8 +32,8 @@ export const Announcement = () => (
       </Button>
     </Section>
     <Text style={textSmall}>
-      As an early user, your feedback is invaluable. Reply to this email anytime
-      — we read everything.
+      As an early user, your feedback is invaluable. Reply to this email anytime — we read
+      everything.
     </Text>
   </EmailFrame>
 );

@@ -1,7 +1,7 @@
 import type { Feed } from '@repo/shared/types';
-import { feedsCollection } from '~/entities/feeds';
 import TriangleAlertIcon from 'lucide-solid/icons/triangle-alert';
 import { Show } from 'solid-js';
+import { feedsCollection } from '~/entities/feeds';
 import { LazyModal, type ModalController } from './LazyModal';
 
 interface DeleteFeedModalProps {

@@ -66,9 +66,15 @@ export const itemsCollection = createCollection(
     getKey: (item) => item.id,
     schema: ItemSchema,
     queryFn: () => $$getAll(),
-    onInsert: async ({ transaction }) => { /* sync to server */ },
-    onUpdate: async ({ transaction }) => { /* sync to server */ },
-    onDelete: async ({ transaction }) => { /* sync to server */ },
+    onInsert: async ({ transaction }) => {
+      /* sync to server */
+    },
+    onUpdate: async ({ transaction }) => {
+      /* sync to server */
+    },
+    onDelete: async ({ transaction }) => {
+      /* sync to server */
+    },
   }),
 );
 
@@ -151,7 +157,10 @@ export function MyModal(props: MyModalProps) {
 
   return (
     <LazyModal
-      controller={(c) => { modalController = c; props.controller(c); }}
+      controller={(c) => {
+        modalController = c;
+        props.controller(c);
+      }}
       title="Title"
     >
       <MyModalForm onClose={() => modalController.close()} />

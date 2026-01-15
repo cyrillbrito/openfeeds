@@ -70,7 +70,7 @@ export function ArticleTagManager(props: ArticleTagManagerProps) {
         </For>
 
         <button
-          ref={triggerRef}
+          ref={(el) => (triggerRef = el)}
           type="button"
           class="btn btn-ghost btn-xs gap-1"
           onClick={openPopover}
@@ -82,7 +82,7 @@ export function ArticleTagManager(props: ArticleTagManagerProps) {
 
       {/* Popover Dropdown - renders in top-layer */}
       <div
-        ref={popoverRef}
+        ref={(el) => (popoverRef = el)}
         popover="auto"
         class="dropdown-content border-base-300 bg-base-100 m-0 rounded-lg border p-0 shadow-lg"
       >

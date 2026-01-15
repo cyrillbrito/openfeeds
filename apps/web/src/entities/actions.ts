@@ -1,8 +1,8 @@
 import { dbProvider } from '@repo/domain';
 import * as ruleEvalDomain from '@repo/domain';
 import { createServerFn } from '@tanstack/solid-start';
-import { authMiddleware } from '~/server/middleware/auth';
 import { z } from 'zod';
+import { authMiddleware } from '~/server/middleware/auth';
 import { articlesCollection } from './articles';
 
 const $$applyFilterRules = createServerFn({ method: 'POST' })
