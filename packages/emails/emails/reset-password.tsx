@@ -1,10 +1,9 @@
 import { Button, Heading, Link, Section, Text } from '@react-email/components';
+import type { ResetPasswordProps } from '../types';
 import { EmailFrame } from './components/email-frame';
 import { button, buttonContainer, h1, link, text } from './styles';
 
-export interface ResetPasswordProps {
-  resetUrl?: string;
-}
+export type { ResetPasswordProps };
 
 export const ResetPassword = ({ resetUrl }: ResetPasswordProps) => (
   <EmailFrame
