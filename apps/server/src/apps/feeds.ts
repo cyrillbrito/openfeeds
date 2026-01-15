@@ -1,17 +1,9 @@
-import {
-  createFeed,
-  deleteFeed,
-  discoverRssFeeds,
-  getAllFeeds,
-  syncFeed,
-  updateFeed,
-} from '@repo/domain';
+import { createFeed, deleteFeed, discoverRssFeeds, getAllFeeds, updateFeed } from '@repo/domain';
 import {
   CreateFeedSchema,
   DiscoveryRequestSchema,
   DiscoveryResponseSchema,
   FeedSchema,
-  SyncResultSchema,
   UpdateFeedSchema,
 } from '@repo/shared/schemas';
 import { Elysia } from 'elysia';
@@ -38,8 +30,8 @@ export const feedsApp = new Elysia({ prefix: '/feeds' })
   )
   .post(
     '/',
-    async ({ body, db, status }) => {
-      const newFeed = await createFeed(body, db);
+    async ({ body, user, db, status }) => {
+      const newFeed = await createFeed(body, user.id, db);
       return status(201, newFeed);
     },
     {
@@ -95,21 +87,6 @@ export const feedsApp = new Elysia({ prefix: '/feeds' })
       detail: {
         tags: ['Feeds'],
         summary: 'Discover RSS feeds from URL',
-      },
-    },
-  )
-  .post(
-    '/:id/sync',
-    async ({ params, db }) => {
-      const result = await syncFeed(params.id, db);
-      return result;
-    },
-    {
-      params: z.object({ id: z.string() }),
-      response: SyncResultSchema,
-      detail: {
-        tags: ['Feeds'],
-        summary: 'Sync feed articles',
       },
     },
   );

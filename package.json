@@ -15,7 +15,7 @@
     }
   },
   "scripts": {
-    "dev": "turbo dev",
+    "dev": "turbo dev --filter=!@repo/marketing --filter=!@repo/emails",
     "build": "turbo build",
     "lint": "oxlint",
     "check-types": "turbo check-types",

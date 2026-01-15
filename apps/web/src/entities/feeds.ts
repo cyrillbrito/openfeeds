@@ -44,7 +44,7 @@ const $$createFeeds = createServerFn({ method: 'POST' })
   .inputValidator(z.array(CreateFeedSchema))
   .handler(({ context, data }) => {
     const db = dbProvider.userDb(context.user.id);
-    return Promise.all(data.map((feed) => feedsDomain.createFeed(feed, db)));
+    return Promise.all(data.map((feed) => feedsDomain.createFeed(feed, context.user.id, db)));
   });
 
 const $$updateFeeds = createServerFn({ method: 'POST' })
