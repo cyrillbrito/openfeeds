@@ -3,6 +3,7 @@ import type { QueryClient } from '@tanstack/solid-query';
 import { SolidQueryDevtoolsPanel } from '@tanstack/solid-query-devtools';
 import { createRootRouteWithContext, HeadContent, Outlet, Scripts } from '@tanstack/solid-router';
 import { TanStackRouterDevtoolsPanel } from '@tanstack/solid-router-devtools';
+import { SessionReadProvider } from '~/hooks/session-read';
 import { ThemeProvider } from '~/hooks/theme';
 import { onMount, Suspense } from 'solid-js';
 import { HydrationScript } from 'solid-js/web';
@@ -47,24 +48,26 @@ function RootComponent() {
       <body>
         <Suspense>
           <ThemeProvider>
-            <ToastProvider>
-              <Outlet />
-              <TanStackDevtools
-                config={{
-                  hideUntilHover: true,
-                }}
-                plugins={[
-                  {
-                    name: 'Router',
-                    render: () => <TanStackRouterDevtoolsPanel />,
-                  },
-                  {
-                    name: 'Query',
-                    render: () => <SolidQueryDevtoolsPanel />,
-                  },
-                ]}
-              />
-            </ToastProvider>
+            <SessionReadProvider>
+              <ToastProvider>
+                <Outlet />
+                <TanStackDevtools
+                  config={{
+                    hideUntilHover: true,
+                  }}
+                  plugins={[
+                    {
+                      name: 'Router',
+                      render: () => <TanStackRouterDevtoolsPanel />,
+                    },
+                    {
+                      name: 'Query',
+                      render: () => <SolidQueryDevtoolsPanel />,
+                    },
+                  ]}
+                />
+              </ToastProvider>
+            </SessionReadProvider>
           </ThemeProvider>
         </Suspense>
 

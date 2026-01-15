@@ -1,8 +1,10 @@
 import { eq, ilike } from '@tanstack/db';
 import { useLiveQuery } from '@tanstack/solid-db';
 import { createFileRoute, useSearch } from '@tanstack/solid-router';
+import { onMount } from 'solid-js';
 import { articlesCollection } from '~/entities/articles';
 import { useFeeds } from '~/entities/feeds';
+import { useSessionRead } from '~/hooks/session-read';
 import { validateReadStatusSearch } from '../common/routing';
 import { type ReadStatus } from '../components/ReadStatusToggle';
 import { ShortsViewer } from '../components/ShortsViewer';
@@ -15,8 +17,12 @@ export const Route = createFileRoute('/_frame/inbox/shorts/')({
 function InboxShorts() {
   const search = useSearch({ from: '/_frame/inbox/shorts/' });
   const readStatus = (): ReadStatus => search().readStatus || 'unread';
+  const { sessionReadIds, addSessionRead, setViewKey } = useSessionRead();
 
-  const isRead = () => (readStatus() === 'read' ? true : readStatus() === 'unread' ? false : null);
+  onMount(() => setViewKey('inbox-shorts'));
+
+  // Only filter by isRead on server when showing 'read' status
+  const isRead = () => (readStatus() === 'read' ? true : null);
 
   const shortsQuery = useLiveQuery((q) => {
     let query = q
@@ -34,16 +40,24 @@ function InboxShorts() {
   const feedsQuery = useFeeds();
 
   const allShorts = () => {
-    return shortsQuery.data || [];
+    const shorts = shortsQuery.data || [];
+    if (readStatus() !== 'unread') return shorts;
+
+    // Show unread + session-read shorts
+    return shorts.filter((a) => !a.isRead || sessionReadIds().has(a.id));
   };
 
   const markAsRead = (articleId: string) => {
+    addSessionRead(articleId);
     articlesCollection.update(articleId, (draft) => {
       draft.isRead = true;
     });
   };
 
   const toggleRead = (articleId: string, isRead: boolean) => {
+    if (isRead) {
+      addSessionRead(articleId);
+    }
     articlesCollection.update(articleId, (draft) => {
       draft.isRead = isRead;
     });
