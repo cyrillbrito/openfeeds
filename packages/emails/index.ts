@@ -1,1 +1,1 @@
-export type { ResetPasswordProps, VerifyEmailProps } from './types';
+// Types are co-located with their email templates in ./emails/*.tsx

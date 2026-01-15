@@ -19,9 +19,13 @@ bun export # Export to HTML
 ## Usage
 
 ```tsx
-import { render } from '@react-email/render';
-import { ResetPassword } from '@repo/emails';
+import { ResetPassword } from '@repo/emails/emails/reset-password';
 
-const html = await render(<ResetPassword resetUrl="..." />);
-// Send via email provider (Resend, SendGrid, etc.)
+// With Resend
+await resend.emails.send({
+  from: 'OpenFeeds <noreply@openfeeds.app>',
+  to: email,
+  subject: 'Reset your password',
+  react: ResetPassword({ resetUrl: '...' }),
+});
 ```
