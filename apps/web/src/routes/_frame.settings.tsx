@@ -1,7 +1,7 @@
 import type { ArchiveResult } from '@repo/shared/types';
 import { createFileRoute } from '@tanstack/solid-router';
-import { createSignal, Show } from 'solid-js';
 import { settingsCollection, triggerAutoArchive, useSettings } from '~/entities/settings';
+import { createSignal, Show } from 'solid-js';
 import { Card } from '../components/Card';
 import { Header } from '../components/Header';
 
@@ -12,7 +12,10 @@ export const Route = createFileRoute('/_frame/settings')({
 export default function SettingsPage() {
   const settingsQuery = useSettings();
   const [editMode, setEditMode] = createSignal(false);
-  const [formData, setFormData] = createSignal<{ theme?: 'light' | 'dark' | 'system'; autoArchiveDays?: number }>({});
+  const [formData, setFormData] = createSignal<{
+    theme?: 'light' | 'dark' | 'system';
+    autoArchiveDays?: number;
+  }>({});
   const [showMarkReadDialog, setShowMarkReadDialog] = createSignal(false);
   const [archiveResult, setArchiveResult] = createSignal<ArchiveResult | null>(null);
   const [isArchiving, setIsArchiving] = createSignal(false);
@@ -183,7 +186,6 @@ export default function SettingsPage() {
                       </label>
                     </div>
                   </div>
-
                 </div>
               </Show>
 
@@ -212,9 +214,7 @@ export default function SettingsPage() {
                     </div>
                     <Show when={archiveError()}>
                       <div class="alert alert-error alert-sm mt-2">
-                        <span class="text-xs">
-                          Error: {archiveError()}
-                        </span>
+                        <span class="text-xs">Error: {archiveError()}</span>
                       </div>
                     </Show>
                   </Card>

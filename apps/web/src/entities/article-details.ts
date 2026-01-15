@@ -81,6 +81,8 @@ export const articleDetailsCollection = createCollection(
  */
 export function useArticleDetails(articleId: () => string) {
   return useLiveQuery((q) =>
-    q.from({ article: articleDetailsCollection }).where(({ article }) => eq(article.id, articleId())),
+    q
+      .from({ article: articleDetailsCollection })
+      .where(({ article }) => eq(article.id, articleId())),
   );
 }

@@ -1,10 +1,10 @@
 import { eq, ilike } from '@tanstack/db';
 import { useLiveQuery } from '@tanstack/solid-db';
 import { createFileRoute, useSearch } from '@tanstack/solid-router';
-import { onMount } from 'solid-js';
 import { articlesCollection } from '~/entities/articles';
 import { useFeeds } from '~/entities/feeds';
 import { useSessionRead } from '~/hooks/session-read';
+import { onMount } from 'solid-js';
 import { validateReadStatusSearch } from '../common/routing';
 import { type ReadStatus } from '../components/ReadStatusToggle';
 import { ShortsViewer } from '../components/ShortsViewer';

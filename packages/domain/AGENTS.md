@@ -11,17 +11,20 @@ bun check-types
 ## Architecture
 
 **Owns:**
+
 - Business logic (feeds, articles, tags, settings, RSS sync, archive, import)
 - Queue instances and enqueueing (BullMQ Queue, not Worker)
 - Infrastructure (dbProvider, logger, environment, errors)
 
 **Does NOT own:**
+
 - BullMQ Worker instances → `apps/worker`
 - HTTP routes → `apps/server`
 
 ## Key Modules
 
 **Business Logic:**
+
 - `feeds.ts` - Feed CRUD, discovery
 - `articles.ts` - Article queries and updates
 - `rss-sync.ts` - RSS fetching, article sync, enqueues feed jobs
@@ -30,6 +33,7 @@ bun check-types
 - `tags.ts`, `settings.ts`, `filter-rules.ts`
 
 **Infrastructure:**
+
 - `queues.ts` - Queue instances, enqueue functions
 - `queue-config.ts` - Redis connection, queue names
 - `db-provider.ts` - Database provider singleton
@@ -40,15 +44,18 @@ bun check-types
 ## Queue Architecture
 
 **Exports:**
+
 - Queue instances: `feedSyncOrchestratorQueue`, `singleFeedSyncQueue`, `feedDetailQueue`, `autoArchiveQueue`
 - Enqueue functions: `enqueueFeedSync()`, `enqueueFeedDetail()`, `initializeScheduledJobs()`
 - Config: `QUEUE_NAMES`, `redisConnection`
 
 **Scheduled Jobs (`initializeScheduledJobs()`):**
+
 - Feed sync orchestrator: `* * * * *` (every minute)
 - Auto archive: `0 0 * * *` (daily at midnight)
 
 **Pattern:**
+
 1. Server enqueues via `enqueueFeedSync()`, `enqueueFeedDetail()`
 2. Worker creates Worker instances, calls domain business logic
 3. Both connect to same Redis queues

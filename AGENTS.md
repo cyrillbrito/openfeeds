@@ -1,4 +1,3 @@
-
 # OpenFeeds
 
 A **local-first RSS reader** built with SolidJS and TanStack Start. Data syncs optimistically to a local database with server persistence.
@@ -25,22 +24,22 @@ Each app/package has its own `AGENTS.md` with specific patterns and guidelines.
 
 ### Apps
 
-| App | Description | Details |
-|-----|-------------|---------|
-| `apps/web/` | SolidJS + TanStack Start frontend | See `apps/web/AGENTS.md` |
-| `apps/server/` | Elysia API (auth, background jobs) | See `apps/server/AGENTS.md` |
-| `apps/worker/` | BullMQ background job processor | See `apps/worker/AGENTS.md` |
-| `apps/e2e/` | Playwright tests + visual regression | See `apps/e2e/AGENTS.md` |
+| App            | Description                          | Details                     |
+| -------------- | ------------------------------------ | --------------------------- |
+| `apps/web/`    | SolidJS + TanStack Start frontend    | See `apps/web/AGENTS.md`    |
+| `apps/server/` | Elysia API (auth, background jobs)   | See `apps/server/AGENTS.md` |
+| `apps/worker/` | BullMQ background job processor      | See `apps/worker/AGENTS.md` |
+| `apps/e2e/`    | Playwright tests + visual regression | See `apps/e2e/AGENTS.md`    |
 
 ### Packages
 
-| Package | Description | Details |
-|---------|-------------|---------|
-| `packages/db/` | Drizzle ORM + SQLite3 schemas | See `packages/db/AGENTS.md` |
-| `packages/domain/` | Business logic + queue management | See `packages/domain/AGENTS.md` |
-| `packages/discovery/` | RSS/Atom feed discovery | See `packages/discovery/AGENTS.md` |
-| `packages/shared/` | Cross-app utilities, types, schemas | - |
-| `packages/emails/` | React Email templates | See `packages/emails/AGENTS.md` |
+| Package               | Description                         | Details                            |
+| --------------------- | ----------------------------------- | ---------------------------------- |
+| `packages/db/`        | Drizzle ORM + SQLite3 schemas       | See `packages/db/AGENTS.md`        |
+| `packages/domain/`    | Business logic + queue management   | See `packages/domain/AGENTS.md`    |
+| `packages/discovery/` | RSS/Atom feed discovery             | See `packages/discovery/AGENTS.md` |
+| `packages/shared/`    | Cross-app utilities, types, schemas | -                                  |
+| `packages/emails/`    | React Email templates               | See `packages/emails/AGENTS.md`    |
 
 ## Architecture
 

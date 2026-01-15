@@ -13,12 +13,14 @@ bun check-types  # TypeScript check
 ## Architecture
 
 **Responsibilities:**
+
 - Create BullMQ Worker instances
 - Process jobs from Redis queues
 - Call `@repo/domain` business logic
 - Initialize scheduled jobs via `initializeScheduledJobs()`
 
 **Does NOT:**
+
 - Enqueue jobs → `@repo/domain`
 - Contain business logic → `@repo/domain`
 - Run HTTP server → `apps/server`
@@ -56,6 +58,7 @@ export function createSingleFeedSyncWorker() {
 ## Environment Variables
 
 Inherited from `@repo/domain`:
+
 - `DB_PATH` - SQLite database path
 - `REDIS_HOST`, `REDIS_PORT` - Redis connection
 - `POSTHOG_PUBLIC_KEY` - Analytics (optional)
