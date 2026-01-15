@@ -1,8 +1,8 @@
 import type { Feed } from '@repo/shared/types';
 import { Link } from '@tanstack/solid-router';
+import { createEffect, createMemo, createSignal, Match, Show, Suspense, Switch } from 'solid-js';
 import { feedsCollection } from '~/entities/feeds';
 import { useTags } from '~/entities/tags';
-import { createEffect, createMemo, createSignal, Match, Show, Suspense, Switch } from 'solid-js';
 import { LazyModal, type ModalController } from './LazyModal';
 import { MultiSelectTag } from './MultiSelectTag';
 import { RuleManager } from './RuleManager';

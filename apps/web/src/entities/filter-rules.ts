@@ -15,9 +15,9 @@ import { eq } from '@tanstack/db';
 import { queryCollectionOptions } from '@tanstack/query-db-collection';
 import { createCollection, useLiveQuery } from '@tanstack/solid-db';
 import { createServerFn } from '@tanstack/solid-start';
+import { z } from 'zod';
 import { queryClient } from '~/query-client';
 import { authMiddleware } from '~/server/middleware/auth';
-import { z } from 'zod';
 
 const $$getAllFilterRules = createServerFn({ method: 'GET' })
   .middleware([authMiddleware])

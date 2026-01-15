@@ -1,11 +1,11 @@
 import { createFileRoute, Link, Outlet, useLocation } from '@tanstack/solid-router';
-import { useTags } from '~/entities/tags';
-import { authMiddleware } from '~/server/middleware/auth.ts';
 import InboxIcon from 'lucide-solid/icons/inbox';
 import LibraryIcon from 'lucide-solid/icons/library';
 import PlusIcon from 'lucide-solid/icons/plus';
 import SearchIcon from 'lucide-solid/icons/search';
 import { createEffect, For, Suspense } from 'solid-js';
+import { useTags } from '~/entities/tags';
+import { authMiddleware } from '~/server/middleware/auth.ts';
 import { AddFeedModal } from '../components/AddFeedModal';
 import { ColorIndicator } from '../components/ColorIndicator';
 import { type ModalController } from '../components/LazyModal';

@@ -1,7 +1,7 @@
 import type { ArchiveResult } from '@repo/shared/types';
 import { createFileRoute } from '@tanstack/solid-router';
-import { settingsCollection, triggerAutoArchive, useSettings } from '~/entities/settings';
 import { createSignal, Show } from 'solid-js';
+import { settingsCollection, triggerAutoArchive, useSettings } from '~/entities/settings';
 import { Card } from '../components/Card';
 import { Header } from '../components/Header';
 

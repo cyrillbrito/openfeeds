@@ -1,9 +1,9 @@
-import { feedsCollection, importOpml } from '~/entities/feeds';
-import { tagsCollection } from '~/entities/tags';
 import CircleAlertIcon from 'lucide-solid/icons/circle-alert';
 import CircleCheckIcon from 'lucide-solid/icons/circle-check';
 import TriangleAlertIcon from 'lucide-solid/icons/triangle-alert';
 import { createSignal, Match, Show, Switch } from 'solid-js';
+import { feedsCollection, importOpml } from '~/entities/feeds';
+import { tagsCollection } from '~/entities/tags';
 import { LazyModal, type ModalController } from './LazyModal';
 
 interface ImportOpmlModalProps {

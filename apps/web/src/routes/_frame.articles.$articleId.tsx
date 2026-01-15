@@ -1,14 +1,14 @@
 import { eq } from '@tanstack/db';
 import { useLiveQuery } from '@tanstack/solid-db';
 import { createFileRoute, Link, useRouter } from '@tanstack/solid-router';
-import { useArticleDetails } from '~/entities/article-details';
-import { articlesCollection } from '~/entities/articles';
-import { useFeeds } from '~/entities/feeds';
-import { useTags } from '~/entities/tags';
 import ArchiveIcon from 'lucide-solid/icons/archive';
 import ArrowLeftIcon from 'lucide-solid/icons/arrow-left';
 import InboxIcon from 'lucide-solid/icons/inbox';
 import { Show, Suspense } from 'solid-js';
+import { useArticleDetails } from '~/entities/article-details';
+import { articlesCollection } from '~/entities/articles';
+import { useFeeds } from '~/entities/feeds';
+import { useTags } from '~/entities/tags';
 import { ArchiveIconButton } from '../components/ArchiveIconButton';
 import { ArticleTagManager } from '../components/ArticleTagManager';
 import { Card } from '../components/Card';
