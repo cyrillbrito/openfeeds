@@ -24,11 +24,6 @@ export const UpdateFeedSchema = z.object({
   tags: z.array(z.string()).optional(),
 });
 
-export const SyncResultSchema = z.object({
-  created: z.number(),
-  updated: z.number(),
-});
-
 export const DiscoveryRequestSchema = z.object({
   url: z.url(),
 });

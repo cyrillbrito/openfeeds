@@ -4,10 +4,9 @@ import {
   logger,
   QUEUE_NAMES,
   redisConnection,
-  syncOldestFeeds,
-  syncSingleFeed,
   updateFeedMetadata,
 } from '@repo/domain';
+import { syncOldestFeeds, syncSingleFeed } from './rss-sync';
 import { attemptAsync } from '@repo/shared/utils';
 import { Worker, type Job } from 'bullmq';
 

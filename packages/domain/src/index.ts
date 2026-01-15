@@ -7,7 +7,7 @@ export * from './feed-details';
 export * from './feeds';
 export * from './filter-rules';
 export * from './import';
-export * from './rss-sync';
+export * from './rss-fetch';
 export * from './rule-evaluation';
 export * from './settings';
 export * from './tags';
