@@ -12,7 +12,9 @@
   },
   "dependencies": {
     "@repo/db": "workspace:*",
+    "@repo/emails": "workspace:*",
     "@repo/shared": "workspace:*",
+    "resend": "^6.2.0",
     "bullmq": "^5.61.0",
     "drizzle-orm": "catalog:",
     "feedsmith": "^2.1.1",

@@ -1,8 +1,11 @@
 {
   "name": "@repo/emails",
+  "exports": {
+    ".": "./index.ts",
+    "./emails/*": "./emails/*.tsx"
+  },
   "scripts": {
     "dev": "email dev --port 3002",
-    "build": "email build",
     "export": "email export"
   },
   "dependencies": {

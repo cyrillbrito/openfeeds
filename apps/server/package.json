@@ -29,7 +29,6 @@
     "p-queue": "^9.0.0",
     "posthog-node": "^5.9.2",
     "redaxios": "^0.5.1",
-    "resend": "^6.2.0",
     "zod": "catalog:"
   },
   "devDependencies": {

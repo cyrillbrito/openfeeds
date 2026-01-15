@@ -6,6 +6,7 @@
     "module": "Preserve",
     "moduleDetection": "force",
     "allowJs": true,
+    "jsx": "react-jsx",
 
     // Bundler mode
     "moduleResolution": "bundler",
