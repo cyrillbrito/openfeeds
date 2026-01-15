@@ -5,7 +5,6 @@
   },
   "scripts": {
     "dev": "email dev --port 3002",
-    "build": "email build",
     "export": "email export"
   },
   "dependencies": {
