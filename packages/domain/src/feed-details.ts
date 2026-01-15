@@ -4,7 +4,7 @@ import { attemptAsync } from '@repo/shared/utils';
 import { eq } from 'drizzle-orm';
 import { dbProvider } from './db-provider';
 import { assert } from './errors';
-import { fetchRss, type ParseFeedResult } from './rss-sync';
+import { fetchRss, type ParseFeedResult } from './rss-fetch';
 
 function parseWebpageUrl(feedResult: ParseFeedResult): string | undefined {
   if (feedResult.format === 'rss') {
