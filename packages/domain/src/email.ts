@@ -1,4 +1,6 @@
 import { Resend } from 'resend';
+import { ResetPassword } from '@repo/emails/emails/reset-password';
+import { VerifyEmail } from '@repo/emails/emails/verify-email';
 import { environment } from './environment';
 
 const resend = environment.resendApiKey ? new Resend(environment.resendApiKey) : null;
@@ -12,14 +14,11 @@ export async function sendVerificationEmail(email: string, url: string) {
     return;
   }
 
-  // TODO: use Resend templates when ready
-  // const data: VerifyEmailProps = { verificationUrl: url };
-
   await resend.emails.send({
     from: FROM_EMAIL,
     to: email,
     subject: 'Verify your email address',
-    html: `<p>Verify your email: <a href="${url}">${url}</a></p>`,
+    react: VerifyEmail({ verificationUrl: url }),
   });
 }
 
@@ -30,13 +29,10 @@ export async function sendPasswordResetEmail(email: string, url: string) {
     return;
   }
 
-  // TODO: use Resend templates when ready
-  // const data: ResetPasswordProps = { resetUrl: url };
-
   await resend.emails.send({
     from: FROM_EMAIL,
     to: email,
     subject: 'Reset your password',
-    html: `<p>Reset your password: <a href="${url}">${url}</a></p>`,
+    react: ResetPassword({ resetUrl: url }),
   });
 }
