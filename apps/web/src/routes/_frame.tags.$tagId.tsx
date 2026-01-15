@@ -2,10 +2,11 @@ import { eq } from '@tanstack/db';
 import { useLiveQuery } from '@tanstack/solid-db';
 import { createFileRoute, Link, useSearch } from '@tanstack/solid-router';
 import ShuffleIcon from 'lucide-solid/icons/shuffle';
-import { createSignal, Show, Suspense } from 'solid-js';
+import { createSignal, onMount, Show, Suspense } from 'solid-js';
 import { articleTagsCollection } from '~/entities/article-tags';
 import { articlesCollection } from '~/entities/articles';
 import { useFeeds } from '~/entities/feeds';
+import { useSessionRead } from '~/hooks/session-read';
 import { useTags } from '~/entities/tags';
 import { validateReadStatusSearch } from '../common/routing';
 import { ArticleList } from '../components/ArticleList';
@@ -28,8 +29,12 @@ function TagArticles() {
   const tagId = () => params().tagId;
   const readStatus = (): ReadStatus => search().readStatus || 'unread';
   const seed = () => search().seed;
+  const { sessionReadIds, addSessionRead, setViewKey } = useSessionRead();
 
-  const isRead = () => (readStatus() === 'read' ? true : readStatus() === 'unread' ? false : null);
+  onMount(() => setViewKey(`tag:${tagId()}`));
+
+  // Only filter by isRead on server when showing 'read' status
+  const isRead = () => (readStatus() === 'read' ? true : null);
 
   const tagsQuery = useTags();
   const feedsQuery = useFeeds();
@@ -76,13 +81,24 @@ function TagArticles() {
     articleId: string,
     updates: { isRead?: boolean; tags?: string[] },
   ) => {
+    // Track session-read articles
+    if (updates.isRead === true) {
+      addSessionRead(articleId);
+    }
+
     articlesCollection.update(articleId, (draft) => {
       if (updates.isRead !== undefined) draft.isRead = updates.isRead;
       if (updates.tags !== undefined) draft.tags = updates.tags;
     });
   };
 
-  const articles = () => articlesQuery.data || [];
+  const articles = () => {
+    const allArticles = articlesQuery.data || [];
+    if (readStatus() !== 'unread') return allArticles;
+
+    // Show unread + session-read articles
+    return allArticles.filter((a) => !a.isRead || sessionReadIds().has(a.id));
+  };
 
   const unreadCount = () => {
     return articles().filter((article) => !article.isRead).length;

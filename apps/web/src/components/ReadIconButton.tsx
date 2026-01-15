@@ -3,7 +3,8 @@ import { twMerge } from 'tailwind-merge';
 import { CircleDotIcon, CircleIcon } from './Icons';
 
 export function ReadIconButton(props: { read?: boolean; setRead?: (read: boolean) => void }) {
-  const handleClick = () => {
+  const handleClick = (e: MouseEvent) => {
+    e.stopPropagation();
     props.setRead?.(!props.read);
   };
 

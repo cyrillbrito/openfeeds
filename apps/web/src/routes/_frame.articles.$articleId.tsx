@@ -1,12 +1,14 @@
+import { eq } from '@tanstack/db';
+import { useLiveQuery } from '@tanstack/solid-db';
 import { createFileRoute, Link, useRouter } from '@tanstack/solid-router';
-import { useArticleDetails } from '~/entities/article-details';
-import { articlesCollection } from '~/entities/articles';
-import { useFeeds } from '~/entities/feeds';
-import { useTags } from '~/entities/tags';
 import ArchiveIcon from 'lucide-solid/icons/archive';
 import ArrowLeftIcon from 'lucide-solid/icons/arrow-left';
 import InboxIcon from 'lucide-solid/icons/inbox';
 import { Show, Suspense } from 'solid-js';
+import { useArticleDetails } from '~/entities/article-details';
+import { articlesCollection } from '~/entities/articles';
+import { useFeeds } from '~/entities/feeds';
+import { useTags } from '~/entities/tags';
 import { ArchiveIconButton } from '../components/ArchiveIconButton';
 import { ArticleTagManager } from '../components/ArticleTagManager';
 import { Card } from '../components/Card';
@@ -25,10 +27,16 @@ function ArticleView() {
   const router = useRouter();
   const articleId = () => params().articleId;
 
-  // Use article details collection for detailed view with cleanContent
-  const articleQuery = useArticleDetails(articleId);
+  // Use articlesCollection for metadata/state (reactive)
+  const articleQuery = useLiveQuery((q) =>
+    q.from({ article: articlesCollection }).where(({ article }) => eq(article.id, articleId())),
+  );
+
+  // Use articleDetailsCollection only for cleanContent
+  const articleDetailsQuery = useArticleDetails(articleId);
 
   const article = () => articleQuery.data?.[0];
+  const cleanContent = () => articleDetailsQuery.data?.[0]?.cleanContent;
 
   const feedsQuery = useFeeds();
   const tagsQuery = useTags();
@@ -85,9 +93,9 @@ function ArticleView() {
           }
         >
           <Show
-            when={!articleQuery.isLoading() && article()}
+            when={article()}
             fallback={
-              <Show when={articleQuery.isError()}>
+              <Show when={articleQuery.isError?.()}>
                 <div class="py-8 text-center">
                   <p class="text-error">Failed to load article</p>
                 </div>
@@ -202,10 +210,10 @@ function ArticleView() {
                     </div>
 
                     {/* Video Description */}
-                    <Show when={art().cleanContent || art().description || art().content}>
+                    <Show when={cleanContent() || art().description || art().content}>
                       <div class="prose prose-lg text-base-content prose-headings:text-base-content prose-a:text-primary prose-strong:text-base-content prose-code:text-base-content prose-blockquote:text-base-content/80 max-w-none">
                         <Show
-                          when={art().cleanContent}
+                          when={cleanContent()}
                           fallback={
                             <div>
                               <h2 class="mb-3 text-xl font-semibold">Description</h2>
@@ -215,22 +223,22 @@ function ArticleView() {
                             </div>
                           }
                         >
-                          <div innerHTML={art().cleanContent!} />
+                          <div innerHTML={cleanContent()!} />
                         </Show>
                       </div>
                     </Show>
                   </Show>
 
                   {/* Article Content - for non-videos */}
-                  <Show when={!isVideo() && art().cleanContent}>
+                  <Show when={!isVideo() && cleanContent()}>
                     <div
                       class="prose prose-lg text-base-content prose-headings:text-base-content prose-a:text-primary prose-strong:text-base-content prose-code:text-base-content prose-blockquote:text-base-content/80 max-w-none"
-                      innerHTML={art().cleanContent!}
+                      innerHTML={cleanContent()!}
                     />
                   </Show>
 
                   {/* No content fallback */}
-                  <Show when={!isVideo() && !art().cleanContent}>
+                  <Show when={!isVideo() && !cleanContent()}>
                     <div class="py-8 text-center">
                       <p class="text-warning">
                         This article doesn't have readable content available

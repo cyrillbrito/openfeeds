@@ -2,8 +2,9 @@ import { eq } from '@tanstack/db';
 import { useLiveQuery } from '@tanstack/solid-db';
 import { createFileRoute, Link } from '@tanstack/solid-router';
 import VideoIcon from 'lucide-solid/icons/video';
-import { createSignal, Show, Suspense } from 'solid-js';
+import { createSignal, onMount, Show, Suspense } from 'solid-js';
 import { articlesCollection } from '~/entities/articles';
+import { useSessionRead } from '~/hooks/session-read';
 import { useFeeds } from '~/entities/feeds';
 import { useTags } from '~/entities/tags';
 import { validateReadStatusSearch } from '../common/routing';
@@ -25,8 +26,13 @@ export const Route = createFileRoute('/_frame/inbox/')({
 function Inbox() {
   const search = Route.useSearch();
   const readStatus = () => search().readStatus || 'unread';
+  const { sessionReadIds, addSessionRead, setViewKey } = useSessionRead();
 
-  const isRead = () => (readStatus() === 'read' ? true : readStatus() === 'unread' ? false : null);
+  onMount(() => setViewKey('inbox'));
+
+  // Only filter by isRead on server when showing 'read' status
+  // For 'unread', we handle filtering client-side to support session-read tracking
+  const isRead = () => (readStatus() === 'read' ? true : null);
 
   const articlesQuery = useLiveQuery((q) => {
     let query = q
@@ -65,7 +71,11 @@ function Inbox() {
   };
 
   const allArticles = () => {
-    return articlesQuery.data || [];
+    const articles = articlesQuery.data || [];
+    if (readStatus() !== 'unread') return articles;
+
+    // Show unread + session-read articles
+    return articles.filter((a) => !a.isRead || sessionReadIds().has(a.id));
   };
 
   const totalCount = () => {
@@ -76,6 +86,11 @@ function Inbox() {
     articleId: string,
     updates: { isRead?: boolean; isArchived?: boolean; tags?: string[] },
   ) => {
+    // Track session-read articles
+    if (updates.isRead === true) {
+      addSessionRead(articleId);
+    }
+
     // If archiving in the inbox view, show toast with undo
     if (updates.isArchived === true) {
       showToast('Article archived', {

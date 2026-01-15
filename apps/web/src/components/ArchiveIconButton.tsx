@@ -8,7 +8,8 @@ export function ArchiveIconButton(props: {
   archived?: boolean;
   setArchived?: (archived: boolean) => void;
 }) {
-  const handleClick = () => {
+  const handleClick = (e: MouseEvent) => {
+    e.stopPropagation();
     props.setArchived?.(!props.archived);
   };
 
