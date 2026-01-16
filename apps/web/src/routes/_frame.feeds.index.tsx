@@ -21,6 +21,8 @@ import { ImportOpmlModal } from '../components/ImportOpmlModal';
 import { type ModalController } from '../components/LazyModal';
 import { getTagDotColor } from '../utils/tagColors';
 
+const SEARCH_DEBOUNCE_MS = 200;
+
 export const Route = createFileRoute('/_frame/feeds/')({
   component: FeedsComponent,
   validateSearch: (search): { q?: string } => {
@@ -56,7 +58,7 @@ function FeedsComponent() {
       replace: true,
     });
     setSearchDebounced(newQ);
-  }, 200);
+  }, SEARCH_DEBOUNCE_MS);
 
   // Filtered feeds based on search query from URL
   const filteredFeeds = createMemo(() => {

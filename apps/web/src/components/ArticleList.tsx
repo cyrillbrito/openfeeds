@@ -1,10 +1,17 @@
 import type { Article, Feed, Tag } from '@repo/shared/types';
 import { Link } from '@tanstack/solid-router';
-import NewspaperIcon from 'lucide-solid/icons/newspaper';
-import TagIcon from 'lucide-solid/icons/tag';
-import { Index, Show, type JSX } from 'solid-js';
+import ChevronDownIcon from 'lucide-solid/icons/chevron-down';
+import { createSignal, For, Show, type JSX } from 'solid-js';
 import { ArticleCard } from './ArticleCard';
+import {
+  AllCaughtUpIllustration,
+  FeedIllustration,
+  NoReadArticlesIllustration,
+  TagsIllustration,
+} from './Icons';
 import type { ReadStatus } from './ReadStatusToggle';
+
+const ARTICLES_PER_PAGE = 20;
 
 interface ArticleListProps {
   articles: Article[];
@@ -35,22 +42,21 @@ export function ArticleList(props: ArticleListProps) {
       return props.emptyState;
     }
 
-    // Generate contextual messages based on readStatus
     if (readStatus === 'unread') {
       const contextMessages = {
         inbox: {
-          icon: '✨',
+          icon: <AllCaughtUpIllustration />,
           title: 'All Caught Up!',
           description:
             'No unread articles right now. New content will appear here when your feeds sync.',
         },
         feed: {
-          icon: '✨',
+          icon: <AllCaughtUpIllustration />,
           title: 'All Caught Up!',
           description: 'This feed has no unread articles at the moment.',
         },
         tag: {
-          icon: '✨',
+          icon: <AllCaughtUpIllustration />,
           title: 'All Caught Up!',
           description: 'No unread articles with this tag right now.',
         },
@@ -61,17 +67,17 @@ export function ArticleList(props: ArticleListProps) {
     if (readStatus === 'read') {
       const contextMessages = {
         inbox: {
-          icon: '📖',
+          icon: <NoReadArticlesIllustration />,
           title: 'No Read Articles',
           description: 'Articles you mark as read will appear here.',
         },
         feed: {
-          icon: '📖',
+          icon: <NoReadArticlesIllustration />,
           title: 'No Read Articles',
           description: 'Articles you read from this feed will appear here.',
         },
         tag: {
-          icon: '📖',
+          icon: <NoReadArticlesIllustration />,
           title: 'No Read Articles',
           description: 'Read articles with this tag will appear here.',
         },
@@ -79,10 +85,9 @@ export function ArticleList(props: ArticleListProps) {
       return contextMessages[context];
     }
 
-    // readStatus === 'all' or undefined - truly empty state
     const contextMessages = {
       inbox: {
-        icon: <NewspaperIcon size={64} class="text-base-content/30 mx-auto" />,
+        icon: <FeedIllustration />,
         title: 'No Articles Found',
         description:
           "You don't have any articles yet. Add some RSS feeds and sync them to see articles here.",
@@ -92,7 +97,7 @@ export function ArticleList(props: ArticleListProps) {
         },
       },
       feed: {
-        icon: <NewspaperIcon size={64} class="text-base-content/30 mx-auto" />,
+        icon: <FeedIllustration />,
         title: 'No Articles Found',
         description: "This feed doesn't have any articles yet.",
         actions: {
@@ -100,7 +105,7 @@ export function ArticleList(props: ArticleListProps) {
         },
       },
       tag: {
-        icon: <TagIcon size={64} class="text-base-content/30 mx-auto" />,
+        icon: <TagsIllustration />,
         title: 'No Articles Found',
         description:
           "This tag doesn't have any articles yet. Articles will appear here once feeds with this tag are synced and contain content.",
@@ -114,6 +119,16 @@ export function ArticleList(props: ArticleListProps) {
   };
 
   const emptyState = getContextualEmptyState();
+
+  const [visibleCount, setVisibleCount] = createSignal(ARTICLES_PER_PAGE);
+
+  const visibleArticles = () => props.articles.slice(0, visibleCount());
+  const hasMoreArticles = () => props.articles.length > visibleCount();
+  const remainingCount = () => props.articles.length - visibleCount();
+
+  const handleLoadMore = () => {
+    setVisibleCount((prev) => prev + ARTICLES_PER_PAGE);
+  };
 
   return (
     <Show
@@ -141,17 +156,26 @@ export function ArticleList(props: ArticleListProps) {
       }
     >
       <div class="grid gap-2 sm:gap-6">
-        <Index each={props.articles.slice(0, 30)}>
+        <For each={visibleArticles()}>
           {(article) => (
             <ArticleCard
-              article={article()}
+              article={article}
               feeds={props.feeds}
               tags={props.tags}
               onUpdateArticle={props.onUpdateArticle}
             />
           )}
-        </Index>
+        </For>
       </div>
+
+      <Show when={hasMoreArticles()}>
+        <div class="mt-6 flex justify-center">
+          <button class="btn btn-outline btn-wide gap-2" onClick={handleLoadMore}>
+            <ChevronDownIcon size={20} />
+            Load More ({remainingCount()} remaining)
+          </button>
+        </div>
+      </Show>
     </Show>
   );
 }

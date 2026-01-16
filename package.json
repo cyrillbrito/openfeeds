@@ -24,7 +24,7 @@
     "auth-db-generate": "turbo -F @repo/db auth-db-generate",
     "create-user": "bun --cwd=packages/scripts create-user",
     "test-ui": "bun --cwd=apps/e2e test-ui",
-    "test-update-snapshots": "cd packages/e2e test-update-snapshots",
+    "test-update-snapshots": "bun --cwd=apps/e2e test-update-snapshots",
     "clean-install": "find . -name \"node_modules\" -type d -exec rm -rf {} + && rm bun.lock && bun install",
     "test": "echo '123'"
   },
