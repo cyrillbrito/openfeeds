@@ -17,6 +17,7 @@ services:
     ports:
       - '3200:3000'
     environment:
+      - CLIENT_DOMAIN=$CLIENT_DOMAIN
       - DB_PATH=/data
       - BETTER_AUTH_SECRET=$BETTER_AUTH_SECRET
       - SIMPLE_AUTH=$SIMPLE_AUTH
