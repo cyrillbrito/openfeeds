@@ -29,14 +29,6 @@ bun src/migrate.ts     # Run migration script directly
 - **Auth Schema:** Better Auth tables (users, sessions, etc.)
 - **Separate Configs:** `drizzle.config.ts` (user) and `drizzle-auth.config.ts` (auth)
 
-**Key Files:**
-
-- `src/index.ts` - Main database exports and connection
-- `src/migrate.ts` - Migration runner script
-- `src/schema/auth.ts` - Better Auth generated schema
-- `drizzle.config.ts` - User schema configuration
-- `drizzle-auth.config.ts` - Auth schema configuration
-
 ## Schema Management
 
 **User Schema Tables:**
