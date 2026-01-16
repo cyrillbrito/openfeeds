@@ -1,6 +1,7 @@
 import type { Article, Feed, Tag } from '@repo/shared/types';
 import { Link, useNavigate } from '@tanstack/solid-router';
 import ArchiveIcon from 'lucide-solid/icons/archive';
+import ExternalLinkIcon from 'lucide-solid/icons/external-link';
 import InboxIcon from 'lucide-solid/icons/inbox';
 import PlayIcon from 'lucide-solid/icons/play';
 import { Show } from 'solid-js';
@@ -25,6 +26,7 @@ interface ArticleCardProps {
 
 export function ArticleCard(props: ArticleCardProps) {
   const navigate = useNavigate();
+
   const feed = () => props.feeds.find((f) => f.id === props.article.feedId);
   const feedName = () => feed()?.title || 'Loading...';
 
@@ -35,60 +37,43 @@ export function ArticleCard(props: ArticleCardProps) {
   };
 
   const isVideo = () => props.article.url && isYouTubeUrl(props.article.url);
-  const videoId = () => {
-    if (!props.article.url) return null;
-    return extractYouTubeVideoId(props.article.url);
-  };
-
-  const shouldOpenInArticleView = () => {
-    return isVideo() || props.article.hasCleanContent;
-  };
+  const videoId = () => (props.article.url ? extractYouTubeVideoId(props.article.url) : null);
+  const hasRichContent = () => isVideo() || props.article.hasCleanContent;
 
   const handleCardClick = (e: MouseEvent) => {
-    // Don't navigate if clicking on interactive elements
     const target = e.target as HTMLElement;
     if (target.closest('button') || target.closest('a') || target.closest('[data-tag-manager]')) {
       return;
     }
 
-    if (shouldOpenInArticleView()) {
-      markAsRead();
+    markAsRead();
+
+    if (hasRichContent()) {
       navigate({
         to: '/articles/$articleId',
         params: { articleId: props.article.id.toString() },
       });
+    } else if (props.article.url) {
+      window.open(props.article.url, '_blank', 'noopener,noreferrer');
     }
   };
 
   return (
     <Card
       class={twMerge(
-        props.article.isRead && 'opacity-60 grayscale-50 transition-[filter,opacity]',
-        shouldOpenInArticleView() && 'cursor-pointer',
+        'cursor-pointer transition-[filter,opacity]',
+        props.article.isRead && 'opacity-60 grayscale-50',
       )}
       onClick={handleCardClick}
     >
-      {/* Header with title and read button */}
       <div class="mb-2">
         <div class="flex gap-3">
           <h2 class="card-title line-clamp-2 flex-1 text-sm leading-tight sm:text-xl">
-            <Show
-              when={shouldOpenInArticleView()}
-              fallback={
-                <a
-                  href={props.article.url || '#'}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  onClick={markAsRead}
-                  class="hover:underline"
-                >
-                  <HeaderLinkStyle>{props.article.title}</HeaderLinkStyle>
-                </a>
-              }
-            >
-              <span class="hover:text-primary cursor-pointer transition-colors">
-                <HeaderLinkStyle>{props.article.title}</HeaderLinkStyle>
-              </span>
+            <span class="hover:text-primary cursor-pointer transition-colors">
+              <HeaderLinkStyle>{props.article.title}</HeaderLinkStyle>
+            </span>
+            <Show when={!hasRichContent() && props.article.url}>
+              <ExternalLinkIcon size={14} class="text-base-content/40 ml-1 inline-block shrink-0" />
             </Show>
           </h2>
           <div class="flex shrink-0 gap-2">

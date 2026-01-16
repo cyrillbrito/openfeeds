@@ -2,7 +2,7 @@ import { eq } from '@tanstack/db';
 import { useLiveQuery } from '@tanstack/solid-db';
 import { createFileRoute, Link } from '@tanstack/solid-router';
 import VideoIcon from 'lucide-solid/icons/video';
-import { createSignal, onMount, Show, Suspense } from 'solid-js';
+import { createMemo, createSignal, onMount, Show, Suspense } from 'solid-js';
 import { articlesCollection } from '~/entities/articles';
 import { useFeeds } from '~/entities/feeds';
 import { useTags } from '~/entities/tags';
@@ -16,6 +16,7 @@ import { LazyModal, type ModalController } from '../components/LazyModal';
 import { CenterLoader } from '../components/Loader';
 import { MarkAllArchivedButton } from '../components/MarkAllArchivedButton';
 import { ReadStatusToggle } from '../components/ReadStatusToggle';
+import { SortToggle } from '../components/SortToggle';
 import { useToast } from '../hooks/toast';
 
 export const Route = createFileRoute('/_frame/inbox/')({
@@ -26,6 +27,7 @@ export const Route = createFileRoute('/_frame/inbox/')({
 function Inbox() {
   const search = Route.useSearch();
   const readStatus = () => search().readStatus || 'unread';
+  const sortOrder = () => search().sort || 'newest';
   const { sessionReadIds, addSessionRead, setViewKey } = useSessionRead();
 
   onMount(() => setViewKey('inbox'));
@@ -70,13 +72,23 @@ function Inbox() {
     }
   };
 
-  const allArticles = () => {
+  const filteredArticles = () => {
     const articles = articlesQuery.data || [];
     if (readStatus() !== 'unread') return articles;
 
-    // Show unread + session-read articles
     return articles.filter((a) => !a.isRead || sessionReadIds().has(a.id));
   };
+
+  const sortedArticles = createMemo(() => {
+    const articles = [...filteredArticles()];
+    const isOldestFirst = sortOrder() === 'oldest';
+
+    return articles.sort((a, b) => {
+      const dateA = new Date(a.pubDate || 0).getTime();
+      const dateB = new Date(b.pubDate || 0).getTime();
+      return isOldestFirst ? dateA - dateB : dateB - dateA;
+    });
+  });
 
   const totalCount = () => {
     return articlesQuery.data?.length || 0;
@@ -134,7 +146,12 @@ function Inbox() {
       </div>
 
       <ArticleListToolbar
-        leftContent={<ReadStatusToggle currentStatus={readStatus()} />}
+        leftContent={
+          <>
+            <ReadStatusToggle currentStatus={readStatus()} />
+            <SortToggle currentSort={sortOrder()} />
+          </>
+        }
         rightContent={
           <>
             <Show when={totalCount() > 0 && readStatus() === 'unread'}>
@@ -167,7 +184,7 @@ function Inbox() {
           <Suspense fallback={<CenterLoader />}>
             <Show when={feedsQuery.data && tagsQuery.data}>
               <ArticleList
-                articles={allArticles()}
+                articles={sortedArticles()}
                 feeds={feedsQuery.data!}
                 tags={tagsQuery.data!}
                 onUpdateArticle={handleUpdateArticle}

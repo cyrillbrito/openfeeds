@@ -6,10 +6,13 @@ export function Card(props: {
   class?: string;
   onClick?: (e: MouseEvent) => void;
 }) {
+  const isClickable = () => !!props.onClick;
+
   return (
     <div
       class={twMerge(
-        'card bg-base-100 border-base-300 rounded-lg border shadow-sm sm:rounded-2xl',
+        'card bg-base-100 border-base-300 rounded-lg border shadow-sm transition-shadow sm:rounded-2xl',
+        isClickable() && 'hover:border-base-content/20 hover:shadow-lg',
         props.class,
       )}
       onClick={props.onClick}

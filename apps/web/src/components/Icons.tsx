@@ -197,3 +197,77 @@ export function CircleDotIcon(props?: IconProps) {
     </svg>
   );
 }
+
+export function AllCaughtUpIllustration(props?: IconProps) {
+  return (
+    <svg
+      width="160"
+      height="120"
+      viewBox="0 0 160 120"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+      class={twMerge('text-success', props?.class)}
+    >
+      <circle cx="80" cy="60" r="40" fill="currentColor" fill-opacity="0.1" />
+      <circle
+        cx="80"
+        cy="60"
+        r="30"
+        stroke="currentColor"
+        stroke-width="3"
+        stroke-dasharray="6,4"
+        fill="none"
+      />
+      <path
+        d="M65 60 L75 70 L95 50"
+        stroke="currentColor"
+        stroke-width="4"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        fill="none"
+      />
+      <circle cx="30" cy="30" r="8" fill="currentColor" fill-opacity="0.15" />
+      <circle cx="130" cy="25" r="6" fill="currentColor" fill-opacity="0.15" />
+      <circle cx="140" cy="90" r="10" fill="currentColor" fill-opacity="0.1" />
+      <circle cx="25" cy="85" r="5" fill="currentColor" fill-opacity="0.15" />
+    </svg>
+  );
+}
+
+export function NoReadArticlesIllustration(props?: IconProps) {
+  return (
+    <svg
+      width="160"
+      height="120"
+      viewBox="0 0 160 120"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+      class={twMerge('text-base-content/30', props?.class)}
+    >
+      <rect
+        x="40"
+        y="25"
+        width="80"
+        height="70"
+        rx="4"
+        fill="currentColor"
+        fill-opacity="0.1"
+        stroke="currentColor"
+        stroke-width="2"
+      />
+      <rect x="50" y="40" width="60" height="4" rx="2" fill="currentColor" fill-opacity="0.3" />
+      <rect x="50" y="50" width="45" height="4" rx="2" fill="currentColor" fill-opacity="0.2" />
+      <rect x="50" y="60" width="55" height="4" rx="2" fill="currentColor" fill-opacity="0.2" />
+      <rect x="50" y="70" width="35" height="4" rx="2" fill="currentColor" fill-opacity="0.2" />
+      <circle
+        cx="80"
+        cy="55"
+        r="25"
+        stroke="currentColor"
+        stroke-width="2"
+        stroke-dasharray="4,4"
+        fill="none"
+      />
+    </svg>
+  );
+}
