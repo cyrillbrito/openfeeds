@@ -24,12 +24,13 @@ Each app/package has its own `AGENTS.md` with specific patterns and guidelines.
 
 ### Apps
 
-| App            | Description                          | Details                     |
-| -------------- | ------------------------------------ | --------------------------- |
-| `apps/web/`    | SolidJS + TanStack Start frontend    | See `apps/web/AGENTS.md`    |
-| `apps/server/` | Elysia API (auth, background jobs)   | See `apps/server/AGENTS.md` |
-| `apps/worker/` | BullMQ background job processor      | See `apps/worker/AGENTS.md` |
-| `apps/e2e/`    | Playwright tests + visual regression | See `apps/e2e/AGENTS.md`    |
+| App               | Description                          | Details                     |
+| ----------------- | ------------------------------------ | --------------------------- |
+| `apps/web/`       | SolidJS + TanStack Start frontend    | See `apps/web/AGENTS.md`    |
+| `apps/server/`    | Elysia API (auth, background jobs)   | See `apps/server/AGENTS.md` |
+| `apps/worker/`    | BullMQ background job processor      | See `apps/worker/AGENTS.md` |
+| `apps/e2e/`       | Playwright tests + visual regression | See `apps/e2e/AGENTS.md`    |
+| `apps/marketing/` | Marketing website                    | -                           |
 
 ### Packages
 
@@ -40,6 +41,7 @@ Each app/package has its own `AGENTS.md` with specific patterns and guidelines.
 | `packages/discovery/` | RSS/Atom feed discovery             | See `packages/discovery/AGENTS.md` |
 | `packages/shared/`    | Cross-app utilities, types, schemas | -                                  |
 | `packages/emails/`    | React Email templates               | See `packages/emails/AGENTS.md`    |
+| `packages/scripts/`   | CLI utilities (e.g., create-user)   | -                                  |
 
 ## Architecture
 

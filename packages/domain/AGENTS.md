@@ -23,23 +23,9 @@ bun check-types
 
 ## Key Modules
 
-**Business Logic:**
+**Business Logic:** feeds, articles, tags, settings, filter-rules, archive, import, rss-fetch
 
-- `feeds.ts` - Feed CRUD, discovery
-- `articles.ts` - Article queries and updates
-- `rss-sync.ts` - RSS fetching, article sync, enqueues feed jobs
-- `import.ts` - OPML import, enqueues sync/detail jobs
-- `archive.ts` - Auto-archive logic
-- `tags.ts`, `settings.ts`, `filter-rules.ts`
-
-**Infrastructure:**
-
-- `queues.ts` - Queue instances, enqueue functions
-- `queue-config.ts` - Redis connection, queue names
-- `db-provider.ts` - Database provider singleton
-- `logger.ts` - PostHog + file logging
-- `environment.ts` - Env validation
-- `errors.ts` - Domain error classes
+**Infrastructure:** queues, queue-config, db-provider, logger, environment, errors
 
 ## Queue Architecture
 

@@ -40,7 +40,7 @@ bun check-types  # TypeScript check
 ## Worker Pattern
 
 ```typescript
-import { dbProvider, QUEUE_NAMES, redisConnection, syncSingleFeed } from '@repo/domain';
+import { dbProvider, QUEUE_NAMES, redisConnection } from '@repo/domain';
 import { Worker } from 'bullmq';
 
 export function createSingleFeedSyncWorker() {
