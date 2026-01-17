@@ -71,6 +71,7 @@ export function ArticleCard(props: ArticleCardProps) {
       class={twMerge(
         'hover:bg-base-200/50 cursor-pointer px-4 transition-all md:px-6',
         props.article.isRead && 'opacity-50',
+        // Video articles have thumbnails adding visual bulk; text-only articles need more padding for breathing room
         isVideo() ? 'py-3 md:py-4' : 'py-4 md:py-5',
       )}
       onClick={handleCardClick}

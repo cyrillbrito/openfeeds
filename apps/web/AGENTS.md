@@ -135,11 +135,15 @@ const [value, setValue] = createSignal(0);
 
 ## Styling
 
-**DaisyUI Colors:**
+See [UI_DESIGN.md](./UI_DESIGN.md) for full design language documentation.
 
-- `base-100` - Content background
-- `base-200` - Backdrop, tooltips, dropdowns
+**Quick Reference:**
+
+- **Mobile-first** - Design for small screens, enhance for larger
+- `base-100` - Default app background (global)
+- `base-200` - Elevated surfaces (dropdowns, tooltips, hover states)
 - `base-300` - Borders
+- Content width constrained to `max-w-4xl` on desktop
 
 **Tailwind v4:**
 

@@ -41,7 +41,7 @@ function FrameLayout() {
       <div class="drawer lg:drawer-open">
         <input id="my-drawer" type="checkbox" class="drawer-toggle" />
         {/* min-h-dvh instead of min-h-screen to handle mobile browser UI (address bar) correctly on rotation */}
-        <div class="drawer-content bg-base-100 flex min-h-dvh flex-col">
+        <div class="drawer-content flex min-h-dvh flex-col">
           <Suspense
             fallback={
               <>
