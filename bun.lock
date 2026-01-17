@@ -24,9 +24,14 @@
       "name": "@repo/extension",
       "version": "0.0.1",
       "dependencies": {
+        "solid-js": "^1.9.9",
+        "tailwindcss": "^4.0.6",
         "webextension-polyfill": "^0.12.0",
       },
       "devDependencies": {
+        "@tailwindcss/vite": "^4.0.6",
+        "@wxt-dev/module-solid": "^1.1.4",
+        "daisyui": "^5.1.27",
         "typescript": "catalog:",
         "wxt": "^0.20.5",
       },
@@ -1015,6 +1020,8 @@
     "@webext-core/match-patterns": ["@webext-core/match-patterns@1.0.3", "", {}, "sha512-NY39ACqCxdKBmHgw361M9pfJma8e4AZo20w9AY+5ZjIj1W2dvXC8J31G5fjfOGbulW9w4WKpT8fPooi0mLkn9A=="],
 
     "@wxt-dev/browser": ["@wxt-dev/browser@0.1.32", "", { "dependencies": { "@types/filesystem": "*", "@types/har-format": "*" } }, "sha512-jvfSppeLzlH4sOkIvMBJoA1pKoI+U5gTkjDwMKdkTWh0P/fj+KDyze3lzo3S6372viCm8tXUKNez+VKyVz2ZDw=="],
+
+    "@wxt-dev/module-solid": ["@wxt-dev/module-solid@1.1.4", "", { "dependencies": { "vite-plugin-solid": "^2.11.6" }, "peerDependencies": { "wxt": ">=0.19.16" } }, "sha512-lnE7AyJeLkG8XMM58NzbtM1GdzzHH7mqt559WT54RwE+4HxBgnGzQVhe7bdWjTWGOdXlTbCi0HyXZqVtzJ3htA=="],
 
     "@wxt-dev/storage": ["@wxt-dev/storage@1.2.6", "", { "dependencies": { "@wxt-dev/browser": "^0.1.4", "async-mutex": "^0.5.0", "dequal": "^2.0.3" } }, "sha512-f6AknnpJvhNHW4s0WqwSGCuZAj0fjP3EVNPBO5kB30pY+3Zt/nqZGqJN6FgBLCSkYjPJ8VL1hNX5LMVmvxQoDw=="],
 
