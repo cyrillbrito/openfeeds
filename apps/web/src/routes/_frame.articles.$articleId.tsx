@@ -11,7 +11,6 @@ import { useFeeds } from '~/entities/feeds';
 import { useTags } from '~/entities/tags';
 import { ArchiveIconButton } from '../components/ArchiveIconButton';
 import { ArticleTagManager } from '../components/ArticleTagManager';
-import { Card } from '../components/Card';
 import { Header } from '../components/Header';
 import { Loader } from '../components/Loader';
 import { ReadIconButton } from '../components/ReadIconButton';
@@ -83,7 +82,7 @@ function ArticleView() {
         </button>
       </Header>
 
-      <div class="container mx-auto min-h-screen p-3 sm:p-6">
+      <div class="mx-auto min-h-screen max-w-4xl px-4 py-4 md:px-6 md:py-6">
         {/* Content */}
         <Suspense
           fallback={
@@ -103,160 +102,152 @@ function ArticleView() {
             }
           >
             {(art) => (
-              <Card class="shadow-xl">
-                <article>
-                  {/* Article Header */}
-                  <header class="mb-8">
-                    <div class="mb-4 flex gap-3">
-                      <h1 class="text-base-content flex-1 text-3xl leading-tight font-bold md:text-4xl">
-                        {art().title}
-                      </h1>
-                      <div class="flex shrink-0 gap-2">
-                        <ArchiveIconButton
-                          read={art().isRead || false}
-                          archived={art().isArchived || false}
-                          setArchived={(isArchived) => {
-                            articlesCollection.update(art().id, (draft) => {
-                              draft.isArchived = isArchived;
-                            });
-                          }}
-                        />
-                        <ReadIconButton
-                          read={art().isRead || false}
-                          setRead={(isRead) => {
-                            articlesCollection.update(art().id, (draft) => {
-                              draft.isRead = isRead;
-                            });
-                          }}
-                        />
-                      </div>
+              <article>
+                {/* Article Header */}
+                <header class="mb-8">
+                  <div class="mb-4 flex gap-3">
+                    <h1 class="text-base-content flex-1 text-2xl leading-tight font-bold md:text-3xl">
+                      {art().title}
+                    </h1>
+                    <div class="flex shrink-0 gap-2">
+                      <ArchiveIconButton
+                        read={art().isRead || false}
+                        archived={art().isArchived || false}
+                        setArchived={(isArchived) => {
+                          articlesCollection.update(art().id, (draft) => {
+                            draft.isArchived = isArchived;
+                          });
+                        }}
+                      />
+                      <ReadIconButton
+                        read={art().isRead || false}
+                        setRead={(isRead) => {
+                          articlesCollection.update(art().id, (draft) => {
+                            draft.isRead = isRead;
+                          });
+                        }}
+                      />
                     </div>
-
-                    <div class="text-base-content/70 flex flex-wrap items-center gap-2 text-sm">
-                      <div class="flex items-center gap-1">
-                        <Show
-                          when={art().isArchived}
-                          fallback={<InboxIcon size={16} class="text-base-content/40" />}
-                        >
-                          <ArchiveIcon size={16} class="text-base-content/40" />
-                        </Show>
-                        <Show when={feed()}>
-                          <Link
-                            to="/feeds/$feedId"
-                            params={{ feedId: art().feedId?.toString() }}
-                            class="text-primary font-medium hover:underline"
-                          >
-                            {feed()!.title}
-                          </Link>
-                        </Show>
-                      </div>
-
-                      <Show when={art().author}>
-                        <span>•</span>
-                        <span>By {art().author}</span>
-                      </Show>
-
-                      <Show when={art().pubDate}>
-                        <span>•</span>
-                        <TimeAgo date={art().pubDate!} />
-                      </Show>
-
-                      <Show when={art().url}>
-                        <span>•</span>
-                        <a
-                          href={art().url!}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          class="text-primary hover:underline"
-                        >
-                          View Original
-                        </a>
-                      </Show>
-                    </div>
-
-                    {/* Article Tags */}
-                    <Show when={tagsQuery.data}>
-                      <div class="mt-4">
-                        <ArticleTagManager
-                          tags={tagsQuery.data!}
-                          selectedIds={art().tags}
-                          onSelectionChange={(tagIds) => {
-                            articlesCollection.update(art().id, (draft) => {
-                              draft.tags = tagIds;
-                            });
-                          }}
-                        />
-                      </div>
-                    </Show>
-                  </header>
-
-                  {/* Divider */}
-                  <div class="mb-8 px-8">
-                    <div class="border-base-300 border-t"></div>
                   </div>
 
-                  {/* Video Content */}
-                  <Show when={isVideo() && videoEmbedUrl()}>
-                    <div class="mb-8">
-                      <div class="aspect-video overflow-hidden rounded-lg shadow-lg">
-                        <iframe
-                          src={videoEmbedUrl()!}
-                          title={art().title}
-                          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-                          allowfullscreen
-                          class="h-full w-full border-0"
-                        ></iframe>
-                      </div>
+                  <div class="text-base-content/70 flex flex-wrap items-center gap-2 text-sm">
+                    <div class="flex items-center gap-1">
+                      <Show
+                        when={art().isArchived}
+                        fallback={<InboxIcon size={16} class="text-base-content/40" />}
+                      >
+                        <ArchiveIcon size={16} class="text-base-content/40" />
+                      </Show>
+                      <Show when={feed()}>
+                        <Link
+                          to="/feeds/$feedId"
+                          params={{ feedId: art().feedId?.toString() }}
+                          class="text-primary font-medium hover:underline"
+                        >
+                          {feed()!.title}
+                        </Link>
+                      </Show>
                     </div>
 
-                    {/* Video Description */}
-                    <Show when={cleanContent() || art().description || art().content}>
-                      <div class="prose prose-lg text-base-content prose-headings:text-base-content prose-a:text-primary prose-strong:text-base-content prose-code:text-base-content prose-blockquote:text-base-content/80 max-w-none">
-                        <Show
-                          when={cleanContent()}
-                          fallback={
-                            <div>
-                              <h2 class="mb-3 text-xl font-semibold">Description</h2>
-                              <p class="whitespace-pre-wrap">
-                                {art().description || art().content}
-                              </p>
-                            </div>
-                          }
-                        >
-                          <div innerHTML={cleanContent()!} />
-                        </Show>
-                      </div>
+                    <Show when={art().author}>
+                      <span>•</span>
+                      <span>By {art().author}</span>
                     </Show>
-                  </Show>
 
-                  {/* Article Content - for non-videos */}
-                  <Show when={!isVideo() && cleanContent()}>
-                    <div
-                      class="prose prose-lg text-base-content prose-headings:text-base-content prose-a:text-primary prose-strong:text-base-content prose-code:text-base-content prose-blockquote:text-base-content/80 max-w-none"
-                      innerHTML={cleanContent()!}
-                    />
-                  </Show>
+                    <Show when={art().pubDate}>
+                      <span>•</span>
+                      <TimeAgo date={art().pubDate!} />
+                    </Show>
 
-                  {/* No content fallback */}
-                  <Show when={!isVideo() && !cleanContent()}>
-                    <div class="py-8 text-center">
-                      <p class="text-warning">
-                        This article doesn't have readable content available
-                      </p>
-                      <Show when={art().url}>
-                        <a
-                          href={art().url!}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          class="btn btn-primary btn-sm mt-4"
-                        >
-                          View Original Article
-                        </a>
+                    <Show when={art().url}>
+                      <span>•</span>
+                      <a
+                        href={art().url!}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        class="text-primary hover:underline"
+                      >
+                        View Original
+                      </a>
+                    </Show>
+                  </div>
+
+                  {/* Article Tags */}
+                  <Show when={tagsQuery.data}>
+                    <div class="mt-4">
+                      <ArticleTagManager
+                        tags={tagsQuery.data!}
+                        selectedIds={art().tags}
+                        onSelectionChange={(tagIds) => {
+                          articlesCollection.update(art().id, (draft) => {
+                            draft.tags = tagIds;
+                          });
+                        }}
+                      />
+                    </div>
+                  </Show>
+                </header>
+
+                {/* Divider */}
+                <div class="border-base-300 mb-8 border-t"></div>
+
+                {/* Video Content */}
+                <Show when={isVideo() && videoEmbedUrl()}>
+                  <div class="mb-8">
+                    <div class="aspect-video overflow-hidden rounded-lg shadow-lg">
+                      <iframe
+                        src={videoEmbedUrl()!}
+                        title={art().title}
+                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                        allowfullscreen
+                        class="h-full w-full border-0"
+                      ></iframe>
+                    </div>
+                  </div>
+
+                  {/* Video Description */}
+                  <Show when={cleanContent() || art().description || art().content}>
+                    <div class="prose prose-lg text-base-content prose-headings:text-base-content prose-a:text-primary prose-strong:text-base-content prose-code:text-base-content prose-blockquote:text-base-content/80 max-w-none">
+                      <Show
+                        when={cleanContent()}
+                        fallback={
+                          <div>
+                            <h2 class="mb-3 text-xl font-semibold">Description</h2>
+                            <p class="whitespace-pre-wrap">{art().description || art().content}</p>
+                          </div>
+                        }
+                      >
+                        <div innerHTML={cleanContent()!} />
                       </Show>
                     </div>
                   </Show>
-                </article>
-              </Card>
+                </Show>
+
+                {/* Article Content - for non-videos */}
+                <Show when={!isVideo() && cleanContent()}>
+                  <div
+                    class="prose prose-lg text-base-content prose-headings:text-base-content prose-a:text-primary prose-strong:text-base-content prose-code:text-base-content prose-blockquote:text-base-content/80 max-w-none"
+                    innerHTML={cleanContent()!}
+                  />
+                </Show>
+
+                {/* No content fallback */}
+                <Show when={!isVideo() && !cleanContent()}>
+                  <div class="py-8 text-center">
+                    <p class="text-warning">This article doesn't have readable content available</p>
+                    <Show when={art().url}>
+                      <a
+                        href={art().url!}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        class="btn btn-primary btn-sm mt-4"
+                      >
+                        View Original Article
+                      </a>
+                    </Show>
+                  </div>
+                </Show>
+              </article>
             )}
           </Show>
         </Suspense>

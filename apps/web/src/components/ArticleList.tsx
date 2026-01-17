@@ -155,7 +155,7 @@ export function ArticleList(props: ArticleListProps) {
         </div>
       }
     >
-      <div class="grid gap-2 sm:gap-6">
+      <div class="divide-base-300 divide-y">
         <For each={visibleArticles()}>
           {(article) => (
             <ArticleCard
