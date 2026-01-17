@@ -31,3 +31,11 @@ export interface DiscoveryOptions {
   /** Custom User-Agent header */
   userAgent?: string;
 }
+
+/**
+ * Options for extracting feeds from a document
+ */
+export interface ExtractOptions {
+  /** Base URL for resolving relative URLs */
+  baseUrl: string;
+}

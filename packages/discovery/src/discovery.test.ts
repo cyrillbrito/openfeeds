@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, mock, test } from 'bun:test';
-import { discoverFeeds } from './discovery.js';
+import { discoverFeeds } from './server.js';
 
 // Mock fetch for testing
 const mockFetch = mock();
@@ -463,7 +463,7 @@ describe('RSS Feed Discovery', () => {
     expect(result[0].url).toBe('https://example.com/feed');
     expect(result[0].title).toBe('RSS');
     expect(result[1].url).toBe('https://example.com/blog/rss.xml');
-    expect(result[1].title).toBe('Blog RSS');
+    expect(result[1].title).toBe('Blog RSS Feed'); // title attribute takes priority
     expect(result[2].url).toBe('https://example.com/news/atom');
     expect(result[2].title).toBe('News Feed');
   });

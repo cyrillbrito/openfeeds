@@ -17,7 +17,7 @@ import {
   getWordPressRss,
   getYoutubePlaylistRss,
   getYoutubeRss,
-} from './services.js';
+} from './core/services.js';
 
 describe('YouTube RSS Discovery', () => {
   test('should detect YouTube channel URL', () => {

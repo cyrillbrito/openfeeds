@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'bun:test';
-import { isSupportedProtocol, parseUrl, resolveUrl, truncate } from './utils.js';
+import { isSupportedProtocol, parseUrl, resolveUrl, truncate } from './core/utils.js';
 
 describe('URL Utilities', () => {
   describe('parseUrl', () => {

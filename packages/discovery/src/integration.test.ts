@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'bun:test';
-import { discoverFeeds, services } from './index.js';
+import { discoverFeeds, SERVICES as services } from './server.js';
 
 describe('RSS Discovery Integration', () => {
   test('should export main discovery function', () => {

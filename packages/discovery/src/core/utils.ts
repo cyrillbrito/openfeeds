@@ -1,45 +1,33 @@
-/**
- * Parse a URL and return URL object
- */
+import { INVALID_EXTENSIONS_REGEX, INVALID_URL_PATTERNS } from './constants.js';
+
 export function parseUrl(urlString: string): URL {
   return new URL(urlString);
 }
 
-/**
- * Resolve relative URLs to absolute URLs
- */
 export function resolveUrl(baseUrl: string, relativeUrl: string): string {
-  // If feed's url starts with "//"
   if (relativeUrl.startsWith('//')) {
     const base = new URL(baseUrl);
     return base.protocol + relativeUrl;
   }
 
-  // If feed's url starts with "/"
   if (relativeUrl.startsWith('/')) {
     const base = new URL(baseUrl);
     return base.origin + relativeUrl;
   }
 
-  // If feed's url starts with http or https
   if (/^(http|https):\/\//i.test(relativeUrl)) {
     return relativeUrl;
   }
 
-  // If feed's has no slash - relative to current path
   if (!relativeUrl.includes('/')) {
     const base = new URL(baseUrl);
     const pathWithoutFile = base.pathname.substring(0, base.pathname.lastIndexOf('/') + 1);
     return base.origin + pathWithoutFile + relativeUrl;
   }
 
-  // Default case - relative to base
   return new URL(relativeUrl, baseUrl).toString();
 }
 
-/**
- * Check if a URL protocol is supported for RSS discovery
- */
 export function isSupportedProtocol(url: string): boolean {
   const unsupportedProtocols = [
     'chrome:',
@@ -59,15 +47,11 @@ export function isSupportedProtocol(url: string): boolean {
   }
 }
 
-/**
- * Truncate string in the middle with separator
- */
 export function truncate(fullStr: string, strLen: number, separator = '...'): string {
   if (fullStr.length <= strLen) return fullStr;
 
   const sepLen = separator.length;
 
-  // If separator is longer than or equal to the target length, just return the separator or original string
   if (sepLen >= strLen) {
     return fullStr.length <= strLen ? fullStr : separator.substring(0, strLen);
   }
@@ -79,4 +63,42 @@ export function truncate(fullStr: string, strLen: number, separator = '...'): st
   return (
     fullStr.substring(0, frontChars) + separator + fullStr.substring(fullStr.length - backChars)
   );
+}
+
+export function normalizeUrl(url: string, baseUrl?: string): string {
+  let normalizedUrl = url
+    .replace(/^(feed:\/\/)/, 'https://')
+    .replace(/^(feed:)/, '')
+    .replace(/^(http:\/\/)/, 'https://');
+
+  if (baseUrl && !normalizedUrl.startsWith('http')) {
+    normalizedUrl = resolveUrl(baseUrl, normalizedUrl);
+  }
+
+  return normalizedUrl;
+}
+
+export function shouldSkipUrl(url: string): boolean {
+  if (INVALID_URL_PATTERNS.some((pattern) => url.includes(pattern))) {
+    return true;
+  }
+
+  if (INVALID_EXTENSIONS_REGEX.test(url)) {
+    return true;
+  }
+
+  return false;
+}
+
+export function isValidFeedUrl(url: string): boolean {
+  try {
+    const urlObj = new URL(url);
+    return urlObj.protocol === 'http:' || urlObj.protocol === 'https:';
+  } catch {
+    return false;
+  }
+}
+
+export function dedupeFeeds<T extends { url: string }>(feeds: T[]): T[] {
+  return feeds.filter((feed, index, array) => array.findIndex((f) => f.url === feed.url) === index);
 }

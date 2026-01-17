@@ -1,8 +1,5 @@
 import type { ServiceResult } from './types.js';
 
-/**
- * Get RSS feed URL of Youtube channel or user
- */
 export function getYoutubeRss(url: string): ServiceResult {
   const result: ServiceResult = { match: false, feeds: [] };
 
@@ -48,9 +45,6 @@ export function getYoutubeRss(url: string): ServiceResult {
   return result;
 }
 
-/**
- * Get RSS feed URL of Youtube playlist
- */
 export function getYoutubePlaylistRss(url: string): ServiceResult {
   const result: ServiceResult = { match: false, feeds: [] };
 
@@ -73,9 +67,6 @@ export function getYoutubePlaylistRss(url: string): ServiceResult {
   return result;
 }
 
-/**
- * Get RSS feed URL for Reddit homepage
- */
 export function getRedditRootRss(url: string): ServiceResult {
   const result: ServiceResult = { match: false, feeds: [] };
 
@@ -94,9 +85,6 @@ export function getRedditRootRss(url: string): ServiceResult {
   return result;
 }
 
-/**
- * Get RSS feed URL of a subreddit
- */
 export function getRedditSubRss(url: string): ServiceResult {
   const result: ServiceResult = { match: false, feeds: [] };
 
@@ -115,9 +103,6 @@ export function getRedditSubRss(url: string): ServiceResult {
   return result;
 }
 
-/**
- * Get RSS feed URL of a Reddit user
- */
 export function getRedditUserRss(url: string): ServiceResult {
   const result: ServiceResult = { match: false, feeds: [] };
 
@@ -136,9 +121,6 @@ export function getRedditUserRss(url: string): ServiceResult {
   return result;
 }
 
-/**
- * Get RSS feed URL for Reddit post comments
- */
 export function getRedditPostCommentsRss(url: string): ServiceResult {
   const result: ServiceResult = { match: false, feeds: [] };
 
@@ -157,9 +139,6 @@ export function getRedditPostCommentsRss(url: string): ServiceResult {
   return result;
 }
 
-/**
- * Get RSS feed URL of Kickstarter
- */
 export function getKickstarterRss(url: string): ServiceResult {
   const result: ServiceResult = { match: false, feeds: [] };
 
@@ -178,9 +157,6 @@ export function getKickstarterRss(url: string): ServiceResult {
   return result;
 }
 
-/**
- * Get RSS feed URL of Vimeo
- */
 export function getVimeoRss(url: string): ServiceResult {
   const result: ServiceResult = { match: false, feeds: [] };
 
@@ -202,9 +178,6 @@ export function getVimeoRss(url: string): ServiceResult {
   return result;
 }
 
-/**
- * Get RSS feed URL of Github repo
- */
 export function getGithubRepoRss(url: string): ServiceResult {
   const result: ServiceResult = { match: false, feeds: [] };
 
@@ -226,9 +199,6 @@ export function getGithubRepoRss(url: string): ServiceResult {
   return result;
 }
 
-/**
- * Get RSS feed URL of Github user
- */
 export function getGithubUserRss(url: string): ServiceResult {
   const result: ServiceResult = { match: false, feeds: [] };
 
@@ -244,9 +214,6 @@ export function getGithubUserRss(url: string): ServiceResult {
   return result;
 }
 
-/**
- * Get RSS feed URL of Gitlab repo
- */
 export function getGitlabRepoRss(url: string): ServiceResult {
   const result: ServiceResult = { match: false, feeds: [] };
 
@@ -262,9 +229,6 @@ export function getGitlabRepoRss(url: string): ServiceResult {
   return result;
 }
 
-/**
- * Get RSS feed URL of Gitlab user
- */
 export function getGitlabUserRss(url: string): ServiceResult {
   const result: ServiceResult = { match: false, feeds: [] };
 
@@ -280,9 +244,6 @@ export function getGitlabUserRss(url: string): ServiceResult {
   return result;
 }
 
-/**
- * Get RSS feed URL of Medium tag page
- */
 export function getMediumTagRss(url: string): ServiceResult {
   const result: ServiceResult = { match: false, feeds: [] };
 
@@ -304,9 +265,6 @@ export function getMediumTagRss(url: string): ServiceResult {
   return result;
 }
 
-/**
- * Get RSS feed URL of Itch.io page
- */
 export function getItchioRss(url: string): ServiceResult {
   const result: ServiceResult = { match: false, feeds: [] };
 
@@ -325,9 +283,6 @@ export function getItchioRss(url: string): ServiceResult {
   return result;
 }
 
-/**
- * Get RSS feed URL of Mirror.xyz
- */
 export function getMirrorXyzRss(url: string): ServiceResult {
   const result: ServiceResult = { match: false, feeds: [] };
 
@@ -350,13 +305,9 @@ export function getMirrorXyzRss(url: string): ServiceResult {
   return result;
 }
 
-/**
- * Get RSS feed URLs for WordPress sites
- */
 export function getWordPressRss(url: string): ServiceResult {
   const result: ServiceResult = { match: false, feeds: [] };
 
-  // Detect WordPress indicators in URL or common WordPress patterns
   const wordpressIndicators = [
     'wp-content',
     'wp-includes',
@@ -386,9 +337,6 @@ export function getWordPressRss(url: string): ServiceResult {
   return result;
 }
 
-/**
- * All service checkers mapped by name
- */
 export const SERVICES = {
   Youtube: getYoutubeRss,
   YoutubePlaylist: getYoutubePlaylistRss,
@@ -408,9 +356,6 @@ export const SERVICES = {
   WordPress: getWordPressRss,
 } as const;
 
-/**
- * Check if URL matches any known service and return feeds
- */
 export function checkKnownServices(url: string): ServiceResult | null {
   for (const [, serviceChecker] of Object.entries(SERVICES)) {
     const result = serviceChecker(url);

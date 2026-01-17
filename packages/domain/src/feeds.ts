@@ -1,5 +1,5 @@
 import { feeds, feedTags, type DbInsertFeed, type UserDb } from '@repo/db';
-import { discoverFeeds } from '@repo/discovery';
+import { discoverFeeds } from '@repo/discovery/server';
 import {
   type CreateFeed,
   type DiscoveredFeed,
