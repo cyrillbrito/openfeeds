@@ -155,7 +155,7 @@ export function ArticleList(props: ArticleListProps) {
         </div>
       }
     >
-      <div class="divide-y divide-base-300">
+      <div class="divide-base-300 divide-y">
         <For each={visibleArticles()}>
           {(article) => (
             <ArticleCard
