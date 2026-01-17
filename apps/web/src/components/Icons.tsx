@@ -206,9 +206,9 @@ export function AllCaughtUpIllustration(props?: IconProps) {
       viewBox="0 0 160 120"
       fill="none"
       xmlns="http://www.w3.org/2000/svg"
-      class={twMerge('text-success', props?.class)}
+      class={twMerge('text-success/80', props?.class)}
     >
-      <circle cx="80" cy="60" r="40" fill="currentColor" fill-opacity="0.1" />
+      <circle cx="80" cy="60" r="40" fill="currentColor" fill-opacity="0.25" />
       <circle
         cx="80"
         cy="60"
@@ -226,10 +226,10 @@ export function AllCaughtUpIllustration(props?: IconProps) {
         stroke-linejoin="round"
         fill="none"
       />
-      <circle cx="30" cy="30" r="8" fill="currentColor" fill-opacity="0.15" />
-      <circle cx="130" cy="25" r="6" fill="currentColor" fill-opacity="0.15" />
-      <circle cx="140" cy="90" r="10" fill="currentColor" fill-opacity="0.1" />
-      <circle cx="25" cy="85" r="5" fill="currentColor" fill-opacity="0.15" />
+      <circle cx="30" cy="30" r="8" fill="currentColor" fill-opacity="0.5" />
+      <circle cx="130" cy="25" r="6" fill="currentColor" fill-opacity="0.5" />
+      <circle cx="140" cy="90" r="10" fill="currentColor" fill-opacity="0.4" />
+      <circle cx="25" cy="85" r="5" fill="currentColor" fill-opacity="0.5" />
     </svg>
   );
 }

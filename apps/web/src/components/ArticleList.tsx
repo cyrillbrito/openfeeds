@@ -135,7 +135,7 @@ export function ArticleList(props: ArticleListProps) {
       when={props.articles && props.articles.length > 0}
       fallback={
         <div class="py-16 text-center">
-          <div class="mb-4">{emptyState.icon}</div>
+          <div class="mb-4 flex justify-center">{emptyState.icon}</div>
           <h2 class="mb-2 text-2xl font-semibold">{emptyState.title}</h2>
           <p class="text-base-content-gray mb-6">{emptyState.description}</p>
           {emptyState.actions && (
