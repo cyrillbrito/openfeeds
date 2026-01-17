@@ -24,16 +24,15 @@
       "name": "@repo/extension",
       "version": "0.0.1",
       "dependencies": {
-        "solid-js": "^1.9.9",
-        "tailwindcss": "^4.0.6",
-        "webextension-polyfill": "^0.12.0",
+        "daisyui": "^5.5.14",
+        "solid-js": "^1.9.10",
+        "tailwindcss": "^4.1.18",
       },
       "devDependencies": {
-        "@tailwindcss/vite": "^4.0.6",
+        "@tailwindcss/vite": "^4.1.18",
         "@wxt-dev/module-solid": "^1.1.4",
-        "daisyui": "^5.1.27",
         "typescript": "catalog:",
-        "wxt": "^0.20.5",
+        "wxt": "^0.20.6",
       },
     },
     "apps/marketing": {
@@ -2310,8 +2309,6 @@
     "web-namespaces": ["web-namespaces@2.0.1", "", {}, "sha512-bKr1DkiNa2krS7qxNtdrtHAmzuYGFQLiQ13TsorsdT6ULTkPLKuu5+GsFpDlg6JFjUTwX2DyhMPG2be8uPrqsQ=="],
 
     "web-vitals": ["web-vitals@4.2.4", "", {}, "sha512-r4DIlprAGwJ7YM11VZp4R884m0Vmgr6EAKe3P+kO0PPj3Unqyvv59rczf6UiGcb9Z8QxZVcqKNwv/g0WNdWwsw=="],
-
-    "webextension-polyfill": ["webextension-polyfill@0.12.0", "", {}, "sha512-97TBmpoWJEE+3nFBQ4VocyCdLKfw54rFaJ6EVQYLBCXqCIpLSZkwGgASpv4oPt9gdKCJ80RJlcmNzNn008Ag6Q=="],
 
     "webidl-conversions": ["webidl-conversions@8.0.1", "", {}, "sha512-BMhLD/Sw+GbJC21C/UgyaZX41nPt8bUTg+jWyDeg7e7YN4xOM05YPSIXceACnXVtqyEw/LMClUQMtMZ+PGGpqQ=="],
 

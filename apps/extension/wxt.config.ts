@@ -14,9 +14,6 @@ export default defineConfig({
       port: 3003,
     },
   },
-  webExt: {
-    startUrls: ['https://example.com'],
-  },
   vite: () => ({
     plugins: [tailwindcss()],
   }),

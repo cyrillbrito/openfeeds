@@ -1,5 +1,6 @@
 import type { DiscoveredFeed, MessageType } from '@/utils/types';
 import { createSignal, For, Match, onMount, Switch } from 'solid-js';
+import './App.css';
 
 type PopupState = 'loading' | 'no-feeds' | 'feeds-list' | 'error';
 
@@ -68,7 +69,7 @@ function FeedItem(props: { feed: DiscoveredFeed }) {
   );
 }
 
-export function Popup() {
+export function App() {
   const [state, setState] = createSignal<PopupState>('loading');
   const [feeds, setFeeds] = createSignal<DiscoveredFeed[]>([]);
   const [errorMessage, setErrorMessage] = createSignal('');
