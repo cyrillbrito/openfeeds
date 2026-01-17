@@ -1,3 +1,5 @@
+import logoUrl from '@/assets/logo.svg';
+import { initTheme } from '@/utils/theme';
 import type { DiscoveredFeed, MessageType } from '@/utils/types';
 import { createSignal, For, Match, onMount, Switch } from 'solid-js';
 import './App.css';
@@ -42,10 +44,22 @@ function FeedItem(props: { feed: DiscoveredFeed }) {
   return (
     <li class="border-base-300 flex items-center justify-between gap-3 rounded-lg border p-3">
       <div class="min-w-0 flex-1">
-        <div class="text-base-content truncate font-medium" title={props.feed.url}>
+        <div class="text-base-content truncate font-medium" title={props.feed.title}>
           {props.feed.title}
         </div>
-        <div class="text-base-content/60 mt-0.5 text-xs">{formatFeedType(props.feed.type)}</div>
+        <div class="text-base-content/60 mt-0.5 flex items-center gap-1.5 text-xs">
+          <span>{formatFeedType(props.feed.type)}</span>
+          <span class="text-base-content/30">•</span>
+          <a
+            href={props.feed.url}
+            target="_blank"
+            rel="noopener noreferrer"
+            class="link link-hover truncate"
+            title={props.feed.url}
+          >
+            {props.feed.url}
+          </a>
+        </div>
       </div>
       <button
         class="btn btn-primary btn-sm"
@@ -75,6 +89,8 @@ export function App() {
   const [errorMessage, setErrorMessage] = createSignal('');
 
   onMount(async () => {
+    await initTheme();
+
     try {
       const [tab] = await browser.tabs.query({
         active: true,
@@ -100,17 +116,45 @@ export function App() {
 
       setFeeds(detectedFeeds);
       setState('feeds-list');
-    } catch (error) {
-      console.error('Failed to detect feeds:', error);
-      setErrorMessage('Could not detect feeds. Try refreshing the page.');
-      setState('error');
+    } catch {
+      setState('no-feeds');
     }
   });
 
   return (
     <div class="flex min-h-[200px] flex-col">
-      <header class="border-base-300 bg-base-200 border-b px-4 py-3">
-        <h1 class="text-base font-semibold">OpenFeeds</h1>
+      <header class="border-base-300 bg-base-200 flex items-center justify-between border-b px-4 py-3">
+        <div class="flex items-center gap-2">
+          <img src={logoUrl} class="h-6 w-8" alt="OpenFeeds logo" />
+          <h1 class="text-base font-semibold">OpenFeeds</h1>
+        </div>
+        <button
+          type="button"
+          class="btn btn-ghost btn-sm btn-square"
+          onClick={() => browser.runtime.openOptionsPage()}
+          title="Settings"
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            class="h-4 w-4"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"
+            />
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
+            />
+          </svg>
+        </button>
       </header>
 
       <main class="flex-1 p-4">
@@ -143,12 +187,6 @@ export function App() {
           </Match>
         </Switch>
       </main>
-
-      <footer class="border-base-300 bg-base-200 border-t px-4 py-3 text-center">
-        <a href="#" class="text-base-content/60 hover:text-primary text-xs hover:underline">
-          Settings
-        </a>
-      </footer>
     </div>
   );
 }

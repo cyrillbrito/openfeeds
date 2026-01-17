@@ -13,8 +13,3 @@
 html {
   background: var(--color-base-100);
 }
-
-body {
-  width: 400px;
-  min-height: 200px;
-}

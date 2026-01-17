@@ -27,6 +27,7 @@ bun zip          # Create distributable ZIP
 | File                        | Type           | Purpose                                         |
 | --------------------------- | -------------- | ----------------------------------------------- |
 | `entrypoints/popup/`        | Popup UI       | SolidJS app shown when clicking extension icon  |
+| `entrypoints/options/`      | Options Page   | Settings UI for configuring server URL          |
 | `entrypoints/content.ts`    | Content Script | Injected into all pages, detects feeds from DOM |
 | `entrypoints/background.ts` | Service Worker | Handles API calls to OpenFeeds server           |
 
@@ -96,13 +97,13 @@ Defined in `utils/types.ts`:
 
 ### Storage
 
-- `apiUrl` - OpenFeeds API URL (default: `http://localhost:3001`)
+- `apiUrl` - OpenFeeds API URL (default: `https://openfeeds.app`)
 
 ### Manifest Permissions
 
 - `activeTab` - Access current tab to inject content script
 - `storage` - Store API URL preference
-- `host_permissions` - Allow API calls to localhost and openfeeds.com
+- `host_permissions` - Allow API calls to localhost and openfeeds.app
 
 ## Directory Structure
 
@@ -111,6 +112,11 @@ apps/extension/
 ├── entrypoints/
 │   ├── popup/           # SolidJS popup UI
 │   │   ├── App.tsx      # Main component
+│   │   ├── App.css      # Tailwind entry
+│   │   ├── main.tsx     # Mount point
+│   │   └── index.html
+│   ├── options/         # Settings page
+│   │   ├── App.tsx      # Settings form
 │   │   ├── App.css      # Tailwind entry
 │   │   ├── main.tsx     # Mount point
 │   │   └── index.html

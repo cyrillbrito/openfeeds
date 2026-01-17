@@ -13,6 +13,7 @@ import { Route as SignupRouteImport } from './routes/signup'
 import { Route as SigninRouteImport } from './routes/signin'
 import { Route as FrameRouteImport } from './routes/_frame'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as ApiFeedsRouteImport } from './routes/api/feeds'
 import { Route as FrameSettingsRouteImport } from './routes/_frame.settings'
 import { Route as FrameTagsIndexRouteImport } from './routes/_frame.tags.index'
 import { Route as FrameInboxIndexRouteImport } from './routes/_frame.inbox.index'
@@ -41,6 +42,11 @@ const FrameRoute = FrameRouteImport.update({
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiFeedsRoute = ApiFeedsRouteImport.update({
+  id: '/api/feeds',
+  path: '/api/feeds',
   getParentRoute: () => rootRouteImport,
 } as any)
 const FrameSettingsRoute = FrameSettingsRouteImport.update({
@@ -100,6 +106,7 @@ export interface FileRoutesByFullPath {
   '/signin': typeof SigninRoute
   '/signup': typeof SignupRoute
   '/settings': typeof FrameSettingsRoute
+  '/api/feeds': typeof ApiFeedsRoute
   '/articles/$articleId': typeof FrameArticlesArticleIdRoute
   '/tags/$tagId': typeof FrameTagsTagIdRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
@@ -115,6 +122,7 @@ export interface FileRoutesByTo {
   '/signin': typeof SigninRoute
   '/signup': typeof SignupRoute
   '/settings': typeof FrameSettingsRoute
+  '/api/feeds': typeof ApiFeedsRoute
   '/articles/$articleId': typeof FrameArticlesArticleIdRoute
   '/tags/$tagId': typeof FrameTagsTagIdRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
@@ -132,6 +140,7 @@ export interface FileRoutesById {
   '/signin': typeof SigninRoute
   '/signup': typeof SignupRoute
   '/_frame/settings': typeof FrameSettingsRoute
+  '/api/feeds': typeof ApiFeedsRoute
   '/_frame/articles/$articleId': typeof FrameArticlesArticleIdRoute
   '/_frame/tags/$tagId': typeof FrameTagsTagIdRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
@@ -149,6 +158,7 @@ export interface FileRouteTypes {
     | '/signin'
     | '/signup'
     | '/settings'
+    | '/api/feeds'
     | '/articles/$articleId'
     | '/tags/$tagId'
     | '/api/auth/$'
@@ -164,6 +174,7 @@ export interface FileRouteTypes {
     | '/signin'
     | '/signup'
     | '/settings'
+    | '/api/feeds'
     | '/articles/$articleId'
     | '/tags/$tagId'
     | '/api/auth/$'
@@ -180,6 +191,7 @@ export interface FileRouteTypes {
     | '/signin'
     | '/signup'
     | '/_frame/settings'
+    | '/api/feeds'
     | '/_frame/articles/$articleId'
     | '/_frame/tags/$tagId'
     | '/api/auth/$'
@@ -196,6 +208,7 @@ export interface RootRouteChildren {
   FrameRoute: typeof FrameRouteWithChildren
   SigninRoute: typeof SigninRoute
   SignupRoute: typeof SignupRoute
+  ApiFeedsRoute: typeof ApiFeedsRoute
   ApiAuthSplatRoute: typeof ApiAuthSplatRoute
 }
 
@@ -227,6 +240,13 @@ declare module '@tanstack/solid-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/feeds': {
+      id: '/api/feeds'
+      path: '/api/feeds'
+      fullPath: '/api/feeds'
+      preLoaderRoute: typeof ApiFeedsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_frame/settings': {
@@ -333,6 +353,7 @@ const rootRouteChildren: RootRouteChildren = {
   FrameRoute: FrameRouteWithChildren,
   SigninRoute: SigninRoute,
   SignupRoute: SignupRoute,
+  ApiFeedsRoute: ApiFeedsRoute,
   ApiAuthSplatRoute: ApiAuthSplatRoute,
 }
 export const routeTree = rootRouteImport

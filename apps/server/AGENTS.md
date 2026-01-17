@@ -1,6 +1,10 @@
-# API Server - Elysia (Secondary)
+# API Server - Elysia (DEPRECATED)
 
-Elysia server handles **auth** and **background job management**. Most data operations are now handled by server functions in `apps/web`.
+> **DEPRECATED**: This server is being phased out. Use TanStack Start server functions in `apps/web` for all new endpoints.
+>
+> Currently still handles: Better Auth (`/api/auth/*`), Bull Board dashboard.
+>
+> **Do NOT add new API routes here.** Add server functions in `apps/web/src/entities/` instead.
 
 ## Commands
 

@@ -24,13 +24,14 @@ Each app/package has its own `AGENTS.md` with specific patterns and guidelines.
 
 ### Apps
 
-| App               | Description                          | Details                     |
-| ----------------- | ------------------------------------ | --------------------------- |
-| `apps/web/`       | SolidJS + TanStack Start frontend    | See `apps/web/AGENTS.md`    |
-| `apps/server/`    | Elysia API (auth, background jobs)   | See `apps/server/AGENTS.md` |
-| `apps/worker/`    | BullMQ background job processor      | See `apps/worker/AGENTS.md` |
-| `apps/e2e/`       | Playwright tests + visual regression | See `apps/e2e/AGENTS.md`    |
-| `apps/marketing/` | Marketing website                    | -                           |
+| App               | Description                          | Details                        |
+| ----------------- | ------------------------------------ | ------------------------------ |
+| `apps/web/`       | SolidJS + TanStack Start (main app)  | See `apps/web/AGENTS.md`       |
+| `apps/server/`    | **DEPRECATED** - Elysia API          | See `apps/server/AGENTS.md`    |
+| `apps/worker/`    | BullMQ background job processor      | See `apps/worker/AGENTS.md`    |
+| `apps/e2e/`       | Playwright tests + visual regression | See `apps/e2e/AGENTS.md`       |
+| `apps/extension/` | Browser extension for feed discovery | See `apps/extension/AGENTS.md` |
+| `apps/marketing/` | Marketing website                    | -                              |
 
 ### Packages
 
@@ -56,17 +57,18 @@ Each app/package has its own `AGENTS.md` with specific patterns and guidelines.
 - TanStack Start `createServerFn` for data operations
 - Auth middleware provides user context
 - Calls `@repo/domain` for business logic
+- **All new API endpoints should be added here, not in Elysia**
 
 **Background Processing:**
 
-- Elysia server handles auth and job enqueueing
 - Worker app processes BullMQ jobs
 - Redis for queue persistence
+- Enqueue jobs via `@repo/domain` functions
 
 ## Tech Stack
 
 - **Frontend:** SolidJS, TanStack Start, TanStack Solid DB, Tailwind v4, DaisyUI
-- **Server:** TanStack Start server functions, Elysia (auth/jobs), Bun runtime
+- **Server:** TanStack Start server functions, Bun runtime
 - **Database:** SQLite3, Drizzle ORM
 - **Queue:** BullMQ + Redis
 - **Auth:** Better Auth

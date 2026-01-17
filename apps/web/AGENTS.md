@@ -171,6 +171,29 @@ export function MyModal(props: MyModalProps) {
 
 Uses `<Show>` internally - destroys content when closed, fresh state on reopen.
 
+## API Routes
+
+TanStack Start can expose traditional API routes in `src/routes/api/`. Use for external integrations (e.g., browser extension).
+
+```tsx
+// src/routes/api/feeds.ts
+import { createAPIFileRoute } from '@tanstack/solid-start/api';
+
+export const Route = createAPIFileRoute('/api/feeds')({
+  POST: async ({ request }) => {
+    // Handle POST /api/feeds
+    const body = await request.json();
+    // ... call domain logic
+    return Response.json({ success: true });
+  },
+});
+```
+
+**When to use API routes vs server functions:**
+
+- **Server functions**: Internal app use, called from components
+- **API routes**: External consumers (extension, webhooks, third-party)
+
 ## Notes
 
 - Path mapping: `~/*` → `./src/*`

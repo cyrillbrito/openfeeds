@@ -7,7 +7,17 @@ export default defineConfig({
     name: 'OpenFeeds',
     description: 'Discover and follow RSS feeds from any website',
     permissions: ['activeTab', 'storage'],
-    host_permissions: ['http://localhost:3001/*', 'https://*.openfeeds.com/*'],
+    host_permissions: [
+      'http://localhost:*/*',
+      'https://openfeeds.app/*',
+      'https://*.openfeeds.app/*',
+    ],
+    icons: {
+      '16': 'icon/16.png',
+      '32': 'icon/32.png',
+      '48': 'icon/48.png',
+      '128': 'icon/128.png',
+    },
   },
   dev: {
     server: {

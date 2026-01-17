@@ -9,7 +9,8 @@ export type MessageType =
   | { type: 'FOLLOW_RESULT'; success: boolean; error?: string };
 
 export interface StorageData {
-  apiUrl: string;
+  apiUrl?: string;
+  theme?: 'light' | 'dark' | 'system';
 }
 
-export const DEFAULT_API_URL = 'http://localhost:3001';
+export const DEFAULT_API_URL = 'https://openfeeds.app';
