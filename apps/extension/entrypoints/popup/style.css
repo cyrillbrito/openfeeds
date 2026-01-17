@@ -1,0 +1,167 @@
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: system-ui, -apple-system, sans-serif;
+  font-size: 14px;
+  line-height: 1.5;
+  color: #1a1a1a;
+  background: #fff;
+  width: 320px;
+  min-height: 200px;
+}
+
+.container {
+  display: flex;
+  flex-direction: column;
+  min-height: 200px;
+}
+
+header {
+  padding: 12px 16px;
+  border-bottom: 1px solid #e5e5e5;
+  background: #f9fafb;
+}
+
+header h1 {
+  font-size: 16px;
+  font-weight: 600;
+  color: #111;
+}
+
+main {
+  flex: 1;
+  padding: 16px;
+}
+
+.state {
+  display: block;
+}
+
+.state.hidden {
+  display: none;
+}
+
+#loading p {
+  color: #666;
+  text-align: center;
+  padding: 24px 0;
+}
+
+#no-feeds {
+  text-align: center;
+  padding: 24px 0;
+}
+
+#no-feeds p {
+  color: #666;
+}
+
+#no-feeds .hint {
+  font-size: 12px;
+  color: #999;
+  margin-top: 8px;
+}
+
+.feeds-count {
+  font-size: 12px;
+  color: #666;
+  margin-bottom: 12px;
+}
+
+#feeds {
+  list-style: none;
+}
+
+#feeds li {
+  padding: 10px 12px;
+  border: 1px solid #e5e5e5;
+  border-radius: 6px;
+  margin-bottom: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+#feeds li:last-child {
+  margin-bottom: 0;
+}
+
+.feed-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.feed-title {
+  font-weight: 500;
+  color: #111;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.feed-type {
+  font-size: 11px;
+  color: #888;
+  margin-top: 2px;
+}
+
+.follow-btn {
+  flex-shrink: 0;
+  padding: 6px 12px;
+  font-size: 12px;
+  font-weight: 500;
+  color: #fff;
+  background: #2563eb;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.follow-btn:hover {
+  background: #1d4ed8;
+}
+
+.follow-btn:disabled {
+  background: #94a3b8;
+  cursor: not-allowed;
+}
+
+.follow-btn.success {
+  background: #16a34a;
+}
+
+.follow-btn.error {
+  background: #dc2626;
+}
+
+#error .error-message {
+  color: #dc2626;
+  background: #fef2f2;
+  padding: 12px;
+  border-radius: 6px;
+  font-size: 13px;
+}
+
+footer {
+  padding: 12px 16px;
+  border-top: 1px solid #e5e5e5;
+  background: #f9fafb;
+  text-align: center;
+}
+
+footer a {
+  font-size: 12px;
+  color: #666;
+  text-decoration: none;
+}
+
+footer a:hover {
+  color: #2563eb;
+  text-decoration: underline;
+}
