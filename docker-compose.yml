@@ -10,6 +10,26 @@ services:
     restart: unless-stopped
     command: redis-server --save 60 1 --loglevel warning
 
+  rsshub:
+    image: diygod/rsshub:latest
+    ports:
+      - '1200:1200'
+    environment:
+      # Cache settings
+      - CACHE_TYPE=redis
+      - REDIS_URL=redis://redis:6379/
+      # Twitter/X credentials (optional - for authenticated routes)
+      - TWITTER_USERNAME=$TWITTER_USERNAME
+      - TWITTER_PASSWORD=$TWITTER_PASSWORD
+      - TWITTER_AUTH_TOKEN=$TWITTER_AUTH_TOKEN
+      # Rate limiting
+      - REQUEST_TIMEOUT=60000
+    depends_on:
+      - redis
+    networks:
+      - rss-network
+    restart: unless-stopped
+
   web:
     build:
       context: .
@@ -24,10 +44,12 @@ services:
       - POSTHOG_PUBLIC_KEY=$POSTHOG_PUBLIC_KEY
       - REDIS_HOST=redis
       - REDIS_PORT=6379
+      - RSSHUB_URL=http://rsshub:1200
     volumes:
       - sqlite_data:/data
     depends_on:
       - redis
+      - rsshub
     networks:
       - rss-network
     restart: unless-stopped

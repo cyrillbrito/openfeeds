@@ -1,5 +1,49 @@
 import type { ServiceResult } from './types.js';
 
+// RSSHub base URL - can be overridden via environment variable
+const RSSHUB_URL = process.env.RSSHUB_URL || 'https://rsshub.app';
+
+/**
+ * Get RSS feed URL for Twitter/X user via RSSHub
+ */
+export function getTwitterRss(url: string): ServiceResult {
+  const result: ServiceResult = { match: false, feeds: [] };
+
+  // Match twitter.com or x.com user profiles
+  const regex = /^(https?:\/\/)?(www\.)?(twitter\.com|x\.com)\/([a-zA-Z0-9_]+)(\/.*)?$/i;
+  const matches = url.match(regex);
+
+  if (matches && matches[4]) {
+    const username = matches[4];
+
+    // Skip non-user paths
+    const excludedPaths = [
+      'home',
+      'explore',
+      'search',
+      'notifications',
+      'messages',
+      'i',
+      'settings',
+      'login',
+      'signup',
+      'tos',
+      'privacy',
+      'about',
+    ];
+
+    if (!excludedPaths.includes(username.toLowerCase())) {
+      result.match = true;
+      result.feeds.push({
+        url: `${RSSHUB_URL}/twitter/user/${username}`,
+        title: `@${username}`,
+      });
+    }
+  }
+
+  return result;
+}
+
 /**
  * Get RSS feed URL of Youtube channel or user
  */
@@ -390,6 +434,7 @@ export function getWordPressRss(url: string): ServiceResult {
  * All service checkers mapped by name
  */
 export const SERVICES = {
+  Twitter: getTwitterRss,
   Youtube: getYoutubeRss,
   YoutubePlaylist: getYoutubePlaylistRss,
   RedditRoot: getRedditRootRss,

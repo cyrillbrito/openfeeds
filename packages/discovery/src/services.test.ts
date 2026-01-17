@@ -13,11 +13,68 @@ import {
   getRedditRootRss,
   getRedditSubRss,
   getRedditUserRss,
+  getTwitterRss,
   getVimeoRss,
   getWordPressRss,
   getYoutubePlaylistRss,
   getYoutubeRss,
 } from './services.js';
+
+describe('Twitter/X RSS Discovery', () => {
+  test('should detect twitter.com user URL', () => {
+    const result = getTwitterRss('https://twitter.com/elonmusk');
+    expect(result.match).toBe(true);
+    expect(result.feeds).toHaveLength(1);
+    expect(result.feeds[0].url).toContain('/twitter/user/elonmusk');
+    expect(result.feeds[0].title).toBe('@elonmusk');
+  });
+
+  test('should detect x.com user URL', () => {
+    const result = getTwitterRss('https://x.com/elonmusk');
+    expect(result.match).toBe(true);
+    expect(result.feeds).toHaveLength(1);
+    expect(result.feeds[0].url).toContain('/twitter/user/elonmusk');
+  });
+
+  test('should detect twitter.com user URL with www', () => {
+    const result = getTwitterRss('https://www.twitter.com/github');
+    expect(result.match).toBe(true);
+    expect(result.feeds).toHaveLength(1);
+    expect(result.feeds[0].url).toContain('/twitter/user/github');
+  });
+
+  test('should handle usernames with underscores', () => {
+    const result = getTwitterRss('https://twitter.com/user_name_123');
+    expect(result.match).toBe(true);
+    expect(result.feeds).toHaveLength(1);
+    expect(result.feeds[0].url).toContain('/twitter/user/user_name_123');
+  });
+
+  test('should not match twitter.com/home', () => {
+    const result = getTwitterRss('https://twitter.com/home');
+    expect(result.match).toBe(false);
+  });
+
+  test('should not match twitter.com/explore', () => {
+    const result = getTwitterRss('https://twitter.com/explore');
+    expect(result.match).toBe(false);
+  });
+
+  test('should not match twitter.com/settings', () => {
+    const result = getTwitterRss('https://twitter.com/settings');
+    expect(result.match).toBe(false);
+  });
+
+  test('should not match twitter.com/i/..', () => {
+    const result = getTwitterRss('https://twitter.com/i/flow/login');
+    expect(result.match).toBe(false);
+  });
+
+  test('should not match non-Twitter URLs', () => {
+    const result = getTwitterRss('https://example.com');
+    expect(result.match).toBe(false);
+  });
+});
 
 describe('YouTube RSS Discovery', () => {
   test('should detect YouTube channel URL', () => {
