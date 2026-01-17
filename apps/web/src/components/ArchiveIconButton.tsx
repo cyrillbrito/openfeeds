@@ -16,14 +16,14 @@ export function ArchiveIconButton(props: {
   return (
     <button
       class={twMerge(
-        'btn btn-ghost btn-square btn-sm sm:btn-lg flex items-center justify-center',
-        props.read ? 'text-base-content/40' : 'text-base-content/80',
+        'p-2 rounded-full transition-colors hover:bg-warning/10 hover:text-warning',
+        props.archived ? 'text-warning' : 'text-base-content/60',
       )}
       onClick={handleClick}
       title={props.archived ? 'Unarchive (show in inbox)' : 'Archive'}
     >
-      <Show when={props.archived} fallback={<ArchiveIcon class="size-4 sm:size-6" />}>
-        <InboxIcon class="size-4 sm:size-6" />
+      <Show when={props.archived} fallback={<ArchiveIcon class="size-5" />}>
+        <InboxIcon class="size-5" />
       </Show>
     </button>
   );

@@ -1,16 +1,13 @@
 import type { Article, Feed, Tag } from '@repo/shared/types';
 import { Link, useNavigate } from '@tanstack/solid-router';
-import ArchiveIcon from 'lucide-solid/icons/archive';
 import ExternalLinkIcon from 'lucide-solid/icons/external-link';
-import InboxIcon from 'lucide-solid/icons/inbox';
 import PlayIcon from 'lucide-solid/icons/play';
+import RssIcon from 'lucide-solid/icons/rss';
 import { Show } from 'solid-js';
 import { twMerge } from 'tailwind-merge';
 import { extractYouTubeVideoId, isYouTubeUrl } from '../utils/youtube';
 import { ArchiveIconButton } from './ArchiveIconButton';
 import { ArticleTagManager } from './ArticleTagManager';
-import { Card } from './Card';
-import { HeaderLinkStyle } from './HeaderLink';
 import { ReadIconButton } from './ReadIconButton';
 import { TimeAgo } from './TimeAgo';
 
@@ -29,6 +26,7 @@ export function ArticleCard(props: ArticleCardProps) {
 
   const feed = () => props.feeds.find((f) => f.id === props.article.feedId);
   const feedName = () => feed()?.title || 'Loading...';
+  const feedIcon = () => feed()?.icon;
 
   const markAsRead = () => {
     if (!props.article.isRead) {
@@ -59,108 +57,134 @@ export function ArticleCard(props: ArticleCardProps) {
   };
 
   return (
-    <Card
+    <article
       class={twMerge(
-        'cursor-pointer transition-[filter,opacity]',
-        props.article.isRead && 'opacity-60 grayscale-50',
+        'flex gap-3 cursor-pointer transition-opacity px-4 py-3',
+        props.article.isRead && 'opacity-60',
       )}
       onClick={handleCardClick}
     >
-      <div class="mb-2">
-        <div class="flex gap-3">
-          <h2 class="card-title line-clamp-2 flex-1 text-sm leading-tight sm:text-xl">
-            <span class="hover:text-primary cursor-pointer transition-colors">
-              <HeaderLinkStyle>{props.article.title}</HeaderLinkStyle>
-            </span>
-            <Show when={!hasRichContent() && props.article.url}>
-              <ExternalLinkIcon size={14} class="text-base-content/40 ml-1 inline-block shrink-0" />
-            </Show>
-          </h2>
-          <div class="flex shrink-0 gap-2">
-            <ArchiveIconButton
-              read={props.article.isRead || false}
-              archived={props.article.isArchived || false}
-              setArchived={(isArchived) => {
-                props.onUpdateArticle(props.article.id, { isArchived });
+      {/* Feed icon - like Twitter avatar */}
+      <div class="shrink-0 pt-0.5">
+        <Link
+          to="/feeds/$feedId"
+          params={{ feedId: props.article.feedId?.toString() }}
+          class="block"
+          onClick={(e) => e.stopPropagation()}
+        >
+          <Show
+            when={feedIcon()}
+            fallback={
+              <div class="size-10 rounded-full bg-base-300 flex items-center justify-center">
+                <RssIcon size={18} class="text-base-content/50" />
+              </div>
+            }
+          >
+            <img
+              src={feedIcon()}
+              alt={feedName()}
+              class="size-10 rounded-full bg-base-300 object-cover"
+              onError={(e) => {
+                // Hide broken image and show fallback
+                e.currentTarget.style.display = 'none';
+                e.currentTarget.nextElementSibling?.classList.remove('hidden');
               }}
             />
-            <ReadIconButton
-              read={props.article.isRead || false}
-              setRead={(isRead) => {
-                props.onUpdateArticle(props.article.id, { isRead });
-              }}
-            />
-          </div>
+            <div class="size-10 rounded-full bg-base-300 flex items-center justify-center hidden">
+              <RssIcon size={18} class="text-base-content/50" />
+            </div>
+          </Show>
+        </Link>
+      </div>
+
+      {/* Content */}
+      <div class="flex-1 min-w-0">
+        {/* Title - prominent, above source */}
+        <h2 class="font-semibold leading-snug text-base-content line-clamp-2 mb-0.5">
+          <span class="hover:underline decoration-base-content/30 underline-offset-2">
+            {props.article.title}
+          </span>
+          <Show when={!hasRichContent() && props.article.url}>
+            <ExternalLinkIcon size={14} class="text-base-content/40 ml-1 inline-block shrink-0" />
+          </Show>
+        </h2>
+
+        {/* Meta: source + time */}
+        <div class="flex items-center gap-1.5 text-sm text-base-content/60 mb-2">
+          <Link
+            to="/feeds/$feedId"
+            params={{ feedId: props.article.feedId?.toString() }}
+            class="hover:underline truncate"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {feedName()}
+          </Link>
+          <span>·</span>
+          <TimeAgo date={new Date(props.article.pubDate!)} tooltipBottom />
         </div>
 
-        {/* Meta info */}
-        <div class="flex items-center gap-2 text-sm">
-          <div class="flex items-center gap-1">
-            <Show
-              when={props.article.isArchived}
-              fallback={<InboxIcon size={16} class="text-base-content/40" />}
-            >
-              <ArchiveIcon size={16} class="text-base-content/40" />
-            </Show>
-            <Link
-              to="/feeds/$feedId"
-              params={{ feedId: props.article.feedId?.toString() }}
-              class="text-primary font-medium hover:underline"
-            >
-              {feedName()}
-            </Link>
+        {/* YouTube Video Thumbnail */}
+        <Show when={isVideo() && videoId()}>
+          <div class="group relative mb-3 w-full cursor-pointer overflow-hidden rounded-xl bg-black">
+            <div class="aspect-video w-full">
+              <img
+                src={`https://img.youtube.com/vi/${videoId()}/mqdefault.jpg`}
+                alt={props.article.title}
+                class="h-full w-full object-cover"
+                onError={(e) => {
+                  (e.currentTarget as HTMLImageElement).src =
+                    `https://img.youtube.com/vi/${videoId()}/hqdefault.jpg`;
+                }}
+              />
+            </div>
+            <div class="absolute inset-0 flex items-center justify-center bg-black/20 transition-colors group-hover:bg-black/30">
+              <div class="rounded-full bg-red-600 p-3 transition-transform hover:scale-110">
+                <PlayIcon class="ml-0.5 size-6 text-white" />
+              </div>
+            </div>
+            <div class="absolute right-2 bottom-2 rounded bg-black/80 px-2 py-0.5 text-xs font-medium text-white">
+              YouTube
+            </div>
           </div>
-          <span class="text-base-content-gray">•</span>
-          <TimeAgo
-            class="text-base-content-gray"
-            date={new Date(props.article.pubDate!)}
-            tooltipBottom
+        </Show>
+
+        {/* Description - subtle */}
+        <Show when={props.article.description || props.article.content}>
+          <p class="text-base-content/70 text-sm line-clamp-2 mb-2 leading-relaxed">
+            {props.article.description || props.article.content}
+          </p>
+        </Show>
+
+        {/* Tags */}
+        <Show when={props.tags.length > 0}>
+          <div class="mb-2" data-tag-manager>
+            <ArticleTagManager
+              tags={props.tags}
+              selectedIds={props.article.tags}
+              onSelectionChange={(tagIds) => {
+                props.onUpdateArticle(props.article.id, { tags: tagIds });
+              }}
+            />
+          </div>
+        </Show>
+
+        {/* Actions row - Twitter style */}
+        <div class="flex items-center gap-6 -ml-2">
+          <ReadIconButton
+            read={props.article.isRead || false}
+            setRead={(isRead) => {
+              props.onUpdateArticle(props.article.id, { isRead });
+            }}
           />
-        </div>
-
-        {/* Article tags */}
-        <div class="mt-2" data-tag-manager>
-          <ArticleTagManager
-            tags={props.tags}
-            selectedIds={props.article.tags}
-            onSelectionChange={(tagIds) => {
-              props.onUpdateArticle(props.article.id, { tags: tagIds });
+          <ArchiveIconButton
+            read={props.article.isRead || false}
+            archived={props.article.isArchived || false}
+            setArchived={(isArchived) => {
+              props.onUpdateArticle(props.article.id, { isArchived });
             }}
           />
         </div>
       </div>
-
-      {/* YouTube Video Thumbnail */}
-      <Show when={isVideo() && videoId()}>
-        <div class="group relative mb-4 w-full max-w-md cursor-pointer overflow-hidden rounded-lg bg-black">
-          <div class="aspect-video w-full">
-            <img
-              src={`https://img.youtube.com/vi/${videoId()}/mqdefault.jpg`}
-              alt={props.article.title}
-              class="h-full w-full object-cover"
-              onError={(e) => {
-                (e.currentTarget as HTMLImageElement).src =
-                  `https://img.youtube.com/vi/${videoId()}/hqdefault.jpg`;
-              }}
-            />
-          </div>
-          <div class="absolute inset-0 flex items-center justify-center bg-black/20 transition-colors group-hover:bg-black/30">
-            <div class="rounded-full bg-red-600 p-3 transition-all duration-200 hover:scale-110 hover:bg-red-700 sm:p-4">
-              <PlayIcon class="ml-0.5 h-6 w-6 text-white sm:h-8 sm:w-8" />
-            </div>
-          </div>
-          <div class="absolute right-2 bottom-2 rounded bg-black/80 px-2 py-1 text-xs font-medium text-white">
-            YouTube
-          </div>
-        </div>
-      </Show>
-
-      {/* Description/content */}
-      <Show when={props.article.description || props.article.content}>
-        <div class="text-base-content/80 line-clamp-2 text-xs leading-relaxed sm:line-clamp-5 sm:text-base">
-          {props.article.description || props.article.content}
-        </div>
-      </Show>
-    </Card>
+    </article>
   );
 }
