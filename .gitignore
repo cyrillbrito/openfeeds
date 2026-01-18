@@ -52,6 +52,9 @@ temp
 # Database
 dbs/
 
+# Benchmark
+benchmark-results/
+
 # AI
 .claude/settings.local.json
 .mcp.json

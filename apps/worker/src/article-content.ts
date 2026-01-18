@@ -7,7 +7,10 @@ export async function fetchAndProcessArticleBatch(
   urls: string[],
 ): Promise<Map<string, string | null>> {
   const browser = new Browser({
-    settings: { errorCapture: BrowserErrorCaptureEnum.processLevel },
+    settings: {
+      errorCapture: BrowserErrorCaptureEnum.disabled,
+      disableJavaScriptEvaluation: true,
+    },
   });
 
   const results = new Map<string, string | null>();

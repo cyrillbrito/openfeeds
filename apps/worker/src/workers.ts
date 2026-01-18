@@ -79,7 +79,7 @@ export function createSingleFeedSyncWorker() {
     },
     {
       connection: redisConnection,
-      concurrency: 2,
+      concurrency: 5,
     },
   );
 }

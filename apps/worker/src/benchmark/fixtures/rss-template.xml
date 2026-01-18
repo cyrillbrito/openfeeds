@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0">
+  <channel>
+    <title>{{FEED_TITLE}}</title>
+    <link>{{FEED_LINK}}</link>
+    <description>Benchmark test feed {{FEED_ID}}</description>
+    <language>en-us</language>
+    <lastBuildDate>{{BUILD_DATE}}</lastBuildDate>
+    {{ITEMS}}
+  </channel>
+</rss>

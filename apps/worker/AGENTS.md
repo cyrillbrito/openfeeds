@@ -8,6 +8,7 @@ Runs BullMQ Worker instances to process jobs. Calls `@repo/domain` business logi
 bun dev          # Dev with hot reload
 bun start        # Start prod
 bun check-types  # TypeScript check
+bun benchmark    # Run performance benchmark
 ```
 
 ## Architecture
@@ -75,3 +76,18 @@ Inherited from `@repo/domain`:
 - **Only create Worker instances** - Never enqueue jobs
 - **Call domain functions** - Never duplicate business logic
 - Setup graceful shutdown (SIGTERM/SIGINT)
+
+## Benchmarking
+
+Measure worker throughput and latency with synthetic feeds.
+
+**Prerequisites:** Redis running, workers running (`bun dev`)
+
+```bash
+bun benchmark                          # 50 feeds, 30 articles each (default)
+bun benchmark --feeds=100 --articles=50 # Custom scale
+bun benchmark --delay=50               # Simulate network latency (ms per request)
+bun benchmark --json                   # JSON output
+```
+
+**Output:** Jobs/sec, p50/p95/p99 latency, error rate. Results saved to `benchmark-results/`.
