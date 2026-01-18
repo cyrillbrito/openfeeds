@@ -49,7 +49,7 @@ bunx playwright install && cd ../..
 ```bash
 # API
 cd apps/server
-bun add @bull-board/api bullmq @mozilla/readability jsdom p-queue posthog-node redaxios resend feedsmith
+bun add @bull-board/api bullmq @mozilla/readability p-queue posthog-node redaxios resend feedsmith
 cd ../..
 
 # Web

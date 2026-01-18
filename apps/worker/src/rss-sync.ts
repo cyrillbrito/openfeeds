@@ -10,7 +10,7 @@ import {
 import { logger } from '@repo/domain/logger';
 import { attemptAsync, createId } from '@repo/shared/utils';
 import { eq, isNull, lt, or } from 'drizzle-orm';
-import { fetchAndProcessArticle } from './article-content';
+import { fetchAndProcessArticleBatch } from './article-content';
 
 // Normalized item structure for our database
 export interface NormalizedFeedItem {
@@ -99,7 +99,20 @@ export async function syncFeedArticles(
   // Get items based on feed format and normalize them
   const normalizedItems = getNormalizedItems(feedResult);
 
-  // TODO: This is not optimized, its making too many requests N+1
+  // Collect article URLs for batch processing
+  const articleUrls: string[] = [];
+  for (const item of normalizedItems) {
+    if (item.url && isArticle(item.url)) {
+      articleUrls.push(item.url);
+    }
+  }
+
+  // Batch fetch and process all article content
+  const contentMap =
+    articleUrls.length > 0
+      ? await fetchAndProcessArticleBatch(articleUrls)
+      : new Map<string, string | null>();
+
   for (const item of normalizedItems) {
     if (!item.guid) continue;
 
@@ -117,12 +130,8 @@ export async function syncFeedArticles(
     // Apply filter rules to determine if article should be marked as read
     const shouldMarkAsReadByRules = await evaluateFilterRules(db, feedId, item.title);
 
-    // Check if this is an article and process content
-    let cleanContent: string | null = null;
-
-    if (item.url && isArticle(item.url)) {
-      cleanContent = await fetchAndProcessArticle(item.url);
-    }
+    // Get pre-fetched clean content from batch results
+    const cleanContent = item.url ? (contentMap.get(item.url) ?? null) : null;
 
     // TODO This should be moved to dedicated article domain function
 

@@ -50,7 +50,7 @@ tmp
 temp
 
 # Database
-*.db
+dbs/
 
 # AI
 .claude/settings.local.json

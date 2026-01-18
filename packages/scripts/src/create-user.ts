@@ -1,7 +1,7 @@
 #!/usr/bin/env bun
 import { createAuthClient } from 'better-auth/client';
 
-const apiUrl = process.env.API_URL || 'http://localhost:3001';
+const apiUrl = process.env.API_URL || 'http://localhost:3000';
 
 // Script-generated test users use @script-test.local domain
 // E2E tests use @e2e-test.local domain

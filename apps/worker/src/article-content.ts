@@ -1,36 +1,51 @@
 import { Readability } from '@mozilla/readability';
-import { attempt, attemptAsync } from '@repo/shared/utils';
-import { JSDOM } from 'jsdom';
+import { Browser, BrowserErrorCaptureEnum } from 'happy-dom';
 
-/**
- * Fetches an article URL and extracts clean content using Readability.
- * This module depends on jsdom and should only be used in server/worker contexts.
- */
-export async function fetchAndProcessArticle(url: string): Promise<string | null> {
-  const [fetchErr, response] = await attemptAsync(fetch(url));
-  if (fetchErr || !response.ok) {
-    return null;
+const NAVIGATION_TIMEOUT_MS = 30_000;
+
+export async function fetchAndProcessArticleBatch(
+  urls: string[],
+): Promise<Map<string, string | null>> {
+  const browser = new Browser({
+    settings: { errorCapture: BrowserErrorCaptureEnum.processLevel },
+  });
+
+  const results = new Map<string, string | null>();
+
+  try {
+    for (const url of urls) {
+      const page = browser.newPage();
+
+      try {
+        await page.goto(url, { timeout: NAVIGATION_TIMEOUT_MS });
+        await page.waitUntilComplete();
+
+        const reader = new Readability(page.mainFrame.document as any);
+        const article = reader.parse();
+
+        if (!article) {
+          console.error(`[${url}] Readability parse returned null`);
+          results.set(url, null);
+          continue;
+        }
+
+        console.log(
+          `[${url}] Extracted: "${article.title}" (${article.content?.length || 0} chars)`,
+        );
+        results.set(url, article.content || null);
+      } catch (error) {
+        console.error(
+          `[${url}] Article extraction failed:`,
+          error instanceof Error ? error.message : String(error),
+        );
+        results.set(url, null);
+      } finally {
+        await page.close();
+      }
+    }
+  } finally {
+    await browser.close();
   }
 
-  const [textErr, html] = await attemptAsync(response.text());
-  if (textErr) {
-    return null;
-  }
-
-  const [domErr, dom] = attempt(() => new JSDOM(html, { url }));
-  if (domErr) {
-    return null;
-  }
-
-  const [readerErr, reader] = attempt(() => new Readability(dom.window.document));
-  if (readerErr) {
-    return null;
-  }
-
-  const [parseErr, article] = attempt(() => reader.parse());
-  if (parseErr) {
-    return null;
-  }
-
-  return article?.content || null;
+  return results;
 }
