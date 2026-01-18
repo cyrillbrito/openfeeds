@@ -148,76 +148,74 @@ function FeedArticles() {
         </div>
       </Header>
 
-      <div class="mx-auto max-w-4xl px-2 py-3 sm:p-6">
-        <div class="mb-6">
-          <Show when={currentFeed()}>
-            {(feed) => (
-              <div class="mb-4 flex items-start gap-4 sm:gap-5">
-                <Show when={feed().icon}>
-                  <div class="bg-base-300 flex h-20 w-20 shrink-0 items-center justify-center rounded-xl shadow-sm sm:h-24 sm:w-24 sm:rounded-2xl md:h-28 md:w-28">
-                    <img
-                      src={feed().icon!}
-                      alt={`${feed().title} icon`}
-                      class="h-20 w-20 rounded-xl object-cover sm:h-24 sm:w-24 sm:rounded-2xl md:h-28 md:w-28"
-                      loading="lazy"
-                      onError={(e) => {
-                        e.currentTarget.style.display = 'none';
+      <div class="mx-auto w-full max-w-2xl px-2 py-3 sm:p-6">
+        <Show when={currentFeed()}>
+          {(feed) => (
+            <div class="mb-4 flex items-start gap-4 sm:gap-5">
+              <Show when={feed().icon}>
+                <div class="bg-base-300 flex h-20 w-20 shrink-0 items-center justify-center rounded-xl shadow-sm sm:h-24 sm:w-24 sm:rounded-2xl md:h-28 md:w-28">
+                  <img
+                    src={feed().icon!}
+                    alt={`${feed().title} icon`}
+                    class="h-20 w-20 rounded-xl object-cover sm:h-24 sm:w-24 sm:rounded-2xl md:h-28 md:w-28"
+                    loading="lazy"
+                    onError={(e) => {
+                      e.currentTarget.style.display = 'none';
+                    }}
+                  />
+                </div>
+              </Show>
+              <div class="min-w-0 flex-1">
+                <h2 class="mb-1.5 text-lg font-semibold sm:text-2xl">{feed().title}</h2>
+                <p class="text-base-content/70 mb-3 line-clamp-3 text-sm leading-relaxed">
+                  {feed().description || 'No description found'}
+                </p>
+
+                {/* Tags */}
+                <Show when={feed().tags && feed().tags.length > 0}>
+                  <div class="mb-3 flex flex-wrap gap-1.5">
+                    <For each={feed().tags}>
+                      {(tagId) => {
+                        const tag = tagsQuery.data?.find((t) => t.id === tagId);
+                        if (tag) {
+                          return (
+                            <Link to="/tags/$tagId" params={{ tagId: tag.id.toString() }}>
+                              <div class="badge badge-sm gap-1.5 transition-all hover:brightness-90">
+                                <ColorIndicator class={getTagDotColor(tag.color)} />
+                                <span>{tag.name}</span>
+                              </div>
+                            </Link>
+                          );
+                        } else {
+                          return <></>;
+                        }
                       }}
-                    />
+                    </For>
                   </div>
                 </Show>
-                <div class="min-w-0 flex-1">
-                  <h2 class="mb-1.5 text-lg font-semibold sm:text-2xl">{feed().title}</h2>
-                  <p class="text-base-content/70 mb-3 line-clamp-3 text-sm leading-relaxed">
-                    {feed().description || 'No description found'}
-                  </p>
 
-                  {/* Tags */}
-                  <Show when={feed().tags && feed().tags.length > 0}>
-                    <div class="mb-3 flex flex-wrap gap-1.5">
-                      <For each={feed().tags}>
-                        {(tagId) => {
-                          const tag = tagsQuery.data?.find((t) => t.id === tagId);
-                          if (tag) {
-                            return (
-                              <Link to="/tags/$tagId" params={{ tagId: tag.id.toString() }}>
-                                <div class="badge badge-sm gap-1.5 transition-all hover:brightness-90">
-                                  <ColorIndicator class={getTagDotColor(tag.color)} />
-                                  <span>{tag.name}</span>
-                                </div>
-                              </Link>
-                            );
-                          } else {
-                            return <></>;
-                          }
-                        }}
-                      </For>
-                    </div>
-                  </Show>
-
-                  <div class="flex flex-wrap gap-3 text-xs">
-                    <a
-                      href={feed().url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      class="link link-primary font-medium"
-                    >
-                      Channel
-                    </a>
-                    <a
-                      href={feed().feedUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      class="link link-primary font-medium"
-                    >
-                      Feed URL
-                    </a>
-                  </div>
+                <div class="flex flex-wrap gap-3 text-xs">
+                  <a
+                    href={feed().url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    class="link link-primary font-medium"
+                  >
+                    Channel
+                  </a>
+                  <a
+                    href={feed().feedUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    class="link link-primary font-medium"
+                  >
+                    Feed URL
+                  </a>
                 </div>
               </div>
-            )}
-          </Show>
-        </div>
+            </div>
+          )}
+        </Show>
       </div>
 
       <ArticleListToolbar
@@ -263,7 +261,7 @@ function FeedArticles() {
         readStatus={readStatus()}
       />
 
-      <div class="mx-auto max-w-4xl px-2 pb-3 sm:px-6 sm:pb-6">
+      <div class="mx-auto w-full max-w-2xl px-2 pb-3 sm:px-6 sm:pb-6">
         <Suspense
           fallback={
             <div class="flex justify-center py-12">

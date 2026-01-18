@@ -23,7 +23,7 @@ export function TagModal(props: TagModalProps) {
         modalController = controller;
         props.controller(controller);
       }}
-      class="w-[calc(100%-2rem)] max-w-2xl sm:w-[calc(100%-4rem)]"
+      class="max-w-md"
       title={isEditMode() ? 'Edit Tag' : 'Create New Tag'}
       // onClose={resetForm}
       // disableBackdropClose={false} // Tag modals allow backdrop close

@@ -7,6 +7,7 @@ import InboxIcon from 'lucide-solid/icons/inbox';
 import RssIcon from 'lucide-solid/icons/rss';
 import { Show } from 'solid-js';
 import { twMerge } from 'tailwind-merge';
+import { containsHtml, downshiftHeadings, sanitizeHtml } from '../utils/html';
 import { extractYouTubeVideoId, isYouTubeUrl } from '../utils/youtube';
 import { ArticleTagManager } from './ArticleTagManager';
 import { TimeAgo } from './TimeAgo';
@@ -69,7 +70,7 @@ export function ArticleCard(props: ArticleCardProps) {
   return (
     <article
       class={twMerge(
-        'hover:bg-base-200/50 cursor-pointer px-4 transition-all md:px-6',
+        'hover:bg-base-200/50 w-full cursor-pointer px-4 transition-all md:px-6',
         props.article.isRead && 'opacity-50',
         // Video articles have thumbnails adding visual bulk; text-only articles need more padding for breathing room
         isVideo() ? 'py-3 md:py-4' : 'py-4 md:py-5',
@@ -132,9 +133,21 @@ export function ArticleCard(props: ArticleCardProps) {
 
       {/* Description */}
       <Show when={!isVideo() && (props.article.description || props.article.content)}>
-        <p class="text-base-content/80 mt-2 mb-3 line-clamp-5 text-sm leading-relaxed md:text-base">
-          {props.article.description || props.article.content}
-        </p>
+        <Show
+          when={containsHtml(props.article.description || props.article.content || '')}
+          fallback={
+            <p class="text-base-content/80 mt-2 mb-3 line-clamp-5 text-sm leading-relaxed md:text-base">
+              {props.article.description || props.article.content}
+            </p>
+          }
+        >
+          <div
+            class="prose prose-sm text-base-content prose-headings:text-base-content prose-a:text-primary prose-strong:text-base-content prose-code:text-base-content prose-blockquote:text-base-content/80 mt-2 mb-3 line-clamp-5 text-sm leading-relaxed md:text-base"
+            innerHTML={downshiftHeadings(
+              sanitizeHtml(props.article.description || props.article.content || ''),
+            )}
+          />
+        </Show>
       </Show>
 
       {/* YouTube Thumbnail */}

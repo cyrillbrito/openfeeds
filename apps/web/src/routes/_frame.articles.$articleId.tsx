@@ -15,6 +15,7 @@ import { Header } from '../components/Header';
 import { Loader } from '../components/Loader';
 import { ReadIconButton } from '../components/ReadIconButton';
 import { TimeAgo } from '../components/TimeAgo';
+import { containsHtml, downshiftHeadings, sanitizeHtml } from '../utils/html';
 import { extractYouTubeVideoId, isYouTubeUrl } from '../utils/youtube';
 
 export const Route = createFileRoute('/_frame/articles/$articleId')({
@@ -82,7 +83,7 @@ function ArticleView() {
         </button>
       </Header>
 
-      <div class="mx-auto min-h-screen max-w-4xl px-4 py-4 md:px-6 md:py-6">
+      <div class="mx-auto min-h-screen w-full max-w-2xl px-4 py-4 md:px-6 md:py-6">
         {/* Content */}
         <Suspense
           fallback={
@@ -213,7 +214,21 @@ function ArticleView() {
                         fallback={
                           <div>
                             <h2 class="mb-3 text-xl font-semibold">Description</h2>
-                            <p class="whitespace-pre-wrap">{art().description || art().content}</p>
+                            <Show
+                              when={containsHtml(art().description || art().content || '')}
+                              fallback={
+                                <p class="whitespace-pre-wrap">
+                                  {art().description || art().content}
+                                </p>
+                              }
+                            >
+                              <div
+                                innerHTML={downshiftHeadings(
+                                  sanitizeHtml(art().description || art().content || ''),
+                                  2,
+                                )}
+                              />
+                            </Show>
                           </div>
                         }
                       >
