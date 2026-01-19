@@ -1,0 +1,32 @@
+# Migrations service - runs database migrations and exits
+FROM oven/bun:1 AS base
+
+
+# Builder stage - install dependencies
+FROM base AS builder
+
+COPY . .
+
+RUN --mount=type=cache,target=/root/.bun/install/cache bun install --frozen-lockfile
+
+
+# Runner stage - minimal image with only what's needed for migrations
+FROM base AS runner
+
+WORKDIR /app
+
+# Copy migrator app source
+COPY --from=builder /home/bun/app/apps/migrator ./apps/migrator
+
+# Copy database package (contains migration logic and SQL files)
+COPY --from=builder /home/bun/app/packages/db ./packages/db
+
+# Copy root package.json for workspace resolution
+COPY --from=builder /home/bun/app/package.json ./package.json
+COPY --from=builder /home/bun/app/bun.lock ./bun.lock
+
+# Copy node_modules
+COPY --from=builder /home/bun/app/node_modules ./node_modules
+
+USER bun
+CMD ["bun", "run", "apps/migrator/src/index.ts"]

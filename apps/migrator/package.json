@@ -1,0 +1,16 @@
+{
+  "name": "@repo/migrator",
+  "main": "src/index.ts",
+  "type": "module",
+  "scripts": {
+    "migrate": "bun src/index.ts"
+  },
+  "dependencies": {
+    "@repo/db": "workspace:*",
+    "zod": "catalog:"
+  },
+  "devDependencies": {
+    "@types/bun": "latest",
+    "typescript": "catalog:"
+  }
+}

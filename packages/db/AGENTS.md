@@ -9,7 +9,6 @@ This package provides the database layer for OpenFeeds using Drizzle ORM with SQ
 ```bash
 bun user-db-generate   # Generate user database migrations
 bun auth-db-generate   # Generate auth database migrations
-bun db-migrate         # Run all migrations
 ```
 
 **From packages/db:**
@@ -17,7 +16,6 @@ bun db-migrate         # Run all migrations
 ```bash
 bun user-db-generate   # Generate user schema migrations only
 bun auth-db-generate   # Generate auth schema migrations only
-bun src/migrate.ts     # Run migration script directly
 ```
 
 ## Architecture
@@ -63,7 +61,7 @@ export const articlesTable = sqliteTable('articles', {
 
 1. Modify table definitions in user schema files
 2. Run `bun user-db-generate` to create migration files
-3. Run `bun db-migrate` to apply migrations
+3. Run `bun migrate` to apply migrations
 4. Commit both schema changes and migration files
 
 **Auth Schema Updates:**
@@ -71,7 +69,9 @@ export const articlesTable = sqliteTable('articles', {
 1. Update Better Auth configuration in `../../apps/server/src/auth.ts`
 2. Run `bun auth-db-generate` to regenerate auth schema
 3. Migration files are created automatically
-4. Run `bun db-migrate` to apply changes
+4. Run `bun migrate` to apply changes
+
+**Note:** Migrations are run via the `apps/migrator` app which handles both auth and user database migrations.
 
 ## Database Connection
 

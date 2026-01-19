@@ -10,6 +10,18 @@ services:
     restart: unless-stopped
     command: redis-server --save 60 1 --loglevel warning
 
+  migrator:
+    build:
+      context: .
+      dockerfile: Dockerfile.migrations
+    environment:
+      - DB_PATH=/data
+    volumes:
+      - sqlite_data:/data
+    networks:
+      - rss-network
+    restart: 'no'
+
   web:
     build:
       context: .
@@ -27,7 +39,10 @@ services:
     volumes:
       - sqlite_data:/data
     depends_on:
-      - redis
+      redis:
+        condition: service_started
+      migrator:
+        condition: service_completed_successfully
     networks:
       - rss-network
     restart: unless-stopped

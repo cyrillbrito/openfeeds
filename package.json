@@ -22,6 +22,7 @@
     "checks": "turbo check-types && oxlint",
     "user-db-generate": "turbo -F @repo/db user-db-generate",
     "auth-db-generate": "turbo -F @repo/db auth-db-generate",
+    "migrate": "bun --cwd=apps/migrator migrate",
     "create-user": "bun --cwd=packages/scripts create-user",
     "test-ui": "bun --cwd=apps/e2e test-ui",
     "test-update-snapshots": "bun --cwd=apps/e2e test-update-snapshots",

@@ -14,6 +14,7 @@ bun build        # Build all apps
 bun check-types  # TypeScript checking
 bun lint         # oxlint type-aware linting
 bun checks       # Type check + lint
+bun migrate      # Run database migrations
 ```
 
 When DB migrations are needed, ask the user to run them for security reasons.
@@ -29,6 +30,7 @@ Each app/package has its own `AGENTS.md` with specific patterns and guidelines.
 | `apps/web/`       | SolidJS + TanStack Start (main app)  | See `apps/web/AGENTS.md`       |
 | `apps/server/`    | **DEPRECATED** - Elysia API          | See `apps/server/AGENTS.md`    |
 | `apps/worker/`    | BullMQ background job processor      | See `apps/worker/AGENTS.md`    |
+| `apps/migrator/`  | Database migration runner            | -                              |
 | `apps/e2e/`       | Playwright tests + visual regression | See `apps/e2e/AGENTS.md`       |
 | `apps/extension/` | Browser extension for feed discovery | See `apps/extension/AGENTS.md` |
 | `apps/marketing/` | Marketing website                    | -                              |

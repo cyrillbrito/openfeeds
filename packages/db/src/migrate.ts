@@ -10,10 +10,10 @@ const userMigrationsFolder = join(__dirname, '../drizzle');
 
 /**
  * Runs all database migrations for auth, user-template, and all user databases.
- * This function is safe to call on startup - it will only apply pending migrations.
+ * Safe to call on startup - only applies pending migrations.
  */
 export async function runAllMigrations(dbProvider: DbProvider) {
-  console.log('🔄 Running migrations...');
+  console.log('Running migrations...');
 
   // Ensure the database directory exists before running migrations
   const authDbPath = dbProvider.authDbConnection().url;
@@ -21,46 +21,34 @@ export async function runAllMigrations(dbProvider: DbProvider) {
 
   const authDb = dbProvider.authDb();
 
-  // Migrate auth database
-  console.log('📋 Migrating auth database...');
+  console.log('Migrating auth database...');
   try {
-    await migrate(authDb, { migrationsFolder: authMigrationsFolder });
-    console.log('✅ Auth database migrated successfully');
+    migrate(authDb, { migrationsFolder: authMigrationsFolder });
   } catch (error) {
-    console.error('❌ Failed to migrate auth database:', error);
+    console.error('Failed to migrate auth database:', error);
     throw error;
   }
 
-  console.log('📋 Migrating user-template database...');
+  console.log('Migrating user-template database...');
   try {
-    const userDatabase = dbProvider.userDb('_user-template');
-    await migrate(userDatabase, { migrationsFolder: userMigrationsFolder });
-    console.log(`✅ User template database migrated successfully`);
+    migrate(dbProvider.userDb('_user-template'), { migrationsFolder: userMigrationsFolder });
   } catch (error) {
-    console.error(`❌ Failed to migrate user template database:`, error);
+    console.error('Failed to migrate user-template database:', error);
     throw error;
   }
 
-  // Find and migrate all user databases
   const users = await authDb.query.user.findMany({ columns: { id: true } });
   if (users.length > 0) {
-    console.log(`👥 Migrating ${users.length} user databases...`);
-
-    // Migrate each user database
+    console.log(`Migrating ${users.length} user databases...`);
     for (const user of users) {
-      const userId = user.id;
-
       try {
-        const userDatabase = dbProvider.userDb(userId);
-        await migrate(userDatabase, { migrationsFolder: userMigrationsFolder });
+        migrate(dbProvider.userDb(user.id), { migrationsFolder: userMigrationsFolder });
       } catch (error) {
-        console.error(`❌ Failed to migrate user database ${userId}:`, error);
+        console.error(`Failed to migrate user database ${user.id}:`, error);
         throw error;
       }
     }
-
-    console.log(`✅ Migrated ${users.length} user databases successfully`);
   }
 
-  console.log('🎉 All migrations completed successfully!');
+  console.log('All migrations completed');
 }
