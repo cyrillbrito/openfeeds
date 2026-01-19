@@ -2,6 +2,7 @@ import { articles, articleTags, feedTags, type UserDb } from '@repo/db';
 import {
   type Article,
   type ArticleQuery,
+  type CreateStandaloneArticle,
   type MarkManyArchivedRequest,
   type MarkManyArchivedResponse,
   type PaginatedResponse,
@@ -257,4 +258,41 @@ export async function markManyArticlesArchived(
     .returning({ id: articles.id });
 
   return { success: true, markedCount: result.length };
+}
+
+/**
+ * Create a standalone article (not tied to any feed)
+ * Used for "save for later" functionality like Pocket
+ */
+export async function createStandaloneArticle(
+  data: CreateStandaloneArticle,
+  db: UserDb,
+): Promise<Article> {
+  const articleId = createId();
+  const now = new Date();
+
+  // Insert the article with null feedId
+  await db.insert(articles).values({
+    id: articleId,
+    feedId: null,
+    title: data.title || data.url, // Use URL as fallback title
+    url: data.url,
+    pubDate: now,
+    createdAt: now,
+    isRead: false,
+    isArchived: false,
+  });
+
+  // Add tags if provided
+  if (data.tags && data.tags.length > 0) {
+    await db.insert(articleTags).values(
+      data.tags.map((tagId) => ({
+        id: createId(),
+        articleId,
+        tagId,
+      })),
+    );
+  }
+
+  return getArticleById(articleId, db);
 }

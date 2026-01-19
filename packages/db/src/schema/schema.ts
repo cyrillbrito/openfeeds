@@ -20,9 +20,8 @@ export const feeds = sqliteTable('feeds', {
 
 export const articles = sqliteTable('articles', {
   id: text().primaryKey(),
-  feedId: text()
-    .notNull()
-    .references(() => feeds.id, { onDelete: 'cascade' }),
+  /** Null for standalone articles (saved without a feed) */
+  feedId: text().references(() => feeds.id, { onDelete: 'cascade' }),
   title: text().notNull(),
   url: text(),
   description: text(),

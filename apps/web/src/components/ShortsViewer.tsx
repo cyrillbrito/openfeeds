@@ -89,7 +89,7 @@ export function ShortsViewer(props: ShortsViewerProps) {
 
   const getCurrentFeed = () => {
     const current = currentShort();
-    if (!current || !props.feedsAccessor) return null;
+    if (!current || !current.feedId || !props.feedsAccessor) return null;
     const feeds = props.feedsAccessor();
     return feeds.find((feed) => feed.id === current.feedId) || null;
   };
