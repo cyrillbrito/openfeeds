@@ -1,6 +1,6 @@
 import { dbProvider } from '@repo/domain';
 import * as articlesDomain from '@repo/domain';
-import { ArticleSchema, UpdateArticleSchema } from '@repo/shared/schemas';
+import { ArticleSchema, CreateStandaloneArticleSchema, UpdateArticleSchema } from '@repo/shared/schemas';
 import type { Article } from '@repo/shared/types';
 import { parseLoadSubsetOptions } from '@tanstack/db';
 import { queryCollectionOptions } from '@tanstack/query-db-collection';
@@ -35,6 +35,14 @@ const $$updateArticles = createServerFn({ method: 'POST' })
     return Promise.all(
       data.map(({ id, ...updates }) => articlesDomain.updateArticle(id, updates, db)),
     );
+  });
+
+export const $$createStandaloneArticle = createServerFn({ method: 'POST' })
+  .middleware([authMiddleware])
+  .inputValidator(CreateStandaloneArticleSchema)
+  .handler(({ context, data }) => {
+    const db = dbProvider.userDb(context.user.id);
+    return articlesDomain.createStandaloneArticle(data, db);
   });
 
 // Articles Collection

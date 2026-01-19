@@ -1,4 +1,5 @@
 import { createFileRoute, Link, Outlet, useLocation } from '@tanstack/solid-router';
+import BookmarkPlusIcon from 'lucide-solid/icons/bookmark-plus';
 import InboxIcon from 'lucide-solid/icons/inbox';
 import LibraryIcon from 'lucide-solid/icons/library';
 import PlusIcon from 'lucide-solid/icons/plus';
@@ -10,6 +11,7 @@ import { AddFeedModal } from '../components/AddFeedModal';
 import { ColorIndicator } from '../components/ColorIndicator';
 import { type ModalController } from '../components/LazyModal';
 import { CenterLoader, Loader } from '../components/Loader.tsx';
+import { SaveArticleModal } from '../components/SaveArticleModal';
 import { TagModal } from '../components/TagModal.tsx';
 import { UserMenu } from '../components/UserMenu.tsx';
 import { getTagDotColor } from '../utils/tagColors';
@@ -23,6 +25,7 @@ export const Route = createFileRoute('/_frame')({
 
 function FrameLayout() {
   let addFeedModalController!: ModalController;
+  let saveArticleModalController!: ModalController;
   const location = useLocation();
 
   // Close drawer on navigation (mobile only)
@@ -37,6 +40,7 @@ function FrameLayout() {
   return (
     <>
       <AddFeedModal controller={(controller) => (addFeedModalController = controller)} />
+      <SaveArticleModal controller={(controller) => (saveArticleModalController = controller)} />
 
       <div class="drawer lg:drawer-open">
         <input id="my-drawer" type="checkbox" class="drawer-toggle" />
@@ -88,6 +92,15 @@ function FrameLayout() {
                   >
                     <SearchIcon size={20} />
                     Discover
+                  </button>
+                </li>
+                <li>
+                  <button
+                    class="hover:bg-base-200 flex w-full items-center gap-3 rounded-lg px-3 py-2 text-left transition-colors"
+                    onClick={() => saveArticleModalController.open()}
+                  >
+                    <BookmarkPlusIcon size={20} />
+                    Save Article
                   </button>
                 </li>
                 <li>

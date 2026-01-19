@@ -13,7 +13,7 @@ export const ArticleQuerySchema = CursorQuerySchema.extend({
 
 export const ArticleSchema = z.object({
   id: z.string(),
-  feedId: z.string(),
+  feedId: z.string().nullable(),
   title: z.string(),
   url: z.string().nullable(),
   description: z.string().nullable(),
@@ -36,6 +36,13 @@ export const CreateArticleSchema = z.object({
   author: z.string().nullable().optional(),
   guid: z.string().nullable().optional(),
   pubDate: z.string().nullable().optional(),
+});
+
+/** Schema for creating standalone articles (not tied to a feed) */
+export const CreateStandaloneArticleSchema = z.object({
+  url: z.string().url(),
+  title: z.string().optional(),
+  tags: z.array(z.string()).optional(),
 });
 
 export const UpdateArticleSchema = z.object({

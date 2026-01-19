@@ -43,7 +43,7 @@ function ArticleView() {
 
   const feed = () => {
     const art = article();
-    if (!art || !feedsQuery.data) return null;
+    if (!art || !art.feedId || !feedsQuery.data) return null;
     return feedsQuery.data.find((f) => f.id === art.feedId);
   };
 
@@ -139,10 +139,17 @@ function ArticleView() {
                       >
                         <ArchiveIcon size={16} class="text-base-content/40" />
                       </Show>
-                      <Show when={feed()}>
+                      <Show
+                        when={feed()}
+                        fallback={
+                          <Show when={!art().feedId}>
+                            <span class="text-base-content/60 font-medium">Saved Article</span>
+                          </Show>
+                        }
+                      >
                         <Link
                           to="/feeds/$feedId"
-                          params={{ feedId: art().feedId?.toString() }}
+                          params={{ feedId: art().feedId! }}
                           class="text-primary font-medium hover:underline"
                         >
                           {feed()!.title}

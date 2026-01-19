@@ -25,8 +25,9 @@ interface ArticleCardProps {
 export function ArticleCard(props: ArticleCardProps) {
   const navigate = useNavigate();
 
-  const feed = () => props.feeds.find((f) => f.id === props.article.feedId);
-  const feedName = () => feed()?.title || 'Loading...';
+  const feed = () =>
+    props.article.feedId ? props.feeds.find((f) => f.id === props.article.feedId) : null;
+  const feedName = () => feed()?.title || (props.article.feedId ? 'Loading...' : 'Saved Article');
   const feedIcon = () => feed()?.icon;
 
   const markAsRead = () => {
@@ -78,34 +79,45 @@ export function ArticleCard(props: ArticleCardProps) {
       onClick={handleCardClick}
     >
       <div class="mb-1.5 flex gap-2 md:gap-3">
-        <Link
-          to="/feeds/$feedId"
-          params={{ feedId: props.article.feedId?.toString() }}
-          class="shrink-0 pt-0.5"
-          onClick={(e) => e.stopPropagation()}
-        >
-          <Show
-            when={feedIcon()}
-            fallback={
+        <Show
+          when={props.article.feedId}
+          fallback={
+            <div class="shrink-0 pt-0.5">
               <div class="bg-base-300 flex size-8 items-center justify-center rounded-full md:size-10">
                 <RssIcon size={12} class="text-base-content/50 md:size-4" />
               </div>
-            }
-          >
-            <img
-              src={feedIcon() ?? undefined}
-              alt={feedName()}
-              class="bg-base-300 size-8 rounded-full object-cover md:size-10"
-              onError={(e) => {
-                e.currentTarget.style.display = 'none';
-                e.currentTarget.nextElementSibling?.classList.remove('hidden');
-              }}
-            />
-            <div class="bg-base-300 flex hidden size-8 items-center justify-center rounded-full md:size-10">
-              <RssIcon size={12} class="text-base-content/50 md:size-4" />
             </div>
-          </Show>
-        </Link>
+          }
+        >
+          <Link
+            to="/feeds/$feedId"
+            params={{ feedId: props.article.feedId! }}
+            class="shrink-0 pt-0.5"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <Show
+              when={feedIcon()}
+              fallback={
+                <div class="bg-base-300 flex size-8 items-center justify-center rounded-full md:size-10">
+                  <RssIcon size={12} class="text-base-content/50 md:size-4" />
+                </div>
+              }
+            >
+              <img
+                src={feedIcon() ?? undefined}
+                alt={feedName()}
+                class="bg-base-300 size-8 rounded-full object-cover md:size-10"
+                onError={(e) => {
+                  e.currentTarget.style.display = 'none';
+                  e.currentTarget.nextElementSibling?.classList.remove('hidden');
+                }}
+              />
+              <div class="bg-base-300 flex hidden size-8 items-center justify-center rounded-full md:size-10">
+                <RssIcon size={12} class="text-base-content/50 md:size-4" />
+              </div>
+            </Show>
+          </Link>
+        </Show>
         <div class="min-w-0 flex-1">
           <h2 class="text-base-content line-clamp-2 text-[15px] leading-snug font-medium md:text-lg">
             {props.article.title}
@@ -117,14 +129,19 @@ export function ArticleCard(props: ArticleCardProps) {
             </Show>
           </h2>
           <div class="text-base-content/50 flex items-center gap-1.5 text-xs md:text-sm">
-            <Link
-              to="/feeds/$feedId"
-              params={{ feedId: props.article.feedId?.toString() }}
-              class="text-base-content/60 truncate hover:underline"
-              onClick={(e) => e.stopPropagation()}
+            <Show
+              when={props.article.feedId}
+              fallback={<span class="text-base-content/60 truncate">{feedName()}</span>}
             >
-              {feedName()}
-            </Link>
+              <Link
+                to="/feeds/$feedId"
+                params={{ feedId: props.article.feedId! }}
+                class="text-base-content/60 truncate hover:underline"
+                onClick={(e) => e.stopPropagation()}
+              >
+                {feedName()}
+              </Link>
+            </Show>
             <span>·</span>
             <TimeAgo date={new Date(props.article.pubDate!)} tooltipBottom />
           </div>
