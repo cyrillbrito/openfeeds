@@ -70,6 +70,19 @@ services:
   #     - redis
   #   restart: unless-stopped
 
+  # Optional: Queue management UI (not required for the app to run)
+  queuedash:
+    image: ghcr.io/alexbudure/queuedash:3.14.0
+    ports:
+      - '3009:3000'
+    environment:
+      - QUEUES_CONFIG_JSON={"queues":[{"name":"feed-sync-orchestrator","displayName":"Feed Sync Orchestrator","type":"bullmq","connectionUrl":"redis://redis:6379"},{"name":"single-feed-sync","displayName":"Single Feed Sync","type":"bullmq","connectionUrl":"redis://redis:6379"},{"name":"feed-detail","displayName":"Feed Details","type":"bullmq","connectionUrl":"redis://redis:6379"},{"name":"auto-archive","displayName":"Auto Archive","type":"bullmq","connectionUrl":"redis://redis:6379"}]}
+    depends_on:
+      - redis
+    networks:
+      - rss-network
+    restart: unless-stopped
+
 volumes:
   sqlite_data:
     driver: local
