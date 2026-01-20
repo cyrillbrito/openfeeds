@@ -1,5 +1,10 @@
 import { createUserDb } from '@repo/db';
-import { dbProvider, environment } from '@repo/domain';
+import {
+  dbProvider,
+  environment,
+  sendPasswordResetEmail,
+  sendVerificationEmail,
+} from '@repo/domain';
 import { betterAuth } from 'better-auth';
 import { drizzleAdapter } from 'better-auth/adapters/drizzle';
 import { createAuthMiddleware } from 'better-auth/api';
@@ -11,6 +16,15 @@ export const auth = betterAuth({
     enabled: true,
     requireEmailVerification: !environment.simpleAuth,
     minPasswordLength: environment.simpleAuth ? 5 : undefined,
+    sendResetPassword: async ({ user, url }) => {
+      await sendPasswordResetEmail(user.email, url);
+    },
+  },
+  emailVerification: {
+    sendVerificationEmail: async ({ user, url }) => {
+      await sendVerificationEmail(user.email, url);
+    },
+    sendOnSignUp: !environment.simpleAuth,
   },
   session: {
     cookieCache: { enabled: true, maxAge: 5 * 60 },

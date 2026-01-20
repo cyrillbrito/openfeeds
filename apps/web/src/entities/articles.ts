@@ -1,6 +1,10 @@
 import { dbProvider } from '@repo/domain';
 import * as articlesDomain from '@repo/domain';
-import { ArticleSchema, CreateStandaloneArticleSchema, UpdateArticleSchema } from '@repo/shared/schemas';
+import {
+  ArticleSchema,
+  CreateStandaloneArticleSchema,
+  UpdateArticleSchema,
+} from '@repo/shared/schemas';
 import type { Article } from '@repo/shared/types';
 import { parseLoadSubsetOptions } from '@tanstack/db';
 import { queryCollectionOptions } from '@tanstack/query-db-collection';

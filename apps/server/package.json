@@ -18,6 +18,7 @@
     "@elysiajs/openapi": "^1.4.11",
     "@repo/db": "workspace:*",
     "@repo/discovery": "workspace:*",
+    "@repo/domain": "workspace:*",
     "@repo/shared": "workspace:*",
     "better-auth": "catalog:",
     "bullmq": "^5.61.0",

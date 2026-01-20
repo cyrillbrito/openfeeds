@@ -1,5 +1,4 @@
-import { ResetPassword } from '@repo/emails/emails/reset-password';
-import { VerifyEmail } from '@repo/emails/emails/verify-email';
+import { renderResetPasswordEmail, renderVerifyEmail } from '@repo/emails';
 import { Resend } from 'resend';
 import { environment } from './environment';
 
@@ -14,11 +13,12 @@ export async function sendVerificationEmail(email: string, url: string) {
     return;
   }
 
+  const html = await renderVerifyEmail(url);
   await resend.emails.send({
     from: FROM_EMAIL,
     to: email,
     subject: 'Verify your email address',
-    react: VerifyEmail({ verificationUrl: url }),
+    html,
   });
 }
 
@@ -29,10 +29,11 @@ export async function sendPasswordResetEmail(email: string, url: string) {
     return;
   }
 
+  const html = await renderResetPasswordEmail(url);
   await resend.emails.send({
     from: FROM_EMAIL,
     to: email,
     subject: 'Reset your password',
-    react: ResetPassword({ resetUrl: url }),
+    html,
   });
 }

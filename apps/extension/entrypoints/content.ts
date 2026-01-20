@@ -1,5 +1,5 @@
 import { detectFeedsFromPage } from '@/utils/feed-detector';
-import type { DiscoveredFeed, MessageType } from '@/utils/types';
+import type { MessageType } from '@/utils/types';
 
 export default defineContentScript({
   matches: ['<all_urls>'],
