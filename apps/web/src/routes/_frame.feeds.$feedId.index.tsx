@@ -1,6 +1,5 @@
 import type { Feed } from '@repo/shared/types';
-import { eq } from '@tanstack/db';
-import { useLiveQuery } from '@tanstack/solid-db';
+import { eq, useLiveQuery } from '@tanstack/solid-db';
 import { createFileRoute, Link, useSearch } from '@tanstack/solid-router';
 import MoreVerticalIcon from 'lucide-solid/icons/more-vertical';
 import ShuffleIcon from 'lucide-solid/icons/shuffle';

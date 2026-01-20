@@ -1,5 +1,4 @@
-import { eq } from '@tanstack/db';
-import { useLiveQuery } from '@tanstack/solid-db';
+import { eq, useLiveQuery } from '@tanstack/solid-db';
 import { createFileRoute, Link, useRouter } from '@tanstack/solid-router';
 import ArchiveIcon from 'lucide-solid/icons/archive';
 import ArrowLeftIcon from 'lucide-solid/icons/arrow-left';

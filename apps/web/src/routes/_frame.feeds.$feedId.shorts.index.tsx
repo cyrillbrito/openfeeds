@@ -1,5 +1,4 @@
-import { eq, ilike } from '@tanstack/db';
-import { useLiveQuery } from '@tanstack/solid-db';
+import { eq, ilike, useLiveQuery } from '@tanstack/solid-db';
 import { createFileRoute, useSearch } from '@tanstack/solid-router';
 import { onMount } from 'solid-js';
 import { articlesCollection } from '~/entities/articles';

@@ -1,5 +1,4 @@
-import { eq } from '@tanstack/db';
-import { useLiveQuery } from '@tanstack/solid-db';
+import { eq, useLiveQuery } from '@tanstack/solid-db';
 import { createFileRoute, Link, useSearch } from '@tanstack/solid-router';
 import ShuffleIcon from 'lucide-solid/icons/shuffle';
 import { createSignal, onMount, Show, Suspense } from 'solid-js';

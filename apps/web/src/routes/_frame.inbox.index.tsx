@@ -1,5 +1,4 @@
-import { eq } from '@tanstack/db';
-import { useLiveQuery } from '@tanstack/solid-db';
+import { eq, useLiveQuery } from '@tanstack/solid-db';
 import { createFileRoute, Link } from '@tanstack/solid-router';
 import VideoIcon from 'lucide-solid/icons/video';
 import { createMemo, createSignal, onMount, Show, Suspense } from 'solid-js';
