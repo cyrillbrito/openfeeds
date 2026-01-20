@@ -1,15 +1,17 @@
 {
-  "name": "@repo/discovery",
+  "name": "@repo/readability",
   "type": "module",
   "exports": {
     "./server": "./src/server.ts",
     "./browser": "./src/browser.ts"
   },
   "scripts": {
+    "check-types": "tsc --noEmit",
     "test": "bun test",
     "test:watch": "bun test --watch"
   },
   "dependencies": {
+    "@mozilla/readability": "^0.6.0",
     "happy-dom": "^20.3.3"
   },
   "devDependencies": {

@@ -8,9 +8,9 @@ import {
   type ParseFeedResult,
 } from '@repo/domain';
 import { logger } from '@repo/domain/logger';
+import { fetchArticleContentBatch } from '@repo/readability/server';
 import { attemptAsync, createId } from '@repo/shared/utils';
 import { eq, isNull, lt, or } from 'drizzle-orm';
-import { fetchAndProcessArticleBatch } from './article-content';
 
 // Normalized item structure for our database
 export interface NormalizedFeedItem {
@@ -110,8 +110,8 @@ export async function syncFeedArticles(
   // Batch fetch and process all article content
   const contentMap =
     articleUrls.length > 0
-      ? await fetchAndProcessArticleBatch(articleUrls)
-      : new Map<string, string | null>();
+      ? await fetchArticleContentBatch(articleUrls)
+      : new Map<string, { title: string | null; excerpt: string | null; content: string | null }>();
 
   for (const item of normalizedItems) {
     if (!item.guid) continue;
@@ -130,8 +130,11 @@ export async function syncFeedArticles(
     // Apply filter rules to determine if article should be marked as read
     const shouldMarkAsReadByRules = await evaluateFilterRules(db, feedId, item.title);
 
-    // Get pre-fetched clean content from batch results
-    const cleanContent = item.url ? (contentMap.get(item.url) ?? null) : null;
+    // Get pre-fetched content from batch results
+    const extractedContent = item.url ? contentMap.get(item.url) : null;
+    const cleanContent = extractedContent?.content ?? null;
+    // Use RSS description if provided, otherwise fall back to extracted excerpt
+    const description = item.description || extractedContent?.excerpt || null;
 
     // TODO This should be moved to dedicated article domain function
 
@@ -143,7 +146,7 @@ export async function syncFeedArticles(
         guid: item.guid,
         title: item.title,
         content: item.content,
-        description: item.description,
+        description: description,
         url: item.url,
         pubDate: item.pubDate,
         author: item.author,

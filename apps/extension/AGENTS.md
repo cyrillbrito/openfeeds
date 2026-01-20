@@ -135,3 +135,24 @@ apps/extension/
 - Popup communicates with content script via `browser.tabs.sendMessage()`
 - Background script uses `fetch()` with `credentials: 'include'` for auth cookies
 - Dev server runs on port 3003 to avoid conflicts with web app (3000) and API (3001)
+
+## Future Ideas
+
+### Reader Mode
+
+Standalone reader view that renders any article in a clean, distraction-free format without requiring OpenFeeds account or saving:
+
+- Add "Read" button in popup next to feed URLs
+- Opens new tab with `/reader?url=<encoded-url>` route
+- Fetches page via background script, runs Readability extraction
+- Renders clean HTML in dedicated reader page with typography optimizations
+- Works independently of OpenFeeds app - pure client-side reading experience
+
+### Print Support
+
+One-click printing of articles in clean, paper-optimized format:
+
+- Add "Print" button in reader mode and popup
+- Print-specific CSS: optimized fonts, margins, no navigation/UI chrome
+- Option to include/exclude images
+- Trigger native `window.print()` dialog

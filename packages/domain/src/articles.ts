@@ -1,4 +1,5 @@
 import { articles, articleTags, feedTags, type UserDb } from '@repo/db';
+import { fetchArticleContent } from '@repo/readability/server';
 import {
   type Article,
   type ArticleQuery,
@@ -263,6 +264,7 @@ export async function markManyArticlesArchived(
 /**
  * Create a standalone article (not tied to any feed)
  * Used for "save for later" functionality like Pocket
+ * Fetches and extracts clean content using Readability
  */
 export async function createStandaloneArticle(
   data: CreateStandaloneArticle,
@@ -271,16 +273,25 @@ export async function createStandaloneArticle(
   const articleId = createId();
   const now = new Date();
 
+  // Fetch and extract article content
+  const {
+    title: extractedTitle,
+    excerpt,
+    content: cleanContent,
+  } = await fetchArticleContent(data.url);
+
   // Insert the article with null feedId
   await db.insert(articles).values({
     id: articleId,
     feedId: null,
-    title: data.title || data.url, // Use URL as fallback title
+    title: data.title || extractedTitle || data.url, // Use provided title, then extracted, then URL as fallback
+    description: excerpt,
     url: data.url,
     pubDate: now,
     createdAt: now,
     isRead: false,
     isArchived: false,
+    cleanContent,
   });
 
   // Add tags if provided
