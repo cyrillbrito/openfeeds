@@ -2,7 +2,8 @@ import type { DiscoveredFeed } from '@repo/shared/types';
 import { createId } from '@repo/shared/utils';
 import CircleAlertIcon from 'lucide-solid/icons/circle-alert';
 import { createSignal, For, Show } from 'solid-js';
-import { discoverFeeds, feedsCollection } from '~/entities/feeds';
+import { feedsCollection } from '~/entities/feeds';
+import { $$discoverFeeds } from '~/entities/feeds.server';
 import { useTags } from '~/entities/tags';
 import { LazyModal, type ModalController } from './LazyModal';
 import { MultiSelectTag } from './MultiSelectTag';
@@ -58,7 +59,7 @@ function AddFeedForm(props: AddFeedFormProps) {
     try {
       setError(null);
       setIsDiscovering(true);
-      const data = await discoverFeeds(url);
+      const data = await $$discoverFeeds({ data: { url } });
 
       setDiscoveredFeeds(data);
 

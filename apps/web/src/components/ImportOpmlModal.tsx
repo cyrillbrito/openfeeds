@@ -2,7 +2,8 @@ import CircleAlertIcon from 'lucide-solid/icons/circle-alert';
 import CircleCheckIcon from 'lucide-solid/icons/circle-check';
 import TriangleAlertIcon from 'lucide-solid/icons/triangle-alert';
 import { createSignal, Match, Show, Switch } from 'solid-js';
-import { feedsCollection, importOpml } from '~/entities/feeds';
+import { feedsCollection } from '~/entities/feeds';
+import { $$importOpml } from '~/entities/feeds.server';
 import { tagsCollection } from '~/entities/tags';
 import { LazyModal, type ModalController } from './LazyModal';
 
@@ -44,7 +45,7 @@ function ImportOpmlForm(props: ImportOpmlFormProps) {
       setImportError(null);
       setImportResult(null);
 
-      const data = await importOpml(content);
+      const data = await $$importOpml({ data: { opmlContent: content } });
 
       setImportResult(data);
 

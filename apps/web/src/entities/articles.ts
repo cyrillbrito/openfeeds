@@ -1,53 +1,9 @@
-import { dbProvider } from '@repo/domain';
-import * as articlesDomain from '@repo/domain';
-import {
-  ArticleSchema,
-  CreateStandaloneArticleSchema,
-  UpdateArticleSchema,
-} from '@repo/shared/schemas';
+import { ArticleSchema } from '@repo/shared/schemas';
 import type { Article } from '@repo/shared/types';
-import { parseLoadSubsetOptions } from '@tanstack/db';
 import { queryCollectionOptions } from '@tanstack/query-db-collection';
-import { createCollection } from '@tanstack/solid-db';
-import { createServerFn } from '@tanstack/solid-start';
-import { z } from 'zod';
+import { createCollection, parseLoadSubsetOptions } from '@tanstack/solid-db';
 import { queryClient } from '~/query-client';
-import { authMiddleware } from '~/server/middleware/auth';
-
-const ArticleQuerySchema = z.object({
-  feedId: z.string().optional(),
-  tagId: z.string().optional(),
-  isRead: z.boolean().optional(),
-  isArchived: z.boolean().optional(),
-  type: z.enum(['all', 'shorts']).optional(),
-  limit: z.number().optional(),
-});
-
-const $$getArticles = createServerFn({ method: 'GET' })
-  .middleware([authMiddleware])
-  .inputValidator(ArticleQuerySchema)
-  .handler(({ context, data: query }) => {
-    const db = dbProvider.userDb(context.user.id);
-    return articlesDomain.getArticles(query, db);
-  });
-
-const $$updateArticles = createServerFn({ method: 'POST' })
-  .middleware([authMiddleware])
-  .inputValidator(z.array(UpdateArticleSchema.extend({ id: z.string() })))
-  .handler(({ context, data }) => {
-    const db = dbProvider.userDb(context.user.id);
-    return Promise.all(
-      data.map(({ id, ...updates }) => articlesDomain.updateArticle(id, updates, db)),
-    );
-  });
-
-export const $$createStandaloneArticle = createServerFn({ method: 'POST' })
-  .middleware([authMiddleware])
-  .inputValidator(CreateStandaloneArticleSchema)
-  .handler(({ context, data }) => {
-    const db = dbProvider.userDb(context.user.id);
-    return articlesDomain.createStandaloneArticle(data, db);
-  });
+import { $$getArticles, $$updateArticles } from './articles.server';
 
 // Articles Collection
 export const articlesCollection = createCollection(

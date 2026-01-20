@@ -1,45 +1,14 @@
-import {
-  dbProvider,
-  getUserSettings as domainGetUserSettings,
-  performArchiveArticles as domainPerformArchiveArticles,
-  updateUserSettings as domainUpdateUserSettings,
-} from '@repo/domain';
-import { AppSettingsSchema, UpdateSettingsSchema } from '@repo/shared/schemas';
+import { AppSettingsSchema } from '@repo/shared/schemas';
 import type { AppSettings, ArchiveResult } from '@repo/shared/types';
 import { queryCollectionOptions } from '@tanstack/query-db-collection';
 import { createCollection, useLiveQuery } from '@tanstack/solid-db';
-import { createServerFn } from '@tanstack/solid-start';
 import { z } from 'zod';
 import { queryClient } from '~/query-client';
-import { authMiddleware } from '~/server/middleware/auth';
 import { articlesCollection } from './articles';
+import { $$getUserSettings, $$triggerAutoArchive, $$updateSettings } from './settings.server';
 
 // Settings is a singleton - we use a fixed ID
 const SETTINGS_ID = 1;
-
-const $$getUserSettings = createServerFn({ method: 'GET' })
-  .middleware([authMiddleware])
-  .handler(({ context }) => {
-    const db = dbProvider.userDb(context.user.id);
-    return domainGetUserSettings(db);
-  });
-
-const $$updateSettings = createServerFn({ method: 'POST' })
-  .middleware([authMiddleware])
-  .inputValidator(z.array(UpdateSettingsSchema))
-  .handler(({ context, data }) => {
-    const db = dbProvider.userDb(context.user.id);
-    // Settings is a singleton, so we just take the first update
-    const updates = data[0] || {};
-    return domainUpdateUserSettings(db, updates);
-  });
-
-const $$triggerAutoArchive = createServerFn({ method: 'POST' })
-  .middleware([authMiddleware])
-  .handler(({ context }) => {
-    const db = dbProvider.userDb(context.user.id);
-    return domainPerformArchiveArticles(db);
-  });
 
 // Extend the schema to include an ID for collection compatibility
 const SettingsWithIdSchema = AppSettingsSchema.extend({

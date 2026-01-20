@@ -1,6 +1,7 @@
 import CircleAlertIcon from 'lucide-solid/icons/circle-alert';
 import { createSignal, Show } from 'solid-js';
-import { $$createStandaloneArticle, articlesCollection } from '~/entities/articles';
+import { articlesCollection } from '~/entities/articles';
+import { $$createStandaloneArticle } from '~/entities/articles.server';
 import { useTags } from '~/entities/tags';
 import { LazyModal, type ModalController } from './LazyModal';
 import { MultiSelectTag } from './MultiSelectTag';

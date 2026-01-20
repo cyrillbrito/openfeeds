@@ -1,22 +1,9 @@
-import { dbProvider } from '@repo/domain';
-import * as articlesDomain from '@repo/domain';
 import { ArticleWithContentSchema } from '@repo/shared/schemas';
 import type { ArticleWithContent } from '@repo/shared/types';
-import { eq } from '@tanstack/db';
 import { queryCollectionOptions } from '@tanstack/query-db-collection';
-import { createCollection, useLiveQuery } from '@tanstack/solid-db';
-import { createServerFn } from '@tanstack/solid-start';
-import { z } from 'zod';
+import { createCollection, eq, useLiveQuery } from '@tanstack/solid-db';
 import { queryClient } from '~/query-client';
-import { authMiddleware } from '~/server/middleware/auth';
-
-const $$getArticleWithContent = createServerFn({ method: 'GET' })
-  .middleware([authMiddleware])
-  .inputValidator(z.object({ id: z.string() }))
-  .handler(({ context, data }) => {
-    const db = dbProvider.userDb(context.user.id);
-    return articlesDomain.getArticleWithContent(data.id, db);
-  });
+import { $$getArticleWithContent } from './article-details.server';
 
 /**
  * Article Details Collection

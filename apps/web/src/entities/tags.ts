@@ -1,44 +1,9 @@
-import { dbProvider } from '@repo/domain';
-import * as tagsDomain from '@repo/domain';
-import { CreateTagSchema, TagSchema, UpdateTagSchema } from '@repo/shared/schemas';
+import { TagSchema } from '@repo/shared/schemas';
 import type { Tag } from '@repo/shared/types';
 import { queryCollectionOptions } from '@tanstack/query-db-collection';
 import { createCollection, useLiveQuery } from '@tanstack/solid-db';
-import { createServerFn } from '@tanstack/solid-start';
-import { z } from 'zod';
 import { queryClient } from '~/query-client';
-import { authMiddleware } from '~/server/middleware/auth';
-
-const $$getAllTags = createServerFn({ method: 'GET' })
-  .middleware([authMiddleware])
-  .handler(({ context }) => {
-    const db = dbProvider.userDb(context.user.id);
-    return tagsDomain.getAllTags(db);
-  });
-
-const $$createTags = createServerFn({ method: 'POST' })
-  .middleware([authMiddleware])
-  .inputValidator(z.array(CreateTagSchema))
-  .handler(({ context, data }) => {
-    const db = dbProvider.userDb(context.user.id);
-    return Promise.all(data.map((tag) => tagsDomain.createTag(tag, db)));
-  });
-
-const $$updateTags = createServerFn({ method: 'POST' })
-  .middleware([authMiddleware])
-  .inputValidator(z.array(UpdateTagSchema.extend({ id: z.string() })))
-  .handler(({ context, data }) => {
-    const db = dbProvider.userDb(context.user.id);
-    return Promise.all(data.map(({ id, ...updates }) => tagsDomain.updateTag(id, updates, db)));
-  });
-
-const $$deleteTags = createServerFn({ method: 'POST' })
-  .middleware([authMiddleware])
-  .inputValidator(z.array(z.string()))
-  .handler(({ context, data: ids }) => {
-    const db = dbProvider.userDb(context.user.id);
-    return Promise.all(ids.map((id) => tagsDomain.deleteTag(id, db)));
-  });
+import { $$createTags, $$deleteTags, $$getAllTags, $$updateTags } from './tags.server';
 
 // Tags Collection
 export const tagsCollection = createCollection(
@@ -48,7 +13,7 @@ export const tagsCollection = createCollection(
     queryClient,
     getKey: (item: Tag) => item.id,
     schema: TagSchema,
-    queryFn: () => $$getAllTags(),
+    queryFn: async () => (await $$getAllTags()) ?? [],
 
     onInsert: async ({ transaction }) => {
       const tags = transaction.mutations.map((mutation) => {
