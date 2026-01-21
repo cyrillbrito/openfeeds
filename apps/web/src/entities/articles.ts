@@ -3,7 +3,7 @@ import type { Article } from '@repo/shared/types';
 import { queryCollectionOptions } from '@tanstack/query-db-collection';
 import { createCollection, parseLoadSubsetOptions } from '@tanstack/solid-db';
 import { queryClient } from '~/query-client';
-import { $$getArticles, $$updateArticles } from './articles.server';
+import { $$createArticle, $$getArticles, $$updateArticles } from './articles.server';
 
 // Articles Collection
 export const articlesCollection = createCollection(
@@ -46,10 +46,31 @@ export const articlesCollection = createCollection(
       return result?.data || [];
     },
 
-    // Articles are created server-side via RSS fetch
-    // No client-side creation needed
-    onInsert: async () => {
-      // Not implemented - articles are created by RSS feed sync
+    onInsert: async ({ transaction }) => {
+      for (const mutation of transaction.mutations) {
+        const data = mutation.data as Article;
+        // Only call server for articles created from URL (no feedId)
+        if (data.feedId === null && data.url) {
+          const article = await $$createArticle({
+            data: {
+              id: mutation.key as string,
+              url: data.url,
+              tags: data.tags.length > 0 ? data.tags : undefined,
+            },
+          });
+
+          // Update collection with real data from server
+          articlesCollection.update(mutation.key as string, {
+            title: article.title,
+            description: article.description,
+            content: article.content,
+            author: article.author,
+            pubDate: article.pubDate?.toISOString() ?? new Date().toISOString(),
+            hasCleanContent: article.hasCleanContent,
+            createdAt: article.createdAt.toISOString(),
+          });
+        }
+      }
     },
 
     // Handle client-side updates (isRead, isArchived, tags)
@@ -66,9 +87,6 @@ export const articlesCollection = createCollection(
     },
 
     // Articles are archived, not deleted
-    // No client-side deletion needed
-    onDelete: async () => {
-      // Not implemented - articles are typically archived
-    },
+    onDelete: async () => {},
   }),
 );

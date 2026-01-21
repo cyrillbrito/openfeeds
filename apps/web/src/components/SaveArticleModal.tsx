@@ -1,7 +1,7 @@
+import { createId } from '@repo/shared/utils';
 import CircleAlertIcon from 'lucide-solid/icons/circle-alert';
 import { createSignal, Show } from 'solid-js';
 import { articlesCollection } from '~/entities/articles';
-import { $$createStandaloneArticle } from '~/entities/articles.server';
 import { useTags } from '~/entities/tags';
 import { LazyModal, type ModalController } from './LazyModal';
 import { MultiSelectTag } from './MultiSelectTag';
@@ -33,7 +33,6 @@ interface SaveArticleFormProps {
 function SaveArticleForm(props: SaveArticleFormProps) {
   const [isSaving, setIsSaving] = createSignal(false);
   const [articleUrl, setArticleUrl] = createSignal('');
-  const [articleTitle, setArticleTitle] = createSignal('');
   const [selectedTags, setSelectedTags] = createSignal<string[]>([]);
   const [error, setError] = createSignal<string | null>(null);
 
@@ -52,30 +51,21 @@ function SaveArticleForm(props: SaveArticleFormProps) {
       setError(null);
       setIsSaving(true);
 
-      // Create the standalone article via server function
-      const article = await $$createStandaloneArticle({
-        data: {
-          url,
-          title: articleTitle().trim() || undefined,
-          tags: selectedTags().length > 0 ? selectedTags() : undefined,
-        },
-      });
-
-      // Insert into local collection for immediate UI update
+      // Insert into collection - onInsert will call server and update with real data
       articlesCollection.insert({
-        id: article.id,
+        id: createId(),
         feedId: null,
-        title: article.title,
-        url: article.url,
-        description: article.description,
-        content: article.content,
-        author: article.author,
-        pubDate: article.pubDate?.toISOString() ?? new Date().toISOString(),
-        isRead: article.isRead ?? false,
-        isArchived: article.isArchived ?? false,
-        hasCleanContent: article.hasCleanContent,
-        tags: article.tags,
-        createdAt: article.createdAt.toISOString(),
+        title: url, // Placeholder, will be updated by onInsert
+        url,
+        description: null,
+        content: null,
+        author: null,
+        pubDate: new Date().toISOString(),
+        isRead: false,
+        isArchived: false,
+        hasCleanContent: false,
+        tags: selectedTags(),
+        createdAt: new Date().toISOString(),
       });
 
       props.onClose();
@@ -101,22 +91,6 @@ function SaveArticleForm(props: SaveArticleFormProps) {
           onInput={(e) => setArticleUrl(e.currentTarget.value)}
           required
         />
-      </div>
-
-      <div class="form-control mb-4 w-full">
-        <label class="label">
-          <span class="label-text">Title (optional)</span>
-        </label>
-        <input
-          type="text"
-          placeholder="Article title"
-          class="input input-bordered w-full"
-          value={articleTitle()}
-          onInput={(e) => setArticleTitle(e.currentTarget.value)}
-        />
-        <label class="label">
-          <span class="label-text-alt">Leave blank to use the URL as the title</span>
-        </label>
       </div>
 
       <Show when={tagsQuery.data && tagsQuery.data.length > 0}>

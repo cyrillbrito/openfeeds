@@ -3,7 +3,7 @@ import { fetchArticleContent } from '@repo/readability/server';
 import {
   type Article,
   type ArticleQuery,
-  type CreateStandaloneArticle,
+  type CreateArticleFromUrl,
   type MarkManyArchivedRequest,
   type MarkManyArchivedResponse,
   type PaginatedResponse,
@@ -262,15 +262,15 @@ export async function markManyArticlesArchived(
 }
 
 /**
- * Create a standalone article (not tied to any feed)
+ * Create an article from a URL (not tied to any feed)
  * Used for "save for later" functionality like Pocket
  * Fetches and extracts clean content using Readability
  */
-export async function createStandaloneArticle(
-  data: CreateStandaloneArticle,
+export async function createArticle(
+  data: CreateArticleFromUrl,
   db: UserDb,
 ): Promise<Article> {
-  const articleId = createId();
+  const articleId = data.id ?? createId();
   const now = new Date();
 
   // Fetch and extract article content
@@ -284,7 +284,7 @@ export async function createStandaloneArticle(
   await db.insert(articles).values({
     id: articleId,
     feedId: null,
-    title: data.title || extractedTitle || data.url, // Use provided title, then extracted, then URL as fallback
+    title: extractedTitle || data.url, // Use extracted title, fallback to URL
     description: excerpt,
     url: data.url,
     pubDate: now,
