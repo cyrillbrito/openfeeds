@@ -1,7 +1,7 @@
 import CircleAlertIcon from 'lucide-solid/icons/circle-alert';
 import { createSignal, Show } from 'solid-js';
 import { articlesCollection } from '~/entities/articles';
-import { $$createStandaloneArticle } from '~/entities/articles.server';
+import { $$createArticle } from '~/entities/articles.server';
 import { useTags } from '~/entities/tags';
 import { LazyModal, type ModalController } from './LazyModal';
 import { MultiSelectTag } from './MultiSelectTag';
@@ -52,8 +52,8 @@ function SaveArticleForm(props: SaveArticleFormProps) {
       setError(null);
       setIsSaving(true);
 
-      // Create the standalone article via server function
-      const article = await $$createStandaloneArticle({
+      // Create the article via server function
+      const article = await $$createArticle({
         data: {
           url,
           title: articleTitle().trim() || undefined,

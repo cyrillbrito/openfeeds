@@ -1,6 +1,6 @@
 import { dbProvider } from '@repo/domain';
 import * as articlesDomain from '@repo/domain';
-import { CreateStandaloneArticleSchema, UpdateArticleSchema } from '@repo/shared/schemas';
+import { CreateArticleFromUrlSchema, UpdateArticleSchema } from '@repo/shared/schemas';
 import { createServerFn } from '@tanstack/solid-start';
 import { z } from 'zod';
 import { authMiddleware } from '~/server/middleware/auth';
@@ -32,10 +32,10 @@ export const $$updateArticles = createServerFn({ method: 'POST' })
     );
   });
 
-export const $$createStandaloneArticle = createServerFn({ method: 'POST' })
+export const $$createArticle = createServerFn({ method: 'POST' })
   .middleware([authMiddleware])
-  .inputValidator(CreateStandaloneArticleSchema)
+  .inputValidator(CreateArticleFromUrlSchema)
   .handler(({ context, data }) => {
     const db = dbProvider.userDb(context.user.id);
-    return articlesDomain.createStandaloneArticle(data, db);
+    return articlesDomain.createArticle(data, db);
   });

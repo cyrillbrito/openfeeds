@@ -3,7 +3,7 @@ import { fetchArticleContent } from '@repo/readability/server';
 import {
   type Article,
   type ArticleQuery,
-  type CreateStandaloneArticle,
+  type CreateArticleFromUrl,
   type MarkManyArchivedRequest,
   type MarkManyArchivedResponse,
   type PaginatedResponse,
@@ -262,12 +262,12 @@ export async function markManyArticlesArchived(
 }
 
 /**
- * Create a standalone article (not tied to any feed)
+ * Create an article from a URL (not tied to any feed)
  * Used for "save for later" functionality like Pocket
  * Fetches and extracts clean content using Readability
  */
-export async function createStandaloneArticle(
-  data: CreateStandaloneArticle,
+export async function createArticle(
+  data: CreateArticleFromUrl,
   db: UserDb,
 ): Promise<Article> {
   const articleId = createId();
