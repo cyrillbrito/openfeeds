@@ -284,7 +284,7 @@ export async function createArticle(
   await db.insert(articles).values({
     id: articleId,
     feedId: null,
-    title: data.title || extractedTitle || data.url, // Use provided title, then extracted, then URL as fallback
+    title: extractedTitle || data.url, // Use extracted title, fallback to URL
     description: excerpt,
     url: data.url,
     pubDate: now,

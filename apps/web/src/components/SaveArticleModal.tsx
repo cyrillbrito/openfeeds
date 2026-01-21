@@ -33,7 +33,6 @@ interface SaveArticleFormProps {
 function SaveArticleForm(props: SaveArticleFormProps) {
   const [isSaving, setIsSaving] = createSignal(false);
   const [articleUrl, setArticleUrl] = createSignal('');
-  const [articleTitle, setArticleTitle] = createSignal('');
   const [selectedTags, setSelectedTags] = createSignal<string[]>([]);
   const [error, setError] = createSignal<string | null>(null);
 
@@ -56,7 +55,6 @@ function SaveArticleForm(props: SaveArticleFormProps) {
       const article = await $$createArticle({
         data: {
           url,
-          title: articleTitle().trim() || undefined,
           tags: selectedTags().length > 0 ? selectedTags() : undefined,
         },
       });
@@ -101,22 +99,6 @@ function SaveArticleForm(props: SaveArticleFormProps) {
           onInput={(e) => setArticleUrl(e.currentTarget.value)}
           required
         />
-      </div>
-
-      <div class="form-control mb-4 w-full">
-        <label class="label">
-          <span class="label-text">Title (optional)</span>
-        </label>
-        <input
-          type="text"
-          placeholder="Article title"
-          class="input input-bordered w-full"
-          value={articleTitle()}
-          onInput={(e) => setArticleTitle(e.currentTarget.value)}
-        />
-        <label class="label">
-          <span class="label-text-alt">Leave blank to use the URL as the title</span>
-        </label>
       </div>
 
       <Show when={tagsQuery.data && tagsQuery.data.length > 0}>
