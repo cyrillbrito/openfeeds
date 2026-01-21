@@ -53,6 +53,7 @@ export const articlesCollection = createCollection(
         if (data.feedId === null && data.url) {
           const article = await $$createArticle({
             data: {
+              id: mutation.key as string,
               url: data.url,
               tags: data.tags.length > 0 ? data.tags : undefined,
             },

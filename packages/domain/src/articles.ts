@@ -270,7 +270,7 @@ export async function createArticle(
   data: CreateArticleFromUrl,
   db: UserDb,
 ): Promise<Article> {
-  const articleId = createId();
+  const articleId = data.id ?? createId();
   const now = new Date();
 
   // Fetch and extract article content
