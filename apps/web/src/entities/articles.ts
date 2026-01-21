@@ -1,9 +1,9 @@
 import { ArticleSchema } from '@repo/shared/schemas';
-import type { Article } from '@repo/shared/types';
+import type { Article, CreateArticleFromUrl } from '@repo/shared/types';
 import { queryCollectionOptions } from '@tanstack/query-db-collection';
 import { createCollection, parseLoadSubsetOptions } from '@tanstack/solid-db';
 import { queryClient } from '~/query-client';
-import { $$getArticles, $$updateArticles } from './articles.server';
+import { $$createArticle, $$getArticles, $$updateArticles } from './articles.server';
 
 // Articles Collection
 export const articlesCollection = createCollection(
@@ -46,11 +46,9 @@ export const articlesCollection = createCollection(
       return result?.data || [];
     },
 
-    // Articles are created server-side via RSS fetch
-    // No client-side creation needed
-    onInsert: async () => {
-      // Not implemented - articles are created by RSS feed sync
-    },
+    // Article creation is handled by createArticleFromUrl() below
+    // which calls the server and then inserts the result
+    onInsert: async () => {},
 
     // Handle client-side updates (isRead, isArchived, tags)
     onUpdate: async ({ transaction }) => {
@@ -66,9 +64,33 @@ export const articlesCollection = createCollection(
     },
 
     // Articles are archived, not deleted
-    // No client-side deletion needed
-    onDelete: async () => {
-      // Not implemented - articles are typically archived
-    },
+    onDelete: async () => {},
   }),
 );
+
+/**
+ * Create an article from a URL and insert it into the collection
+ */
+export async function createArticleFromUrl(data: CreateArticleFromUrl): Promise<Article> {
+  // Call server to create the article (extracts content via Readability)
+  const article = await $$createArticle({ data });
+
+  // Insert into collection for local state
+  articlesCollection.insert({
+    id: article.id,
+    feedId: null,
+    title: article.title,
+    url: article.url,
+    description: article.description,
+    content: article.content,
+    author: article.author,
+    pubDate: article.pubDate?.toISOString() ?? new Date().toISOString(),
+    isRead: article.isRead ?? false,
+    isArchived: article.isArchived ?? false,
+    hasCleanContent: article.hasCleanContent,
+    tags: article.tags,
+    createdAt: article.createdAt.toISOString(),
+  });
+
+  return article;
+}
