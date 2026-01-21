@@ -1,6 +1,7 @@
+import { createId } from '@repo/shared/utils';
 import CircleAlertIcon from 'lucide-solid/icons/circle-alert';
 import { createSignal, Show } from 'solid-js';
-import { createArticleFromUrl } from '~/entities/articles';
+import { articlesCollection } from '~/entities/articles';
 import { useTags } from '~/entities/tags';
 import { LazyModal, type ModalController } from './LazyModal';
 import { MultiSelectTag } from './MultiSelectTag';
@@ -50,9 +51,21 @@ function SaveArticleForm(props: SaveArticleFormProps) {
       setError(null);
       setIsSaving(true);
 
-      await createArticleFromUrl({
+      // Insert into collection - onInsert will call server and update with real data
+      articlesCollection.insert({
+        id: createId(),
+        feedId: null,
+        title: url, // Placeholder, will be updated by onInsert
         url,
-        tags: selectedTags().length > 0 ? selectedTags() : undefined,
+        description: null,
+        content: null,
+        author: null,
+        pubDate: new Date().toISOString(),
+        isRead: false,
+        isArchived: false,
+        hasCleanContent: false,
+        tags: selectedTags(),
+        createdAt: new Date().toISOString(),
       });
 
       props.onClose();
