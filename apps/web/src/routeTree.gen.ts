@@ -23,6 +23,7 @@ import { Route as FrameTagsTagIdRouteImport } from './routes/_frame.tags.$tagId'
 import { Route as FrameArticlesArticleIdRouteImport } from './routes/_frame.articles.$articleId'
 import { Route as FrameInboxShortsIndexRouteImport } from './routes/_frame.inbox.shorts.index'
 import { Route as FrameFeedsFeedIdIndexRouteImport } from './routes/_frame.feeds.$feedId.index'
+import { Route as ApiArticlesArticleIdAudioRouteImport } from './routes/api/articles/$articleId/audio'
 import { Route as FrameFeedsFeedIdShortsIndexRouteImport } from './routes/_frame.feeds.$feedId.shorts.index'
 
 const SignupRoute = SignupRouteImport.update({
@@ -94,6 +95,12 @@ const FrameFeedsFeedIdIndexRoute = FrameFeedsFeedIdIndexRouteImport.update({
   path: '/feeds/$feedId/',
   getParentRoute: () => FrameRoute,
 } as any)
+const ApiArticlesArticleIdAudioRoute =
+  ApiArticlesArticleIdAudioRouteImport.update({
+    id: '/api/articles/$articleId/audio',
+    path: '/api/articles/$articleId/audio',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const FrameFeedsFeedIdShortsIndexRoute =
   FrameFeedsFeedIdShortsIndexRouteImport.update({
     id: '/feeds/$feedId/shorts/',
@@ -113,6 +120,7 @@ export interface FileRoutesByFullPath {
   '/feeds': typeof FrameFeedsIndexRoute
   '/inbox': typeof FrameInboxIndexRoute
   '/tags': typeof FrameTagsIndexRoute
+  '/api/articles/$articleId/audio': typeof ApiArticlesArticleIdAudioRoute
   '/feeds/$feedId': typeof FrameFeedsFeedIdIndexRoute
   '/inbox/shorts': typeof FrameInboxShortsIndexRoute
   '/feeds/$feedId/shorts': typeof FrameFeedsFeedIdShortsIndexRoute
@@ -129,6 +137,7 @@ export interface FileRoutesByTo {
   '/feeds': typeof FrameFeedsIndexRoute
   '/inbox': typeof FrameInboxIndexRoute
   '/tags': typeof FrameTagsIndexRoute
+  '/api/articles/$articleId/audio': typeof ApiArticlesArticleIdAudioRoute
   '/feeds/$feedId': typeof FrameFeedsFeedIdIndexRoute
   '/inbox/shorts': typeof FrameInboxShortsIndexRoute
   '/feeds/$feedId/shorts': typeof FrameFeedsFeedIdShortsIndexRoute
@@ -147,6 +156,7 @@ export interface FileRoutesById {
   '/_frame/feeds/': typeof FrameFeedsIndexRoute
   '/_frame/inbox/': typeof FrameInboxIndexRoute
   '/_frame/tags/': typeof FrameTagsIndexRoute
+  '/api/articles/$articleId/audio': typeof ApiArticlesArticleIdAudioRoute
   '/_frame/feeds/$feedId/': typeof FrameFeedsFeedIdIndexRoute
   '/_frame/inbox/shorts/': typeof FrameInboxShortsIndexRoute
   '/_frame/feeds/$feedId/shorts/': typeof FrameFeedsFeedIdShortsIndexRoute
@@ -165,6 +175,7 @@ export interface FileRouteTypes {
     | '/feeds'
     | '/inbox'
     | '/tags'
+    | '/api/articles/$articleId/audio'
     | '/feeds/$feedId'
     | '/inbox/shorts'
     | '/feeds/$feedId/shorts'
@@ -181,6 +192,7 @@ export interface FileRouteTypes {
     | '/feeds'
     | '/inbox'
     | '/tags'
+    | '/api/articles/$articleId/audio'
     | '/feeds/$feedId'
     | '/inbox/shorts'
     | '/feeds/$feedId/shorts'
@@ -198,6 +210,7 @@ export interface FileRouteTypes {
     | '/_frame/feeds/'
     | '/_frame/inbox/'
     | '/_frame/tags/'
+    | '/api/articles/$articleId/audio'
     | '/_frame/feeds/$feedId/'
     | '/_frame/inbox/shorts/'
     | '/_frame/feeds/$feedId/shorts/'
@@ -210,6 +223,7 @@ export interface RootRouteChildren {
   SignupRoute: typeof SignupRoute
   ApiFeedsRoute: typeof ApiFeedsRoute
   ApiAuthSplatRoute: typeof ApiAuthSplatRoute
+  ApiArticlesArticleIdAudioRoute: typeof ApiArticlesArticleIdAudioRoute
 }
 
 declare module '@tanstack/solid-router' {
@@ -312,6 +326,13 @@ declare module '@tanstack/solid-router' {
       preLoaderRoute: typeof FrameFeedsFeedIdIndexRouteImport
       parentRoute: typeof FrameRoute
     }
+    '/api/articles/$articleId/audio': {
+      id: '/api/articles/$articleId/audio'
+      path: '/api/articles/$articleId/audio'
+      fullPath: '/api/articles/$articleId/audio'
+      preLoaderRoute: typeof ApiArticlesArticleIdAudioRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/_frame/feeds/$feedId/shorts/': {
       id: '/_frame/feeds/$feedId/shorts/'
       path: '/feeds/$feedId/shorts'
@@ -355,6 +376,7 @@ const rootRouteChildren: RootRouteChildren = {
   SignupRoute: SignupRoute,
   ApiFeedsRoute: ApiFeedsRoute,
   ApiAuthSplatRoute: ApiAuthSplatRoute,
+  ApiArticlesArticleIdAudioRoute: ApiArticlesArticleIdAudioRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

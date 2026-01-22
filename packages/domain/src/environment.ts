@@ -14,7 +14,7 @@ export const environment = z
     RESEND_AUDIENCE_ID: z.string().optional(),
     // TTS Configuration
     UNREAL_SPEECH_API_KEY: z.string().optional(),
-    TTS_DEFAULT_VOICE: z.string().default('Scarlett'),
+    TTS_DEFAULT_VOICE: z.string().default('Sierra'),
   })
   .transform((env) => ({
     clientDomain: env.CLIENT_DOMAIN,

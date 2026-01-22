@@ -9,8 +9,11 @@ import { articlesCollection } from '~/entities/articles';
 import { useFeeds } from '~/entities/feeds';
 import { useTags } from '~/entities/tags';
 import { ArchiveIconButton } from '../components/ArchiveIconButton';
+import { ArticleAudioProvider } from '../components/ArticleAudioContext';
+import { ArticleAudioPlayer } from '../components/ArticleAudioPlayer';
 import { ArticleTagManager } from '../components/ArticleTagManager';
 import { Header } from '../components/Header';
+import { HighlightedArticleContent } from '../components/HighlightedArticleContent';
 import { Loader } from '../components/Loader';
 import { ReadIconButton } from '../components/ReadIconButton';
 import { TimeAgo } from '../components/TimeAgo';
@@ -198,6 +201,17 @@ function ArticleView() {
                 {/* Divider */}
                 <div class="border-base-300 mb-8 border-t"></div>
 
+                {/* Audio Player and Content - for non-video articles with content */}
+                <Show when={!isVideo() && cleanContent()}>
+                  <ArticleAudioProvider>
+                    <ArticleAudioPlayer articleId={art().id} />
+                    <HighlightedArticleContent
+                      html={cleanContent()!}
+                      class="prose prose-lg text-base-content prose-headings:text-base-content prose-a:text-primary prose-strong:text-base-content prose-code:text-base-content prose-blockquote:text-base-content/80 max-w-none"
+                    />
+                  </ArticleAudioProvider>
+                </Show>
+
                 {/* Video Content */}
                 <Show when={isVideo() && videoEmbedUrl()}>
                   <div class="mb-8">
@@ -242,14 +256,6 @@ function ArticleView() {
                       </Show>
                     </div>
                   </Show>
-                </Show>
-
-                {/* Article Content - for non-videos */}
-                <Show when={!isVideo() && cleanContent()}>
-                  <div
-                    class="prose prose-lg text-base-content prose-headings:text-base-content prose-a:text-primary prose-strong:text-base-content prose-code:text-base-content prose-blockquote:text-base-content/80 max-w-none"
-                    innerHTML={cleanContent()!}
-                  />
                 </Show>
 
                 {/* No content fallback */}
