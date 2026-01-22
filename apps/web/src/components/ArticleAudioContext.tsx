@@ -18,6 +18,9 @@ interface ArticleAudioContextValue {
   wordTimings: () => WordTiming[];
   setWordTimings: (timings: WordTiming[]) => void;
   isHighlightingEnabled: () => boolean;
+  // Seeking
+  seekToWordIndex: (index: number) => void;
+  onSeekRequest: (callback: (index: number) => void) => void;
 }
 
 const ArticleAudioContext = createContext<ArticleAudioContextValue>();
@@ -27,9 +30,22 @@ export function ArticleAudioProvider(props: ParentProps) {
   const [currentWordIndex, setCurrentWordIndex] = createSignal<number>(-1);
   const [wordTimings, setWordTimings] = createSignal<WordTiming[]>([]);
 
+  // Callback for seek requests - AudioPlayer will register this
+  let seekCallback: ((index: number) => void) | null = null;
+
   const isHighlightingEnabled = () => {
     const state = audioState();
     return (state === 'playing' || state === 'paused') && wordTimings().length > 0;
+  };
+
+  const seekToWordIndex = (index: number) => {
+    if (seekCallback) {
+      seekCallback(index);
+    }
+  };
+
+  const onSeekRequest = (callback: (index: number) => void) => {
+    seekCallback = callback;
   };
 
   return (
@@ -42,6 +58,8 @@ export function ArticleAudioProvider(props: ParentProps) {
         wordTimings,
         setWordTimings,
         isHighlightingEnabled,
+        seekToWordIndex,
+        onSeekRequest,
       }}
     >
       {props.children}

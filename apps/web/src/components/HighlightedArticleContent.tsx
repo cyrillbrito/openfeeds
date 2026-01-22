@@ -9,6 +9,7 @@ interface HighlightedArticleContentProps {
 /**
  * Renders article HTML content with word-level highlighting synchronized to audio playback.
  * Uses a floating highlight bubble that smoothly transitions between words.
+ * Allows clicking on words to seek to that position in the audio.
  */
 export function HighlightedArticleContent(props: HighlightedArticleContentProps) {
   const audio = useArticleAudio();
@@ -16,9 +17,18 @@ export function HighlightedArticleContent(props: HighlightedArticleContentProps)
   let highlightRef: HTMLDivElement | undefined;
   const [isInitialized, setIsInitialized] = createSignal(false);
 
-  // Process HTML to wrap words in spans when highlighting is enabled
+  // Check if audio is ready for interaction (can seek)
+  const canSeek = () => {
+    const state = audio.audioState();
+    return (
+      (state === 'ready' || state === 'playing' || state === 'paused') &&
+      audio.wordTimings().length > 0
+    );
+  };
+
+  // Process HTML to wrap words in spans when seeking/highlighting is available
   const processedHtml = createMemo(() => {
-    if (!audio.isHighlightingEnabled() || audio.wordTimings().length === 0) {
+    if (!canSeek() || audio.wordTimings().length === 0) {
       return props.html;
     }
 
@@ -26,6 +36,22 @@ export function HighlightedArticleContent(props: HighlightedArticleContentProps)
     // This is tricky because we need to match TTS words to rendered text
     return wrapWordsInHtml(props.html, audio.wordTimings().length);
   });
+
+  // Handle click on words to seek
+  const handleClick = (e: MouseEvent) => {
+    if (!canSeek()) return;
+
+    // Find the clicked word span
+    const target = e.target as HTMLElement;
+    const wordIndex = target.getAttribute('data-word-index');
+
+    if (wordIndex !== null) {
+      const index = parseInt(wordIndex, 10);
+      if (!isNaN(index)) {
+        audio.seekToWordIndex(index);
+      }
+    }
+  };
 
   // Update highlight position when current word changes
   createEffect(() => {
@@ -58,13 +84,20 @@ export function HighlightedArticleContent(props: HighlightedArticleContentProps)
     setIsInitialized(true);
   });
 
+  // Update innerHTML when processedHtml changes (SolidJS innerHTML doesn't auto-update)
+  createEffect(() => {
+    if (containerRef && isInitialized()) {
+      containerRef.innerHTML = processedHtml();
+    }
+  });
+
   return (
     <div class="relative">
       {/* Floating highlight bubble */}
       <Show when={audio.isHighlightingEnabled()}>
         <div
           ref={highlightRef}
-          class="bg-primary/20 pointer-events-none absolute rounded-md opacity-0 transition-all duration-150 ease-out"
+          class="bg-primary/20 pointer-events-none absolute rounded-md opacity-0"
           style={{ 'z-index': 0 }}
         />
       </Show>
@@ -73,9 +106,23 @@ export function HighlightedArticleContent(props: HighlightedArticleContentProps)
       <div
         ref={containerRef}
         class={props.class}
+        classList={{
+          'seekable-content': canSeek(),
+        }}
         style={{ position: 'relative', 'z-index': 1 }}
-        innerHTML={isInitialized() ? processedHtml() : props.html}
+        onClick={handleClick}
       />
+
+      {/* Hover styles for seekable words */}
+      <style>{`
+        .seekable-content [data-word-index] {
+          cursor: pointer;
+          border-radius: 2px;
+        }
+        .seekable-content [data-word-index]:hover {
+          background-color: color-mix(in srgb, currentColor 15%, transparent);
+        }
+      `}</style>
     </div>
   );
 }

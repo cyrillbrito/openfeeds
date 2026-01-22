@@ -3,7 +3,7 @@ import Headphones from 'lucide-solid/icons/headphones';
 import Loader2 from 'lucide-solid/icons/loader-2';
 import Pause from 'lucide-solid/icons/pause';
 import Play from 'lucide-solid/icons/play';
-import { createEffect, createSignal, onCleanup, Show } from 'solid-js';
+import { createEffect, createSignal, onCleanup, onMount, Show } from 'solid-js';
 import { $$generateArticleAudio, $$getArticleAudio } from '~/entities/article-audio.server';
 import { useArticleAudio } from './ArticleAudioContext';
 
@@ -21,6 +21,28 @@ export function ArticleAudioPlayer(props: ArticleAudioPlayerProps) {
 
   let audioRef: HTMLAudioElement | undefined;
   let animationFrameId: number | undefined;
+
+  // Register seek handler so HighlightedArticleContent can request seeks
+  onMount(() => {
+    audio.onSeekRequest((wordIndex) => {
+      const timings = localWordTimings();
+      if (!audioRef || wordIndex < 0 || wordIndex >= timings.length) return;
+
+      const timing = timings[wordIndex];
+      if (timing) {
+        audioRef.currentTime = timing.start;
+        setCurrentTime(timing.start);
+        audio.setCurrentWordIndex(wordIndex);
+
+        // Start playing if not already
+        if (audio.audioState() !== 'playing') {
+          audioRef.play();
+          audio.setAudioState('playing');
+          startProgressLoop();
+        }
+      }
+    });
+  });
 
   // Use requestAnimationFrame for smooth progress updates
   const updateProgress = () => {
@@ -142,7 +164,7 @@ export function ArticleAudioPlayer(props: ArticleAudioPlayerProps) {
     <div
       class="border-base-300 bg-base-200 mb-6 rounded-lg border p-4 transition-all"
       classList={{
-        'sticky top-0 z-10 shadow-md': isSticky(),
+        'sticky top-18 z-10 shadow-md': isSticky(),
       }}
     >
       {/* Hidden audio element */}
