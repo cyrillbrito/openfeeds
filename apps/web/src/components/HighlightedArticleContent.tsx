@@ -1,3 +1,4 @@
+import type { WordTiming } from '@repo/shared/types';
 import { createEffect, createMemo, createSignal, onMount, Show } from 'solid-js';
 import { useArticleAudio } from './ArticleAudioContext';
 
@@ -28,13 +29,13 @@ export function HighlightedArticleContent(props: HighlightedArticleContentProps)
 
   // Process HTML to wrap words in spans when seeking/highlighting is available
   const processedHtml = createMemo(() => {
-    if (!canSeek() || audio.wordTimings().length === 0) {
+    const timings = audio.wordTimings();
+    if (!canSeek() || timings.length === 0) {
       return props.html;
     }
 
-    // We need to wrap text nodes in spans with data-word-index
-    // This is tricky because we need to match TTS words to rendered text
-    return wrapWordsInHtml(props.html, audio.wordTimings().length);
+    // Use TTS word list to guide HTML wrapping
+    return wrapWordsWithTimings(props.html, timings);
   });
 
   // Handle click on words to seek
@@ -128,22 +129,41 @@ export function HighlightedArticleContent(props: HighlightedArticleContentProps)
 }
 
 /**
- * Wraps individual words in the HTML with span elements for highlighting.
- * Preserves HTML structure while adding data-word-index attributes.
+ * Normalize a word for comparison - lowercase and strip punctuation from edges
  */
-function wrapWordsInHtml(html: string, _totalWords: number): string {
-  // Create a temporary container to parse HTML
+function normalizeWord(word: string): string {
+  return word.toLowerCase().replace(/^[^\w]+|[^\w]+$/g, '');
+}
+
+/**
+ * Check if two normalized words match (with some flexibility)
+ */
+function wordsMatch(htmlWord: string, ttsWord: string): boolean {
+  if (!htmlWord || !ttsWord) return false;
+  return htmlWord === ttsWord || htmlWord.includes(ttsWord) || ttsWord.includes(htmlWord);
+}
+
+/**
+ * Wraps words in HTML using TTS word timings as the source of truth.
+ * This ensures the word indices match between audio and display.
+ */
+function wrapWordsWithTimings(html: string, timings: WordTiming[]): string {
   const template = document.createElement('template');
   template.innerHTML = html;
 
-  let wordIndex = 0;
+  // Build a list of normalized TTS words for matching
+  const ttsWords = timings.map((t) => normalizeWord(t.word));
+  let ttsIndex = 0;
+
+  // How many TTS words to look ahead when trying to resync after a mismatch
+  const LOOKAHEAD = 5;
 
   function processNode(node: Node): void {
     if (node.nodeType === Node.TEXT_NODE) {
       const text = node.textContent || '';
       if (!text.trim()) return;
 
-      // Split text into words while preserving whitespace
+      // Split into words and whitespace, preserving order
       const parts = text.split(/(\s+)/);
       const fragment = document.createDocumentFragment();
 
@@ -152,9 +172,38 @@ function wrapWordsInHtml(html: string, _totalWords: number): string {
           // Whitespace - keep as text
           fragment.appendChild(document.createTextNode(part));
         } else if (part) {
-          // Word - wrap in span (no inline styles to keep it lightweight)
+          // This is a word from the HTML - try to match it with TTS words
+          const normalizedPart = normalizeWord(part);
+          let matchedIndex = -1;
+
+          if (normalizedPart && ttsIndex < ttsWords.length) {
+            // First, try exact match at current position
+            if (wordsMatch(normalizedPart, ttsWords[ttsIndex]!)) {
+              matchedIndex = ttsIndex;
+              ttsIndex++;
+            } else {
+              // Mismatch - look ahead to try to resync
+              for (
+                let ahead = 1;
+                ahead <= LOOKAHEAD && ttsIndex + ahead < ttsWords.length;
+                ahead++
+              ) {
+                if (wordsMatch(normalizedPart, ttsWords[ttsIndex + ahead]!)) {
+                  // Found a match ahead - skip to it
+                  ttsIndex = ttsIndex + ahead;
+                  matchedIndex = ttsIndex;
+                  ttsIndex++;
+                  break;
+                }
+              }
+            }
+          }
+
+          // Create span with word index if matched
           const span = document.createElement('span');
-          span.setAttribute('data-word-index', String(wordIndex++));
+          if (matchedIndex >= 0) {
+            span.setAttribute('data-word-index', String(matchedIndex));
+          }
           span.textContent = part;
           fragment.appendChild(span);
         }
@@ -162,13 +211,11 @@ function wrapWordsInHtml(html: string, _totalWords: number): string {
 
       node.parentNode?.replaceChild(fragment, node);
     } else if (node.nodeType === Node.ELEMENT_NODE) {
-      // Skip script, style, and other non-content elements
       const tagName = (node as Element).tagName.toLowerCase();
       if (['script', 'style', 'noscript', 'iframe'].includes(tagName)) {
         return;
       }
 
-      // Process child nodes (iterate backwards to handle replacements)
       const children = Array.from(node.childNodes);
       for (const child of children) {
         processNode(child);
@@ -176,14 +223,12 @@ function wrapWordsInHtml(html: string, _totalWords: number): string {
     }
   }
 
-  // Process all nodes in the template
   const content = template.content;
   const children = Array.from(content.childNodes);
   for (const child of children) {
     processNode(child);
   }
 
-  // Get the modified HTML
   const wrapper = document.createElement('div');
   wrapper.appendChild(content.cloneNode(true));
   return wrapper.innerHTML;
