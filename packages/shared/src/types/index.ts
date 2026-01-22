@@ -7,3 +7,4 @@ export * from './auth';
 export * from './common';
 export * from './filter-rule';
 export * from './settings';
+export * from './tts';

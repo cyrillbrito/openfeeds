@@ -36,6 +36,9 @@ services:
       - POSTHOG_PUBLIC_KEY=$POSTHOG_PUBLIC_KEY
       - REDIS_HOST=redis
       - REDIS_PORT=6379
+      # TTS Configuration (optional)
+      - UNREAL_SPEECH_API_KEY=$UNREAL_SPEECH_API_KEY
+      - TTS_DEFAULT_VOICE=$TTS_DEFAULT_VOICE
     volumes:
       - sqlite_data:/data
     depends_on:

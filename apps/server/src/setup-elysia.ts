@@ -2,6 +2,7 @@ import { cors } from '@elysiajs/cors';
 import { openapi } from '@elysiajs/openapi';
 import { Elysia } from 'elysia';
 import { z } from 'zod';
+import { articleAudioApp } from './apps/article-audio';
 import { articleTagsApp } from './apps/article-tags';
 import { articlesApp } from './apps/articles';
 // import { authApp } from './apps/auth';
@@ -34,6 +35,7 @@ export const apiApp = new Elysia({ prefix: '/api' })
   .use(tagsApp)
   .use(feedsApp)
   .use(articlesApp)
+  .use(articleAudioApp)
   .use(articleTagsApp)
   .use(importApp)
   .use(settingsApp)

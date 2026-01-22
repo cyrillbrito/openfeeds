@@ -12,6 +12,7 @@ export * from './rss-fetch';
 export * from './rule-evaluation';
 export * from './settings';
 export * from './tags';
+export * from './tts';
 
 // Utilities
 export * from './db-utils';
