@@ -97,7 +97,7 @@ export function HighlightedArticleContent(props: HighlightedArticleContentProps)
       <Show when={audio.isHighlightingEnabled()}>
         <div
           ref={highlightRef}
-          class="bg-primary/20 pointer-events-none absolute rounded-md opacity-0"
+          class="bg-primary/20 pointer-events-none absolute rounded-md opacity-0 transition-all duration-150 ease-out"
           style={{ 'z-index': 0 }}
         />
       </Show>
@@ -120,7 +120,7 @@ export function HighlightedArticleContent(props: HighlightedArticleContentProps)
           border-radius: 2px;
         }
         .seekable-content [data-word-index]:hover {
-          background-color: color-mix(in srgb, currentColor 15%, transparent);
+          background-color: color-mix(in oklab, var(--color-primary) 10%, transparent);
         }
       `}</style>
     </div>
@@ -152,11 +152,10 @@ function wrapWordsInHtml(html: string, _totalWords: number): string {
           // Whitespace - keep as text
           fragment.appendChild(document.createTextNode(part));
         } else if (part) {
-          // Word - wrap in span
+          // Word - wrap in span (no inline styles to keep it lightweight)
           const span = document.createElement('span');
           span.setAttribute('data-word-index', String(wordIndex++));
           span.textContent = part;
-          span.style.position = 'relative';
           fragment.appendChild(span);
         }
       }
