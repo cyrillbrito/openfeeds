@@ -48,7 +48,7 @@ export const articlesCollection = createCollection(
 
     onInsert: async ({ transaction }) => {
       for (const mutation of transaction.mutations) {
-        const data = mutation.data as Article;
+        const data = mutation.modified;
         // Only call server for articles created from URL (no feedId)
         if (data.feedId === null && data.url) {
           const article = await $$createArticle({
@@ -59,16 +59,23 @@ export const articlesCollection = createCollection(
             },
           });
 
-          // Update collection with real data from server
-          articlesCollection.update(mutation.key as string, {
+          // Write directly to synced data store without triggering onUpdate
+          articlesCollection.utils.writeUpdate({
+            id: mutation.key as string,
             title: article.title,
             description: article.description,
             content: article.content,
             author: article.author,
-            pubDate: article.pubDate?.toISOString() ?? new Date().toISOString(),
+            pubDate: article.pubDate ?? new Date(),
             hasCleanContent: article.hasCleanContent,
-            createdAt: article.createdAt.toISOString(),
+            createdAt: article.createdAt,
           });
+
+          // If tags were assigned, invalidate article-tags collection
+          // to force refresh of the local article-tag relationships
+          if (data.tags && data.tags.length > 0) {
+            queryClient.invalidateQueries({ queryKey: ['article-tags'] });
+          }
         }
       }
     },
