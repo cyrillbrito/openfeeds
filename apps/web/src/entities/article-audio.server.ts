@@ -5,7 +5,13 @@ import { z } from 'zod';
 import { authMiddleware } from '~/server/middleware/auth';
 
 /**
- * Check if audio exists for an article and get metadata
+ * Check if audio exists for an article and get metadata.
+ *
+ * Returns metadata and a URL to the streaming endpoint.
+ * The audio URL points to a dedicated streaming endpoint because:
+ * - Audio files are too large to transmit via server functions (base64 would add 33% overhead)
+ * - Streaming requires proper HTTP features (byte-range requests, caching headers)
+ * - This pattern separates metadata operations (server functions) from file streaming (HTTP endpoints)
  */
 export const $$getArticleAudio = createServerFn({ method: 'GET' })
   .middleware([authMiddleware])
@@ -33,7 +39,11 @@ export const $$getArticleAudio = createServerFn({ method: 'GET' })
   });
 
 /**
- * Generate audio for an article on-demand
+ * Generate audio for an article on-demand.
+ *
+ * Generates the audio file and saves it to disk, then returns metadata
+ * and a URL to the streaming endpoint. The actual audio is served via
+ * the streaming endpoint to avoid memory issues with large files.
  */
 export const $$generateArticleAudio = createServerFn({ method: 'POST' })
   .middleware([authMiddleware])
