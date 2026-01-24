@@ -117,13 +117,13 @@ export interface FileRoutesByFullPath {
   '/articles/$articleId': typeof FrameArticlesArticleIdRoute
   '/tags/$tagId': typeof FrameTagsTagIdRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
-  '/feeds': typeof FrameFeedsIndexRoute
-  '/inbox': typeof FrameInboxIndexRoute
-  '/tags': typeof FrameTagsIndexRoute
+  '/feeds/': typeof FrameFeedsIndexRoute
+  '/inbox/': typeof FrameInboxIndexRoute
+  '/tags/': typeof FrameTagsIndexRoute
   '/api/articles/$articleId/audio': typeof ApiArticlesArticleIdAudioRoute
-  '/feeds/$feedId': typeof FrameFeedsFeedIdIndexRoute
-  '/inbox/shorts': typeof FrameInboxShortsIndexRoute
-  '/feeds/$feedId/shorts': typeof FrameFeedsFeedIdShortsIndexRoute
+  '/feeds/$feedId/': typeof FrameFeedsFeedIdIndexRoute
+  '/inbox/shorts/': typeof FrameInboxShortsIndexRoute
+  '/feeds/$feedId/shorts/': typeof FrameFeedsFeedIdShortsIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -172,13 +172,13 @@ export interface FileRouteTypes {
     | '/articles/$articleId'
     | '/tags/$tagId'
     | '/api/auth/$'
-    | '/feeds'
-    | '/inbox'
-    | '/tags'
+    | '/feeds/'
+    | '/inbox/'
+    | '/tags/'
     | '/api/articles/$articleId/audio'
-    | '/feeds/$feedId'
-    | '/inbox/shorts'
-    | '/feeds/$feedId/shorts'
+    | '/feeds/$feedId/'
+    | '/inbox/shorts/'
+    | '/feeds/$feedId/shorts/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -245,7 +245,7 @@ declare module '@tanstack/solid-router' {
     '/_frame': {
       id: '/_frame'
       path: ''
-      fullPath: ''
+      fullPath: '/'
       preLoaderRoute: typeof FrameRouteImport
       parentRoute: typeof rootRouteImport
     }
@@ -273,21 +273,21 @@ declare module '@tanstack/solid-router' {
     '/_frame/tags/': {
       id: '/_frame/tags/'
       path: '/tags'
-      fullPath: '/tags'
+      fullPath: '/tags/'
       preLoaderRoute: typeof FrameTagsIndexRouteImport
       parentRoute: typeof FrameRoute
     }
     '/_frame/inbox/': {
       id: '/_frame/inbox/'
       path: '/inbox'
-      fullPath: '/inbox'
+      fullPath: '/inbox/'
       preLoaderRoute: typeof FrameInboxIndexRouteImport
       parentRoute: typeof FrameRoute
     }
     '/_frame/feeds/': {
       id: '/_frame/feeds/'
       path: '/feeds'
-      fullPath: '/feeds'
+      fullPath: '/feeds/'
       preLoaderRoute: typeof FrameFeedsIndexRouteImport
       parentRoute: typeof FrameRoute
     }
@@ -315,14 +315,14 @@ declare module '@tanstack/solid-router' {
     '/_frame/inbox/shorts/': {
       id: '/_frame/inbox/shorts/'
       path: '/inbox/shorts'
-      fullPath: '/inbox/shorts'
+      fullPath: '/inbox/shorts/'
       preLoaderRoute: typeof FrameInboxShortsIndexRouteImport
       parentRoute: typeof FrameRoute
     }
     '/_frame/feeds/$feedId/': {
       id: '/_frame/feeds/$feedId/'
       path: '/feeds/$feedId'
-      fullPath: '/feeds/$feedId'
+      fullPath: '/feeds/$feedId/'
       preLoaderRoute: typeof FrameFeedsFeedIdIndexRouteImport
       parentRoute: typeof FrameRoute
     }
@@ -336,7 +336,7 @@ declare module '@tanstack/solid-router' {
     '/_frame/feeds/$feedId/shorts/': {
       id: '/_frame/feeds/$feedId/shorts/'
       path: '/feeds/$feedId/shorts'
-      fullPath: '/feeds/$feedId/shorts'
+      fullPath: '/feeds/$feedId/shorts/'
       preLoaderRoute: typeof FrameFeedsFeedIdShortsIndexRouteImport
       parentRoute: typeof FrameRoute
     }

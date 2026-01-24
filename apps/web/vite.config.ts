@@ -16,8 +16,6 @@ export default defineConfig({
     tailwindcss(),
     tanstackStart({
       spa: { enabled: true },
-      // For some crazy reason, it still tries to prerender
-      prerender: { enabled: false, failOnError: false },
     }),
     solidPlugin({ ssr: true }),
   ],
