@@ -145,7 +145,7 @@ function FeedsComponent() {
                   Stay updated with the latest content from blogs, news sites, and more.
                 </p>
 
-                <div class="flex justify-center gap-3">
+                <div class="flex flex-col justify-center gap-3 sm:flex-row">
                   <button
                     class="btn btn-outline btn-lg"
                     onClick={() => importOpmlModalController.open()}
