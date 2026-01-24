@@ -6,6 +6,7 @@
 - [ ] Enable archive rule by content type (vide, short, article)
 - [ ] BlurHash Thumbnails
 - [ ] Loggers and multiplied
+- [ ] Sanitize description, for example for the ryan carniato rss feed the description is including iframes
 
 ## Done
 
