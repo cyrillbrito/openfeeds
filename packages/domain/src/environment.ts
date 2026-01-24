@@ -12,6 +12,9 @@ export const environment = z
     REDIS_PORT: z.coerce.number().default(6379),
     RESEND_API_KEY: z.string().optional(),
     RESEND_AUDIENCE_ID: z.string().optional(),
+    // TTS Configuration
+    UNREAL_SPEECH_API_KEY: z.string().optional(),
+    TTS_DEFAULT_VOICE: z.string().default('Sierra'),
   })
   .transform((env) => ({
     clientDomain: env.CLIENT_DOMAIN,
@@ -24,6 +27,9 @@ export const environment = z
     redisPort: env.REDIS_PORT,
     resendApiKey: env.RESEND_API_KEY,
     resendAudienceId: env.RESEND_AUDIENCE_ID,
+    // TTS
+    unrealSpeechApiKey: env.UNREAL_SPEECH_API_KEY,
+    ttsDefaultVoice: env.TTS_DEFAULT_VOICE,
   }))
   .parse(process.env);
 
