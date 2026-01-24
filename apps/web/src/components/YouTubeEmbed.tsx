@@ -39,6 +39,7 @@ export function YouTubeEmbed(props: YouTubeEmbedProps) {
             class={
               isShorts() ? 'h-[560px] w-full object-cover' : 'aspect-video w-full object-cover'
             }
+            loading="lazy"
             onError={(e) => {
               // Fallback to medium quality thumbnail if maxres doesn't exist
               (e.currentTarget as HTMLImageElement).src =

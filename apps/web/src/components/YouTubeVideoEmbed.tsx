@@ -39,6 +39,7 @@ export function YouTubeVideoEmbed(props: YouTubeVideoEmbedProps) {
               src={`https://img.youtube.com/vi/${videoId()}/mqdefault.jpg`}
               alt={props.title || 'YouTube Video'}
               class="aspect-video w-full object-cover"
+              loading="lazy"
               onError={(e) => {
                 (e.currentTarget as HTMLImageElement).src =
                   `https://img.youtube.com/vi/${videoId()}/hqdefault.jpg`;

@@ -107,6 +107,7 @@ export function ArticleCard(props: ArticleCardProps) {
                 src={feedIcon() ?? undefined}
                 alt={feedName()}
                 class="bg-base-300 size-8 rounded-full object-cover md:size-10"
+                loading="lazy"
                 onError={(e) => {
                   e.currentTarget.style.display = 'none';
                   e.currentTarget.nextElementSibling?.classList.remove('hidden');
@@ -175,6 +176,7 @@ export function ArticleCard(props: ArticleCardProps) {
               src={`https://img.youtube.com/vi/${videoId()}/mqdefault.jpg`}
               alt={props.article.title}
               class="h-full w-full object-cover"
+              loading="lazy"
               onError={(e) => {
                 (e.currentTarget as HTMLImageElement).src =
                   `https://img.youtube.com/vi/${videoId()}/hqdefault.jpg`;

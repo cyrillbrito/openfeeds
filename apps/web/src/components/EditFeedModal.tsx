@@ -67,7 +67,12 @@ function EditFeedForm(props: EditFeedFormProps) {
       <div class="bg-base-200 rounded-lg p-4">
         <div class="flex items-center gap-3">
           <Show when={props.feed.icon}>
-            <img src={props.feed.icon!} alt={`${props.feed.title} icon`} class="h-6 w-6 rounded" />
+            <img
+              src={props.feed.icon!}
+              alt={`${props.feed.title} icon`}
+              class="h-6 w-6 rounded"
+              loading="lazy"
+            />
           </Show>
           <div>
             <h4 class="font-semibold">{props.feed.title}</h4>
