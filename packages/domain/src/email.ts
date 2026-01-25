@@ -1,12 +1,24 @@
 import { renderResetPasswordEmail, renderVerifyEmail } from '@repo/emails';
 import { Resend } from 'resend';
-import { environment } from './environment';
+import { getConfig } from './config';
 
-const resend = environment.resendApiKey ? new Resend(environment.resendApiKey) : null;
+// Lazy-initialized Resend client
+let _resend: Resend | null = null;
+let _resendChecked = false;
+
+function getResend(): Resend | null {
+  if (!_resendChecked) {
+    const config = getConfig();
+    _resend = config.resendApiKey ? new Resend(config.resendApiKey) : null;
+    _resendChecked = true;
+  }
+  return _resend;
+}
 
 const FROM_EMAIL = 'OpenFeeds <noreply@openfeeds.app>';
 
 export async function sendVerificationEmail(email: string, url: string) {
+  const resend = getResend();
   if (!resend) {
     console.log('[Email] Resend not configured, skipping verification email');
     console.log('[Email] Verification URL:', url);
@@ -23,6 +35,7 @@ export async function sendVerificationEmail(email: string, url: string) {
 }
 
 export async function sendPasswordResetEmail(email: string, url: string) {
+  const resend = getResend();
   if (!resend) {
     console.log('[Email] Resend not configured, skipping password reset email');
     console.log('[Email] Reset URL:', url);

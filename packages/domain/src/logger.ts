@@ -1,7 +1,7 @@
 import { appendFileSync, existsSync, mkdirSync } from 'fs';
 import { join } from 'path';
 import { PostHog } from 'posthog-node';
-import { environment } from './environment';
+import { getConfig } from './config';
 
 export interface LogMetadata {
   // Known metadata fields
@@ -26,10 +26,14 @@ interface Logger {
 }
 
 class PostHogLogger implements Logger {
-  private posthog = new PostHog(environment.posthogPublicKey, {
-    host: 'https://eu.i.posthog.com',
-    enableExceptionAutocapture: true,
-  });
+  private posthog: PostHog;
+
+  constructor(publicKey: string) {
+    this.posthog = new PostHog(publicKey, {
+      host: 'https://eu.i.posthog.com',
+      enableExceptionAutocapture: true,
+    });
+  }
 
   error(error: Error, metadata?: LogMetadata) {
     const { sessionId, userId, ...rest } = metadata || {};
@@ -107,4 +111,15 @@ class FileLogger implements Logger {
   }
 }
 
-export const logger: Logger = environment.posthogPublicKey ? new PostHogLogger() : new FileLogger();
+let _logger: Logger | null = null;
+export function getLogger(): Logger {
+  const config = getConfig();
+  return (_logger ??= config.posthogPublicKey
+    ? new PostHogLogger(config.posthogPublicKey)
+    : new FileLogger());
+}
+
+/** Convenience proxy that delegates to getLogger() */
+export const logger: Logger = {
+  error: (error: Error, metadata?: LogMetadata) => getLogger().error(error, metadata),
+};

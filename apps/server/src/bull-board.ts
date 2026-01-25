@@ -2,10 +2,10 @@ import { createBullBoard } from '@bull-board/api';
 import { BullMQAdapter } from '@bull-board/api/bullMQAdapter';
 import { ElysiaAdapter } from '@bull-board/elysia';
 import {
-  autoArchiveQueue,
-  feedDetailQueue,
-  feedSyncOrchestratorQueue,
-  singleFeedSyncQueue,
+  getAutoArchiveQueue,
+  getFeedDetailQueue,
+  getFeedSyncOrchestratorQueue,
+  getSingleFeedSyncQueue,
 } from '@repo/domain';
 
 /**
@@ -20,10 +20,10 @@ export function setupBullBoard() {
 
   createBullBoard({
     queues: [
-      new BullMQAdapter(feedSyncOrchestratorQueue),
-      new BullMQAdapter(singleFeedSyncQueue),
-      new BullMQAdapter(feedDetailQueue),
-      new BullMQAdapter(autoArchiveQueue),
+      new BullMQAdapter(getFeedSyncOrchestratorQueue()),
+      new BullMQAdapter(getSingleFeedSyncQueue()),
+      new BullMQAdapter(getFeedDetailQueue()),
+      new BullMQAdapter(getAutoArchiveQueue()),
     ],
     serverAdapter,
     options: {

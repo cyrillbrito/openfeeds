@@ -41,28 +41,21 @@ bun benchmark    # Run performance benchmark
 ## Worker Pattern
 
 ```typescript
-import { dbProvider, QUEUE_NAMES, redisConnection } from '@repo/domain';
+import { getUserDb } from '@repo/db';
+import { getRedisConnection, QUEUE_NAMES, syncSingleFeed } from '@repo/domain';
 import { Worker } from 'bullmq';
 
 export function createSingleFeedSyncWorker() {
   return new Worker(
     QUEUE_NAMES.SINGLE_FEED_SYNC,
     async (job) => {
-      const db = dbProvider.userDb(job.data.userId);
+      const db = getUserDb(job.data.userId);
       await syncSingleFeed(db, job.data.feedId);
     },
-    { connection: redisConnection, concurrency: 2 },
+    { connection: getRedisConnection(), concurrency: 2 },
   );
 }
 ```
-
-## Environment Variables
-
-Inherited from `@repo/domain`:
-
-- `DB_PATH` - SQLite database path
-- `REDIS_HOST`, `REDIS_PORT` - Redis connection
-- `POSTHOG_PUBLIC_KEY` - Analytics (optional)
 
 ## Deployment
 

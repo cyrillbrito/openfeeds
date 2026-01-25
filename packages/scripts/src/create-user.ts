@@ -1,7 +1,6 @@
 #!/usr/bin/env bun
 import { createAuthClient } from 'better-auth/client';
-
-const apiUrl = process.env.API_URL || 'http://localhost:3000';
+import { env } from './env';
 
 // Script-generated test users use @script-test.local domain
 // E2E tests use @e2e-test.local domain
@@ -19,7 +18,7 @@ const password = process.argv[3] || email; // Use email as password if not provi
 const name = process.argv[4] || email.split('@')[0];
 
 const authClient = createAuthClient({
-  baseURL: apiUrl,
+  baseURL: env.API_URL,
 });
 
 async function createUser() {

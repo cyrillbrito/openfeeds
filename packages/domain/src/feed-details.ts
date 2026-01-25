@@ -1,8 +1,7 @@
-import { feeds } from '@repo/db';
+import { feeds, getUserDb } from '@repo/db';
 import type { Feed } from '@repo/shared/types';
 import { attemptAsync } from '@repo/shared/utils';
 import { eq } from 'drizzle-orm';
-import { dbProvider } from './db-provider';
 import { assert } from './errors';
 import { fetchRss, type ParseFeedResult } from './rss-fetch';
 
@@ -143,7 +142,7 @@ export async function fetchFeedMetadata(feed: ParseFeedResult): Promise<Partial<
 }
 
 export async function updateFeedMetadata(userId: string, feedId: string) {
-  const db = dbProvider.userDb(userId);
+  const db = getUserDb(userId);
 
   const [feedErr, feed] = await attemptAsync(
     db.query.feeds.findFirst({

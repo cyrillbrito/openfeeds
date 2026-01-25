@@ -1,16 +1,12 @@
-import { createUserDb } from '@repo/db';
-import {
-  dbProvider,
-  environment,
-  sendPasswordResetEmail,
-  sendVerificationEmail,
-} from '@repo/domain';
+import { createUserDb, getAuthDb } from '@repo/db';
+import { sendPasswordResetEmail, sendVerificationEmail } from '@repo/domain';
 import { betterAuth } from 'better-auth';
 import { drizzleAdapter } from 'better-auth/adapters/drizzle';
 import { createAuthMiddleware } from 'better-auth/api';
 import { tanstackStartCookies } from 'better-auth/tanstack-start';
 import { Database } from 'bun:sqlite';
 import { drizzle } from 'drizzle-orm/bun-sqlite';
+import { env } from '../env';
 
 let authInstance: ReturnType<typeof betterAuth> | null = null;
 
@@ -38,15 +34,15 @@ export function getAuth() {
   // :memory: creates a temporary SQLite database in RAM
   const database = isPrerender
     ? drizzleAdapter(drizzle(new Database(':memory:')), { provider: 'sqlite' })
-    : drizzleAdapter(dbProvider.authDb(), { provider: 'sqlite' });
+    : drizzleAdapter(getAuthDb(), { provider: 'sqlite' });
 
   // Create auth instance with appropriate database
   authInstance = betterAuth({
     database,
     emailAndPassword: {
       enabled: true,
-      requireEmailVerification: !environment.simpleAuth,
-      minPasswordLength: environment.simpleAuth ? 5 : undefined,
+      requireEmailVerification: !env.SIMPLE_AUTH,
+      minPasswordLength: env.SIMPLE_AUTH ? 5 : undefined,
       sendResetPassword: async ({ user, url }) => {
         await sendPasswordResetEmail(user.email, url);
       },
@@ -55,7 +51,7 @@ export function getAuth() {
       sendVerificationEmail: async ({ user, url }) => {
         await sendVerificationEmail(user.email, url);
       },
-      sendOnSignUp: !environment.simpleAuth,
+      sendOnSignUp: !env.SIMPLE_AUTH,
     },
     session: {
       cookieCache: { enabled: true, maxAge: 5 * 60 },
@@ -66,7 +62,7 @@ export function getAuth() {
         if (ctx.path.startsWith('/sign-up')) {
           const newSession = ctx.context.newSession;
           if (newSession?.user.id) {
-            await createUserDb(dbProvider, newSession.user.id);
+            await createUserDb(newSession.user.id);
           }
         }
       }),

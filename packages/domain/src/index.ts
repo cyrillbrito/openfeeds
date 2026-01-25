@@ -18,18 +18,22 @@ export * from './tts';
 export * from './db-utils';
 export * from './logger-file';
 
-// Infrastructure - exported separately for flexibility
+// Infrastructure - new config-based pattern
+export {
+  initDomain,
+  getConfig,
+  getRedisConnection,
+  QUEUE_NAMES,
+  type DomainConfig,
+} from './config';
 export { logger, type LogMetadata } from './logger';
-export { dbProvider } from './db-provider';
-export { environment } from './environment';
-export { redisConnection, QUEUE_NAMES } from './queue-config';
 export {
   enqueueFeedDetail,
   enqueueFeedSync,
   initializeScheduledJobs,
   type UserFeedJobData,
-  feedSyncOrchestratorQueue,
-  singleFeedSyncQueue,
-  feedDetailQueue,
-  autoArchiveQueue,
+  getFeedSyncOrchestratorQueue,
+  getSingleFeedSyncQueue,
+  getFeedDetailQueue,
+  getAutoArchiveQueue,
 } from './queues';

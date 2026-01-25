@@ -1,6 +1,5 @@
 import { rmSync } from 'fs';
-import { feeds } from '@repo/db';
-import { dbProvider } from '@repo/domain';
+import { feeds, getAuthDb, getUserDb, userDbConnection } from '@repo/db';
 import { createAuthClient } from 'better-auth/client';
 import { eq } from 'drizzle-orm';
 
@@ -59,7 +58,7 @@ export async function setup(config: BenchmarkConfig): Promise<BenchmarkContext> 
   console.log(`User created: ${userId}`);
 
   console.log(`Seeding ${feedCount} feeds with varying article counts...`);
-  const userDb = dbProvider.userDb(userId);
+  const db = getUserDb(userId);
   const feedIds: string[] = [];
   const now = new Date();
   const articleCounts: number[] = [];
@@ -70,7 +69,7 @@ export async function setup(config: BenchmarkConfig): Promise<BenchmarkContext> 
     feedIds.push(feedId);
     articleCounts.push(articleCount);
 
-    await userDb.insert(feeds).values({
+    await db.insert(feeds).values({
       id: feedId,
       title: `Benchmark Feed ${i + 1}`,
       description: `Test feed for benchmarking`,
@@ -95,12 +94,12 @@ export async function setup(config: BenchmarkConfig): Promise<BenchmarkContext> 
 export async function teardown(userId: string): Promise<void> {
   console.log(`Cleaning up benchmark user ${userId}...`);
 
-  const authDb = dbProvider.authDb();
+  const authDb = getAuthDb();
   const user = authDb._.fullSchema.user;
 
   await authDb.delete(user).where(eq(user.id, userId));
 
-  const dbPath = dbProvider.userDbConnection(userId).url;
+  const dbPath = userDbConnection(userId).url;
   try {
     rmSync(dbPath, { force: true });
     console.log(`Deleted user database: ${dbPath}`);

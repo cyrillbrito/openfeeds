@@ -9,10 +9,15 @@
       "env": [
         "VITE_*",
         "BETTER_AUTH_SECRET",
-        "CORS_ORIGINS",
+        "CLIENT_DOMAIN",
         "DB_PATH",
-        "SIMPLE_AUTH",
-        "POSTHOG_PUBLIC_KEY"
+        "ENABLE_CORS",
+        "POSTHOG_PUBLIC_KEY",
+        "REDIS_HOST",
+        "REDIS_PORT",
+        "RESEND_API_KEY",
+        "RESEND_AUDIENCE_ID",
+        "SIMPLE_AUTH"
       ]
     },
     "lint": {
@@ -28,10 +33,15 @@
       "env": [
         "VITE_*",
         "BETTER_AUTH_SECRET",
-        "CORS_ORIGINS",
+        "CLIENT_DOMAIN",
         "DB_PATH",
-        "SIMPLE_AUTH",
-        "POSTHOG_PUBLIC_KEY"
+        "ENABLE_CORS",
+        "POSTHOG_PUBLIC_KEY",
+        "REDIS_HOST",
+        "REDIS_PORT",
+        "RESEND_API_KEY",
+        "RESEND_AUDIENCE_ID",
+        "SIMPLE_AUTH"
       ]
     }
   }

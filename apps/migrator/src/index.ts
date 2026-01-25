@@ -1,9 +1,9 @@
-import { DbProvider, runAllMigrations } from '@repo/db';
-import { environment } from './environment';
+import { initDb, runAllMigrations } from '@repo/db';
+import { env } from './environment';
 
 try {
-  const dbProvider = new DbProvider({ dbPath: environment.dbPath });
-  await runAllMigrations(dbProvider);
+  initDb({ dbPath: env.DB_PATH });
+  await runAllMigrations();
   process.exit(0);
 } catch (error) {
   console.error('Migration failed:', error);

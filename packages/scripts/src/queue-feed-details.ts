@@ -4,8 +4,9 @@
  * Script to queue feed detail updates for a specific user
  * Usage: bun queue-feed-details <userId>
  */
-import { DbProvider } from '@repo/db';
+import { getUserDb, initDb } from '@repo/db';
 import { Queue } from 'bullmq';
+import { env } from './env';
 
 interface UserFeedJobData {
   userId: string;
@@ -19,25 +20,20 @@ const QUEUE_NAMES = {
 async function queueFeedDetailsForUser(userId: string) {
   console.log(`Queuing feed detail updates for user: ${userId}`);
 
-  // Get config from environment
-  const dbPath = process.env.DB_PATH || 'file:../../dbs';
-  const redisHost = process.env.REDIS_HOST || 'localhost';
-  const redisPort = Number.parseInt(process.env.REDIS_PORT || '6379');
-
-  // Initialize database provider
-  const dbProvider = new DbProvider({ dbPath });
+  // Initialize database
+  initDb({ dbPath: env.DB_PATH });
 
   // Create queue connection
   const feedDetailQueue = new Queue<UserFeedJobData>(QUEUE_NAMES.FEED_DETAIL, {
     connection: {
-      host: redisHost,
-      port: redisPort,
+      host: env.REDIS_HOST,
+      port: env.REDIS_PORT,
     },
   });
 
   try {
     // Get user's feeds from database
-    const db = dbProvider.userDb(userId);
+    const db = getUserDb(userId);
     const userFeeds = await db.query.feeds.findMany({
       columns: { id: true, title: true },
     });

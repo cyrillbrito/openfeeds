@@ -14,7 +14,7 @@ bun check-types
 
 - Business logic (feeds, articles, tags, settings, RSS sync, archive, import)
 - Queue instances and enqueueing (BullMQ Queue, not Worker)
-- Infrastructure (dbProvider, logger, environment, errors)
+- Infrastructure (config, logger, errors)
 
 **Does NOT own:**
 
@@ -25,7 +25,7 @@ bun check-types
 
 **Business Logic:** feeds, articles, tags, settings, filter-rules, archive, import, rss-fetch
 
-**Infrastructure:** queues, queue-config, db-provider, logger, environment, errors
+**Infrastructure:** queues, queue-config, config, logger, errors
 
 ## Queue Architecture
 
@@ -45,12 +45,6 @@ bun check-types
 1. Server enqueues via `enqueueFeedSync()`, `enqueueFeedDetail()`
 2. Worker creates Worker instances, calls domain business logic
 3. Both connect to same Redis queues
-
-## Environment Variables
-
-- `DB_PATH` - SQLite database path
-- `REDIS_HOST`, `REDIS_PORT` - Redis connection
-- `POSTHOG_PUBLIC_KEY` - Analytics (optional)
 
 ## Guidelines
 

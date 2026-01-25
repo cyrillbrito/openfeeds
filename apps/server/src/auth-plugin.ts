@@ -1,5 +1,5 @@
-import type { UserDb } from '@repo/db';
-import { dbProvider, UnauthorizedError } from '@repo/domain';
+import { getUserDb, type UserDb } from '@repo/db';
+import { UnauthorizedError } from '@repo/domain';
 import { Elysia } from 'elysia';
 import { auth, type AuthSession, type AuthUser } from './auth';
 
@@ -18,7 +18,7 @@ export const authPlugin = new Elysia({ name: 'auth' }).resolve(
     return {
       user: session.user as AuthUser,
       session: session.session as AuthSession,
-      db: dbProvider.userDb(session.user.id) as UserDb,
+      db: getUserDb(session.user.id) as UserDb,
     };
   },
 );

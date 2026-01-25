@@ -1,11 +1,11 @@
+import { existsSync } from 'node:fs';
+import { mkdir, readFile, writeFile } from 'node:fs/promises';
+import { join } from 'node:path';
 import type { UserDb } from '@repo/db';
 import type { ArticleAudioMetadata, WordTiming } from '@repo/shared/types';
-import { mkdir, readFile, writeFile } from 'node:fs/promises';
-import { existsSync } from 'node:fs';
-import { join } from 'node:path';
-import { environment } from './environment';
-import { NotFoundError } from './errors';
 import { getArticleWithContent } from './articles';
+import { getConfig } from './config';
+import { NotFoundError } from './errors';
 
 /** Unreal Speech API response */
 interface UnrealSpeechResponse {
@@ -25,7 +25,7 @@ interface UnrealSpeechTimestamp {
  * Get the audio directory path for a user
  */
 function getAudioDir(userId: string): string {
-  return join(environment.dbPath, 'audio', userId);
+  return join(getConfig().dbPath, 'audio', userId);
 }
 
 /**
@@ -128,7 +128,7 @@ export async function generateArticleAudio(
   db: UserDb,
   options?: { voice?: string },
 ): Promise<ArticleAudioMetadata> {
-  const apiKey = environment.unrealSpeechApiKey;
+  const apiKey = getConfig().unrealSpeechApiKey;
   if (!apiKey) {
     throw new Error('UNREAL_SPEECH_API_KEY is not configured');
   }
@@ -159,13 +159,13 @@ export async function generateArticleAudio(
   // For longer content, we'd need to use /synthesisTasks or chunk it
   const truncatedContent = textContent.slice(0, 3000);
 
-  const voice = options?.voice || environment.ttsDefaultVoice;
+  const voice = options?.voice || getConfig().ttsDefaultVoice;
 
   // Call Unreal Speech API
   const response = await fetch('https://api.v8.unrealspeech.com/speech', {
     method: 'POST',
     headers: {
-      'Authorization': `Bearer ${apiKey}`,
+      Authorization: `Bearer ${apiKey}`,
       'Content-Type': 'application/json',
     },
     body: JSON.stringify({

@@ -1,12 +1,10 @@
 import { defineConfig } from 'drizzle-kit';
-import { DbProvider } from './src/db-provider';
+import { initDb, userDbConnection } from './src/config';
 
-const dbProvider = new DbProvider({
-  dbPath: process.env.DB_PATH || '../../dbs',
-});
+initDb({ dbPath: process.env.DB_PATH || '../../dbs' });
 
 export default defineConfig({
   dialect: 'sqlite',
-  dbCredentials: dbProvider.userDbConnection('_user-template'),
+  dbCredentials: userDbConnection('_user-template'),
   schema: './src/schema/schema.ts',
 });

@@ -1,4 +1,4 @@
-import { dbProvider } from '@repo/domain';
+import { getUserDb } from '@repo/db';
 import * as feedsDomain from '@repo/domain';
 import { createFileRoute } from '@tanstack/solid-router';
 import { getAuth } from '~/server/auth';
@@ -48,7 +48,7 @@ export const Route = createFileRoute('/api/feeds')({
         }
 
         try {
-          const db = dbProvider.userDb(session.user.id);
+          const db = getUserDb(session.user.id);
           const feed = await feedsDomain.createFeed({ url: body.url }, session.user.id, db);
           return Response.json(feed, { status: 201, headers });
         } catch (error) {

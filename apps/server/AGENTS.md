@@ -48,20 +48,6 @@ await enqueueFeedSync(userId, feedId);
 await enqueueFeedDetail(userId, feedId);
 ```
 
-## Environment Variables
-
-**Required:**
-
-- `DB_PATH` - SQLite database path
-- `BETTER_AUTH_SECRET` - Auth secret key
-- `CLIENT_DOMAIN` - Client domain for CORS
-
-**Optional:**
-
-- `REDIS_HOST`, `REDIS_PORT` - Redis connection
-- `POSTHOG_PUBLIC_KEY` - Analytics
-- `SIMPLE_AUTH` - Dev auth mode
-
 ## Notes
 
 - Use `@repo/domain` for all business logic

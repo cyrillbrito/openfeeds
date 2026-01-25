@@ -1,13 +1,11 @@
 import { defineConfig } from 'drizzle-kit';
-import { DbProvider } from './src/db-provider';
+import { authDbConnection, initDb } from './src/config';
 
-const dbProvider = new DbProvider({
-  dbPath: process.env.DB_PATH || '../../dbs',
-});
+initDb({ dbPath: process.env.DB_PATH || '../../dbs' });
 
 export default defineConfig({
   dialect: 'sqlite',
-  dbCredentials: dbProvider.authDbConnection(),
+  dbCredentials: authDbConnection(),
   schema: './src/schema/auth.ts',
   out: './drizzle-auth',
 });

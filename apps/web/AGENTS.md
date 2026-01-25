@@ -45,7 +45,7 @@ import { createServerFn } from '@tanstack/solid-start';
 const $$getAll = createServerFn({ method: 'GET' })
   .middleware([authMiddleware])
   .handler(({ context }) => {
-    const db = dbProvider.userDb(context.user.id);
+    const db = getUserDb(context.user.id);
     return domain.getAll(db);
   });
 
@@ -53,7 +53,7 @@ const $$create = createServerFn({ method: 'POST' })
   .middleware([authMiddleware])
   .inputValidator(CreateSchema)
   .handler(({ context, data }) => {
-    const db = dbProvider.userDb(context.user.id);
+    const db = getUserDb(context.user.id);
     return domain.create(data, db);
   });
 
@@ -101,7 +101,7 @@ export const $$doSomething = createServerFn({ method: 'POST' })
   .middleware([authMiddleware])
   .inputValidator(z.object({ id: z.string() }))
   .handler(({ context, data }) => {
-    const db = dbProvider.userDb(context.user.id);
+    const db = getUserDb(context.user.id);
     return domain.doSomething(data.id, db);
   });
 

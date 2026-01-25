@@ -1,9 +1,9 @@
+import { getAuthDb, getUserDb } from '@repo/db';
 import {
   autoArchiveArticles,
-  dbProvider,
+  getRedisConnection,
   logger,
   QUEUE_NAMES,
-  redisConnection,
   updateFeedMetadata,
 } from '@repo/domain';
 import { attemptAsync } from '@repo/shared/utils';
@@ -20,7 +20,7 @@ export function createFeedSyncOrchestratorWorker() {
     QUEUE_NAMES.FEED_SYNC_ORCHESTRATOR,
     async (job) => {
       console.log(`Starting feed sync orchestrator job ${job.id}`);
-      const authDb = dbProvider.authDb();
+      const authDb = getAuthDb();
       const [usersError, users] = await attemptAsync(
         authDb.query.user.findMany({ columns: { id: true } }),
       );
@@ -34,7 +34,7 @@ export function createFeedSyncOrchestratorWorker() {
       }
 
       for (const user of users) {
-        const db = dbProvider.userDb(user.id);
+        const db = getUserDb(user.id);
         const [syncError] = await attemptAsync(syncOldestFeeds(user.id, db));
 
         if (syncError) {
@@ -48,7 +48,7 @@ export function createFeedSyncOrchestratorWorker() {
       }
     },
     {
-      connection: redisConnection,
+      connection: getRedisConnection(),
       concurrency: 2,
     },
   );
@@ -63,7 +63,7 @@ export function createSingleFeedSyncWorker() {
       );
       const { userId, feedId } = job.data;
 
-      const db = dbProvider.userDb(userId);
+      const db = getUserDb(userId);
       const [syncError] = await attemptAsync(syncSingleFeed(db, feedId));
 
       if (syncError) {
@@ -78,7 +78,7 @@ export function createSingleFeedSyncWorker() {
       }
     },
     {
-      connection: redisConnection,
+      connection: getRedisConnection(),
       concurrency: 5,
     },
   );
@@ -106,7 +106,7 @@ export function createFeedDetailsWorker() {
       }
     },
     {
-      connection: redisConnection,
+      connection: getRedisConnection(),
       concurrency: 2,
     },
   );
@@ -117,7 +117,7 @@ export function createAutoArchiveWorker() {
     QUEUE_NAMES.AUTO_ARCHIVE,
     async (job: Job) => {
       console.log(`Starting auto archive job ${job.id}`);
-      const authDb = dbProvider.authDb();
+      const authDb = getAuthDb();
       const [usersError, users] = await attemptAsync(
         authDb.query.user.findMany({ columns: { id: true } }),
       );
@@ -131,7 +131,7 @@ export function createAutoArchiveWorker() {
       }
 
       for (const user of users) {
-        const db = dbProvider.userDb(user.id);
+        const db = getUserDb(user.id);
         const [archiveError] = await attemptAsync(autoArchiveArticles(db));
 
         if (archiveError) {
@@ -145,7 +145,7 @@ export function createAutoArchiveWorker() {
       }
     },
     {
-      connection: redisConnection,
+      connection: getRedisConnection(),
       concurrency: 2,
     },
   );

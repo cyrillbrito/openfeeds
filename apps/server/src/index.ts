@@ -1,6 +1,18 @@
+import { initDb } from '@repo/db';
+import { initDomain } from '@repo/domain';
 import { Elysia } from 'elysia';
 import { setupBullBoard } from './bull-board';
+import { environment } from './environment';
 import { apiApp } from './setup-elysia';
+
+// Initialize database and domain before any other code runs
+initDb({ dbPath: environment.dbPath });
+initDomain({
+  dbPath: environment.dbPath,
+  redis: { host: environment.redisHost, port: environment.redisPort },
+  posthogPublicKey: environment.posthogPublicKey,
+  resendApiKey: environment.resendApiKey,
+});
 
 // Setup Bull Board dashboard (monitoring only, no workers)
 const serverAdapter = setupBullBoard();

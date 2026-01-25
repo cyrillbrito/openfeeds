@@ -1,5 +1,5 @@
-import { createUserDb } from '@repo/db';
-import { dbProvider, sendPasswordResetEmail, sendVerificationEmail } from '@repo/domain';
+import { createUserDb, getAuthDb } from '@repo/db';
+import { sendPasswordResetEmail, sendVerificationEmail } from '@repo/domain';
 import { betterAuth } from 'better-auth';
 import { drizzleAdapter } from 'better-auth/adapters/drizzle';
 import { createAuthMiddleware } from 'better-auth/api';
@@ -8,7 +8,7 @@ import { environment } from './environment';
 // Factory so TypeScript can infer BetterAuth's full type
 function createBetterAuth(): ReturnType<typeof betterAuth> {
   return betterAuth({
-    database: drizzleAdapter(dbProvider.authDb(), { provider: 'sqlite' }),
+    database: drizzleAdapter(getAuthDb(), { provider: 'sqlite' }),
     emailAndPassword: {
       enabled: true,
       requireEmailVerification: !environment.simpleAuth,
@@ -34,7 +34,7 @@ function createBetterAuth(): ReturnType<typeof betterAuth> {
         if (ctx.path.startsWith('/sign-up')) {
           const newSession = ctx.context.newSession;
           if (newSession?.user.id) {
-            await createUserDb(dbProvider, newSession.user.id);
+            await createUserDb(newSession.user.id);
           }
         }
       }),

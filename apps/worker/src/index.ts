@@ -1,10 +1,26 @@
-import { initializeScheduledJobs, logger, QUEUE_NAMES } from '@repo/domain';
+import { initDb } from '@repo/db';
+import { initDomain, initializeScheduledJobs, logger, QUEUE_NAMES } from '@repo/domain';
+import { env } from './env';
 import {
   createAutoArchiveWorker,
   createFeedDetailsWorker,
   createFeedSyncOrchestratorWorker,
   createSingleFeedSyncWorker,
 } from './workers';
+
+// Initialize packages with config from environment
+// Note: initDb must be called before initDomain
+initDb({ dbPath: env.DB_PATH });
+
+initDomain({
+  dbPath: env.DB_PATH,
+  redis: {
+    host: env.REDIS_HOST,
+    port: env.REDIS_PORT,
+  },
+  posthogPublicKey: env.POSTHOG_PUBLIC_KEY,
+  resendApiKey: env.RESEND_API_KEY,
+});
 
 // Initialize scheduled jobs (orchestrator, auto-archive)
 await initializeScheduledJobs();

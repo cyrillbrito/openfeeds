@@ -94,12 +94,6 @@ const newFeed = await db
   .returning();
 ```
 
-**Environment Requirements:**
-
-- `DB_PATH` - SQLite3 database connection string
-- Development: Can use local SQLite file
-- Production: SQLite3 hosted database
-
 ## Important Guidelines
 
 - Never modify migration files manually

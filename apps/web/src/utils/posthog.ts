@@ -1,13 +1,13 @@
 import posthog from 'posthog-js';
-import { environment } from '../environment';
+import { env } from '../env';
 
 posthog.init('phc_V6I0xn1Ptmx3QVqXzLNAK22H6D58kR3SJTYg1JdVEx', {
   api_host: 'https://eu.i.posthog.com',
-  person_profiles: 'identified_only', // or 'always' to create profiles for anonymous users as well
+  person_profiles: 'identified_only',
 
   // Enables session tracking across FE and BE
   __add_tracing_headers: [
-    environment.apiUrl || '',
+    env.VITE_API_URL || '',
     'localhost:3000',
     'localhost:3001',
     '*',
