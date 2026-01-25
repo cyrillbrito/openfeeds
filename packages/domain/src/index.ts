@@ -7,6 +7,7 @@ export * from './errors';
 export * from './feed-details';
 export * from './feeds';
 export * from './filter-rules';
+export * from './export';
 export * from './import';
 export * from './rss-fetch';
 export * from './rule-evaluation';

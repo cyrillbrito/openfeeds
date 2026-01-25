@@ -20,6 +20,13 @@ export const $$importOpml = createServerFn({ method: 'POST' })
     return feedsDomain.importOpmlFeeds(data.opmlContent, context.user.id, db);
   });
 
+export const $$exportOpml = createServerFn({ method: 'GET' })
+  .middleware([authMiddleware])
+  .handler(({ context }) => {
+    const db = getUserDb(context.user.id);
+    return feedsDomain.exportOpmlFeeds(db);
+  });
+
 export const $$getAllFeeds = createServerFn({ method: 'GET' })
   .middleware([authMiddleware])
   .handler(({ context }) => {

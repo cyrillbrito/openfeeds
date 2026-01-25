@@ -1,6 +1,7 @@
 import type { ArchiveResult } from '@repo/shared/types';
 import { createFileRoute } from '@tanstack/solid-router';
 import { createSignal, Show } from 'solid-js';
+import { $$exportOpml } from '~/entities/feeds.server';
 import { settingsCollection, triggerAutoArchive, useSettings } from '~/entities/settings';
 import { Card } from '../components/Card';
 import { Header } from '../components/Header';
@@ -20,6 +21,25 @@ export default function SettingsPage() {
   const [archiveResult, setArchiveResult] = createSignal<ArchiveResult | null>(null);
   const [isArchiving, setIsArchiving] = createSignal(false);
   const [archiveError, setArchiveError] = createSignal<string | null>(null);
+  const [isExporting, setIsExporting] = createSignal(false);
+
+  const handleExportOpml = async () => {
+    try {
+      setIsExporting(true);
+      const opmlContent = await $$exportOpml();
+      const blob = new Blob([opmlContent], { type: 'application/xml' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'openfeeds-export.opml';
+      a.click();
+      URL.revokeObjectURL(url);
+    } catch (err) {
+      console.error('Failed to export OPML:', err);
+    } finally {
+      setIsExporting(false);
+    }
+  };
 
   const handleUpdate = () => {
     const changes = formData();
@@ -188,6 +208,33 @@ export default function SettingsPage() {
                   </div>
                 </div>
               </Show>
+
+              <div class="divider"></div>
+
+              <div>
+                <h3 class="text-md text-base-content mb-3 font-medium">Data Management</h3>
+                <div class="space-y-4">
+                  <Card>
+                    <h4 class="card-title text-base">Export Feeds</h4>
+                    <p class="text-base-content-gray mb-4 text-sm">
+                      Export all your feeds as an OPML file. You can use this to backup your
+                      subscriptions or import them into another RSS reader.
+                    </p>
+                    <div class="card-actions">
+                      <button
+                        class="btn btn-primary btn-sm"
+                        onClick={handleExportOpml}
+                        disabled={isExporting()}
+                      >
+                        <Show when={isExporting()}>
+                          <span class="loading loading-spinner loading-xs mr-2"></span>
+                        </Show>
+                        Export OPML
+                      </button>
+                    </div>
+                  </Card>
+                </div>
+              </div>
 
               <div class="divider"></div>
 

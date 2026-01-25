@@ -78,25 +78,33 @@ export async function importOpmlFeeds(
 
   for (const feed of feedsToImport) {
     try {
-      let tagId: string | undefined;
+      // Parse comma-separated categories per OPML 2.0 spec
+      const tagIds: string[] = [];
       if (feed.category) {
-        tagId = tagLookup[feed.category];
+        const categories = feed.category
+          .split(',')
+          .map((c) => c.trim())
+          .filter(Boolean);
+        for (const category of categories) {
+          let tagId = tagLookup[category];
 
-        if (!tagId) {
-          const [tagErr, tagResult] = await attemptAsync(
-            db.insert(tags).values({ id: createId(), name: feed.category }).returning(),
-          );
-          if (tagErr) {
-            logger.error(tagErr, {
-              operation: 'import_tag_creation',
-              tagName: feed.category,
-            });
-            failed.push(feed.title);
-            continue;
+          if (!tagId) {
+            const [tagErr, tagResult] = await attemptAsync(
+              db.insert(tags).values({ id: createId(), name: category }).returning(),
+            );
+            if (tagErr) {
+              logger.error(tagErr, {
+                operation: 'import_tag_creation',
+                tagName: category,
+              });
+              // Continue with other categories, don't fail the whole feed
+              continue;
+            }
+            tagId = tagResult[0]?.id;
+            assert(tagId);
+            tagLookup[category] = tagId;
           }
-          tagId = tagResult[0]?.id;
-          assert(tagId);
-          tagLookup[feed.category] = tagId;
+          tagIds.push(tagId);
         }
       }
 
@@ -148,15 +156,15 @@ export async function importOpmlFeeds(
       const feedId = insertResult[0]?.id;
       assert(feedId);
 
-      if (tagId) {
+      if (tagIds.length > 0) {
         const [feedTagErr] = await attemptAsync(
-          db.insert(feedTags).values([
-            {
+          db.insert(feedTags).values(
+            tagIds.map((tagId) => ({
               id: createId(),
               feedId: feedId,
               tagId: tagId,
-            },
-          ]),
+            })),
+          ),
         );
 
         if (feedTagErr) {
@@ -164,7 +172,7 @@ export async function importOpmlFeeds(
             operation: 'import_feed_tag_association',
             feedTitle: feed.title,
             feedId: feedId,
-            tagId: tagId,
+            tagIds: tagIds,
           });
         }
       }
