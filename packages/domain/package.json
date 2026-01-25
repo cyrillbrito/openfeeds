@@ -12,6 +12,7 @@
   },
   "dependencies": {
     "@repo/db": "workspace:*",
+    "@repo/discovery": "workspace:*",
     "@repo/emails": "workspace:*",
     "@repo/readability": "workspace:*",
     "@repo/shared": "workspace:*",
