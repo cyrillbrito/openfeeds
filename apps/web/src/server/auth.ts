@@ -39,6 +39,7 @@ export function getAuth() {
   // Create auth instance with appropriate database
   authInstance = betterAuth({
     database,
+    trustedOrigins: [env.CLIENT_DOMAIN],
     emailAndPassword: {
       enabled: true,
       requireEmailVerification: !env.SIMPLE_AUTH,
