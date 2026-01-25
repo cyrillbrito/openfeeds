@@ -19,9 +19,6 @@ let _config: DbConfig | null = null;
  * Must be called once at app startup before using any db functions.
  */
 export function initDb(config: DbConfig): void {
-  if (_config) {
-    throw new Error('Db already initialized. initDb() should only be called once.');
-  }
   _config = config;
 }
 

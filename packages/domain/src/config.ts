@@ -30,9 +30,6 @@ let _config: DomainConfig | null = null;
  * Note: Call `initDb()` from @repo/db before calling this function.
  */
 export function initDomain(config: DomainConfig): void {
-  if (_config) {
-    throw new Error('Domain already initialized. initDomain() should only be called once.');
-  }
   _config = config;
 }
 
