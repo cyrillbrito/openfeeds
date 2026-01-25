@@ -15,7 +15,7 @@ function IndexRedirect() {
   const feedsQuery = useFeeds();
 
   createEffect(() => {
-    if (feedsQuery.status() === 'ready') {
+    if (feedsQuery.status === 'ready') {
       if (feedsQuery.data?.length) {
         navigate({ to: '/inbox', replace: true });
       } else {

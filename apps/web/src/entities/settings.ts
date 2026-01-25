@@ -63,10 +63,10 @@ export function useSettings() {
       return settings as AppSettings;
     },
     get isLoading() {
-      return query.isLoading();
+      return query.isLoading;
     },
     get isError() {
-      return query.isError();
+      return query.isError;
     },
   };
 }

@@ -109,7 +109,7 @@ export function RuleManager(props: RuleManagerProps) {
       </Show>
 
       <Show
-        when={!filterRulesQuery.isLoading()}
+        when={!filterRulesQuery.isLoading}
         fallback={
           <div class="flex justify-center py-4">
             <span class="loading loading-spinner loading-md"></span>
@@ -140,7 +140,7 @@ export function RuleManager(props: RuleManagerProps) {
         </Show>
       </Show>
 
-      <Show when={filterRulesQuery.isError()}>
+      <Show when={filterRulesQuery.isError}>
         <div class="alert alert-error">
           <CircleAlertIcon size={20} />
           <span>Failed to load filter rules. Please try again.</span>

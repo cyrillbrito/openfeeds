@@ -97,7 +97,7 @@ function ArticleView() {
           <Show
             when={article()}
             fallback={
-              <Show when={articleQuery.isError?.()}>
+              <Show when={articleQuery.isError}>
                 <div class="py-8 text-center">
                   <p class="text-error">Failed to load article</p>
                 </div>
