@@ -13,7 +13,7 @@ services:
   migrator:
     build:
       context: .
-      dockerfile: Dockerfile.migrations
+      dockerfile: apps/migrator/Dockerfile
     environment:
       - DB_PATH=/data
     volumes:
@@ -25,7 +25,7 @@ services:
   web:
     build:
       context: .
-      dockerfile: Dockerfile.web
+      dockerfile: apps/web/Dockerfile
     ports:
       - '3200:3000'
     environment:
@@ -53,7 +53,7 @@ services:
   worker:
     build:
       context: .
-      dockerfile: Dockerfile.worker
+      dockerfile: apps/worker/Dockerfile
     environment:
       - DB_PATH=/data
       - REDIS_HOST=redis
