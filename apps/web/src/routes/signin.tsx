@@ -53,7 +53,7 @@ function SignInPage() {
     }
 
     // Redirect to original page or default to root (which will smart-redirect)
-    const redirectTo = search().redirect || '/';
+    const redirectTo = search()?.redirect || '/';
     void navigate({ to: redirectTo, replace: true });
   };
 

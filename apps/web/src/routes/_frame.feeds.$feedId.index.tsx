@@ -1,6 +1,6 @@
 import type { Feed } from '@repo/shared/types';
 import { eq, useLiveQuery } from '@tanstack/solid-db';
-import { createFileRoute, Link, useSearch } from '@tanstack/solid-router';
+import { createFileRoute, Link } from '@tanstack/solid-router';
 import MoreVerticalIcon from 'lucide-solid/icons/more-vertical';
 import ShuffleIcon from 'lucide-solid/icons/shuffle';
 import VideoIcon from 'lucide-solid/icons/video';
@@ -30,10 +30,10 @@ export const Route = createFileRoute('/_frame/feeds/$feedId/')({
 
 function FeedArticles() {
   const params = Route.useParams();
-  const search = useSearch({ from: '/_frame/feeds/$feedId/' });
-  const feedId = () => params().feedId;
-  const readStatus = (): ReadStatus => search().readStatus || 'unread';
-  const seed = () => search().seed;
+  const search = Route.useSearch();
+  const feedId = () => params()?.feedId;
+  const readStatus = (): ReadStatus => search()?.readStatus || 'unread';
+  const seed = () => search()?.seed;
   const { sessionReadIds, addSessionRead, setViewKey } = useSessionRead();
 
   onMount(() => setViewKey(`feed:${feedId()}`));

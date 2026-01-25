@@ -48,8 +48,8 @@ function FeedsComponent() {
   const [feedToDelete, setFeedToDelete] = createSignal<Feed | null>(null);
   const [editingFeed, setEditingFeed] = createSignal<Feed | null>(null);
 
-  // const [searchInput, setSearchInput] = createSignal(search().q ?? '');
-  const [searchDebounced, setSearchDebounced] = createSignal(search().q ?? '');
+  // const [searchInput, setSearchInput] = createSignal(search()?.q ?? '');
+  const [searchDebounced, setSearchDebounced] = createSignal(search()?.q ?? '');
 
   const setSearchDebounce = debounce((value: string) => {
     const newQ = value.toLowerCase().trim();
@@ -183,7 +183,7 @@ function FeedsComponent() {
                   </div>
                   <h2 class="mb-2 text-2xl font-bold">No feeds found</h2>
                   <p class="text-base-content-gray">
-                    No feeds match your search query "{search().q}"
+                    No feeds match your search query "{search()?.q}"
                   </p>
                   <button class="btn btn-outline mt-4" onClick={() => setSearchDebounce('')}>
                     Clear search

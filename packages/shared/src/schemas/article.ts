@@ -9,6 +9,7 @@ export const ArticleQuerySchema = CursorQuerySchema.extend({
   isArchived: z.stringbool().optional(),
   type: z.enum(['all', 'shorts']).default('all').optional(),
   search: z.string().optional(),
+  ids: z.array(z.string()).optional(),
 });
 
 export const ArticleSchema = z.object({

@@ -27,7 +27,7 @@ export const Route = createFileRoute('/_frame/articles/$articleId')({
 function ArticleView() {
   const params = Route.useParams();
   const router = useRouter();
-  const articleId = () => params().articleId;
+  const articleId = () => params()?.articleId;
 
   // Use articlesCollection for metadata/state (reactive)
   const articleQuery = useLiveQuery((q) =>

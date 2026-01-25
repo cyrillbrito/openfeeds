@@ -18,7 +18,7 @@ export async function getArticles(
   filters: ArticleQuery,
   db: UserDb,
 ): Promise<PaginatedResponse<Article>> {
-  const { cursor, limit, feedId, tagId, isRead, isArchived, type, search } = filters;
+  const { cursor, limit, feedId, tagId, isRead, isArchived, type, search, ids } = filters;
 
   const queryLimit = limit ? limit + 1 : undefined;
 
@@ -44,6 +44,11 @@ export async function getArticles(
     } else {
       whereConditions.push(inArray(articles.id, articleIds));
     }
+  }
+
+  // IDs filter - load specific articles by ID (used by local joins)
+  if (ids && ids.length > 0) {
+    whereConditions.push(inArray(articles.id, ids));
   }
 
   // Read status filter - only apply if explicitly passed
@@ -266,10 +271,7 @@ export async function markManyArticlesArchived(
  * Used for "save for later" functionality like Pocket
  * Fetches and extracts clean content using Readability
  */
-export async function createArticle(
-  data: CreateArticleFromUrl,
-  db: UserDb,
-): Promise<Article> {
+export async function createArticle(data: CreateArticleFromUrl, db: UserDb): Promise<Article> {
   const articleId = data.id ?? createId();
   const now = new Date();
 

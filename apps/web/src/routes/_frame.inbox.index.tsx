@@ -25,8 +25,8 @@ export const Route = createFileRoute('/_frame/inbox/')({
 
 function Inbox() {
   const search = Route.useSearch();
-  const readStatus = () => search().readStatus || 'unread';
-  const sortOrder = () => search().sort || 'newest';
+  const readStatus = () => search()?.readStatus || 'unread';
+  const sortOrder = () => search()?.sort || 'newest';
   const { sessionReadIds, addSessionRead, setViewKey } = useSessionRead();
 
   onMount(() => setViewKey('inbox'));

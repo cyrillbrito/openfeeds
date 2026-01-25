@@ -1,5 +1,5 @@
 import { eq, ilike, useLiveQuery } from '@tanstack/solid-db';
-import { createFileRoute, useSearch } from '@tanstack/solid-router';
+import { createFileRoute } from '@tanstack/solid-router';
 import { onMount } from 'solid-js';
 import { articlesCollection } from '~/entities/articles';
 import { useFeeds } from '~/entities/feeds';
@@ -15,9 +15,9 @@ export const Route = createFileRoute('/_frame/feeds/$feedId/shorts/')({
 
 function FocusedShorts() {
   const params = Route.useParams();
-  const search = useSearch({ from: '/_frame/feeds/$feedId/shorts/' });
-  const feedId = () => params().feedId;
-  const readStatus = (): ReadStatus => search().readStatus || 'unread';
+  const search = Route.useSearch();
+  const feedId = () => params()?.feedId;
+  const readStatus = (): ReadStatus => search()?.readStatus || 'unread';
   const { sessionReadIds, addSessionRead, setViewKey } = useSessionRead();
 
   onMount(() => setViewKey(`feed-shorts:${feedId()}`));

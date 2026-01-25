@@ -1,19 +1,9 @@
-import {
-  Link,
-  rootRouteId,
-  useMatch,
-  useRouter,
-  type ErrorComponentProps,
-} from '@tanstack/solid-router';
+import { Link, useRouter, type ErrorComponentProps } from '@tanstack/solid-router';
 import TriangleAlert from 'lucide-solid/icons/triangle-alert';
 import { createSignal, Show } from 'solid-js';
 
 export function DefaultCatchBoundary({ error }: ErrorComponentProps) {
   const router = useRouter();
-  const isRoot = useMatch({
-    strict: false,
-    select: (state) => state.id === rootRouteId,
-  });
   const [showDetails, setShowDetails] = createSignal(false);
 
   console.error('DefaultCatchBoundary Error:', error);
@@ -60,22 +50,9 @@ export function DefaultCatchBoundary({ error }: ErrorComponentProps) {
             >
               Try Again
             </button>
-            {isRoot() ? (
-              <Link to="/" class="btn btn-outline">
-                Home
-              </Link>
-            ) : (
-              <Link
-                to="/"
-                class="btn btn-outline"
-                onClick={(e) => {
-                  e.preventDefault();
-                  window.history.back();
-                }}
-              >
-                Go Back
-              </Link>
-            )}
+            <Link to="/" class="btn btn-outline">
+              Home
+            </Link>
           </div>
         </div>
       </div>

@@ -1,7 +1,7 @@
 import { eq, useLiveQuery } from '@tanstack/solid-db';
-import { createFileRoute, Link, useSearch } from '@tanstack/solid-router';
+import { createFileRoute, Link } from '@tanstack/solid-router';
 import ShuffleIcon from 'lucide-solid/icons/shuffle';
-import { createSignal, onMount, Show, Suspense } from 'solid-js';
+import { createMemo, createSignal, onMount, Show, Suspense } from 'solid-js';
 import { articleTagsCollection } from '~/entities/article-tags';
 import { articlesCollection } from '~/entities/articles';
 import { useFeeds } from '~/entities/feeds';
@@ -24,10 +24,10 @@ export const Route = createFileRoute('/_frame/tags/$tagId')({
 
 function TagArticles() {
   const params = Route.useParams();
-  const search = useSearch({ from: '/_frame/tags/$tagId' });
-  const tagId = () => params().tagId;
-  const readStatus = (): ReadStatus => search().readStatus || 'unread';
-  const seed = () => search().seed;
+  const search = Route.useSearch();
+  const tagId = () => params()?.tagId;
+  const readStatus = (): ReadStatus => search()?.readStatus || 'unread';
+  const seed = () => search()?.seed;
   const { sessionReadIds, addSessionRead, setViewKey } = useSessionRead();
 
   onMount(() => setViewKey(`tag:${tagId()}`));
@@ -91,8 +91,18 @@ function TagArticles() {
     });
   };
 
-  const articles = () => {
+  // Sort articles by pubDate (newest first)
+  const sortedArticles = createMemo(() => {
     const allArticles = articlesQuery.data || [];
+    return [...allArticles].sort((a, b) => {
+      const dateA = new Date(a.pubDate || 0).getTime();
+      const dateB = new Date(b.pubDate || 0).getTime();
+      return dateB - dateA; // newest first
+    });
+  });
+
+  const articles = () => {
+    const allArticles = sortedArticles();
     if (readStatus() !== 'unread') return allArticles;
 
     // Show unread + session-read articles

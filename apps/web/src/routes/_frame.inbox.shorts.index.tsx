@@ -1,5 +1,5 @@
 import { eq, ilike, useLiveQuery } from '@tanstack/solid-db';
-import { createFileRoute, useSearch } from '@tanstack/solid-router';
+import { createFileRoute } from '@tanstack/solid-router';
 import { onMount } from 'solid-js';
 import { articlesCollection } from '~/entities/articles';
 import { useFeeds } from '~/entities/feeds';
@@ -14,8 +14,8 @@ export const Route = createFileRoute('/_frame/inbox/shorts/')({
 });
 
 function InboxShorts() {
-  const search = useSearch({ from: '/_frame/inbox/shorts/' });
-  const readStatus = (): ReadStatus => search().readStatus || 'unread';
+  const search = Route.useSearch();
+  const readStatus = (): ReadStatus => search()?.readStatus || 'unread';
   const { sessionReadIds, addSessionRead, setViewKey } = useSessionRead();
 
   onMount(() => setViewKey('inbox-shorts'));

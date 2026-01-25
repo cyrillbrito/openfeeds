@@ -23,6 +23,7 @@ export const articlesCollection = createCollection(
       const loadSubsetOptions = ctx.meta?.loadSubsetOptions as
         | { where?: any; orderBy?: any; limit?: number }
         | undefined;
+
       const parsed = parseLoadSubsetOptions({
         where: loadSubsetOptions?.where,
         orderBy: loadSubsetOptions?.orderBy,
@@ -40,9 +41,14 @@ export const articlesCollection = createCollection(
         if (operator === 'eq') {
           query[fieldName] = value;
         }
+        // Handle 'in' operator for loading articles by ID (from joins)
+        if (operator === 'in' && fieldName === 'id') {
+          query.ids = value;
+        }
       });
 
       const result = await $$getArticles({ data: query });
+
       return result?.data || [];
     },
 

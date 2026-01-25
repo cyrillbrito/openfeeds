@@ -12,6 +12,7 @@ const ArticleQuerySchema = z.object({
   isArchived: z.boolean().optional(),
   type: z.enum(['all', 'shorts']).optional(),
   limit: z.number().optional(),
+  ids: z.array(z.string()).optional(),
 });
 
 export const $$getArticles = createServerFn({ method: 'GET' })
