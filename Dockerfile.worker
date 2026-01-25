@@ -27,6 +27,9 @@ RUN --mount=type=cache,target=/root/.bun/install/cache bun install --frozen-lock
 # Copy the full pruned source code
 COPY --from=pruner /home/bun/app/out/full/ .
 
+# Build dependencies (e.g., @repo/emails)
+RUN bun run build
+
 
 # Runner stage - final production image
 FROM base AS runner
