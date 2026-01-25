@@ -28,6 +28,9 @@ RUN --mount=type=cache,target=/root/.bun/install/cache bun install --frozen-lock
 COPY --from=pruner /home/bun/app/out/full/ .
 
 # Build the web app (TanStack Start outputs to .output/)
+# Dummy env vars for prerendering - app requires these at build time for SSR
+ENV BETTER_AUTH_SECRET="build-time-placeholder"
+ENV CLIENT_DOMAIN="http://localhost:3000"
 RUN bun run build --filter=@repo/web
 
 
