@@ -12,6 +12,7 @@ import interCss from '../inter/inter.css?url';
 import appCss from '../styles/app.css?url';
 
 export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()({
+  ssr: false,
   head: () => ({
     meta: [
       { charset: 'utf-8' },

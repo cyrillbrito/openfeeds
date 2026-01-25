@@ -1,24 +1,16 @@
 import { BetterFetchError } from '@better-fetch/fetch';
 import { attemptAsync } from '@repo/shared/utils';
 import { createFileRoute, redirect, useNavigate } from '@tanstack/solid-router';
-import { createServerFn } from '@tanstack/solid-start';
-import { getRequestHeaders } from '@tanstack/solid-start/server';
 import posthog from 'posthog-js';
 import { createSignal, Show } from 'solid-js';
 import { Card } from '../components/Card.tsx';
 import { Loader } from '../components/Loader';
-import { useRegister } from '../hooks/use-auth.ts';
-import { getAuth } from '../server/auth';
-
-const getSessionOnServer = createServerFn({ method: 'GET' }).handler(async () => {
-  const headers = getRequestHeaders();
-  return getAuth().api.getSession({ headers });
-});
+import { fetchUser, useRegister } from '../hooks/use-auth.ts';
 
 export const Route = createFileRoute('/signup')({
   beforeLoad: async () => {
-    const session = await getSessionOnServer();
-    if (session) {
+    const user = await fetchUser();
+    if (user) {
       throw redirect({ to: '/' });
     }
   },
