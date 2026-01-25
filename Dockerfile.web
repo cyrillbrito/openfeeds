@@ -43,6 +43,5 @@ WORKDIR /app
 COPY --from=builder /home/bun/app/apps/web/.output ./.output
 COPY --from=builder /home/bun/app/node_modules ./node_modules
 
-USER bun
 EXPOSE 3000
 CMD ["bun", "--bun", "run", ".output/server/index.mjs"]

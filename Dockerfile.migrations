@@ -36,5 +36,4 @@ WORKDIR /app
 # Copy everything from builder (pruned monorepo structure)
 COPY --from=builder /home/bun/app .
 
-USER bun
 CMD ["bun", "--bun", "run", "apps/migrator/src/index.ts"]
