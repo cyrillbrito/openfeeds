@@ -50,28 +50,26 @@ services:
       - rss-network
     restart: unless-stopped
 
-  # api:
-  #   build:
-  #     context: .
-  #     dockerfile: Dockerfile.api
-  #   ports:
-  #     - '3201:3001'
-  #   environment:
-  #     - DB_PATH=/data
-  #     - CLIENT_DOMAIN=$CLIENT_DOMAIN
-  #     - ENABLE_CORS=$ENABLE_CORS
-  #     - BETTER_AUTH_SECRET=$BETTER_AUTH_SECRET
-  #     - SIMPLE_AUTH=$SIMPLE_AUTH
-  #     - POSTHOG_PUBLIC_KEY=$POSTHOG_PUBLIC_KEY
-  #     - REDIS_HOST=redis
-  #     - REDIS_PORT=6379
-  #   volumes:
-  #     - sqlite_data:/data
-  #   networks:
-  #     - rss-network
-  #   depends_on:
-  #     - redis
-  #   restart: unless-stopped
+  worker:
+    build:
+      context: .
+      dockerfile: Dockerfile.worker
+    environment:
+      - DB_PATH=/data
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - POSTHOG_PUBLIC_KEY=$POSTHOG_PUBLIC_KEY
+      - RESEND_API_KEY=$RESEND_API_KEY
+    volumes:
+      - sqlite_data:/data
+    depends_on:
+      redis:
+        condition: service_started
+      migrator:
+        condition: service_completed_successfully
+    networks:
+      - rss-network
+    restart: unless-stopped
 
   # Optional: Queue management UI (not required for the app to run)
   queuedash:

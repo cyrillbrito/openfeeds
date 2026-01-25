@@ -6,26 +6,26 @@ FROM oven/bun:1 AS base
 FROM base AS pruner
 
 # Install turbo globally
-RUN bun install -g turbo
+RUN bun install -g turbo@^2
 
 # Copy entire monorepo
 COPY . .
 
-# Generate a partial monorepo with a pruned lockfile for the "web" workspace (NOT WORKING)
-# RUN turbo prune @repo/web --docker
+# Generate a partial monorepo with a pruned lockfile for the "web" workspace
+RUN turbo prune @repo/web --docker
 
 
 # Builder stage - install dependencies & build
 FROM base AS builder
 
-# Copy pruned lockfile and package.json files (NOT WORKING)
-# COPY --from=pruner /home/bun/app/out/json/ .
-COPY --from=pruner /home/bun/app/ .
+# Copy pruned lockfile and package.json files first (changes less often)
+COPY --from=pruner /home/bun/app/out/json/ .
 
 # Install dependencies using Bun with cache mount
 RUN --mount=type=cache,target=/root/.bun/install/cache bun install --frozen-lockfile
 
-# COPY --from=pruner /home/bun/app/out/full/ . (NOT WORKING)
+# Copy the full pruned source code
+COPY --from=pruner /home/bun/app/out/full/ .
 
 # Build the web app (TanStack Start outputs to .output/)
 RUN bun run build --filter=@repo/web
@@ -42,4 +42,4 @@ COPY --from=builder /home/bun/app/node_modules ./node_modules
 
 USER bun
 EXPOSE 3000
-CMD ["bun", "--bun", ".output/server/index.mjs"]
+CMD ["bun", "--bun", "run", ".output/server/index.mjs"]

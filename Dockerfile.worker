@@ -1,4 +1,4 @@
-# Migrations service - runs database migrations and exits
+# Worker service - processes BullMQ background jobs
 FROM oven/bun:1 AS base
 
 
@@ -11,8 +11,8 @@ RUN bun install -g turbo@^2
 # Copy entire monorepo
 COPY . .
 
-# Generate a partial monorepo with a pruned lockfile for the "migrator" workspace
-RUN turbo prune @repo/migrator --docker
+# Generate a partial monorepo with a pruned lockfile for the "worker" workspace
+RUN turbo prune @repo/worker --docker
 
 
 # Builder stage - install dependencies
@@ -28,7 +28,7 @@ RUN --mount=type=cache,target=/root/.bun/install/cache bun install --frozen-lock
 COPY --from=pruner /home/bun/app/out/full/ .
 
 
-# Runner stage - minimal image with only what's needed for migrations
+# Runner stage - final production image
 FROM base AS runner
 
 WORKDIR /app
@@ -37,4 +37,4 @@ WORKDIR /app
 COPY --from=builder /home/bun/app .
 
 USER bun
-CMD ["bun", "--bun", "run", "apps/migrator/src/index.ts"]
+CMD ["bun", "--bun", "run", "apps/worker/src/index.ts"]
