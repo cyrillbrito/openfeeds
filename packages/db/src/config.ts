@@ -1,3 +1,4 @@
+import { mkdirSync } from 'node:fs';
 import { Database } from 'bun:sqlite';
 import { drizzle } from 'drizzle-orm/bun-sqlite';
 import * as authSchema from './schema/auth';
@@ -17,8 +18,10 @@ let _config: DbConfig | null = null;
 /**
  * Initialize the db package with configuration.
  * Must be called once at app startup before using any db functions.
+ * Creates the dbPath directory if it doesn't exist.
  */
 export function initDb(config: DbConfig): void {
+  mkdirSync(config.dbPath, { recursive: true });
   _config = config;
 }
 
