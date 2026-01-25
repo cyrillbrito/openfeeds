@@ -1,6 +1,6 @@
 import { BetterFetchError } from '@better-fetch/fetch';
 import { attemptAsync } from '@repo/shared/utils';
-import { createFileRoute, redirect, useNavigate } from '@tanstack/solid-router';
+import { createFileRoute, Link, redirect, useNavigate } from '@tanstack/solid-router';
 import posthog from 'posthog-js';
 import { createSignal, Show } from 'solid-js';
 import { Card } from '../components/Card.tsx';
@@ -190,9 +190,9 @@ function SignUpPage() {
         <div class="text-center">
           <p class="text-base-content-gray text-sm">
             Already have an account?{' '}
-            <a href="/signin" class="link link-primary font-medium">
+            <Link to="/signin" search={{}} class="link link-primary font-medium">
               Sign in
-            </a>
+            </Link>
           </p>
         </div>
       </Card>

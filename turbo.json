@@ -27,6 +27,7 @@
       "dependsOn": ["^check-types"]
     },
     "dev": {
+      "dependsOn": ["@repo/emails#build"],
       "cache": false,
       "persistent": true,
       "inputs": ["$TURBO_DEFAULT$", ".env"],

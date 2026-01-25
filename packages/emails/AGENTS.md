@@ -2,26 +2,35 @@
 
 Transactional email templates using [@react-email/components](https://react.email).
 
+## Build System
+
+This package uses **tsdown** to pre-compile React components before other packages import them.
+
+**Why?** The main app uses SolidJS, which has its own JSX transform. Without pre-building, Vite would transform React Email's JSX with SolidJS's transform, causing runtime errors. By pre-compiling with tsdown, the JSX is already converted to plain JS function calls, eliminating any JSX conflicts.
+
 ## Commands
 
 ```bash
 bun dev    # Preview emails at localhost:3002
-bun build  # Build templates
-bun export # Export to HTML
+bun build  # Pre-compile templates with tsdown (required before other packages can import)
+bun export # Export to static HTML files
 ```
 
 ## Structure
 
+- `emails/index.ts` - Package entry point, exports all email components
 - `emails/components/` - Shared components (EmailFrame)
 - `emails/styles.ts` - Shared styles
 - `emails/*.tsx` - Email templates
 
 ## Usage
 
-```tsx
-import { ResetPassword } from '@repo/emails/emails/reset-password';
+Components are exported pre-compiled from the package root:
 
-// With Resend
+```tsx
+import { ResetPassword } from '@repo/emails';
+
+// With Resend - pass React element directly (Resend handles rendering)
 await resend.emails.send({
   from: 'OpenFeeds <noreply@openfeeds.app>',
   to: email,
@@ -29,3 +38,9 @@ await resend.emails.send({
   react: ResetPassword({ resetUrl: '...' }),
 });
 ```
+
+## Adding New Templates
+
+1. Create template in `emails/my-template.tsx`
+2. Export from `emails/index.ts`
+3. Run `bun build` to compile

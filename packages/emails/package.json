@@ -2,18 +2,18 @@
   "name": "@repo/emails",
   "exports": {
     ".": {
-      "types": "./dist/render.d.ts",
-      "default": "./render.ts"
+      "types": "./dist/index.d.mts",
+      "default": "./dist/index.mjs"
     }
   },
   "scripts": {
+    "build": "tsdown",
     "dev": "email dev --port 3002",
     "export": "email export",
     "check-types": "tsc --build"
   },
   "dependencies": {
     "@react-email/components": "1.0.6",
-    "@react-email/render": "2.0.4",
     "react": "^19.2.3",
     "react-dom": "^19.2.3"
   },
@@ -21,6 +21,7 @@
     "@react-email/preview-server": "5.2.5",
     "@types/react": "^19.2.9",
     "@types/react-dom": "^19.2.3",
-    "react-email": "5.2.5"
+    "react-email": "5.2.5",
+    "tsdown": "^0.20.1"
   }
 }

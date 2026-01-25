@@ -72,3 +72,29 @@ export function useLogout() {
     },
   }));
 }
+
+export function useForgotPassword() {
+  return useMutation(() => ({
+    mutationFn: ({ email }: { email: string }) =>
+      authClient.requestPasswordReset(
+        {
+          email,
+          redirectTo: '/reset-password',
+        },
+        { throw: true },
+      ),
+  }));
+}
+
+export function useResetPassword() {
+  return useMutation(() => ({
+    mutationFn: ({ newPassword, token }: { newPassword: string; token: string }) =>
+      authClient.resetPassword(
+        {
+          newPassword,
+          token,
+        },
+        { throw: true },
+      ),
+  }));
+}

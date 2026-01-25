@@ -1,13 +1,12 @@
 {
   "compilerOptions": {
-    "composite": true,
-    "declaration": true,
-    "declarationMap": true,
-    "outDir": "./dist",
+    "composite": false,
     "jsx": "react-jsx",
     "skipLibCheck": true,
-    "strict": true
+    "strict": true,
+    "noEmit": true,
+    "strictNullChecks": true
   },
   "include": ["**/*.ts", "**/*.tsx"],
-  "exclude": ["node_modules", ".react-email", "dist"]
+  "exclude": ["node_modules", ".react-email"]
 }
