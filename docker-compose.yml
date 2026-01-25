@@ -23,7 +23,7 @@ services:
   web:
     image: ghcr.io/cyrillbrito/openfeeds-web:latest
     ports:
-      - '80:3000'
+      - '3000:3000'
     environment:
       - CLIENT_DOMAIN=$CLIENT_DOMAIN
       - DB_PATH=/data
