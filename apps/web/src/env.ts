@@ -16,11 +16,6 @@ export const env = createEnv({
     SIMPLE_AUTH: z.stringbool().default(false),
     CLIENT_DOMAIN: z.url(),
   },
-  clientPrefix: 'VITE_',
-  client: {
-    // Client-side env vars (exposed to browser, must start with VITE_)
-    VITE_API_URL: z.string().optional(),
-  },
   runtimeEnv: process.env,
   emptyStringAsUndefined: true,
 });
