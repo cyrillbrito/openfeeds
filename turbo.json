@@ -44,6 +44,9 @@
         "RESEND_AUDIENCE_ID",
         "SIMPLE_AUTH"
       ]
+    },
+    "docker:publish": {
+      "cache": false
     }
   }
 }

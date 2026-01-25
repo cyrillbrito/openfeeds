@@ -11,7 +11,9 @@ services:
     command: redis-server --save 60 1 --loglevel warning
 
   migrator:
-    image: ghcr.io/cyrillbrito/openfeeds-migrations:latest
+    build:
+      context: .
+      dockerfile: Dockerfile.migrations
     environment:
       - DB_PATH=/data
     volumes:
@@ -21,7 +23,9 @@ services:
     restart: 'no'
 
   web:
-    image: ghcr.io/cyrillbrito/openfeeds-web:latest
+    build:
+      context: .
+      dockerfile: Dockerfile.web
     ports:
       - '3200:3000'
     environment:
@@ -47,7 +51,9 @@ services:
     restart: unless-stopped
 
   worker:
-    image: ghcr.io/cyrillbrito/openfeeds-worker:latest
+    build:
+      context: .
+      dockerfile: Dockerfile.worker
     environment:
       - DB_PATH=/data
       - REDIS_HOST=redis

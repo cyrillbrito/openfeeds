@@ -6,7 +6,8 @@
     "dev": "bun run --hot src/index.ts",
     "start": "bun run src/index.ts",
     "check-types": "tsc --noEmit",
-    "benchmark": "bun run src/benchmark/index.ts"
+    "benchmark": "bun run src/benchmark/index.ts",
+    "docker:publish": "docker build -f ../../Dockerfile.worker -t ghcr.io/cyrillbrito/openfeeds-worker:latest ../.. && docker push ghcr.io/cyrillbrito/openfeeds-worker:latest"
   },
   "dependencies": {
     "@repo/db": "workspace:*",

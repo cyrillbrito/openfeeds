@@ -3,7 +3,8 @@
   "main": "src/index.ts",
   "type": "module",
   "scripts": {
-    "migrate": "bun src/index.ts"
+    "migrate": "bun src/index.ts",
+    "docker:publish": "docker build -f ../../Dockerfile.migrations -t ghcr.io/cyrillbrito/openfeeds-migrations:latest ../.. && docker push ghcr.io/cyrillbrito/openfeeds-migrations:latest"
   },
   "dependencies": {
     "@repo/db": "workspace:*",
