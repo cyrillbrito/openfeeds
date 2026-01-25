@@ -1,22 +1,25 @@
 import { Link } from '@tanstack/solid-router';
+import FileQuestion from 'lucide-solid/icons/file-question';
 
-export function NotFound({ children }: { children?: any }) {
+export function NotFound() {
   return (
-    <div class="space-y-2 p-2">
-      <div class="text-gray-600 dark:text-gray-400">
-        {children || <p>The page you are looking for does not exist.</p>}
+    <div class="hero bg-base-200 min-h-screen">
+      <div class="hero-content text-center">
+        <div class="w-full max-w-lg">
+          <div class="mb-8 flex flex-col items-center gap-4">
+            <FileQuestion class="text-base-content/50 size-16" />
+            <h1 class="text-base-content text-2xl font-bold">Page Not Found</h1>
+          </div>
+
+          <p class="text-base-content/70 mb-6">
+            The page you are looking for does not exist or has been moved.
+          </p>
+
+          <Link to="/" class="btn btn-primary">
+            Go Home
+          </Link>
+        </div>
       </div>
-      <p class="flex flex-wrap items-center gap-2">
-        <button
-          onClick={() => window.history.back()}
-          class="rounded bg-emerald-500 px-2 py-1 text-sm font-black text-white uppercase"
-        >
-          Go back
-        </button>
-        <Link to="/" class="rounded bg-cyan-600 px-2 py-1 text-sm font-black text-white uppercase">
-          Start Over
-        </Link>
-      </p>
     </div>
   );
 }
