@@ -46,7 +46,7 @@ export const articlesCollection = createCollection(
           query.ids = value;
         }
         // Handle 'ilike' operator for YouTube shorts URL filtering
-        if (operator === 'ilike' && fieldName === 'url' && value === '%youtube.com/shorts%') {
+        if (operator === 'ilike' && fieldName === 'url' && typeof value === 'string' && value.includes('youtube.com/shorts')) {
           query.type = 'shorts';
         }
       });
