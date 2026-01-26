@@ -13,6 +13,7 @@ const ArticleQuerySchema = z.object({
   type: z.enum(['all', 'shorts']).optional(),
   limit: z.number().optional(),
   ids: z.array(z.string()).optional(),
+  urlLike: z.string().optional(),
 });
 
 export const $$getArticles = createServerFn({ method: 'GET' })

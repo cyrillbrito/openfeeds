@@ -18,7 +18,7 @@ export async function getArticles(
   filters: ArticleQuery,
   db: UserDb,
 ): Promise<PaginatedResponse<Article>> {
-  const { cursor, limit, feedId, tagId, isRead, isArchived, type, search, ids } = filters;
+  const { cursor, limit, feedId, tagId, isRead, isArchived, type, search, ids, urlLike } = filters;
 
   const queryLimit = limit ? limit + 1 : undefined;
 
@@ -64,6 +64,11 @@ export async function getArticles(
   // Type filter
   if (type === 'shorts') {
     whereConditions.push(like(articles.url, '%youtube.com/shorts%'));
+  }
+
+  // URL like filter (for ilike queries from client)
+  if (urlLike) {
+    whereConditions.push(like(articles.url, urlLike));
   }
 
   // Search filter (TODO: implement full-text search when needed)

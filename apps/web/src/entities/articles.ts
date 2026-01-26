@@ -38,12 +38,25 @@ export const articlesCollection = createCollection(
       // Map filters to query parameters
       parsed.filters.forEach(({ field, operator, value }) => {
         const fieldName = field[field.length - 1];
+        let handled = false;
+
         if (operator === 'eq') {
           query[fieldName] = value;
+          handled = true;
         }
         // Handle 'in' operator for loading articles by ID (from joins)
         if (operator === 'in' && fieldName === 'id') {
           query.ids = value;
+          handled = true;
+        }
+        // Handle 'ilike' operator for URL pattern filtering
+        if (operator === 'ilike' && fieldName === 'url') {
+          query.urlLike = value;
+          handled = true;
+        }
+
+        if (!handled) {
+          console.warn(`[articles] Unmapped filter: ${operator} on ${fieldName}`, value);
         }
       });
 
