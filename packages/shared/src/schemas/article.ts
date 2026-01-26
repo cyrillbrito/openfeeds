@@ -10,6 +10,7 @@ export const ArticleQuerySchema = CursorQuerySchema.extend({
   type: z.enum(['all', 'shorts']).default('all').optional(),
   search: z.string().optional(),
   ids: z.array(z.string()).optional(),
+  urlLike: z.string().optional(),
 });
 
 export const ArticleSchema = z.object({
