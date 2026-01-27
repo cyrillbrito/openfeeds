@@ -145,8 +145,24 @@ export async function getArticleById(id: string, db: UserDb): Promise<Article> {
 }
 
 /**
+ * Check if URL is a YouTube video (which doesn't need content extraction)
+ */
+function isYouTubeUrl(url: string | null): boolean {
+  if (!url) return false;
+  try {
+    const urlObj = new URL(url);
+    return urlObj.hostname.includes('youtube.com') || urlObj.hostname.includes('youtu.be');
+  } catch {
+    return false;
+  }
+}
+
+/**
  * Get article by ID with full content (including cleanContent)
  * Used for the reader view where we need the processed article content
+ *
+ * Content extraction is done on-demand: if the article doesn't have cleanContent
+ * yet and has a valid URL (non-YouTube), it will be extracted and saved.
  */
 export async function getArticleWithContent(
   id: string,
@@ -167,11 +183,44 @@ export async function getArticleWithContent(
     throw new NotFoundError();
   }
 
+  let cleanContent = article.cleanContent ?? null;
+  let description = article.description;
+
+  // On-demand content extraction: if not yet extracted and has a valid URL
+  if (!article.contentExtractedAt && article.url && !isYouTubeUrl(article.url)) {
+    try {
+      const extracted = await fetchArticleContent(article.url);
+      cleanContent = extracted.content ?? null;
+
+      // Build update object
+      const updateData: {
+        cleanContent: string | null;
+        contentExtractedAt: Date;
+        description?: string;
+      } = {
+        cleanContent,
+        contentExtractedAt: new Date(),
+      };
+
+      // Use extracted excerpt as description if article doesn't have one
+      if (!description && extracted.excerpt) {
+        description = extracted.excerpt;
+        updateData.description = extracted.excerpt;
+      }
+
+      // Persist the extracted content so we don't need to fetch again
+      await db.update(articles).set(updateData).where(eq(articles.id, id));
+    } catch (error) {
+      // Log but don't fail the request - user can still see RSS content
+      console.error(`Failed to extract content for article ${id}:`, error);
+    }
+  }
+
   const apiArticle = articleDbToApi(article);
 
   return {
     ...apiArticle,
-    cleanContent: article.cleanContent ?? null,
+    cleanContent,
   };
 }
 

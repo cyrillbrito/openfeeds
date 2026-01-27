@@ -38,7 +38,11 @@ function ArticleView() {
   const articleDetailsQuery = useArticleDetails(articleId);
 
   const article = () => articleQuery.data?.[0];
-  const cleanContent = () => articleDetailsQuery.data?.[0]?.cleanContent;
+  const articleDetails = () => articleDetailsQuery.data?.[0];
+  const cleanContent = () => articleDetails()?.cleanContent;
+  // Content is loading if query is loading OR if we don't have details for this article yet
+  const isContentLoading = () =>
+    articleDetailsQuery.isLoading || (!articleDetailsQuery.isReady && !articleDetails());
 
   const feedsQuery = useFeeds();
   const tagsQuery = useTags();
@@ -258,8 +262,15 @@ function ArticleView() {
                   </Show>
                 </Show>
 
-                {/* No content fallback */}
-                <Show when={!isVideo() && !cleanContent()}>
+                {/* Loading state for content extraction */}
+                <Show when={!isVideo() && isContentLoading()}>
+                  <div class="flex justify-center py-12">
+                    <Loader />
+                  </div>
+                </Show>
+
+                {/* No content fallback - only show after loading completes */}
+                <Show when={!isVideo() && !isContentLoading() && !cleanContent()}>
                   <div class="py-8 text-center">
                     <p class="text-warning">This article doesn't have readable content available</p>
                     <Show when={art().url}>

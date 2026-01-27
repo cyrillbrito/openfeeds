@@ -38,12 +38,26 @@ bun benchmark    # Run performance benchmark
 - `Feed Details` - Calls `updateFeedMetadata()` for feed metadata
 - `Auto Archive` - Calls `autoArchiveArticles()`, runs daily at midnight
 
+## Environment Variables
+
+Configured in `src/env.ts` using t3-env:
+
+| Variable                          | Default | Description                       |
+| --------------------------------- | ------- | --------------------------------- |
+| `WORKER_CONCURRENCY_ORCHESTRATOR` | 1       | Concurrency for orchestrator jobs |
+| `WORKER_CONCURRENCY_FEED_SYNC`    | 2       | Concurrency for feed sync jobs    |
+| `WORKER_CONCURRENCY_FEED_DETAILS` | 1       | Concurrency for feed details jobs |
+| `WORKER_CONCURRENCY_AUTO_ARCHIVE` | 1       | Concurrency for auto-archive jobs |
+
+Defaults are conservative for small VMs. Increase for higher throughput on larger machines.
+
 ## Worker Pattern
 
 ```typescript
 import { getUserDb } from '@repo/db';
 import { getRedisConnection, QUEUE_NAMES, syncSingleFeed } from '@repo/domain';
 import { Worker } from 'bullmq';
+import { env } from './env';
 
 export function createSingleFeedSyncWorker() {
   return new Worker(
@@ -52,7 +66,7 @@ export function createSingleFeedSyncWorker() {
       const db = getUserDb(job.data.userId);
       await syncSingleFeed(db, job.data.feedId);
     },
-    { connection: getRedisConnection(), concurrency: 2 },
+    { connection: getRedisConnection(), concurrency: env.WORKER_CONCURRENCY_FEED_SYNC },
   );
 }
 ```

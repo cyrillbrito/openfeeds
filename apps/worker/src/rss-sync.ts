@@ -8,7 +8,6 @@ import {
   type ParseFeedResult,
 } from '@repo/domain';
 import { logger } from '@repo/domain/logger';
-import { fetchArticleContentBatch } from '@repo/readability/server';
 import { attemptAsync, createId } from '@repo/shared/utils';
 import { eq, isNull, lt, or } from 'drizzle-orm';
 
@@ -21,20 +20,6 @@ export interface NormalizedFeedItem {
   url: string | null;
   pubDate: Date;
   author: string | null;
-}
-
-function isYouTubeUrl(url: string): boolean {
-  if (!url) return false;
-  try {
-    const urlObj = new URL(url);
-    return urlObj.hostname.includes('youtube.com') || urlObj.hostname.includes('youtu.be');
-  } catch {
-    return false;
-  }
-}
-
-function isArticle(url: string): boolean {
-  return !isYouTubeUrl(url);
 }
 
 function getNormalizedItems(feedResult: ParseFeedResult): NormalizedFeedItem[] {
@@ -99,19 +84,8 @@ export async function syncFeedArticles(
   // Get items based on feed format and normalize them
   const normalizedItems = getNormalizedItems(feedResult);
 
-  // Collect article URLs for batch processing
-  const articleUrls: string[] = [];
-  for (const item of normalizedItems) {
-    if (item.url && isArticle(item.url)) {
-      articleUrls.push(item.url);
-    }
-  }
-
-  // Batch fetch and process all article content
-  const contentMap =
-    articleUrls.length > 0
-      ? await fetchArticleContentBatch(articleUrls)
-      : new Map<string, { title: string | null; excerpt: string | null; content: string | null }>();
+  // Note: Content extraction is now done on-demand when user views the article
+  // This significantly reduces memory/CPU usage during feed sync
 
   for (const item of normalizedItems) {
     if (!item.guid) continue;
@@ -130,14 +104,6 @@ export async function syncFeedArticles(
     // Apply filter rules to determine if article should be marked as read
     const shouldMarkAsReadByRules = await evaluateFilterRules(db, feedId, item.title);
 
-    // Get pre-fetched content from batch results
-    const extractedContent = item.url ? contentMap.get(item.url) : null;
-    const cleanContent = extractedContent?.content ?? null;
-    // Use RSS description if provided, otherwise fall back to extracted excerpt
-    const description = item.description || extractedContent?.excerpt || null;
-
-    // TODO This should be moved to dedicated article domain function
-
     const [newArticle] = await db
       .insert(articles)
       .values({
@@ -146,13 +112,14 @@ export async function syncFeedArticles(
         guid: item.guid,
         title: item.title,
         content: item.content,
-        description: description,
+        description: item.description,
         url: item.url,
         pubDate: item.pubDate,
         author: item.author,
         isRead: shouldMarkAsReadByRules,
         isArchived: shouldAutoArchive,
-        cleanContent: cleanContent,
+        // cleanContent is null - will be extracted on-demand when user views the article
+        cleanContent: null,
       })
       .returning({ id: articles.id });
 

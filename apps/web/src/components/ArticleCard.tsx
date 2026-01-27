@@ -2,12 +2,11 @@ import type { Article, Feed, Tag } from '@repo/shared/types';
 import { Link, useNavigate } from '@tanstack/solid-router';
 import ArchiveIcon from 'lucide-solid/icons/archive';
 import CheckIcon from 'lucide-solid/icons/check';
-import ExternalLinkIcon from 'lucide-solid/icons/external-link';
 import InboxIcon from 'lucide-solid/icons/inbox';
 import RssIcon from 'lucide-solid/icons/rss';
 import { Show } from 'solid-js';
 import { twMerge } from 'tailwind-merge';
-import { containsHtml, downshiftHeadings, sanitizeHtml } from '../utils/html';
+import { containsHtml, downshiftHeadings, sanitizeHtml, stripAnchors } from '../utils/html';
 import { extractYouTubeVideoId, isYouTubeUrl } from '../utils/youtube';
 import { ArticleTagManager } from './ArticleTagManager';
 import { TimeAgo } from './TimeAgo';
@@ -38,7 +37,6 @@ export function ArticleCard(props: ArticleCardProps) {
 
   const isVideo = () => props.article.url && isYouTubeUrl(props.article.url);
   const videoId = () => (props.article.url ? extractYouTubeVideoId(props.article.url) : null);
-  const hasRichContent = () => isVideo() || props.article.hasCleanContent;
 
   const handleCardClick = (e: MouseEvent) => {
     const target = e.target as HTMLElement;
@@ -47,15 +45,10 @@ export function ArticleCard(props: ArticleCardProps) {
     }
 
     markAsRead();
-
-    if (hasRichContent()) {
-      navigate({
-        to: '/articles/$articleId',
-        params: { articleId: props.article.id.toString() },
-      });
-    } else if (props.article.url) {
-      window.open(props.article.url, '_blank', 'noopener,noreferrer');
-    }
+    navigate({
+      to: '/articles/$articleId',
+      params: { articleId: props.article.id.toString() },
+    });
   };
 
   const handleMarkRead = (e: MouseEvent) => {
@@ -122,12 +115,6 @@ export function ArticleCard(props: ArticleCardProps) {
         <div class="min-w-0 flex-1">
           <h2 class="text-base-content line-clamp-2 text-[15px] leading-snug font-medium md:text-lg">
             {props.article.title}
-            <Show when={!hasRichContent() && props.article.url}>
-              <ExternalLinkIcon
-                size={12}
-                class="text-base-content/40 ml-1 inline-block shrink-0 md:size-3.5"
-              />
-            </Show>
           </h2>
           <div class="text-base-content/50 flex items-center gap-1.5 text-xs md:text-sm">
             <Show
@@ -161,8 +148,10 @@ export function ArticleCard(props: ArticleCardProps) {
         >
           <div
             class="prose prose-sm text-base-content prose-headings:text-base-content prose-a:text-primary prose-strong:text-base-content prose-code:text-base-content prose-blockquote:text-base-content/80 mt-2 mb-3 line-clamp-5 text-sm leading-relaxed md:text-base"
-            innerHTML={downshiftHeadings(
-              sanitizeHtml(props.article.description || props.article.content || ''),
+            innerHTML={stripAnchors(
+              downshiftHeadings(
+                sanitizeHtml(props.article.description || props.article.content || ''),
+              ),
             )}
           />
         </Show>

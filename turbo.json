@@ -17,7 +17,11 @@
         "REDIS_PORT",
         "RESEND_API_KEY",
         "RESEND_AUDIENCE_ID",
-        "SIMPLE_AUTH"
+        "SIMPLE_AUTH",
+        "WORKER_CONCURRENCY_ORCHESTRATOR",
+        "WORKER_CONCURRENCY_FEED_SYNC",
+        "WORKER_CONCURRENCY_FEED_DETAILS",
+        "WORKER_CONCURRENCY_AUTO_ARCHIVE"
       ]
     },
     "lint": {
@@ -42,7 +46,11 @@
         "REDIS_PORT",
         "RESEND_API_KEY",
         "RESEND_AUDIENCE_ID",
-        "SIMPLE_AUTH"
+        "SIMPLE_AUTH",
+        "WORKER_CONCURRENCY_ORCHESTRATOR",
+        "WORKER_CONCURRENCY_FEED_SYNC",
+        "WORKER_CONCURRENCY_FEED_DETAILS",
+        "WORKER_CONCURRENCY_AUTO_ARCHIVE"
       ]
     },
     "docker:publish": {

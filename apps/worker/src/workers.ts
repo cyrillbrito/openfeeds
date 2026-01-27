@@ -8,6 +8,7 @@ import {
 } from '@repo/domain';
 import { attemptAsync } from '@repo/shared/utils';
 import { Worker, type Job } from 'bullmq';
+import { env } from './env';
 import { syncOldestFeeds, syncSingleFeed } from './rss-sync';
 
 export interface UserFeedJobData {
@@ -49,7 +50,7 @@ export function createFeedSyncOrchestratorWorker() {
     },
     {
       connection: getRedisConnection(),
-      concurrency: 2,
+      concurrency: env.WORKER_CONCURRENCY_ORCHESTRATOR,
     },
   );
 }
@@ -79,7 +80,7 @@ export function createSingleFeedSyncWorker() {
     },
     {
       connection: getRedisConnection(),
-      concurrency: 5,
+      concurrency: env.WORKER_CONCURRENCY_FEED_SYNC,
     },
   );
 }
@@ -107,7 +108,7 @@ export function createFeedDetailsWorker() {
     },
     {
       connection: getRedisConnection(),
-      concurrency: 2,
+      concurrency: env.WORKER_CONCURRENCY_FEED_DETAILS,
     },
   );
 }
@@ -146,7 +147,7 @@ export function createAutoArchiveWorker() {
     },
     {
       connection: getRedisConnection(),
-      concurrency: 2,
+      concurrency: env.WORKER_CONCURRENCY_AUTO_ARCHIVE,
     },
   );
 }

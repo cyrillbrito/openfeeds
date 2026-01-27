@@ -11,6 +11,11 @@ export const env = createEnv({
       .optional()
       .default('phc_V6I0xn1Ptmx3QVqXzLNAK22H6D58kR3SJTYg1JdVEx'),
     RESEND_API_KEY: z.string().optional(),
+    // Worker concurrency settings (conservative defaults for small VMs)
+    WORKER_CONCURRENCY_ORCHESTRATOR: z.coerce.number().default(1),
+    WORKER_CONCURRENCY_FEED_SYNC: z.coerce.number().default(2),
+    WORKER_CONCURRENCY_FEED_DETAILS: z.coerce.number().default(1),
+    WORKER_CONCURRENCY_AUTO_ARCHIVE: z.coerce.number().default(1),
   },
   runtimeEnv: process.env,
   emptyStringAsUndefined: true,
