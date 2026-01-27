@@ -41,7 +41,7 @@ export const EmailFrame = ({
       <Container style={container}>
         <Section style={logoContainer}>
           <Img
-            src="https://openfeeds.app/logo.png"
+            src="https://openfeeds.app/_emails/logo.png"
             width="40"
             height="30"
             alt="OpenFeeds"

@@ -44,3 +44,13 @@ await resend.emails.send({
 1. Create template in `emails/my-template.tsx`
 2. Export from `emails/index.ts`
 3. Run `bun build` to compile
+
+## Static Assets
+
+Email assets (logos, images) are hosted in the marketing app at `apps/marketing/public/_emails/`. Reference them with absolute URLs:
+
+```tsx
+<Img src="https://openfeeds.app/_emails/logo.png" />
+```
+
+This `/_emails/` path is excluded from Cloudflare's Astro adapter routing, ensuring direct static file serving.

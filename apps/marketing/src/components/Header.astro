@@ -1,12 +1,13 @@
 ---
 import GitHubIcon from './icons/GitHubIcon.astro';
 import TwitterIcon from './icons/TwitterIcon.astro';
+import logoAlt from '../assets/logo-alt.svg';
 ---
 
 <header class="border-b border-foreground/10 bg-background">
   <div class="mx-auto flex max-w-6xl items-center justify-between px-6 py-4">
     <a href="/" class="flex gap-2">
-      <img src="/logo-alt.svg" class="h-12 w-12" alt="OpenFeeds logo" />
+      <img src={logoAlt.src} class="h-12 w-12" alt="OpenFeeds logo" />
       <span class="text-2xl font-bold text-foreground mt-[6px] font-logo">OpenFeeds</span>
     </a>
 

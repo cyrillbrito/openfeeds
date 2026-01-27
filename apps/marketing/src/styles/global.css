@@ -6,7 +6,7 @@
   font-family: 'Gilda Display';
   font-style: normal;
   font-weight: 400;
-  src: url('/fonts/gilda-display-v20-latin-regular.woff2') format('woff2');
+  src: url('../assets/fonts/gilda-display-v20-latin-regular.woff2') format('woff2');
 }
 
 /* inter-700 - latin */
@@ -15,7 +15,7 @@
   font-family: 'Inter';
   font-style: normal;
   font-weight: 700;
-  src: url('/fonts/inter-v20-latin-700.woff2') format('woff2'); /* Chrome 36+, Opera 23+, Firefox 39+, Safari 12+, iOS 10+ */
+  src: url('../assets/fonts/inter-v20-latin-700.woff2') format('woff2'); /* Chrome 36+, Opera 23+, Firefox 39+, Safari 12+, iOS 10+ */
 }
 
 @theme {

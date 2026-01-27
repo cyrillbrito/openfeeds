@@ -17,8 +17,8 @@ export default defineConfig({
     routes: {
       extend: {
         exclude: [
-          // For email use
-          { pattern: '/logo.png' },
+          // Email assets served directly
+          { pattern: '/_emails/*' },
         ],
       },
     },
