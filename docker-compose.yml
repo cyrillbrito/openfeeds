@@ -1,4 +1,23 @@
 services:
+  postgres:
+    image: postgres:18.1-alpine
+    ports:
+      - '5432:5432'
+    environment:
+      POSTGRES_DB: openfeeds
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - rss-network
+    restart: unless-stopped
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U postgres -d openfeeds']
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
   redis:
     image: redis:7-alpine
     volumes:
@@ -11,11 +30,12 @@ services:
   migrator:
     image: ghcr.io/cyrillbrito/openfeeds-migrations:latest
     environment:
-      - DB_PATH=/data
-    volumes:
-      - sqlite_data:/data
+      - DATABASE_URL=postgresql://postgres:postgres@postgres:5432/openfeeds
     networks:
       - rss-network
+    depends_on:
+      postgres:
+        condition: service_healthy
     restart: 'no'
 
   web:
@@ -24,7 +44,7 @@ services:
       - '3000:3000'
     environment:
       - CLIENT_DOMAIN=$CLIENT_DOMAIN
-      - DB_PATH=/data
+      - DATABASE_URL=postgresql://postgres:postgres@postgres:5432/openfeeds
       - BETTER_AUTH_SECRET=$BETTER_AUTH_SECRET
       - SIMPLE_AUTH=$SIMPLE_AUTH
       - POSTHOG_PUBLIC_KEY=$POSTHOG_PUBLIC_KEY
@@ -33,11 +53,11 @@ services:
       # TTS Configuration (optional)
       - UNREAL_SPEECH_API_KEY=$UNREAL_SPEECH_API_KEY
       - TTS_DEFAULT_VOICE=$TTS_DEFAULT_VOICE
-    volumes:
-      - sqlite_data:/data
     depends_on:
       redis:
         condition: service_started
+      postgres:
+        condition: service_healthy
       migrator:
         condition: service_completed_successfully
     networks:
@@ -47,16 +67,16 @@ services:
   worker:
     image: ghcr.io/cyrillbrito/openfeeds-worker:latest
     environment:
-      - DB_PATH=/data
+      - DATABASE_URL=postgresql://postgres:postgres@postgres:5432/openfeeds
       - REDIS_HOST=redis
       - REDIS_PORT=6379
       - POSTHOG_PUBLIC_KEY=$POSTHOG_PUBLIC_KEY
       - RESEND_API_KEY=$RESEND_API_KEY
-    volumes:
-      - sqlite_data:/data
     depends_on:
       redis:
         condition: service_started
+      postgres:
+        condition: service_healthy
       migrator:
         condition: service_completed_successfully
     networks:
@@ -77,7 +97,7 @@ services:
     restart: unless-stopped
 
 volumes:
-  sqlite_data:
+  postgres_data:
     driver: local
   redis_data:
     driver: local

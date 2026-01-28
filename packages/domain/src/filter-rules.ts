@@ -1,4 +1,4 @@
-import { articles, feeds, filterRules, type UserDb } from '@repo/db';
+import { articles, feeds, filterRules, getDb } from '@repo/db';
 import {
   type CreateFilterRuleApi,
   type FilterRule,
@@ -9,17 +9,36 @@ import { and, eq } from 'drizzle-orm';
 import { filterRuleDbToApi } from './db-utils';
 import { assert, NotFoundError, UnexpectedError } from './errors';
 
-export async function getAllFilterRules(db: UserDb): Promise<FilterRule[]> {
-  const rules = await db.query.filterRules.findMany({
-    orderBy: (filterRules, { desc }) => [desc(filterRules.createdAt)],
-  });
+export async function getAllFilterRules(userId: string): Promise<FilterRule[]> {
+  const db = getDb();
+
+  // Join filterRules with feeds to filter by userId in a single query
+  const rules = await db
+    .select({
+      id: filterRules.id,
+      feedId: filterRules.feedId,
+      pattern: filterRules.pattern,
+      operator: filterRules.operator,
+      isActive: filterRules.isActive,
+      createdAt: filterRules.createdAt,
+      updatedAt: filterRules.updatedAt,
+    })
+    .from(filterRules)
+    .innerJoin(feeds, eq(filterRules.feedId, feeds.id))
+    .where(eq(feeds.userId, userId))
+    .orderBy(filterRules.createdAt);
+
   return rules.map(filterRuleDbToApi);
 }
 
-export async function getFilterRulesByFeedId(feedId: string, db: UserDb): Promise<FilterRule[]> {
-  // Check if feed exists
+export async function getFilterRulesByFeedId(
+  feedId: string,
+  userId: string,
+): Promise<FilterRule[]> {
+  const db = getDb();
+  // Check if feed exists and belongs to user
   const feed = await db.query.feeds.findFirst({
-    where: eq(feeds.id, feedId),
+    where: and(eq(feeds.id, feedId), eq(feeds.userId, userId)),
   });
 
   if (!feed) {
@@ -38,11 +57,12 @@ export async function getFilterRulesByFeedId(feedId: string, db: UserDb): Promis
 export async function createFilterRule(
   feedId: string,
   data: CreateFilterRuleApi & { id?: string },
-  db: UserDb,
+  userId: string,
 ): Promise<FilterRule> {
-  // Check if feed exists
+  const db = getDb();
+  // Check if feed exists and belongs to user
   const feed = await db.query.feeds.findFirst({
-    where: eq(feeds.id, feedId),
+    where: and(eq(feeds.id, feedId), eq(feeds.userId, userId)),
   });
 
   if (!feed) {
@@ -78,8 +98,19 @@ export async function updateFilterRule(
   feedId: string,
   ruleId: string,
   data: UpdateFilterRule,
-  db: UserDb,
+  userId: string,
 ): Promise<FilterRule> {
+  const db = getDb();
+
+  // First verify the feed belongs to this user
+  const feed = await db.query.feeds.findFirst({
+    where: and(eq(feeds.id, feedId), eq(feeds.userId, userId)),
+  });
+
+  if (!feed) {
+    throw new NotFoundError();
+  }
+
   // Check if rule exists and belongs to the feed
   const existingRule = await db.query.filterRules.findFirst({
     where: and(eq(filterRules.id, ruleId), eq(filterRules.feedId, feedId)),
@@ -120,7 +151,22 @@ export async function updateFilterRule(
   return filterRuleDbToApi(updatedRule);
 }
 
-export async function deleteFilterRule(feedId: string, ruleId: string, db: UserDb): Promise<void> {
+export async function deleteFilterRule(
+  feedId: string,
+  ruleId: string,
+  userId: string,
+): Promise<void> {
+  const db = getDb();
+
+  // First verify the feed belongs to this user
+  const feed = await db.query.feeds.findFirst({
+    where: and(eq(feeds.id, feedId), eq(feeds.userId, userId)),
+  });
+
+  if (!feed) {
+    throw new NotFoundError();
+  }
+
   // Check if rule exists and belongs to the feed
   const existingRule = await db.query.filterRules.findFirst({
     where: and(eq(filterRules.id, ruleId), eq(filterRules.feedId, feedId)),
@@ -136,11 +182,12 @@ export async function deleteFilterRule(feedId: string, ruleId: string, db: UserD
 
 export async function applyFilterRulesToFeed(
   feedId: string,
-  db: UserDb,
+  userId: string,
 ): Promise<{ articlesProcessed: number; articlesMarkedAsRead: number }> {
-  // Check if feed exists
+  const db = getDb();
+  // Check if feed exists and belongs to user
   const feed = await db.query.feeds.findFirst({
-    where: eq(feeds.id, feedId),
+    where: and(eq(feeds.id, feedId), eq(feeds.userId, userId)),
   });
 
   if (!feed) {

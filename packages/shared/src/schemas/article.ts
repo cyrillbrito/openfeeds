@@ -43,7 +43,7 @@ export const CreateArticleSchema = z.object({
 /** Schema for creating articles from a URL (not tied to a feed) */
 export const CreateArticleFromUrlSchema = z.object({
   id: z.string().optional(),
-  url: z.string().url(),
+  url: z.url(),
   tags: z.array(z.string()).optional(),
 });
 

@@ -1,4 +1,4 @@
-import { feeds, feedTags, type DbInsertFeed, type UserDb } from '@repo/db';
+import { feeds, feedTags, getDb, type DbInsertFeed } from '@repo/db';
 import { discoverFeeds } from '@repo/discovery/server';
 import {
   type CreateFeed,
@@ -7,13 +7,15 @@ import {
   type UpdateFeed,
 } from '@repo/shared/types';
 import { attemptAsync, createId } from '@repo/shared/utils';
-import { eq } from 'drizzle-orm';
+import { and, eq } from 'drizzle-orm';
 import { feedDbToApi, type DbFeedWithTags } from './db-utils';
 import { assert, BadRequestError, ConflictError, NotFoundError, UnexpectedError } from './errors';
 import { enqueueFeedDetail, enqueueFeedSync } from './queues';
 
-export async function getAllFeeds(db: UserDb): Promise<Feed[]> {
+export async function getAllFeeds(userId: string): Promise<Feed[]> {
+  const db = getDb();
   const feedsWithTags = await db.query.feeds.findMany({
+    where: eq(feeds.userId, userId),
     with: {
       feedTags: {
         columns: { tagId: true },
@@ -28,9 +30,10 @@ export async function getAllFeeds(db: UserDb): Promise<Feed[]> {
  * Get feed by ID with tags
  * Used for business logic that needs a single feed
  */
-export async function getFeedById(id: string, db: UserDb): Promise<Feed> {
+export async function getFeedById(id: string, userId: string): Promise<Feed> {
+  const db = getDb();
   const feed = await db.query.feeds.findFirst({
-    where: eq(feeds.id, id),
+    where: and(eq(feeds.id, id), eq(feeds.userId, userId)),
     with: {
       feedTags: {
         columns: { tagId: true },
@@ -48,11 +51,11 @@ export async function getFeedById(id: string, db: UserDb): Promise<Feed> {
 export async function createFeed(
   data: CreateFeed & { id?: string },
   userId: string,
-  db: UserDb,
 ): Promise<Feed> {
-  // Check if feed with this URL already exists
+  const db = getDb();
+  // Check if feed with this URL already exists for this user
   const existingFeed = await db.query.feeds.findFirst({
-    where: eq(feeds.feedUrl, data.url),
+    where: and(eq(feeds.feedUrl, data.url), eq(feeds.userId, userId)),
   });
 
   if (existingFeed) {
@@ -62,6 +65,7 @@ export async function createFeed(
   const feedId = data.id ?? createId();
   const feed: DbInsertFeed = {
     id: feedId,
+    userId,
     title: 'Unknown',
     description: '',
     url: data.url,
@@ -93,9 +97,10 @@ export async function createFeed(
   return feedDbToApi(dbFeedWithTags);
 }
 
-export async function updateFeed(id: string, data: UpdateFeed, db: UserDb): Promise<Feed> {
-  // Verify feed exists
-  await getFeedById(id, db);
+export async function updateFeed(id: string, data: UpdateFeed, userId: string): Promise<Feed> {
+  const db = getDb();
+  // Verify feed exists and belongs to user
+  await getFeedById(id, userId);
 
   const feedUpdateData = {
     title: data.title,
@@ -111,7 +116,10 @@ export async function updateFeed(id: string, data: UpdateFeed, db: UserDb): Prom
   });
 
   if (Object.keys(feedUpdateData).length > 0) {
-    await db.update(feeds).set(feedUpdateData).where(eq(feeds.id, id));
+    await db
+      .update(feeds)
+      .set(feedUpdateData)
+      .where(and(eq(feeds.id, id), eq(feeds.userId, userId)));
   }
 
   if (data.tags !== undefined) {
@@ -128,20 +136,21 @@ export async function updateFeed(id: string, data: UpdateFeed, db: UserDb): Prom
   }
 
   // Fetch and return the updated feed with consistent query structure
-  return getFeedById(id, db);
+  return getFeedById(id, userId);
 }
 
-export async function deleteFeed(id: string, db: UserDb): Promise<void> {
+export async function deleteFeed(id: string, userId: string): Promise<void> {
+  const db = getDb();
   const existingFeed = await db.query.feeds.findFirst({
     columns: { id: true },
-    where: eq(feeds.id, id),
+    where: and(eq(feeds.id, id), eq(feeds.userId, userId)),
   });
 
   if (!existingFeed) {
     throw new NotFoundError();
   }
 
-  await db.delete(feeds).where(eq(feeds.id, id));
+  await db.delete(feeds).where(and(eq(feeds.id, id), eq(feeds.userId, userId)));
 }
 
 export async function discoverRssFeeds(url: string): Promise<DiscoveredFeed[]> {

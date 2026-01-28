@@ -1,12 +1,15 @@
-import { tags, type UserDb } from '@repo/db';
+import { getDb, tags } from '@repo/db';
 import { type CreateTag, type Tag, type UpdateTag } from '@repo/shared/types';
 import { attemptAsync, createId } from '@repo/shared/utils';
-import { eq, sql } from 'drizzle-orm';
+import { and, eq, sql } from 'drizzle-orm';
 import { tagDbToApi } from './db-utils';
 import { assert, ConflictError, NotFoundError, UnexpectedError } from './errors';
 
-export async function getAllTags(db: UserDb): Promise<Tag[]> {
-  const allTags = await db.query.tags.findMany();
+export async function getAllTags(userId: string): Promise<Tag[]> {
+  const db = getDb();
+  const allTags = await db.query.tags.findMany({
+    where: eq(tags.userId, userId),
+  });
   return allTags.map(tagDbToApi);
 }
 
@@ -14,9 +17,10 @@ export async function getAllTags(db: UserDb): Promise<Tag[]> {
  * Get tag by ID
  * Used for business logic that needs a single tag
  */
-export async function getTagById(id: string, db: UserDb): Promise<Tag> {
+export async function getTagById(id: string, userId: string): Promise<Tag> {
+  const db = getDb();
   const tag = await db.query.tags.findFirst({
-    where: eq(tags.id, id),
+    where: and(eq(tags.id, id), eq(tags.userId, userId)),
   });
 
   if (!tag) {
@@ -26,10 +30,11 @@ export async function getTagById(id: string, db: UserDb): Promise<Tag> {
   return tagDbToApi(tag);
 }
 
-export async function createTag(data: CreateTag & { id?: string }, db: UserDb): Promise<Tag> {
-  // Check if tag name already exists (case-insensitive)
+export async function createTag(data: CreateTag & { id?: string }, userId: string): Promise<Tag> {
+  const db = getDb();
+  // Check if tag name already exists for this user (case-insensitive)
   const existingTag = await db.query.tags.findFirst({
-    where: sql`lower(${tags.name}) = lower(${data.name})`,
+    where: and(eq(tags.userId, userId), sql`lower(${tags.name}) = lower(${data.name})`),
   });
 
   if (existingTag) {
@@ -41,6 +46,7 @@ export async function createTag(data: CreateTag & { id?: string }, db: UserDb): 
       .insert(tags)
       .values({
         id: data.id ?? createId(),
+        userId,
         name: data.name,
         color: data.color,
       })
@@ -58,14 +64,15 @@ export async function createTag(data: CreateTag & { id?: string }, db: UserDb): 
   return tagDbToApi(newTag);
 }
 
-export async function updateTag(id: string, data: UpdateTag, db: UserDb): Promise<Tag> {
-  // Verify tag exists
-  await getTagById(id, db);
+export async function updateTag(id: string, data: UpdateTag, userId: string): Promise<Tag> {
+  const db = getDb();
+  // Verify tag exists and belongs to user
+  await getTagById(id, userId);
 
-  // Check if new name already exists (excluding current tag) - case-insensitive
+  // Check if new name already exists for this user (excluding current tag) - case-insensitive
   if (data.name) {
     const duplicateTag = await db.query.tags.findFirst({
-      where: sql`lower(${tags.name}) = lower(${data.name})`,
+      where: and(eq(tags.userId, userId), sql`lower(${tags.name}) = lower(${data.name})`),
     });
 
     if (duplicateTag && duplicateTag.id !== id) {
@@ -79,7 +86,11 @@ export async function updateTag(id: string, data: UpdateTag, db: UserDb): Promis
   if (data.color !== undefined) updateData.color = data.color;
 
   const [err, dbResult] = await attemptAsync(
-    db.update(tags).set(updateData).where(eq(tags.id, id)).returning(),
+    db
+      .update(tags)
+      .set(updateData)
+      .where(and(eq(tags.id, id), eq(tags.userId, userId)))
+      .returning(),
   );
 
   if (err) {
@@ -93,9 +104,10 @@ export async function updateTag(id: string, data: UpdateTag, db: UserDb): Promis
   return tagDbToApi(updatedTag);
 }
 
-export async function deleteTag(id: string, db: UserDb): Promise<void> {
-  // Verify tag exists
-  await getTagById(id, db);
+export async function deleteTag(id: string, userId: string): Promise<void> {
+  const db = getDb();
+  // Verify tag exists and belongs to user
+  await getTagById(id, userId);
 
-  await db.delete(tags).where(eq(tags.id, id));
+  await db.delete(tags).where(and(eq(tags.id, id), eq(tags.userId, userId)));
 }

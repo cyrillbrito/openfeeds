@@ -1,4 +1,3 @@
-import { getUserDb } from '@repo/db';
 import * as articlesDomain from '@repo/domain';
 import { CreateArticleFromUrlSchema, UpdateArticleSchema } from '@repo/shared/schemas';
 import { createServerFn } from '@tanstack/solid-start';
@@ -20,17 +19,15 @@ export const $$getArticles = createServerFn({ method: 'GET' })
   .middleware([authMiddleware])
   .inputValidator(ArticleQuerySchema)
   .handler(({ context, data: query }) => {
-    const db = getUserDb(context.user.id);
-    return articlesDomain.getArticles(query, db);
+    return articlesDomain.getArticles(query, context.user.id);
   });
 
 export const $$updateArticles = createServerFn({ method: 'POST' })
   .middleware([authMiddleware])
   .inputValidator(z.array(UpdateArticleSchema.extend({ id: z.string() })))
   .handler(({ context, data }) => {
-    const db = getUserDb(context.user.id);
     return Promise.all(
-      data.map(({ id, ...updates }) => articlesDomain.updateArticle(id, updates, db)),
+      data.map(({ id, ...updates }) => articlesDomain.updateArticle(id, updates, context.user.id)),
     );
   });
 
@@ -38,6 +35,5 @@ export const $$createArticle = createServerFn({ method: 'POST' })
   .middleware([authMiddleware])
   .inputValidator(CreateArticleFromUrlSchema)
   .handler(({ context, data }) => {
-    const db = getUserDb(context.user.id);
-    return articlesDomain.createArticle(data, db);
+    return articlesDomain.createArticle(data, context.user.id);
   });

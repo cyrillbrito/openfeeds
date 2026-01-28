@@ -1,4 +1,4 @@
-import { articles, articleTags, feeds, feedTags, type UserDb } from '@repo/db';
+import { articles, articleTags, feeds, feedTags, getDb } from '@repo/db';
 import {
   enqueueFeedSync,
   evaluateFilterRules,
@@ -9,7 +9,7 @@ import {
 } from '@repo/domain';
 import { logger } from '@repo/domain/logger';
 import { attemptAsync, createId } from '@repo/shared/utils';
-import { eq, isNull, lt, or } from 'drizzle-orm';
+import { and, eq, isNull, lt, or } from 'drizzle-orm';
 
 // Normalized item structure for our database
 export interface NormalizedFeedItem {
@@ -67,14 +67,15 @@ function getNormalizedItems(feedResult: ParseFeedResult): NormalizedFeedItem[] {
 export async function syncFeedArticles(
   feedResult: ParseFeedResult,
   feedId: string,
-  db: UserDb,
+  userId: string,
   autoArchiveCutoffDate?: Date,
 ): Promise<{
   created: number;
   updated: number;
 }> {
+  const db = getDb();
   // optional, so when doing many this avoids repeated fetches
-  autoArchiveCutoffDate ??= await getAutoArchiveCutoffDate(db);
+  autoArchiveCutoffDate ??= await getAutoArchiveCutoffDate(userId);
 
   const counts = {
     created: 0,
@@ -102,12 +103,13 @@ export async function syncFeedArticles(
     const shouldAutoArchive = item.pubDate < autoArchiveCutoffDate;
 
     // Apply filter rules to determine if article should be marked as read
-    const shouldMarkAsReadByRules = await evaluateFilterRules(db, feedId, item.title);
+    const shouldMarkAsReadByRules = await evaluateFilterRules(feedId, item.title, userId);
 
     const [newArticle] = await db
       .insert(articles)
       .values({
         id: createId(),
+        userId,
         feedId: feedId,
         guid: item.guid,
         title: item.title,
@@ -156,10 +158,11 @@ const LIMIT = 15;
  * Sync a single feed by ID.
  * This is the core worker function for individual feed sync jobs.
  */
-export async function syncSingleFeed(db: UserDb, feedId: string): Promise<void> {
+export async function syncSingleFeed(userId: string, feedId: string): Promise<void> {
+  const db = getDb();
   const [feedErr, feed] = await attemptAsync(
     db.query.feeds.findFirst({
-      where: eq(feeds.id, feedId),
+      where: and(eq(feeds.id, feedId), eq(feeds.userId, userId)),
     }),
   );
 
@@ -179,8 +182,8 @@ export async function syncSingleFeed(db: UserDb, feedId: string): Promise<void> 
   const [feedSyncErr] = await attemptAsync(
     (async () => {
       const feedResult = await fetchRss(feed.feedUrl);
-      const autoArchiveCutoffDate = await getAutoArchiveCutoffDate(db);
-      await syncFeedArticles(feedResult, feed.id, db, autoArchiveCutoffDate);
+      const autoArchiveCutoffDate = await getAutoArchiveCutoffDate(userId);
+      await syncFeedArticles(feedResult, feed.id, userId, autoArchiveCutoffDate);
     })(),
   );
 
@@ -212,9 +215,13 @@ export async function syncSingleFeed(db: UserDb, feedId: string): Promise<void> 
  * Finds feeds that need syncing and enqueues them as individual jobs.
  * This is the orchestrator job that runs on a schedule.
  */
-export async function syncOldestFeeds(userId: string, db: UserDb): Promise<void> {
+export async function syncOldestFeeds(userId: string): Promise<void> {
+  const db = getDb();
   const outdatedDate = new Date(Date.now() - OUTDATED_MIN * 60 * 1000);
-  const condition = or(isNull(feeds.lastSyncAt), lt(feeds.lastSyncAt, outdatedDate));
+  const condition = and(
+    eq(feeds.userId, userId),
+    or(isNull(feeds.lastSyncAt), lt(feeds.lastSyncAt, outdatedDate)),
+  );
 
   // TODO Include fields
   const feedsToSync = await db.select().from(feeds).where(condition).limit(LIMIT);

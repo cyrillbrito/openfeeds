@@ -4,13 +4,13 @@
  * Script to queue feed detail updates for a specific user
  * Usage: bun queue-feed-details <userId>
  */
-import { getUserDb, initDb } from '@repo/db';
+import { getDb, initDb } from '@repo/db';
 import { Queue } from 'bullmq';
 import { env } from './env';
 
 interface UserFeedJobData {
   userId: string;
-  feedId: number;
+  feedId: string;
 }
 
 const QUEUE_NAMES = {
@@ -21,7 +21,7 @@ async function queueFeedDetailsForUser(userId: string) {
   console.log(`Queuing feed detail updates for user: ${userId}`);
 
   // Initialize database
-  initDb({ dbPath: env.DB_PATH });
+  initDb({ databaseUrl: env.DATABASE_URL });
 
   // Create queue connection
   const feedDetailQueue = new Queue<UserFeedJobData>(QUEUE_NAMES.FEED_DETAIL, {
@@ -33,7 +33,7 @@ async function queueFeedDetailsForUser(userId: string) {
 
   try {
     // Get user's feeds from database
-    const db = getUserDb(userId);
+    const db = getDb();
     const userFeeds = await db.query.feeds.findMany({
       columns: { id: true, title: true },
     });
@@ -46,7 +46,7 @@ async function queueFeedDetailsForUser(userId: string) {
     }
 
     // Queue each feed for detail update
-    const jobs = [];
+    const jobs: Awaited<ReturnType<typeof feedDetailQueue.add>>[] = [];
     for (const feed of userFeeds) {
       console.log(`Queuing feed: ${feed.id} - ${feed.title || 'Untitled'}`);
       const job = await feedDetailQueue.add(

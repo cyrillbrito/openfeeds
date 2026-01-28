@@ -25,8 +25,8 @@ export const filterRulesApp = new Elysia()
   .use(authPlugin)
   .get(
     '/feeds/:id/rules',
-    async ({ params, db }) => {
-      const rules = await getFilterRulesByFeedId(params.id, db);
+    async ({ params, user }) => {
+      const rules = await getFilterRulesByFeedId(params.id, user.id);
       return rules;
     },
     {
@@ -40,8 +40,8 @@ export const filterRulesApp = new Elysia()
   )
   .post(
     '/feeds/:id/rules',
-    async ({ params, body, db, status }) => {
-      const newRule = await createFilterRule(params.id, body, db);
+    async ({ params, body, status, user }) => {
+      const newRule = await createFilterRule(params.id, body, user.id);
       return status(201, newRule);
     },
     {
@@ -58,8 +58,8 @@ export const filterRulesApp = new Elysia()
   )
   .put(
     '/feeds/:id/rules/:ruleId',
-    async ({ params, body, db }) => {
-      const updatedRule = await updateFilterRule(params.id, params.ruleId, body, db);
+    async ({ params, body, user }) => {
+      const updatedRule = await updateFilterRule(params.id, params.ruleId, body, user.id);
       return updatedRule;
     },
     {
@@ -74,8 +74,8 @@ export const filterRulesApp = new Elysia()
   )
   .delete(
     '/feeds/:id/rules/:ruleId',
-    async ({ params, db, status }) => {
-      await deleteFilterRule(params.id, params.ruleId, db);
+    async ({ params, status, user }) => {
+      await deleteFilterRule(params.id, params.ruleId, user.id);
       return status(204);
     },
     {
@@ -88,8 +88,8 @@ export const filterRulesApp = new Elysia()
   )
   .post(
     '/feeds/:id/rules/apply',
-    async ({ params, db }) => {
-      const result = await applyFilterRulesToFeed(params.id, db);
+    async ({ params, user }) => {
+      const result = await applyFilterRulesToFeed(params.id, user.id);
       return result;
     },
     {

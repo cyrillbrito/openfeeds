@@ -1,84 +1,108 @@
-import { relations, sql } from 'drizzle-orm';
-import { index, integer, sqliteTable, text, uniqueIndex } from 'drizzle-orm/sqlite-core';
+import { relations } from 'drizzle-orm';
+import { boolean, index, jsonb, pgTable, text, timestamp, uniqueIndex } from 'drizzle-orm/pg-core';
+import { user } from './auth';
 
-export const feeds = sqliteTable('feeds', {
-  id: text().primaryKey(),
-  title: text().notNull(),
-  description: text(),
-  /** Webpage url */
-  url: text().notNull(),
-  /** RSS Feed url */
-  feedUrl: text().notNull().unique(),
-  /** Site favicon/icon url */
-  icon: text(),
-  /** last time articles where fetched */
-  lastSyncAt: integer({ mode: 'timestamp' }),
-  createdAt: integer({ mode: 'timestamp' })
-    .notNull()
-    .default(sql`(unixepoch())`),
-});
+export const feeds = pgTable(
+  'feeds',
+  {
+    id: text('id').primaryKey(),
+    userId: text('user_id')
+      .notNull()
+      .references(() => user.id, { onDelete: 'cascade' }),
+    title: text('title').notNull(),
+    description: text('description'),
+    /** Webpage url */
+    url: text('url').notNull(),
+    /** RSS Feed url */
+    feedUrl: text('feed_url').notNull(),
+    /** Site favicon/icon url */
+    icon: text('icon'),
+    /** last time articles where fetched */
+    lastSyncAt: timestamp('last_sync_at'),
+    createdAt: timestamp('created_at').notNull().defaultNow(),
+  },
+  (table) => [
+    index('feeds_user_id_idx').on(table.userId),
+    uniqueIndex('feeds_user_feed_url_idx').on(table.userId, table.feedUrl),
+  ],
+);
 
-export const articles = sqliteTable('articles', {
-  id: text().primaryKey(),
-  /** Null for articles saved from URL (not tied to a feed) */
-  feedId: text().references(() => feeds.id, { onDelete: 'cascade' }),
-  title: text().notNull(),
-  url: text(),
-  description: text(),
-  content: text(), // full article content if available
-  author: text(),
-  guid: text(),
-  pubDate: integer({ mode: 'timestamp' }),
-  isRead: integer({ mode: 'boolean' }).default(false),
-  isArchived: integer({ mode: 'boolean' }).default(false),
-  cleanContent: text(), // processed readable content
-  createdAt: integer({ mode: 'timestamp' })
-    .notNull()
-    .default(sql`(unixepoch())`),
-});
+export const articles = pgTable(
+  'articles',
+  {
+    id: text('id').primaryKey(),
+    userId: text('user_id')
+      .notNull()
+      .references(() => user.id, { onDelete: 'cascade' }),
+    /** Null for articles saved from URL (not tied to a feed) */
+    feedId: text('feed_id').references(() => feeds.id, { onDelete: 'cascade' }),
+    title: text('title').notNull(),
+    url: text('url'),
+    description: text('description'),
+    content: text('content'), // full article content if available
+    author: text('author'),
+    guid: text('guid'),
+    pubDate: timestamp('pub_date'),
+    isRead: boolean('is_read').default(false),
+    isArchived: boolean('is_archived').default(false),
+    cleanContent: text('clean_content'), // processed readable content
+    createdAt: timestamp('created_at').notNull().defaultNow(),
+  },
+  (table) => [
+    index('articles_user_id_idx').on(table.userId),
+    index('articles_feed_id_idx').on(table.feedId),
+  ],
+);
 
-export const tags = sqliteTable('tags', {
-  id: text().primaryKey(),
-  name: text().notNull().unique(),
-  // TODO Enum the color
-  // FIXME: Should we validate color values at the database level?
-  /** Can be one of the chromatic tailwind colors or null */
-  color: text(),
-  createdAt: integer({ mode: 'timestamp' })
-    .notNull()
-    .default(sql`(unixepoch())`),
-});
+export const tags = pgTable(
+  'tags',
+  {
+    id: text('id').primaryKey(),
+    userId: text('user_id')
+      .notNull()
+      .references(() => user.id, { onDelete: 'cascade' }),
+    name: text('name').notNull(),
+    // TODO Enum the color
+    // FIXME: Should we validate color values at the database level?
+    /** Can be one of the chromatic tailwind colors or null */
+    color: text('color'),
+    createdAt: timestamp('created_at').notNull().defaultNow(),
+  },
+  (table) => [uniqueIndex('tags_user_name_idx').on(table.userId, table.name)],
+);
 
 // Many-to-many relationship between feeds and tags
-export const feedTags = sqliteTable(
+export const feedTags = pgTable(
   'feed_tags',
   {
-    id: text().primaryKey(),
-    feedId: text()
+    id: text('id').primaryKey(),
+    feedId: text('feed_id')
       .notNull()
       .references(() => feeds.id, { onDelete: 'cascade' }),
-    tagId: text()
+    tagId: text('tag_id')
       .notNull()
       .references(() => tags.id, { onDelete: 'cascade' }),
   },
-  (table) => [uniqueIndex('unique_feed_tag').on(table.feedId, table.tagId)],
+  (table) => [
+    uniqueIndex('unique_feed_tag').on(table.feedId, table.tagId),
+    index('feed_tags_tag_idx').on(table.tagId),
+  ],
 );
 
 // Many-to-many relationship between articles and tags
-export const articleTags = sqliteTable(
+export const articleTags = pgTable(
   'article_tags',
   {
-    id: text().primaryKey(),
-    articleId: text()
+    id: text('id').primaryKey(),
+    articleId: text('article_id')
       .notNull()
       .references(() => articles.id, { onDelete: 'cascade' }),
-    tagId: text()
+    tagId: text('tag_id')
       .notNull()
       .references(() => tags.id, { onDelete: 'cascade' }),
   },
   (table) => [
     uniqueIndex('unique_article_tag').on(table.articleId, table.tagId),
-    index('article_tags_article_idx').on(table.articleId),
     index('article_tags_tag_idx').on(table.tagId),
   ],
 );
@@ -87,28 +111,31 @@ export const articleTags = sqliteTable(
  * Not really sure why doing settings as key-value.
  * Since they can be kind of dynamic, to see if this works well.
  */
-export const settings = sqliteTable('settings', {
-  key: text().primaryKey(),
-  value: text({ mode: 'json' }).notNull(),
-  updatedAt: integer({ mode: 'timestamp' })
-    .notNull()
-    .default(sql`(unixepoch())`),
-});
+export const settings = pgTable(
+  'settings',
+  {
+    userId: text('user_id')
+      .notNull()
+      .references(() => user.id, { onDelete: 'cascade' }),
+    key: text('key').notNull(),
+    value: jsonb('value').notNull(),
+    updatedAt: timestamp('updated_at').notNull().defaultNow(),
+  },
+  (table) => [uniqueIndex('settings_user_key_idx').on(table.userId, table.key)],
+);
 
-export const filterRules = sqliteTable(
+export const filterRules = pgTable(
   'filter_rules',
   {
-    id: text().primaryKey(),
-    feedId: text()
+    id: text('id').primaryKey(),
+    feedId: text('feed_id')
       .notNull()
       .references(() => feeds.id, { onDelete: 'cascade' }),
-    pattern: text().notNull(),
-    operator: text().notNull(), // 'includes' or 'not_includes'
-    isActive: integer({ mode: 'boolean' }).notNull().default(true),
-    createdAt: integer({ mode: 'timestamp' })
-      .notNull()
-      .default(sql`(unixepoch())`),
-    updatedAt: integer({ mode: 'timestamp' }),
+    pattern: text('pattern').notNull(),
+    operator: text('operator').notNull(), // 'includes' or 'not_includes'
+    isActive: boolean('is_active').notNull().default(true),
+    createdAt: timestamp('created_at').notNull().defaultNow(),
+    updatedAt: timestamp('updated_at'),
   },
   (table) => [
     index('filter_rules_feed_id_idx').on(table.feedId),
@@ -117,13 +144,21 @@ export const filterRules = sqliteTable(
 );
 
 // Relations
-export const feedsRelations = relations(feeds, ({ many }) => ({
+export const feedsRelations = relations(feeds, ({ one, many }) => ({
+  user: one(user, {
+    fields: [feeds.userId],
+    references: [user.id],
+  }),
   articles: many(articles),
   feedTags: many(feedTags),
   filterRules: many(filterRules),
 }));
 
 export const articlesRelations = relations(articles, ({ one, many }) => ({
+  user: one(user, {
+    fields: [articles.userId],
+    references: [user.id],
+  }),
   feed: one(feeds, {
     fields: [articles.feedId],
     references: [feeds.id],
@@ -131,7 +166,11 @@ export const articlesRelations = relations(articles, ({ one, many }) => ({
   articleTags: many(articleTags),
 }));
 
-export const tagsRelations = relations(tags, ({ many }) => ({
+export const tagsRelations = relations(tags, ({ one, many }) => ({
+  user: one(user, {
+    fields: [tags.userId],
+    references: [user.id],
+  }),
   feedTags: many(feedTags),
   articleTags: many(articleTags),
 }));
@@ -155,6 +194,13 @@ export const articleTagsRelations = relations(articleTags, ({ one }) => ({
   tag: one(tags, {
     fields: [articleTags.tagId],
     references: [tags.id],
+  }),
+}));
+
+export const settingsRelations = relations(settings, ({ one }) => ({
+  user: one(user, {
+    fields: [settings.userId],
+    references: [user.id],
   }),
 }));
 

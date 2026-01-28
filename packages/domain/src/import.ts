@@ -1,4 +1,4 @@
-import { feeds, feedTags, tags, type UserDb } from '@repo/db';
+import { feeds, feedTags, getDb, tags } from '@repo/db';
 import { type ImportResult } from '@repo/shared/types';
 import { attemptAsync, createId } from '@repo/shared/utils';
 import { eq } from 'drizzle-orm';
@@ -52,11 +52,8 @@ function getFeedsFromOutlines(outlines: OPMLOutlines): Array<{
 }
 
 // Core business logic for importing OPML feeds
-export async function importOpmlFeeds(
-  opmlContent: string,
-  userId: string,
-  db: UserDb,
-): Promise<ImportResult> {
+export async function importOpmlFeeds(opmlContent: string, userId: string): Promise<ImportResult> {
+  const db = getDb();
   const parsedOpml = parseOpml(opmlContent);
 
   // Extract all feeds from the OPML structure
@@ -90,7 +87,7 @@ export async function importOpmlFeeds(
 
           if (!tagId) {
             const [tagErr, tagResult] = await attemptAsync(
-              db.insert(tags).values({ id: createId(), name: category }).returning(),
+              db.insert(tags).values({ id: createId(), userId, name: category }).returning(),
             );
             if (tagErr) {
               logger.error(tagErr, {
@@ -136,6 +133,7 @@ export async function importOpmlFeeds(
           .insert(feeds)
           .values({
             id: createId(),
+            userId,
             title: feed.title,
             url: feed.htmlUrl,
             feedUrl: feed.xmlUrl,

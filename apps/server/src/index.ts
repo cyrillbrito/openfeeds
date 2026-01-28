@@ -6,9 +6,8 @@ import { environment } from './environment';
 import { apiApp } from './setup-elysia';
 
 // Initialize database and domain before any other code runs
-initDb({ dbPath: environment.dbPath });
+initDb({ databaseUrl: environment.databaseUrl });
 initDomain({
-  dbPath: environment.dbPath,
   redis: { host: environment.redisHost, port: environment.redisPort },
   posthogPublicKey: environment.posthogPublicKey,
   resendApiKey: environment.resendApiKey,

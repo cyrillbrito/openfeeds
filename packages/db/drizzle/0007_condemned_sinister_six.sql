@@ -1,1 +1,0 @@
-ALTER TABLE `articles` ADD `isArchived` integer DEFAULT false;

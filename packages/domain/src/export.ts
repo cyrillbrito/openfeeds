@@ -1,12 +1,15 @@
-import type { UserDb } from '@repo/db';
+import { feeds, getDb } from '@repo/db';
+import { eq } from 'drizzle-orm';
 import { generateOpml } from 'feedsmith';
 
 /**
  * Exports all user feeds as OPML 2.0 format.
  * Categories are comma-separated per OPML spec when feeds have multiple tags.
  */
-export async function exportOpmlFeeds(db: UserDb): Promise<string> {
+export async function exportOpmlFeeds(userId: string): Promise<string> {
+  const db = getDb();
   const allFeeds = await db.query.feeds.findMany({
+    where: eq(feeds.userId, userId),
     with: {
       feedTags: {
         with: {

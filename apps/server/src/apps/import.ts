@@ -9,11 +9,11 @@ export const importApp = new Elysia({ prefix: '/import' })
   .use(authPlugin)
   .post(
     '/opml',
-    async ({ body, user, db }) => {
+    async ({ body, user }) => {
       const { opmlContent } = body;
       const userId = user.id;
 
-      const finalResult = await importOpmlFeeds(opmlContent, userId, db);
+      const finalResult = await importOpmlFeeds(opmlContent, userId);
 
       if (!finalResult) {
         throw new Error('Import failed to complete');

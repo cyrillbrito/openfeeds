@@ -8,8 +8,8 @@ import type { ConnectionOptions } from 'bullmq';
  * Apps should call `initDb()` before `initDomain()`.
  */
 export interface DomainConfig {
-  /** Path to the database/data directory (used for storing audio files, etc.) */
-  dbPath: string;
+  /** Path for local file storage (audio files, etc.) */
+  dataPath?: string;
   redis: {
     host: string;
     port: number;

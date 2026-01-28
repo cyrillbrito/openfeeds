@@ -25,8 +25,8 @@ export const articlesApp = new Elysia({ prefix: '/articles' })
   .use(authPlugin)
   .get(
     '/',
-    async ({ query, db }) => {
-      const result = await getArticles(query, db);
+    async ({ query, user }) => {
+      const result = await getArticles(query, user.id);
       return result;
     },
     {
@@ -40,8 +40,8 @@ export const articlesApp = new Elysia({ prefix: '/articles' })
   )
   .put(
     '/:id',
-    async ({ params, body, db }) => {
-      const updatedArticle = await updateArticle(params.id, body, db);
+    async ({ params, body, user }) => {
+      const updatedArticle = await updateArticle(params.id, body, user.id);
       return updatedArticle;
     },
     {
@@ -56,8 +56,8 @@ export const articlesApp = new Elysia({ prefix: '/articles' })
   )
   .post(
     '/mark-many-archived',
-    async ({ body, db }) => {
-      const result = await markManyArticlesArchived(body, db);
+    async ({ body, user }) => {
+      const result = await markManyArticlesArchived(body, user.id);
       return result;
     },
     {
@@ -71,8 +71,8 @@ export const articlesApp = new Elysia({ prefix: '/articles' })
   )
   .get(
     '/:id',
-    async ({ params, db }) => {
-      const article = await getArticleWithContent(params.id, db);
+    async ({ params, user }) => {
+      const article = await getArticleWithContent(params.id, user.id);
       return article;
     },
     {

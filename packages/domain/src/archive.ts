@@ -1,4 +1,4 @@
-import { articles, type UserDb } from '@repo/db';
+import { articles, getDb } from '@repo/db';
 import { attemptAsyncFn, startTimer } from '@repo/shared/utils';
 import { and, eq, lt } from 'drizzle-orm';
 import { logToFile, logToFileDump } from './logger-file';
@@ -9,10 +9,10 @@ export interface ArchiveResult {
   cutoffDate: string;
 }
 
-export async function autoArchiveArticles(db: UserDb): Promise<void> {
+export async function autoArchiveArticles(userId: string): Promise<void> {
   const [error] = await attemptAsyncFn(async () => {
     const timer = startTimer();
-    const result = await performArchiveArticles(db);
+    const result = await performArchiveArticles(userId);
 
     console.log(
       `Auto-archived ${result.markedCount} articles in ${timer.elapsed().toFixed(2)} seconds`,
@@ -31,9 +31,10 @@ export async function autoArchiveArticles(db: UserDb): Promise<void> {
   }
 }
 
-export async function performArchiveArticles(db: UserDb): Promise<ArchiveResult> {
+export async function performArchiveArticles(userId: string): Promise<ArchiveResult> {
+  const db = getDb();
   // Get the cutoff date for auto-archiving articles
-  const cutoffDate = await getAutoArchiveCutoffDate(db);
+  const cutoffDate = await getAutoArchiveCutoffDate(userId);
 
   // Archive articles that are older than the cutoff date, unread, and not already archived
   const result = await db
@@ -41,6 +42,7 @@ export async function performArchiveArticles(db: UserDb): Promise<ArchiveResult>
     .set({ isArchived: true })
     .where(
       and(
+        eq(articles.userId, userId),
         eq(articles.isRead, false),
         eq(articles.isArchived, false),
         lt(articles.pubDate, cutoffDate),

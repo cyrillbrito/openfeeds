@@ -9,8 +9,8 @@ export const settingsApp = new Elysia({ prefix: '/settings' })
   .use(authPlugin)
   .get(
     '/',
-    async ({ db }) => {
-      const userSettings = await getUserSettings(db);
+    async ({ user }) => {
+      const userSettings = await getUserSettings(user.id);
       return userSettings;
     },
     {
@@ -23,8 +23,8 @@ export const settingsApp = new Elysia({ prefix: '/settings' })
   )
   .put(
     '/',
-    async ({ body, db }) => {
-      const newSettings = await updateUserSettings(db, body);
+    async ({ body, user }) => {
+      const newSettings = await updateUserSettings(user.id, body);
       return newSettings;
     },
     {
@@ -38,8 +38,8 @@ export const settingsApp = new Elysia({ prefix: '/settings' })
   )
   .post(
     '/auto-archive',
-    async ({ db }) => {
-      const result = await performArchiveArticles(db);
+    async ({ user }) => {
+      const result = await performArchiveArticles(user.id);
       return result;
     },
     {

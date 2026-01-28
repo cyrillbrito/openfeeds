@@ -5,8 +5,8 @@
     ".": "./src/index.ts"
   },
   "scripts": {
-    "auth-db-generate": "bunx --bun @better-auth/cli@latest generate --config ../../apps/server/src/auth.ts --output ./src/schema/auth.ts --yes && bun --bun drizzle-kit generate --config=drizzle-auth.config.ts",
-    "user-db-generate": "bun --bun drizzle-kit generate"
+    "generate:auth-schema": "bunx --bun @better-auth/cli@latest generate --config ../../apps/web/src/server/auth2.ts --output ./src/schema/auth.ts --yes",
+    "generate:migrations": "bun --bun drizzle-kit generate"
   },
   "dependencies": {
     "drizzle-orm": "catalog:"

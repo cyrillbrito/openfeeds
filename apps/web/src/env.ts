@@ -3,7 +3,8 @@ import { z } from 'zod';
 
 export const env = createEnv({
   server: {
-    DB_PATH: z.string().default('./dbs'),
+    DATABASE_URL: z.url(),
+    DATA_PATH: z.string().optional(), // Local file storage for audio, etc.
     REDIS_HOST: z.string().default('localhost'),
     REDIS_PORT: z.coerce.number().default(6379),
     POSTHOG_PUBLIC_KEY: z.string().optional(),

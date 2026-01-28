@@ -1,4 +1,4 @@
-import { getAuthDb, getUserDb } from '@repo/db';
+import { getDb } from '@repo/db';
 import {
   autoArchiveArticles,
   getRedisConnection,
@@ -21,9 +21,9 @@ export function createFeedSyncOrchestratorWorker() {
     QUEUE_NAMES.FEED_SYNC_ORCHESTRATOR,
     async (job) => {
       console.log(`Starting feed sync orchestrator job ${job.id}`);
-      const authDb = getAuthDb();
+      const db = getDb();
       const [usersError, users] = await attemptAsync(
-        authDb.query.user.findMany({ columns: { id: true } }),
+        db.query.user.findMany({ columns: { id: true } }),
       );
 
       if (usersError) {
@@ -35,8 +35,7 @@ export function createFeedSyncOrchestratorWorker() {
       }
 
       for (const user of users) {
-        const db = getUserDb(user.id);
-        const [syncError] = await attemptAsync(syncOldestFeeds(user.id, db));
+        const [syncError] = await attemptAsync(syncOldestFeeds(user.id));
 
         if (syncError) {
           logger.error(syncError, {
@@ -64,8 +63,7 @@ export function createSingleFeedSyncWorker() {
       );
       const { userId, feedId } = job.data;
 
-      const db = getUserDb(userId);
-      const [syncError] = await attemptAsync(syncSingleFeed(db, feedId));
+      const [syncError] = await attemptAsync(syncSingleFeed(userId, feedId));
 
       if (syncError) {
         logger.error(syncError, {
@@ -118,9 +116,9 @@ export function createAutoArchiveWorker() {
     QUEUE_NAMES.AUTO_ARCHIVE,
     async (job: Job) => {
       console.log(`Starting auto archive job ${job.id}`);
-      const authDb = getAuthDb();
+      const db = getDb();
       const [usersError, users] = await attemptAsync(
-        authDb.query.user.findMany({ columns: { id: true } }),
+        db.query.user.findMany({ columns: { id: true } }),
       );
 
       if (usersError) {
@@ -132,8 +130,7 @@ export function createAutoArchiveWorker() {
       }
 
       for (const user of users) {
-        const db = getUserDb(user.id);
-        const [archiveError] = await attemptAsync(autoArchiveArticles(db));
+        const [archiveError] = await attemptAsync(autoArchiveArticles(user.id));
 
         if (archiveError) {
           logger.error(archiveError, {

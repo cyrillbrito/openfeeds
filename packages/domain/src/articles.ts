@@ -1,4 +1,4 @@
-import { articles, articleTags, feedTags, type UserDb } from '@repo/db';
+import { articles, articleTags, feedTags, getDb } from '@repo/db';
 import { fetchArticleContent } from '@repo/readability/server';
 import {
   type Article,
@@ -16,14 +16,18 @@ import { BadRequestError, NotFoundError } from './errors';
 
 export async function getArticles(
   filters: ArticleQuery,
-  db: UserDb,
+  userId: string,
 ): Promise<PaginatedResponse<Article>> {
+  const db = getDb();
   const { cursor, limit, feedId, tagId, isRead, isArchived, type, search, ids, urlLike } = filters;
 
   const queryLimit = limit ? limit + 1 : undefined;
 
   // Build base filters (excluding cursor and pagination)
   const whereConditions = [];
+
+  // Always filter by userId
+  whereConditions.push(eq(articles.userId, userId));
 
   // Feed filter
   if (feedId) {
@@ -125,9 +129,10 @@ export async function getArticles(
  * Get article by ID with just the base data (no cleanContent)
  * Used for business logic that needs a single article (e.g., after updates)
  */
-export async function getArticleById(id: string, db: UserDb): Promise<Article> {
+export async function getArticleById(id: string, userId: string): Promise<Article> {
+  const db = getDb();
   const article = await db.query.articles.findFirst({
-    where: eq(articles.id, id),
+    where: and(eq(articles.id, id), eq(articles.userId, userId)),
     with: {
       articleTags: {
         columns: {
@@ -166,10 +171,11 @@ function isYouTubeUrl(url: string | null): boolean {
  */
 export async function getArticleWithContent(
   id: string,
-  db: UserDb,
+  userId: string,
 ): Promise<Article & { cleanContent: string | null }> {
+  const db = getDb();
   const article = await db.query.articles.findFirst({
-    where: eq(articles.id, id),
+    where: and(eq(articles.id, id), eq(articles.userId, userId)),
     with: {
       articleTags: {
         columns: {
@@ -224,7 +230,12 @@ export async function getArticleWithContent(
   };
 }
 
-export async function updateArticle(id: string, data: UpdateArticle, db: UserDb): Promise<Article> {
+export async function updateArticle(
+  id: string,
+  data: UpdateArticle,
+  userId: string,
+): Promise<Article> {
+  const db = getDb();
   // Update article fields (excluding tags)
   const { tags, ...articleData } = data;
 
@@ -232,7 +243,7 @@ export async function updateArticle(id: string, data: UpdateArticle, db: UserDb)
     const [updatedArticle] = await db
       .update(articles)
       .set(articleData)
-      .where(eq(articles.id, id))
+      .where(and(eq(articles.id, id), eq(articles.userId, userId)))
       .returning();
 
     if (!updatedArticle) {
@@ -258,13 +269,14 @@ export async function updateArticle(id: string, data: UpdateArticle, db: UserDb)
   }
 
   // Fetch and return the updated article with consistent query structure
-  return getArticleById(id, db);
+  return getArticleById(id, userId);
 }
 
 export async function markManyArticlesArchived(
   request: MarkManyArchivedRequest,
-  db: UserDb,
+  userId: string,
 ): Promise<MarkManyArchivedResponse> {
+  const db = getDb();
   const { context, feedId, tagId } = request;
 
   // Validate context-specific parameters
@@ -275,18 +287,19 @@ export async function markManyArticlesArchived(
     throw new BadRequestError();
   }
 
+  // Base condition: always filter by userId
+  const userCondition = eq(articles.userId, userId);
+  const notArchivedCondition = or(eq(articles.isArchived, false), isNull(articles.isArchived));
+
   let whereClause;
 
   switch (context) {
     case 'all':
-      whereClause = or(eq(articles.isArchived, false), isNull(articles.isArchived));
+      whereClause = and(userCondition, notArchivedCondition);
       break;
 
     case 'feed':
-      whereClause = and(
-        eq(articles.feedId, feedId!),
-        or(eq(articles.isArchived, false), isNull(articles.isArchived)),
-      );
+      whereClause = and(userCondition, eq(articles.feedId, feedId!), notArchivedCondition);
       break;
 
     case 'tag':
@@ -300,10 +313,7 @@ export async function markManyArticlesArchived(
       }
 
       const feedIds = feedsWithTag.map((ft) => ft.feedId);
-      whereClause = and(
-        inArray(articles.feedId, feedIds),
-        or(eq(articles.isArchived, false), isNull(articles.isArchived)),
-      );
+      whereClause = and(userCondition, inArray(articles.feedId, feedIds), notArchivedCondition);
       break;
 
     default:
@@ -325,7 +335,8 @@ export async function markManyArticlesArchived(
  * Used for "save for later" functionality like Pocket
  * Fetches and extracts clean content using Readability
  */
-export async function createArticle(data: CreateArticleFromUrl, db: UserDb): Promise<Article> {
+export async function createArticle(data: CreateArticleFromUrl, userId: string): Promise<Article> {
+  const db = getDb();
   const articleId = data.id ?? createId();
   const now = new Date();
 
@@ -339,6 +350,7 @@ export async function createArticle(data: CreateArticleFromUrl, db: UserDb): Pro
   // Insert the article with null feedId
   await db.insert(articles).values({
     id: articleId,
+    userId,
     feedId: null,
     title: extractedTitle || data.url, // Use extracted title, fallback to URL
     description: excerpt,
@@ -361,5 +373,5 @@ export async function createArticle(data: CreateArticleFromUrl, db: UserDb): Pro
     );
   }
 
-  return getArticleById(articleId, db);
+  return getArticleById(articleId, userId);
 }
