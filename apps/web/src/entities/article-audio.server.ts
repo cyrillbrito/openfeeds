@@ -1,4 +1,3 @@
-import { getUserDb } from '@repo/db';
 import * as ttsDomain from '@repo/domain';
 import { createServerFn } from '@tanstack/solid-start';
 import { z } from 'zod';
@@ -51,9 +50,8 @@ export const $$generateArticleAudio = createServerFn({ method: 'POST' })
   .handler(async ({ context, data }) => {
     const userId = context.user.id;
     const { articleId, voice } = data;
-    const db = getUserDb(userId);
 
-    const metadata = await ttsDomain.generateArticleAudio(articleId, userId, db, { voice });
+    const metadata = await ttsDomain.generateArticleAudio(articleId, userId, { voice });
 
     return {
       audioUrl: `/api/articles/${articleId}/audio`,

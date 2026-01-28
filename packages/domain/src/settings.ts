@@ -1,13 +1,14 @@
-import { settings, type UserDb } from '@repo/db';
+import { getDb, settings } from '@repo/db';
 import { defaultSettings, type AppSettings } from '@repo/shared/types';
-import { eq } from 'drizzle-orm';
+import { and, eq } from 'drizzle-orm';
 
 /**
  * Gets the user's application settings, falling back to defaults if not found
  */
-export async function getUserSettings(db: UserDb): Promise<AppSettings> {
+export async function getUserSettings(userId: string): Promise<AppSettings> {
+  const db = getDb();
   const defaultSetting = await db.query.settings.findFirst({
-    where: eq(settings.key, 'default'),
+    where: and(eq(settings.userId, userId), eq(settings.key, 'default')),
   });
 
   if (!defaultSetting) {
@@ -27,20 +28,22 @@ export async function getUserSettings(db: UserDb): Promise<AppSettings> {
  * Updates the user's application settings
  */
 export async function updateUserSettings(
-  db: UserDb,
+  userId: string,
   updates: Partial<AppSettings>,
 ): Promise<AppSettings> {
-  const currentSettings = await getUserSettings(db);
+  const db = getDb();
+  const currentSettings = await getUserSettings(userId);
   const newSettings = { ...currentSettings, ...updates };
 
   await db
     .insert(settings)
     .values({
+      userId,
       key: 'default',
       value: newSettings,
     })
     .onConflictDoUpdate({
-      target: settings.key,
+      target: [settings.userId, settings.key],
       set: {
         value: newSettings,
         updatedAt: new Date(),
@@ -53,8 +56,8 @@ export async function updateUserSettings(
 /**
  * Gets the cutoff date for auto-archiving articles based on user settings.
  */
-export async function getAutoArchiveCutoffDate(db: UserDb): Promise<Date> {
-  const userSettings = await getUserSettings(db);
+export async function getAutoArchiveCutoffDate(userId: string): Promise<Date> {
+  const userSettings = await getUserSettings(userId);
   const autoArchiveDays = userSettings.autoArchiveDays;
   return new Date(Date.now() - autoArchiveDays * 24 * 60 * 60 * 1000);
 }

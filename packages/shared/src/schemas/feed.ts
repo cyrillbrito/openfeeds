@@ -13,13 +13,13 @@ export const FeedSchema = z.object({
 });
 
 export const CreateFeedSchema = z.object({
-  url: z.string().url(),
+  url: z.url(),
 });
 
 export const UpdateFeedSchema = z.object({
   title: z.string().optional(),
   description: z.string().nullable().optional(),
-  url: z.string().url().optional(),
+  url: z.url().optional(),
   icon: z.string().nullable().optional(),
   tags: z.array(z.string()).optional(),
 });

@@ -16,8 +16,8 @@ export const feedsApp = new Elysia({ prefix: '/feeds' })
   .use(authPlugin)
   .get(
     '/',
-    async ({ db }) => {
-      const feeds = await getAllFeeds(db);
+    async ({ user }) => {
+      const feeds = await getAllFeeds(user.id);
       return feeds;
     },
     {
@@ -30,8 +30,8 @@ export const feedsApp = new Elysia({ prefix: '/feeds' })
   )
   .post(
     '/',
-    async ({ body, user, db, status }) => {
-      const newFeed = await createFeed(body, user.id, db);
+    async ({ body, user, status }) => {
+      const newFeed = await createFeed(body, user.id);
       return status(201, newFeed);
     },
     {
@@ -47,8 +47,8 @@ export const feedsApp = new Elysia({ prefix: '/feeds' })
   )
   .put(
     '/:id',
-    async ({ params, body, db }) => {
-      const updatedFeed = await updateFeed(params.id, body, db);
+    async ({ params, body, user }) => {
+      const updatedFeed = await updateFeed(params.id, body, user.id);
       return updatedFeed;
     },
     {
@@ -63,8 +63,8 @@ export const feedsApp = new Elysia({ prefix: '/feeds' })
   )
   .delete(
     '/:id',
-    async ({ params, db, status }) => {
-      await deleteFeed(params.id, db);
+    async ({ params, status, user }) => {
+      await deleteFeed(params.id, user.id);
       return status(204);
     },
     {

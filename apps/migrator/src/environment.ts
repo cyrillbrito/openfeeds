@@ -3,7 +3,7 @@ import { z } from 'zod';
 
 export const env = createEnv({
   server: {
-    DB_PATH: z.string().default('./dbs'),
+    DATABASE_URL: z.url(),
   },
   runtimeEnv: process.env,
   emptyStringAsUndefined: true,

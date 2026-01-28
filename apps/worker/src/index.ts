@@ -10,10 +10,9 @@ import {
 
 // Initialize packages with config from environment
 // Note: initDb must be called before initDomain
-initDb({ dbPath: env.DB_PATH });
+initDb({ databaseUrl: env.DATABASE_URL });
 
 initDomain({
-  dbPath: env.DB_PATH,
   redis: {
     host: env.REDIS_HOST,
     port: env.REDIS_PORT,

@@ -1,7 +1,7 @@
-import { feeds, getUserDb } from '@repo/db';
+import { feeds, getDb } from '@repo/db';
 import type { Feed } from '@repo/shared/types';
 import { attemptAsync } from '@repo/shared/utils';
-import { eq } from 'drizzle-orm';
+import { and, eq } from 'drizzle-orm';
 import { assert } from './errors';
 import { fetchRss, type ParseFeedResult } from './rss-fetch';
 
@@ -142,12 +142,12 @@ export async function fetchFeedMetadata(feed: ParseFeedResult): Promise<Partial<
 }
 
 export async function updateFeedMetadata(userId: string, feedId: string) {
-  const db = getUserDb(userId);
+  const db = getDb();
 
   const [feedErr, feed] = await attemptAsync(
     db.query.feeds.findFirst({
       columns: { feedUrl: true },
-      where: eq(feeds.id, feedId),
+      where: and(eq(feeds.id, feedId), eq(feeds.userId, userId)),
     }),
   );
   if (feedErr) {
@@ -160,10 +160,27 @@ export async function updateFeedMetadata(userId: string, feedId: string) {
   const parseFeedResult = await fetchRss(feed.feedUrl);
   const partialFeedWithMetadata = await fetchFeedMetadata(parseFeedResult);
 
-  Object.assign(feed, partialFeedWithMetadata);
+  // Only update fields that are safe to update
+  const updateData: {
+    url?: string;
+    icon?: string | null;
+    title?: string;
+    description?: string | null;
+  } = {};
 
-  const [updateErr] = await attemptAsync(db.update(feeds).set(feed).where(eq(feeds.id, feedId)));
+  if (partialFeedWithMetadata.url) updateData.url = partialFeedWithMetadata.url;
+  if (partialFeedWithMetadata.icon !== undefined) updateData.icon = partialFeedWithMetadata.icon;
+  if (partialFeedWithMetadata.title) updateData.title = partialFeedWithMetadata.title;
+  if (partialFeedWithMetadata.description !== undefined)
+    updateData.description = partialFeedWithMetadata.description;
+
+  const [updateErr] = await attemptAsync(
+    db
+      .update(feeds)
+      .set(updateData)
+      .where(and(eq(feeds.id, feedId), eq(feeds.userId, userId))),
+  );
   if (updateErr) {
-    throw feedErr;
+    throw updateErr;
   }
 }

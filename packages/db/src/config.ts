@@ -1,28 +1,34 @@
-import { mkdirSync } from 'node:fs';
-import { Database } from 'bun:sqlite';
-import { drizzle } from 'drizzle-orm/bun-sqlite';
-import * as authSchema from './schema/auth';
-import * as schema from './schema/schema';
+import { SQL } from 'bun';
+import { drizzle } from 'drizzle-orm/bun-sql';
+import * as schema from './schema';
 
 /**
  * Configuration required to initialize the db package.
  * Apps must call `initDb()` with this config before using db functions.
  */
 export interface DbConfig {
-  dbPath: string;
+  databaseUrl: string;
 }
 
 // Internal state - populated by initDb()
 let _config: DbConfig | null = null;
+let _db: ReturnType<typeof createDbInstance> | null = null;
+
+function createDbInstance(connectionString: string) {
+  const client = new SQL(connectionString);
+  return drizzle(client, { schema });
+}
 
 /**
  * Initialize the db package with configuration.
  * Must be called once at app startup before using any db functions.
- * Creates the dbPath directory if it doesn't exist.
  */
 export function initDb(config: DbConfig): void {
-  mkdirSync(config.dbPath, { recursive: true });
+  if (_config) {
+    throw new Error('Db already initialized');
+  }
   _config = config;
+  _db = createDbInstance(config.databaseUrl);
 }
 
 /**
@@ -36,51 +42,15 @@ export function getDbConfig(): DbConfig {
 }
 
 /**
- * Get the auth database connection info (for drizzle config).
+ * Get the database instance.
+ * Single database handles both auth and user data (user isolation via userId FK).
  */
-export function authDbConnection() {
-  const config = getDbConfig();
-  return {
-    url: `${config.dbPath}/_auth.db`,
-  };
+export function getDb() {
+  if (!_db) {
+    throw new Error('Db not initialized. Call initDb() first.');
+  }
+  return _db;
 }
 
-/**
- * Get the auth database instance.
- */
-export function getAuthDb() {
-  const config = getDbConfig();
-  const client = new Database(`${config.dbPath}/_auth.db`);
-  return drizzle({
-    client,
-    schema: authSchema,
-  });
-}
-
-/**
- * Get the user database connection info (for drizzle config).
- */
-export function userDbConnection(userId: string) {
-  const config = getDbConfig();
-  return {
-    url: `${config.dbPath}/${userId}.db`,
-  };
-}
-
-/**
- * Get the user database instance.
- */
-export function getUserDb(userId: string) {
-  const config = getDbConfig();
-  const client = new Database(`${config.dbPath}/${userId}.db`);
-  return drizzle({
-    client,
-    schema,
-  });
-}
-
-/** Type for user database instance */
-export type UserDb = ReturnType<typeof getUserDb>;
-
-/** Type for auth database instance */
-export type AuthDb = ReturnType<typeof getAuthDb>;
+/** Type for database instance */
+export type Db = ReturnType<typeof getDb>;

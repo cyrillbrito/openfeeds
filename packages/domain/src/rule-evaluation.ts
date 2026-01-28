@@ -1,20 +1,29 @@
-import { articles, filterRules, type UserDb } from '@repo/db';
+import { articles, feeds, filterRules, getDb } from '@repo/db';
 import { attemptAsyncFn, shouldMarkAsRead } from '@repo/shared/utils';
 import { and, eq } from 'drizzle-orm';
 import { filterRuleDbToApi } from './db-utils';
 
-export type Database = UserDb;
-
 /**
  * Evaluates filter rules for a given feed and article title.
  * Returns true if the article should be marked as read based on the rules.
+ * Verifies feed ownership via userId.
  */
 export async function evaluateFilterRules(
-  db: Database,
   feedId: string,
   articleTitle: string,
+  userId: string,
 ): Promise<boolean> {
+  const db = getDb();
   const [error, result] = await attemptAsyncFn(async () => {
+    // Verify the feed belongs to this user
+    const feed = await db.query.feeds.findFirst({
+      where: and(eq(feeds.id, feedId), eq(feeds.userId, userId)),
+    });
+
+    if (!feed) {
+      return false; // Feed doesn't exist or doesn't belong to user
+    }
+
     // Get all active filter rules for this feed
     const rules = await db.query.filterRules.findMany({
       where: and(eq(filterRules.feedId, feedId), eq(filterRules.isActive, true)),
@@ -40,12 +49,23 @@ export async function evaluateFilterRules(
 /**
  * Applies all active filter rules to existing articles for a specific feed.
  * Returns the number of articles that were marked as read.
+ * Verifies feed ownership via userId.
  */
 export async function applyFilterRulesToExistingArticles(
-  db: Database,
   feedId: string,
+  userId: string,
 ): Promise<{ articlesProcessed: number; articlesMarkedAsRead: number }> {
+  const db = getDb();
   const [error, result] = await attemptAsyncFn(async () => {
+    // Verify the feed belongs to this user
+    const feed = await db.query.feeds.findFirst({
+      where: and(eq(feeds.id, feedId), eq(feeds.userId, userId)),
+    });
+
+    if (!feed) {
+      return { articlesProcessed: 0, articlesMarkedAsRead: 0 };
+    }
+
     // Get all active filter rules for this feed
     const rules = await db.query.filterRules.findMany({
       where: and(eq(filterRules.feedId, feedId), eq(filterRules.isActive, true)),
@@ -55,9 +75,13 @@ export async function applyFilterRulesToExistingArticles(
       return { articlesProcessed: 0, articlesMarkedAsRead: 0 };
     }
 
-    // Get all articles for this feed that are not already read
+    // Get all articles for this feed that are not already read (scoped by userId)
     const feedArticles = await db.query.articles.findMany({
-      where: and(eq(articles.feedId, feedId), eq(articles.isRead, false)),
+      where: and(
+        eq(articles.feedId, feedId),
+        eq(articles.userId, userId),
+        eq(articles.isRead, false),
+      ),
     });
 
     let articlesMarkedAsRead = 0;
@@ -66,7 +90,10 @@ export async function applyFilterRulesToExistingArticles(
     // Apply rules to each article
     for (const article of feedArticles) {
       if (shouldMarkAsRead(apiRules, article.title)) {
-        await db.update(articles).set({ isRead: true }).where(eq(articles.id, article.id));
+        await db
+          .update(articles)
+          .set({ isRead: true })
+          .where(and(eq(articles.id, article.id), eq(articles.userId, userId)));
         articlesMarkedAsRead++;
       }
     }
@@ -90,9 +117,9 @@ export async function applyFilterRulesToExistingArticles(
  * This is used when new articles are being added to avoid processing all articles every time.
  */
 export async function applyFilterRulesToArticle(
-  db: Database,
   feedId: string,
   articleTitle: string,
+  userId: string,
 ): Promise<boolean> {
-  return evaluateFilterRules(db, feedId, articleTitle);
+  return evaluateFilterRules(feedId, articleTitle, userId);
 }

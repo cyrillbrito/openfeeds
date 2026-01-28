@@ -10,8 +10,8 @@ export const tagsApp = new Elysia({ prefix: '/tags' })
   .use(authPlugin)
   .get(
     '/',
-    async ({ db }) => {
-      const tags = await getAllTags(db);
+    async ({ user }) => {
+      const tags = await getAllTags(user.id);
       return tags;
     },
     {
@@ -24,8 +24,8 @@ export const tagsApp = new Elysia({ prefix: '/tags' })
   )
   .post(
     '/',
-    async ({ body, db, status }) => {
-      const newTag = await createTag(body, db);
+    async ({ body, user, status }) => {
+      const newTag = await createTag(body, user.id);
       return status(201, newTag);
     },
     {
@@ -41,8 +41,8 @@ export const tagsApp = new Elysia({ prefix: '/tags' })
   )
   .put(
     '/:id',
-    async ({ params, body, db }) => {
-      const updatedTag = await updateTag(params.id, body, db);
+    async ({ params, body, user }) => {
+      const updatedTag = await updateTag(params.id, body, user.id);
       return updatedTag;
     },
     {
@@ -57,8 +57,8 @@ export const tagsApp = new Elysia({ prefix: '/tags' })
   )
   .delete(
     '/:id',
-    async ({ params, db, status }) => {
-      await deleteTag(params.id, db);
+    async ({ params, status, user }) => {
+      await deleteTag(params.id, user.id);
       return status(204);
     },
     {

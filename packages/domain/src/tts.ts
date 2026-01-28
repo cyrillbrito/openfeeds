@@ -1,7 +1,6 @@
 import { existsSync } from 'node:fs';
 import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
-import type { UserDb } from '@repo/db';
 import type { ArticleAudioMetadata, WordTiming } from '@repo/shared/types';
 import { getArticleWithContent } from './articles';
 import { getConfig } from './config';
@@ -25,7 +24,13 @@ interface UnrealSpeechTimestamp {
  * Get the audio directory path for a user
  */
 function getAudioDir(userId: string): string {
-  return join(getConfig().dbPath, 'audio', userId);
+  const dataPath = getConfig().dataPath;
+  if (!dataPath) {
+    throw new Error(
+      'dataPath is not configured. Set dataPath in initDomain() to use TTS features.',
+    );
+  }
+  return join(dataPath, 'audio', userId);
 }
 
 /**
@@ -125,7 +130,6 @@ function stripHtml(html: string): string {
 export async function generateArticleAudio(
   articleId: string,
   userId: string,
-  db: UserDb,
   options?: { voice?: string },
 ): Promise<ArticleAudioMetadata> {
   const apiKey = getConfig().unrealSpeechApiKey;
@@ -142,7 +146,7 @@ export async function generateArticleAudio(
   }
 
   // Get article content
-  const article = await getArticleWithContent(articleId, db);
+  const article = await getArticleWithContent(articleId, userId);
   if (!article) {
     throw new NotFoundError();
   }

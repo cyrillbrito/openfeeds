@@ -9,8 +9,8 @@ export const articleTagsApp = new Elysia({ prefix: '/article-tags' })
   .use(authPlugin)
   .get(
     '/',
-    async ({ db }) => {
-      const articleTags = await getAllArticleTags(db);
+    async ({ user }) => {
+      const articleTags = await getAllArticleTags(user.id);
       return articleTags;
     },
     {
