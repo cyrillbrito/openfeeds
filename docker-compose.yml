@@ -66,6 +66,7 @@ services:
     environment:
       - CLIENT_DOMAIN=$CLIENT_DOMAIN
       - DATABASE_URL=postgresql://postgres:postgres@postgres:5432/openfeeds
+      - ELECTRIC_URL=http://electric:3000
       - BETTER_AUTH_SECRET=$BETTER_AUTH_SECRET
       - SIMPLE_AUTH=$SIMPLE_AUTH
       - POSTHOG_PUBLIC_KEY=$POSTHOG_PUBLIC_KEY

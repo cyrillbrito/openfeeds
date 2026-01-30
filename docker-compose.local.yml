@@ -1,4 +1,5 @@
-# Local development: external services only (run app/worker locally)
+# Local development: build and run all services from local Dockerfiles
+# Use this to test the full containerized stack locally
 services:
   postgres:
     image: postgres:18.1-alpine
@@ -49,6 +50,71 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
+    restart: unless-stopped
+
+  migrator:
+    build:
+      context: .
+      dockerfile: apps/migrator/Dockerfile
+    environment:
+      - DATABASE_URL=postgresql://postgres:postgres@postgres:5432/openfeeds
+    networks:
+      - rss-network
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: 'no'
+
+  web:
+    build:
+      context: .
+      dockerfile: apps/web/Dockerfile
+    ports:
+      - '3200:3000'
+    environment:
+      - CLIENT_DOMAIN=${CLIENT_DOMAIN:-http://localhost:3200}
+      - DATABASE_URL=postgresql://postgres:postgres@postgres:5432/openfeeds
+      - ELECTRIC_URL=http://electric:3000
+      - BETTER_AUTH_SECRET=${BETTER_AUTH_SECRET:-dev-secret-change-me}
+      - SIMPLE_AUTH=${SIMPLE_AUTH:-true}
+      - POSTHOG_PUBLIC_KEY=$POSTHOG_PUBLIC_KEY
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      # TTS Configuration (optional)
+      - UNREAL_SPEECH_API_KEY=$UNREAL_SPEECH_API_KEY
+      - TTS_DEFAULT_VOICE=$TTS_DEFAULT_VOICE
+    depends_on:
+      redis:
+        condition: service_started
+      postgres:
+        condition: service_healthy
+      electric:
+        condition: service_started
+      migrator:
+        condition: service_completed_successfully
+    networks:
+      - rss-network
+    restart: unless-stopped
+
+  worker:
+    build:
+      context: .
+      dockerfile: apps/worker/Dockerfile
+    environment:
+      - DATABASE_URL=postgresql://postgres:postgres@postgres:5432/openfeeds
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - POSTHOG_PUBLIC_KEY=$POSTHOG_PUBLIC_KEY
+      - RESEND_API_KEY=$RESEND_API_KEY
+    depends_on:
+      redis:
+        condition: service_started
+      postgres:
+        condition: service_healthy
+      migrator:
+        condition: service_completed_successfully
+    networks:
+      - rss-network
     restart: unless-stopped
 
   # Queue management UI

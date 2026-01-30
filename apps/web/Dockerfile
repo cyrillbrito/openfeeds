@@ -31,6 +31,7 @@ COPY --from=pruner /home/bun/app/out/full/ .
 # Dummy env vars for prerendering - app requires these at build time for SSR
 ENV BETTER_AUTH_SECRET="build-time-placeholder"
 ENV CLIENT_DOMAIN="http://localhost:3000"
+ENV DATABASE_URL="postgresql://placeholder:placeholder@localhost:5432/placeholder"
 RUN bun run build --filter=@repo/web
 
 
