@@ -95,7 +95,7 @@ function Inbox() {
 
   const handleUpdateArticle = (
     articleId: string,
-    updates: { isRead?: boolean; isArchived?: boolean; tags?: string[] },
+    updates: { isRead?: boolean; isArchived?: boolean },
   ) => {
     // Track session-read articles
     if (updates.isRead === true) {
@@ -119,7 +119,6 @@ function Inbox() {
     articlesCollection.update(articleId, (draft) => {
       if (updates.isRead !== undefined) draft.isRead = updates.isRead;
       if (updates.isArchived !== undefined) draft.isArchived = updates.isArchived;
-      if (updates.tags !== undefined) draft.tags = updates.tags;
     });
   };
 

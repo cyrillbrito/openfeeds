@@ -12,21 +12,11 @@ import { assert, NotFoundError, UnexpectedError } from './errors';
 export async function getAllFilterRules(userId: string): Promise<FilterRule[]> {
   const db = getDb();
 
-  // Join filterRules with feeds to filter by userId in a single query
-  const rules = await db
-    .select({
-      id: filterRules.id,
-      feedId: filterRules.feedId,
-      pattern: filterRules.pattern,
-      operator: filterRules.operator,
-      isActive: filterRules.isActive,
-      createdAt: filterRules.createdAt,
-      updatedAt: filterRules.updatedAt,
-    })
-    .from(filterRules)
-    .innerJoin(feeds, eq(filterRules.feedId, feeds.id))
-    .where(eq(feeds.userId, userId))
-    .orderBy(filterRules.createdAt);
+  // Now that filter_rules has user_id, we can filter directly
+  const rules = await db.query.filterRules.findMany({
+    where: eq(filterRules.userId, userId),
+    orderBy: (filterRules, { asc }) => [asc(filterRules.createdAt)],
+  });
 
   return rules.map(filterRuleDbToApi);
 }
@@ -75,6 +65,7 @@ export async function createFilterRule(
       .insert(filterRules)
       .values({
         id: data.id ?? createId(),
+        userId,
         feedId,
         pattern: data.pattern,
         operator: data.operator,

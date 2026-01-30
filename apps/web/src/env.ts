@@ -4,6 +4,7 @@ import { z } from 'zod';
 export const env = createEnv({
   server: {
     DATABASE_URL: z.url(),
+    ELECTRIC_URL: z.string().default('http://localhost:3060'), // Electric SQL sync service (use electric:3000 in Docker)
     DATA_PATH: z.string().optional(), // Local file storage for audio, etc.
     REDIS_HOST: z.string().default('localhost'),
     REDIS_PORT: z.coerce.number().default(6379),

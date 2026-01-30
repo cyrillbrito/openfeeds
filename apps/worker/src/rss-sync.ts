@@ -138,6 +138,7 @@ export async function syncFeedArticles(
         await db.insert(articleTags).values(
           feedTagsList.map((ft) => ({
             id: createId(),
+            userId,
             articleId: newArticle.id,
             tagId: ft.tagId,
           })),

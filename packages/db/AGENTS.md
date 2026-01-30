@@ -102,6 +102,60 @@ const newFeed = await db
 - Keep user and auth schemas logically separated
 - Use proper TypeScript types from schema exports
 
+## User ID Denormalization (Critical)
+
+**Every table MUST have a `user_id` column with an index.** This includes junction/join tables.
+
+### Why This Is Required
+
+Electric SQL shapes cannot perform JOINs or subqueries in where clauses. Without `user_id` directly on each table:
+
+1. We'd need to build `WHERE id IN (...)` clauses with potentially thousands of IDs
+2. This causes HTTP 414 (URI Too Long) errors when URLs exceed browser/server limits
+3. Query performance suffers without proper indexing
+
+### Pattern for Junction Tables
+
+```typescript
+export const articleTags = pgTable(
+  'article_tags',
+  {
+    id: text('id').primaryKey(),
+    // REQUIRED: user_id for Electric SQL filtering
+    userId: text('user_id')
+      .notNull()
+      .references(() => user.id, { onDelete: 'cascade' }),
+    articleId: text('article_id')
+      .notNull()
+      .references(() => articles.id, { onDelete: 'cascade' }),
+    tagId: text('tag_id')
+      .notNull()
+      .references(() => tags.id, { onDelete: 'cascade' }),
+  },
+  (table) => [
+    // REQUIRED: index on user_id for efficient filtering
+    index('article_tags_user_id_idx').on(table.userId),
+    uniqueIndex('unique_article_tag').on(table.articleId, table.tagId),
+    index('article_tags_tag_idx').on(table.tagId),
+  ],
+);
+```
+
+### Checklist for New Tables
+
+- [ ] Add `userId` column with `references(() => user.id, { onDelete: 'cascade' })`
+- [ ] Add `index('table_name_user_id_idx').on(table.userId)`
+- [ ] Add `user` relation in the relations definition
+- [ ] Update shared Zod schemas to include `userId`
+- [ ] Update domain functions to pass `userId` on insert
+- [ ] Update shape handlers to filter by `user_id`
+
+### Reference
+
+See Electric SQL docs: https://electric-sql.com/docs/guides/shapes#include-tree-workarounds
+
+> "For multi-level include trees, you can denormalise the filtering column onto the lower tables so that you can sync with a simple where clause."
+
 ## Drizzle Features
 
 - SQLite dialect

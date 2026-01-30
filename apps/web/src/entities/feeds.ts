@@ -1,19 +1,21 @@
+import { snakeCamelMapper } from '@electric-sql/client';
 import { FeedSchema } from '@repo/shared/schemas';
-import type { Feed } from '@repo/shared/types';
-import { queryCollectionOptions } from '@tanstack/query-db-collection';
+import { electricCollectionOptions } from '@tanstack/electric-db-collection';
 import { createCollection, useLiveQuery } from '@tanstack/solid-db';
-import { queryClient } from '~/query-client';
-import { $$createFeeds, $$deleteFeeds, $$getAllFeeds, $$updateFeeds } from './feeds.server';
+import { getShapeUrl } from '~/lib/electric-client';
+import { $$createFeeds, $$deleteFeeds, $$updateFeeds } from './feeds.server';
 
-// Feeds Collection
+// Feeds Collection - Electric-powered real-time sync
 export const feedsCollection = createCollection(
-  queryCollectionOptions({
+  electricCollectionOptions({
     id: 'feeds',
-    queryKey: ['feeds'],
-    queryClient,
-    getKey: (item: Feed) => item.id,
     schema: FeedSchema,
-    queryFn: async () => (await $$getAllFeeds()) ?? [],
+    getKey: (item) => item.id,
+
+    shapeOptions: {
+      url: getShapeUrl('feeds'),
+      columnMapper: snakeCamelMapper(),
+    },
 
     onInsert: async ({ transaction }) => {
       const feeds = transaction.mutations.map((mutation) => {

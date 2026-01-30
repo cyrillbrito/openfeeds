@@ -15,10 +15,7 @@ interface ArticleCardProps {
   article: Article;
   feeds: Feed[];
   tags: Tag[];
-  onUpdateArticle: (
-    articleId: string,
-    updates: { isRead?: boolean; isArchived?: boolean; tags?: string[] },
-  ) => void;
+  onUpdateArticle: (articleId: string, updates: { isRead?: boolean; isArchived?: boolean }) => void;
 }
 
 export function ArticleCard(props: ArticleCardProps) {
@@ -178,13 +175,7 @@ export function ArticleCard(props: ArticleCardProps) {
       {/* Tags */}
       <Show when={props.tags.length > 0}>
         <div class="mb-2" data-tag-manager>
-          <ArticleTagManager
-            tags={props.tags}
-            selectedIds={props.article.tags}
-            onSelectionChange={(tagIds) => {
-              props.onUpdateArticle(props.article.id, { tags: tagIds });
-            }}
-          />
+          <ArticleTagManager articleId={props.article.id} tags={props.tags} />
         </div>
       </Show>
 

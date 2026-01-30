@@ -1,3 +1,4 @@
+# Local development: external services only (run app/worker locally)
 services:
   postgres:
     image: postgres:18.1-alpine
@@ -12,6 +13,12 @@ services:
     networks:
       - rss-network
     restart: unless-stopped
+    command:
+      - postgres
+      - -c
+      - listen_addresses=*
+      - -c
+      - wal_level=logical # Required for Electric SQL
     healthcheck:
       test: ['CMD-SHELL', 'pg_isready -U postgres -d openfeeds']
       interval: 5s
@@ -29,69 +36,22 @@ services:
     restart: unless-stopped
     command: redis-server --save 60 1 --loglevel warning
 
-  migrator:
-    build:
-      context: .
-      dockerfile: apps/migrator/Dockerfile
-    environment:
-      - DATABASE_URL=postgresql://postgres:postgres@postgres:5432/openfeeds
-    networks:
-      - rss-network
-    depends_on:
-      postgres:
-        condition: service_healthy
-    restart: 'no'
-
-  web:
-    build:
-      context: .
-      dockerfile: apps/web/Dockerfile
+  # Electric SQL sync service
+  electric:
+    image: electricsql/electric:latest
     ports:
-      - '3200:3000'
+      - '3060:3000'
     environment:
-      - CLIENT_DOMAIN=$CLIENT_DOMAIN
-      - DATABASE_URL=postgresql://postgres:postgres@postgres:5432/openfeeds
-      - BETTER_AUTH_SECRET=$BETTER_AUTH_SECRET
-      - SIMPLE_AUTH=$SIMPLE_AUTH
-      - POSTHOG_PUBLIC_KEY=$POSTHOG_PUBLIC_KEY
-      - REDIS_HOST=redis
-      - REDIS_PORT=6379
-      # TTS Configuration (optional)
-      - UNREAL_SPEECH_API_KEY=$UNREAL_SPEECH_API_KEY
-      - TTS_DEFAULT_VOICE=$TTS_DEFAULT_VOICE
-    depends_on:
-      redis:
-        condition: service_started
-      postgres:
-        condition: service_healthy
-      migrator:
-        condition: service_completed_successfully
+      DATABASE_URL: postgresql://postgres:postgres@postgres:5432/openfeeds?sslmode=disable
+      ELECTRIC_INSECURE: true
     networks:
       - rss-network
-    restart: unless-stopped
-
-  worker:
-    build:
-      context: .
-      dockerfile: apps/worker/Dockerfile
-    environment:
-      - DATABASE_URL=postgresql://postgres:postgres@postgres:5432/openfeeds
-      - REDIS_HOST=redis
-      - REDIS_PORT=6379
-      - POSTHOG_PUBLIC_KEY=$POSTHOG_PUBLIC_KEY
-      - RESEND_API_KEY=$RESEND_API_KEY
     depends_on:
-      redis:
-        condition: service_started
       postgres:
         condition: service_healthy
-      migrator:
-        condition: service_completed_successfully
-    networks:
-      - rss-network
     restart: unless-stopped
 
-  # Optional: Queue management UI (not required for the app to run)
+  # Queue management UI
   queuedash:
     image: ghcr.io/alexbudure/queuedash:3.14.0
     ports:

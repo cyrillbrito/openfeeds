@@ -76,6 +76,9 @@ export const feedTags = pgTable(
   'feed_tags',
   {
     id: text('id').primaryKey(),
+    userId: text('user_id')
+      .notNull()
+      .references(() => user.id, { onDelete: 'cascade' }),
     feedId: text('feed_id')
       .notNull()
       .references(() => feeds.id, { onDelete: 'cascade' }),
@@ -84,6 +87,7 @@ export const feedTags = pgTable(
       .references(() => tags.id, { onDelete: 'cascade' }),
   },
   (table) => [
+    index('feed_tags_user_id_idx').on(table.userId),
     uniqueIndex('unique_feed_tag').on(table.feedId, table.tagId),
     index('feed_tags_tag_idx').on(table.tagId),
   ],
@@ -94,6 +98,9 @@ export const articleTags = pgTable(
   'article_tags',
   {
     id: text('id').primaryKey(),
+    userId: text('user_id')
+      .notNull()
+      .references(() => user.id, { onDelete: 'cascade' }),
     articleId: text('article_id')
       .notNull()
       .references(() => articles.id, { onDelete: 'cascade' }),
@@ -102,6 +109,7 @@ export const articleTags = pgTable(
       .references(() => tags.id, { onDelete: 'cascade' }),
   },
   (table) => [
+    index('article_tags_user_id_idx').on(table.userId),
     uniqueIndex('unique_article_tag').on(table.articleId, table.tagId),
     index('article_tags_tag_idx').on(table.tagId),
   ],
@@ -128,6 +136,9 @@ export const filterRules = pgTable(
   'filter_rules',
   {
     id: text('id').primaryKey(),
+    userId: text('user_id')
+      .notNull()
+      .references(() => user.id, { onDelete: 'cascade' }),
     feedId: text('feed_id')
       .notNull()
       .references(() => feeds.id, { onDelete: 'cascade' }),
@@ -138,6 +149,7 @@ export const filterRules = pgTable(
     updatedAt: timestamp('updated_at'),
   },
   (table) => [
+    index('filter_rules_user_id_idx').on(table.userId),
     index('filter_rules_feed_id_idx').on(table.feedId),
     index('filter_rules_active_idx').on(table.isActive),
   ],
@@ -176,6 +188,10 @@ export const tagsRelations = relations(tags, ({ one, many }) => ({
 }));
 
 export const feedTagsRelations = relations(feedTags, ({ one }) => ({
+  user: one(user, {
+    fields: [feedTags.userId],
+    references: [user.id],
+  }),
   feed: one(feeds, {
     fields: [feedTags.feedId],
     references: [feeds.id],
@@ -187,6 +203,10 @@ export const feedTagsRelations = relations(feedTags, ({ one }) => ({
 }));
 
 export const articleTagsRelations = relations(articleTags, ({ one }) => ({
+  user: one(user, {
+    fields: [articleTags.userId],
+    references: [user.id],
+  }),
   article: one(articles, {
     fields: [articleTags.articleId],
     references: [articles.id],
@@ -205,6 +225,10 @@ export const settingsRelations = relations(settings, ({ one }) => ({
 }));
 
 export const filterRulesRelations = relations(filterRules, ({ one }) => ({
+  user: one(user, {
+    fields: [filterRules.userId],
+    references: [user.id],
+  }),
   feed: one(feeds, {
     fields: [filterRules.feedId],
     references: [feeds.id],

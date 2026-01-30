@@ -1,19 +1,21 @@
+import { snakeCamelMapper } from '@electric-sql/client';
 import { TagSchema } from '@repo/shared/schemas';
-import type { Tag } from '@repo/shared/types';
-import { queryCollectionOptions } from '@tanstack/query-db-collection';
+import { electricCollectionOptions } from '@tanstack/electric-db-collection';
 import { createCollection, useLiveQuery } from '@tanstack/solid-db';
-import { queryClient } from '~/query-client';
-import { $$createTags, $$deleteTags, $$getAllTags, $$updateTags } from './tags.server';
+import { getShapeUrl } from '~/lib/electric-client';
+import { $$createTags, $$deleteTags, $$updateTags } from './tags.server';
 
-// Tags Collection
+// Tags Collection - Electric-powered real-time sync
 export const tagsCollection = createCollection(
-  queryCollectionOptions({
+  electricCollectionOptions({
     id: 'tags',
-    queryKey: ['tags'],
-    queryClient,
-    getKey: (item: Tag) => item.id,
     schema: TagSchema,
-    queryFn: async () => (await $$getAllTags()) ?? [],
+    getKey: (item) => item.id,
+
+    shapeOptions: {
+      url: getShapeUrl('tags'),
+      columnMapper: snakeCamelMapper(),
+    },
 
     onInsert: async ({ transaction }) => {
       const tags = transaction.mutations.map((mutation) => {

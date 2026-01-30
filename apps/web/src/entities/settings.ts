@@ -1,14 +1,12 @@
+import { snakeCamelMapper } from '@electric-sql/client';
 import { AppSettingsSchema } from '@repo/shared/schemas';
 import type { AppSettings, ArchiveResult } from '@repo/shared/types';
-import { queryCollectionOptions } from '@tanstack/query-db-collection';
+import { electricCollectionOptions } from '@tanstack/electric-db-collection';
 import { createCollection, useLiveQuery } from '@tanstack/solid-db';
 import { z } from 'zod';
-import { queryClient } from '~/query-client';
+import { getShapeUrl } from '~/lib/electric-client';
 import { articlesCollection } from './articles';
-import { $$getUserSettings, $$triggerAutoArchive, $$updateSettings } from './settings.server';
-
-// Settings is a singleton - we use a fixed ID
-const SETTINGS_ID = 1;
+import { $$triggerAutoArchive, $$updateSettings } from './settings.server';
 
 // Extend the schema to include an ID for collection compatibility
 const SettingsWithIdSchema = AppSettingsSchema.extend({
@@ -17,17 +15,16 @@ const SettingsWithIdSchema = AppSettingsSchema.extend({
 
 type SettingsWithId = z.infer<typeof SettingsWithIdSchema>;
 
-// Settings Collection (singleton pattern)
+// Settings Collection (singleton pattern) - Electric-powered real-time sync
 export const settingsCollection = createCollection(
-  queryCollectionOptions({
+  electricCollectionOptions({
     id: 'settings',
-    queryKey: ['settings'],
-    queryClient,
-    getKey: (item: SettingsWithId) => item.id,
     schema: SettingsWithIdSchema,
-    queryFn: async () => {
-      const data = await $$getUserSettings();
-      return data ? [{ ...data, id: SETTINGS_ID }] : [];
+    getKey: (item: SettingsWithId) => item.id,
+
+    shapeOptions: {
+      url: getShapeUrl('settings'),
+      columnMapper: snakeCamelMapper(),
     },
 
     onUpdate: async ({ transaction }) => {
@@ -58,8 +55,7 @@ export function useSettings() {
     get data() {
       const item = query.data?.[0];
       if (!item) return undefined;
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      const { id, ...settings } = item;
+      const { id: _id, ...settings } = item;
       return settings as AppSettings;
     },
     get isLoading() {

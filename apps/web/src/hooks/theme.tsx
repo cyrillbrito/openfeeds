@@ -2,9 +2,11 @@ import {
   createContext,
   createEffect,
   createSignal,
+  onMount,
   useContext,
   type ParentComponent,
 } from 'solid-js';
+import { isServer } from 'solid-js/web';
 
 type ThemeMode = 'light' | 'dark' | 'system';
 
@@ -23,6 +25,7 @@ export const ThemeProvider: ParentComponent = (props) => {
   const actualTheme = () => {
     const currentTheme = theme();
     if (currentTheme === 'system') {
+      if (isServer) return 'light'; // Default for SSR
       return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dracula' : 'light';
     } else if (currentTheme === 'dark') {
       return 'dracula';
@@ -31,8 +34,8 @@ export const ThemeProvider: ParentComponent = (props) => {
     }
   };
 
-  // Load saved theme from localStorage
-  createEffect(() => {
+  // Load saved theme from localStorage (client-only)
+  onMount(() => {
     const saved = localStorage.getItem('theme') as ThemeMode;
     if (saved && ['light', 'dark', 'system'].includes(saved)) {
       setTheme(saved);
@@ -41,6 +44,7 @@ export const ThemeProvider: ParentComponent = (props) => {
 
   // Apply theme to document
   createEffect(() => {
+    if (isServer) return;
     const themeToApply = actualTheme();
     document.documentElement.setAttribute('data-theme', themeToApply);
     localStorage.setItem('theme', theme());

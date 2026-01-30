@@ -17,7 +17,7 @@ interface ArticleListProps {
   articles: Article[];
   feeds: Feed[];
   tags: Tag[];
-  onUpdateArticle: (articleId: string, updates: { isRead?: boolean; tags?: string[] }) => void;
+  onUpdateArticle: (articleId: string, updates: { isRead?: boolean; isArchived?: boolean }) => void;
   readStatus?: ReadStatus;
   context?: 'inbox' | 'feed' | 'tag';
   emptyState?: {

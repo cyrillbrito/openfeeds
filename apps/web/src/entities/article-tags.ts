@@ -1,19 +1,34 @@
+import { snakeCamelMapper } from '@electric-sql/client';
 import { ArticleTagSchema } from '@repo/shared/schemas';
-import type { ArticleTag } from '@repo/shared/types';
-import { queryCollectionOptions } from '@tanstack/query-db-collection';
+import { electricCollectionOptions } from '@tanstack/electric-db-collection';
 import { createCollection, useLiveQuery } from '@tanstack/solid-db';
-import { queryClient } from '~/query-client';
-import { $$getAllArticleTags } from './article-tags.server';
+import { getShapeUrl } from '~/lib/electric-client';
+import { $$createArticleTags, $$deleteArticleTags } from './article-tags.server';
 
-// Article Tags Collection (junction table for local-first joins)
+// Article Tags Collection (junction table for local-first joins) - Electric-powered real-time sync
 export const articleTagsCollection = createCollection(
-  queryCollectionOptions({
+  electricCollectionOptions({
     id: 'article-tags',
-    queryKey: ['article-tags'],
-    queryClient,
-    getKey: (item: ArticleTag) => item.id,
     schema: ArticleTagSchema,
-    queryFn: async () => (await $$getAllArticleTags()) ?? [],
+    getKey: (item) => item.id,
+
+    shapeOptions: {
+      url: getShapeUrl('article-tags'),
+      columnMapper: snakeCamelMapper(),
+    },
+
+    onInsert: async ({ transaction }) => {
+      const tags = transaction.mutations.map((mutation) => {
+        const tag = mutation.modified;
+        return { articleId: tag.articleId, tagId: tag.tagId };
+      });
+      await $$createArticleTags({ data: tags });
+    },
+
+    onDelete: async ({ transaction }) => {
+      const ids = transaction.mutations.map((mutation) => mutation.key as string);
+      await $$deleteArticleTags({ data: ids });
+    },
   }),
 );
 

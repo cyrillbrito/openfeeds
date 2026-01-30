@@ -4,7 +4,6 @@ import ArchiveIcon from 'lucide-solid/icons/archive';
 import ArrowLeftIcon from 'lucide-solid/icons/arrow-left';
 import InboxIcon from 'lucide-solid/icons/inbox';
 import { Show, Suspense } from 'solid-js';
-import { useArticleDetails } from '~/entities/article-details';
 import { articlesCollection } from '~/entities/articles';
 import { useFeeds } from '~/entities/feeds';
 import { useTags } from '~/entities/tags';
@@ -29,20 +28,12 @@ function ArticleView() {
   const router = useRouter();
   const articleId = () => params()?.articleId;
 
-  // Use articlesCollection for metadata/state (reactive)
   const articleQuery = useLiveQuery((q) =>
     q.from({ article: articlesCollection }).where(({ article }) => eq(article.id, articleId())),
   );
 
-  // Use articleDetailsCollection only for cleanContent
-  const articleDetailsQuery = useArticleDetails(articleId);
-
-  const article = () => articleQuery.data?.[0];
-  const articleDetails = () => articleDetailsQuery.data?.[0];
-  const cleanContent = () => articleDetails()?.cleanContent;
-  // Content is loading if query is loading OR if we don't have details for this article yet
-  const isContentLoading = () =>
-    articleDetailsQuery.isLoading || (!articleDetailsQuery.isReady && !articleDetails());
+  const article = () => articleQuery()[0];
+  const cleanContent = () => article()?.cleanContent;
 
   const feedsQuery = useFeeds();
   const tagsQuery = useTags();
@@ -189,15 +180,7 @@ function ArticleView() {
                   {/* Article Tags */}
                   <Show when={tagsQuery.data}>
                     <div class="mt-4">
-                      <ArticleTagManager
-                        tags={tagsQuery.data!}
-                        selectedIds={art().tags}
-                        onSelectionChange={(tagIds) => {
-                          articlesCollection.update(art().id, (draft) => {
-                            draft.tags = tagIds;
-                          });
-                        }}
-                      />
+                      <ArticleTagManager articleId={art().id} tags={tagsQuery()} />
                     </div>
                   </Show>
                 </header>
@@ -263,14 +246,14 @@ function ArticleView() {
                 </Show>
 
                 {/* Loading state for content extraction */}
-                <Show when={!isVideo() && isContentLoading()}>
+                <Show when={!isVideo() && articleQuery.isLoading}>
                   <div class="flex justify-center py-12">
                     <Loader />
                   </div>
                 </Show>
 
                 {/* No content fallback - only show after loading completes */}
-                <Show when={!isVideo() && !isContentLoading() && !cleanContent()}>
+                <Show when={!isVideo() && !articleQuery.isLoading && !cleanContent()}>
                   <div class="py-8 text-center">
                     <p class="text-warning">This article doesn't have readable content available</p>
                     <Show when={art().url}>

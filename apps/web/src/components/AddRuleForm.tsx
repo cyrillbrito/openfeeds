@@ -3,6 +3,7 @@ import { createId } from '@repo/shared/utils';
 import CircleAlertIcon from 'lucide-solid/icons/circle-alert';
 import { createSignal, For, Show } from 'solid-js';
 import { filterRulesCollection } from '~/entities/filter-rules';
+import { useUser } from '~/hooks/use-auth';
 
 interface AddRuleFormProps {
   feedId: string;
@@ -11,6 +12,7 @@ interface AddRuleFormProps {
 }
 
 export function AddRuleForm(props: AddRuleFormProps) {
+  const user = useUser();
   const [pattern, setPattern] = createSignal('');
   const [operator, setOperator] = createSignal<
     (typeof FilterOperator)[keyof typeof FilterOperator]
@@ -40,9 +42,16 @@ export function AddRuleForm(props: AddRuleFormProps) {
       return;
     }
 
+    const userId = user.data?.id;
+    if (!userId) {
+      setError('Not authenticated');
+      return;
+    }
+
     setError(null);
     filterRulesCollection.insert({
       id: createId(),
+      userId,
       feedId: props.feedId,
       pattern: trimmedPattern,
       operator: operator(),
