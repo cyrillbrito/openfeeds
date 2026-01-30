@@ -12,6 +12,7 @@
     "docker:publish": "docker build -f ./Dockerfile -t ghcr.io/cyrillbrito/openfeeds-web:latest ../.. && docker push ghcr.io/cyrillbrito/openfeeds-web:latest"
   },
   "dependencies": {
+    "@electric-sql/client": "^1.5.0",
     "@repo/db": "workspace:*",
     "@repo/discovery": "workspace:*",
     "@repo/domain": "workspace:*",
@@ -21,9 +22,9 @@
     "@solid-primitives/date": "^2.1.4",
     "@solid-primitives/scheduled": "^1.5.2",
     "@tailwindcss/typography": "^0.5.19",
-    "@tanstack/query-db-collection": "^1.0.20",
+    "@tanstack/electric-db-collection": "^0.2.30",
     "@tanstack/router-plugin": "^1.157.6",
-    "@tanstack/solid-db": "^0.2.3",
+    "@tanstack/solid-db": "^0.2.4",
     "@tanstack/solid-devtools": "^0.7.22",
     "@tanstack/solid-query": "^5.90.23",
     "@tanstack/solid-query-devtools": "^5.91.2",

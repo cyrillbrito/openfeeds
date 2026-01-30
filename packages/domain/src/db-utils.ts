@@ -14,17 +14,10 @@ export function isoToDate(iso: string | null): Date | null {
 }
 
 /**
- * Extended DB types with relation data for API conversion
- * These interfaces represent database query results that include joined relation data
- */
-export interface DbArticleWithTags extends DbArticle {
-  articleTags: { tagId: string }[];
-}
-
-/**
  * Convert database article to API article format
+ * Article tags are now managed separately via the article-tags collection
  */
-export function articleDbToApi(dbArticle: DbArticleWithTags): Article {
+export function articleDbToApi(dbArticle: DbArticle): Article {
   return {
     id: dbArticle.id,
     feedId: dbArticle.feedId,
@@ -37,7 +30,6 @@ export function articleDbToApi(dbArticle: DbArticleWithTags): Article {
     isRead: dbArticle.isRead,
     isArchived: dbArticle.isArchived,
     hasCleanContent: !!dbArticle.cleanContent,
-    tags: dbArticle.articleTags.map((at) => at.tagId),
     createdAt: dbArticle.createdAt,
   };
 }
@@ -81,6 +73,7 @@ export function tagDbToApi(dbTag: DbTag): Tag {
 export function filterRuleDbToApi(dbRule: DbFilterRule): FilterRule {
   return {
     id: dbRule.id,
+    userId: dbRule.userId,
     feedId: dbRule.feedId,
     pattern: dbRule.pattern,
     operator: dbRule.operator as 'includes' | 'not_includes',

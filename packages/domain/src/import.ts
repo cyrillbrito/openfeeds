@@ -159,6 +159,7 @@ export async function importOpmlFeeds(opmlContent: string, userId: string): Prom
           db.insert(feedTags).values(
             tagIds.map((tagId) => ({
               id: createId(),
+              userId,
               feedId: feedId,
               tagId: tagId,
             })),

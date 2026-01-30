@@ -95,18 +95,11 @@ export async function getArticles(
     whereConditions.push(cursorCondition);
   }
 
-  // Execute query using Drizzle with article tags
+  // Execute query using Drizzle
   const results = await db.query.articles.findMany({
     where: whereConditions.length ? and(...whereConditions) : undefined,
     orderBy: desc(articles.pubDate),
     limit: queryLimit || 10000,
-    with: {
-      articleTags: {
-        columns: {
-          tagId: true,
-        },
-      },
-    },
   });
 
   // Handle pagination
@@ -133,13 +126,6 @@ export async function getArticleById(id: string, userId: string): Promise<Articl
   const db = getDb();
   const article = await db.query.articles.findFirst({
     where: and(eq(articles.id, id), eq(articles.userId, userId)),
-    with: {
-      articleTags: {
-        columns: {
-          tagId: true,
-        },
-      },
-    },
   });
 
   if (!article) {
@@ -176,13 +162,6 @@ export async function getArticleWithContent(
   const db = getDb();
   const article = await db.query.articles.findFirst({
     where: and(eq(articles.id, id), eq(articles.userId, userId)),
-    with: {
-      articleTags: {
-        columns: {
-          tagId: true,
-        },
-      },
-    },
   });
 
   if (!article) {
@@ -236,35 +215,16 @@ export async function updateArticle(
   userId: string,
 ): Promise<Article> {
   const db = getDb();
-  // Update article fields (excluding tags)
-  const { tags, ...articleData } = data;
 
-  if (Object.keys(articleData).length > 0) {
+  if (Object.keys(data).length > 0) {
     const [updatedArticle] = await db
       .update(articles)
-      .set(articleData)
+      .set(data)
       .where(and(eq(articles.id, id), eq(articles.userId, userId)))
       .returning();
 
     if (!updatedArticle) {
       throw new NotFoundError();
-    }
-  }
-
-  // Update tags if provided
-  if (tags !== undefined) {
-    // Delete existing article tags
-    await db.delete(articleTags).where(eq(articleTags.articleId, id));
-
-    // Insert new article tags
-    if (tags.length > 0) {
-      await db.insert(articleTags).values(
-        tags.map((tagId) => ({
-          id: createId(),
-          articleId: id,
-          tagId,
-        })),
-      );
     }
   }
 
@@ -361,17 +321,6 @@ export async function createArticle(data: CreateArticleFromUrl, userId: string):
     isArchived: false,
     cleanContent,
   });
-
-  // Add tags if provided
-  if (data.tags && data.tags.length > 0) {
-    await db.insert(articleTags).values(
-      data.tags.map((tagId) => ({
-        id: createId(),
-        articleId,
-        tagId,
-      })),
-    );
-  }
 
   return getArticleById(articleId, userId);
 }

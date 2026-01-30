@@ -1,31 +1,47 @@
 import type { Tag } from '@repo/shared/types';
+import { createId } from '@repo/shared/utils';
+import { eq, useLiveQuery } from '@tanstack/solid-db';
 import { Link } from '@tanstack/solid-router';
 import PlusIcon from 'lucide-solid/icons/plus';
 import { For } from 'solid-js';
+import { articleTagsCollection } from '~/entities/article-tags';
 import { getTagDotColor } from '../utils/tagColors';
 import { ColorIndicator } from './ColorIndicator';
 
 interface ArticleTagManagerProps {
+  articleId: string;
   tags: Tag[];
-  selectedIds: string[];
-  onSelectionChange: (ids: string[]) => void;
 }
 
 export function ArticleTagManager(props: ArticleTagManagerProps) {
   let triggerRef: HTMLButtonElement | undefined;
   let popoverRef: HTMLDivElement | undefined;
 
-  const selectedTags = () => props.tags.filter((t) => props.selectedIds.includes(t.id));
-  const availableTags = () => props.tags.filter((tag) => !props.selectedIds.includes(tag.id));
+  // Query article tags for this specific article
+  const articleTagsQuery = useLiveQuery((q) =>
+    q
+      .from({ articleTag: articleTagsCollection })
+      .where(({ articleTag }) => eq(articleTag.articleId, props.articleId)),
+  );
+
+  const selectedTagIds = () => (articleTagsQuery.data ?? []).map((at) => at.tagId);
+  const selectedTags = () => props.tags.filter((t) => selectedTagIds().includes(t.id));
+  const availableTags = () => props.tags.filter((tag) => !selectedTagIds().includes(tag.id));
 
   const removeTag = (tagId: string) => {
-    const newIds = props.selectedIds.filter((id) => id !== tagId);
-    props.onSelectionChange(newIds);
+    const articleTag = (articleTagsQuery.data ?? []).find((at) => at.tagId === tagId);
+    if (articleTag) {
+      articleTagsCollection.delete(articleTag.id);
+    }
   };
 
   const addTag = (tagId: string) => {
-    const newIds = [...props.selectedIds, tagId];
-    props.onSelectionChange(newIds);
+    articleTagsCollection.insert({
+      id: createId(),
+      userId: '', // Will be set by server
+      articleId: props.articleId,
+      tagId,
+    });
     popoverRef?.hidePopover();
   };
 

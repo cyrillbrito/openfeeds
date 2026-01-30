@@ -1,6 +1,7 @@
 import { createId } from '@repo/shared/utils';
 import CircleAlertIcon from 'lucide-solid/icons/circle-alert';
 import { createSignal, Show } from 'solid-js';
+import { articleTagsCollection } from '~/entities/article-tags';
 import { articlesCollection } from '~/entities/articles';
 import { useTags } from '~/entities/tags';
 import { LazyModal, type ModalController } from './LazyModal';
@@ -51,9 +52,11 @@ function SaveArticleForm(props: SaveArticleFormProps) {
       setError(null);
       setIsSaving(true);
 
+      const articleId = createId();
+
       // Insert into collection - onInsert will call server and update with real data
       articlesCollection.insert({
-        id: createId(),
+        id: articleId,
         feedId: null,
         title: url, // Placeholder, will be updated by onInsert
         url,
@@ -63,10 +66,23 @@ function SaveArticleForm(props: SaveArticleFormProps) {
         pubDate: new Date().toISOString(),
         isRead: false,
         isArchived: false,
+        cleanContent: null,
         hasCleanContent: false,
-        tags: selectedTags(),
         createdAt: new Date().toISOString(),
       });
+
+      // Add tags if selected (using article tags collection)
+      const tagsToAdd = selectedTags();
+      if (tagsToAdd.length > 0) {
+        for (const tagId of tagsToAdd) {
+          articleTagsCollection.insert({
+            id: createId(),
+            userId: '', // Will be set by server
+            articleId,
+            tagId,
+          });
+        }
+      }
 
       props.onClose();
     } catch (err) {

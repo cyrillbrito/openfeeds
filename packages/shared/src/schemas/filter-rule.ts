@@ -7,6 +7,7 @@ export const FilterOperator = {
 
 export const filterRuleSchema = z.object({
   id: z.string(),
+  userId: z.string(),
   feedId: z.string(),
   pattern: z.string().min(1),
   operator: z.enum([FilterOperator.INCLUDES, FilterOperator.NOT_INCLUDES]),
@@ -17,6 +18,7 @@ export const filterRuleSchema = z.object({
 
 export const createFilterRuleSchema = filterRuleSchema.omit({
   id: true,
+  userId: true,
   createdAt: true,
   updatedAt: true,
 });

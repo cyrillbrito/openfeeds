@@ -25,7 +25,6 @@ export const ArticleSchema = z.object({
   isRead: z.boolean().nullable(),
   isArchived: z.boolean().nullable(),
   hasCleanContent: z.boolean(),
-  tags: z.array(z.string()),
   createdAt: z.coerce.date(),
 });
 
@@ -44,13 +43,11 @@ export const CreateArticleSchema = z.object({
 export const CreateArticleFromUrlSchema = z.object({
   id: z.string().optional(),
   url: z.url(),
-  tags: z.array(z.string()).optional(),
 });
 
 export const UpdateArticleSchema = z.object({
   isRead: z.boolean().optional(),
   isArchived: z.boolean().optional(),
-  tags: z.array(z.string()).optional(),
 });
 
 // Article with feed information

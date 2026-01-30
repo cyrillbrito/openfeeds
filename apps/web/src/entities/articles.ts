@@ -1,68 +1,43 @@
-import { ArticleSchema } from '@repo/shared/schemas';
-import type { Article } from '@repo/shared/types';
-import { queryCollectionOptions } from '@tanstack/query-db-collection';
-import { createCollection, parseLoadSubsetOptions } from '@tanstack/solid-db';
-import { queryClient } from '~/query-client';
-import { $$createArticle, $$getArticles, $$updateArticles } from './articles.server';
+import { snakeCamelMapper } from '@electric-sql/client';
+import { electricCollectionOptions } from '@tanstack/electric-db-collection';
+import { createCollection } from '@tanstack/solid-db';
+import { z } from 'zod';
+import { getShapeUrl } from '~/lib/electric-client';
+import { $$createArticle, $$updateArticles } from './articles.server';
 
-// Articles Collection
+// Schema matching application format (camelCase)
+// Electric returns snake_case from DB, columnMapper converts to camelCase
+// Note: `hasCleanContent` is a computed field, not in DB
+const ElectricArticleSchema = z.object({
+  id: z.string(),
+  feedId: z.string().nullable(),
+  title: z.string(),
+  url: z.string().nullable(),
+  description: z.string().nullable(),
+  content: z.string().nullable(),
+  author: z.string().nullable(),
+  pubDate: z.coerce.date().nullable(),
+  isRead: z.boolean().nullable(),
+  isArchived: z.boolean().nullable(),
+  cleanContent: z.string().nullable(), // Raw DB column
+  createdAt: z.coerce.date(),
+  // Add computed field with default for client-side use
+  hasCleanContent: z.boolean().optional().default(false),
+});
+
+// Articles Collection - Electric-powered real-time sync
 export const articlesCollection = createCollection(
-  queryCollectionOptions({
+  electricCollectionOptions({
     id: 'articles',
-    queryKey: ['articles'],
-    queryClient,
-    getKey: (item: Article) => item.id,
-    schema: ArticleSchema,
-    syncMode: 'on-demand', // Load data incrementally when queried
+    schema: ElectricArticleSchema,
+    getKey: (item) => item.id,
 
-    // Fetch articles with server-side filtering (predicate push-down)
-    // When views create live queries with .where() clauses, those filters
-    // are passed here via ctx.meta.loadSubsetOptions
-    queryFn: async (ctx) => {
-      // Parse filters from live queries
-      const loadSubsetOptions = ctx.meta?.loadSubsetOptions as
-        | { where?: any; orderBy?: any; limit?: number }
-        | undefined;
-
-      const parsed = parseLoadSubsetOptions({
-        where: loadSubsetOptions?.where,
-        orderBy: loadSubsetOptions?.orderBy,
-        limit: loadSubsetOptions?.limit,
-      });
-
-      // Build query parameters from parsed filters
-      const query: Record<string, any> = {
-        limit: parsed.limit || 10000,
-      };
-
-      // Map filters to query parameters
-      parsed.filters.forEach(({ field, operator, value }) => {
-        const fieldName = field[field.length - 1];
-        let handled = false;
-
-        if (operator === 'eq') {
-          query[fieldName] = value;
-          handled = true;
-        }
-        // Handle 'in' operator for loading articles by ID (from joins)
-        if (operator === 'in' && fieldName === 'id') {
-          query.ids = value;
-          handled = true;
-        }
-        // Handle 'ilike' operator for URL pattern filtering
-        if (operator === 'ilike' && fieldName === 'url') {
-          query.urlLike = value;
-          handled = true;
-        }
-
-        if (!handled) {
-          console.warn(`[articles] Unmapped filter: ${operator} on ${fieldName}`, value);
-        }
-      });
-
-      const result = await $$getArticles({ data: query });
-
-      return result?.data || [];
+    shapeOptions: {
+      url: getShapeUrl('articles'),
+      columnMapper: snakeCamelMapper(),
+      onError: (error) => {
+        console.error('Electric articles sync error:', error);
+      },
     },
 
     onInsert: async ({ transaction }) => {
@@ -74,7 +49,6 @@ export const articlesCollection = createCollection(
             data: {
               id: mutation.key as string,
               url: data.url,
-              tags: data.tags.length > 0 ? data.tags : undefined,
             },
           });
 
@@ -85,28 +59,21 @@ export const articlesCollection = createCollection(
             description: article.description,
             content: article.content,
             author: article.author,
-            pubDate: article.pubDate ?? new Date(),
+            pubDate: article.pubDate ?? new Date().toISOString(),
             hasCleanContent: article.hasCleanContent,
             createdAt: article.createdAt,
           });
-
-          // If tags were assigned, invalidate article-tags collection
-          // to force refresh of the local article-tag relationships
-          if (data.tags && data.tags.length > 0) {
-            queryClient.invalidateQueries({ queryKey: ['article-tags'] });
-          }
         }
       }
     },
 
-    // Handle client-side updates (isRead, isArchived, tags)
+    // Handle client-side updates (isRead, isArchived)
     onUpdate: async ({ transaction }) => {
       const updates = transaction.mutations.map((mutation) => {
         return {
           id: mutation.key as string,
           isRead: mutation.changes.isRead ?? undefined,
           isArchived: mutation.changes.isArchived ?? undefined,
-          tags: mutation.changes.tags ?? undefined,
         };
       });
       await $$updateArticles({ data: updates });

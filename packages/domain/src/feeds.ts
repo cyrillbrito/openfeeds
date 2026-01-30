@@ -128,6 +128,7 @@ export async function updateFeed(id: string, data: UpdateFeed, userId: string): 
     if (data.tags.length > 0) {
       const tagAssociations = data.tags.map((tagId: string) => ({
         id: createId(),
+        userId,
         feedId: id,
         tagId,
       }));

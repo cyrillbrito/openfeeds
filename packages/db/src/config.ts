@@ -24,9 +24,7 @@ function createDbInstance(connectionString: string) {
  * Must be called once at app startup before using any db functions.
  */
 export function initDb(config: DbConfig): void {
-  if (_config) {
-    throw new Error('Db already initialized');
-  }
+  if (_config) return;
   _config = config;
   _db = createDbInstance(config.databaseUrl);
 }

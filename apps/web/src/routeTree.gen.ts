@@ -20,6 +20,12 @@ import { Route as FrameSettingsRouteImport } from './routes/_frame.settings'
 import { Route as FrameTagsIndexRouteImport } from './routes/_frame.tags.index'
 import { Route as FrameInboxIndexRouteImport } from './routes/_frame.inbox.index'
 import { Route as FrameFeedsIndexRouteImport } from './routes/_frame.feeds.index'
+import { Route as ApiShapesTagsRouteImport } from './routes/api/shapes/tags'
+import { Route as ApiShapesSettingsRouteImport } from './routes/api/shapes/settings'
+import { Route as ApiShapesFilterRulesRouteImport } from './routes/api/shapes/filter-rules'
+import { Route as ApiShapesFeedsRouteImport } from './routes/api/shapes/feeds'
+import { Route as ApiShapesArticlesRouteImport } from './routes/api/shapes/articles'
+import { Route as ApiShapesArticleTagsRouteImport } from './routes/api/shapes/article-tags'
 import { Route as ApiAuthSplatRouteImport } from './routes/api/auth/$'
 import { Route as FrameTagsTagIdRouteImport } from './routes/_frame.tags.$tagId'
 import { Route as FrameArticlesArticleIdRouteImport } from './routes/_frame.articles.$articleId'
@@ -82,6 +88,36 @@ const FrameFeedsIndexRoute = FrameFeedsIndexRouteImport.update({
   path: '/feeds/',
   getParentRoute: () => FrameRoute,
 } as any)
+const ApiShapesTagsRoute = ApiShapesTagsRouteImport.update({
+  id: '/api/shapes/tags',
+  path: '/api/shapes/tags',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiShapesSettingsRoute = ApiShapesSettingsRouteImport.update({
+  id: '/api/shapes/settings',
+  path: '/api/shapes/settings',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiShapesFilterRulesRoute = ApiShapesFilterRulesRouteImport.update({
+  id: '/api/shapes/filter-rules',
+  path: '/api/shapes/filter-rules',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiShapesFeedsRoute = ApiShapesFeedsRouteImport.update({
+  id: '/api/shapes/feeds',
+  path: '/api/shapes/feeds',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiShapesArticlesRoute = ApiShapesArticlesRouteImport.update({
+  id: '/api/shapes/articles',
+  path: '/api/shapes/articles',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiShapesArticleTagsRoute = ApiShapesArticleTagsRouteImport.update({
+  id: '/api/shapes/article-tags',
+  path: '/api/shapes/article-tags',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiAuthSplatRoute = ApiAuthSplatRouteImport.update({
   id: '/api/auth/$',
   path: '/api/auth/$',
@@ -131,6 +167,12 @@ export interface FileRoutesByFullPath {
   '/articles/$articleId': typeof FrameArticlesArticleIdRoute
   '/tags/$tagId': typeof FrameTagsTagIdRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
+  '/api/shapes/article-tags': typeof ApiShapesArticleTagsRoute
+  '/api/shapes/articles': typeof ApiShapesArticlesRoute
+  '/api/shapes/feeds': typeof ApiShapesFeedsRoute
+  '/api/shapes/filter-rules': typeof ApiShapesFilterRulesRoute
+  '/api/shapes/settings': typeof ApiShapesSettingsRoute
+  '/api/shapes/tags': typeof ApiShapesTagsRoute
   '/feeds/': typeof FrameFeedsIndexRoute
   '/inbox/': typeof FrameInboxIndexRoute
   '/tags/': typeof FrameTagsIndexRoute
@@ -150,6 +192,12 @@ export interface FileRoutesByTo {
   '/articles/$articleId': typeof FrameArticlesArticleIdRoute
   '/tags/$tagId': typeof FrameTagsTagIdRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
+  '/api/shapes/article-tags': typeof ApiShapesArticleTagsRoute
+  '/api/shapes/articles': typeof ApiShapesArticlesRoute
+  '/api/shapes/feeds': typeof ApiShapesFeedsRoute
+  '/api/shapes/filter-rules': typeof ApiShapesFilterRulesRoute
+  '/api/shapes/settings': typeof ApiShapesSettingsRoute
+  '/api/shapes/tags': typeof ApiShapesTagsRoute
   '/feeds': typeof FrameFeedsIndexRoute
   '/inbox': typeof FrameInboxIndexRoute
   '/tags': typeof FrameTagsIndexRoute
@@ -171,6 +219,12 @@ export interface FileRoutesById {
   '/_frame/articles/$articleId': typeof FrameArticlesArticleIdRoute
   '/_frame/tags/$tagId': typeof FrameTagsTagIdRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
+  '/api/shapes/article-tags': typeof ApiShapesArticleTagsRoute
+  '/api/shapes/articles': typeof ApiShapesArticlesRoute
+  '/api/shapes/feeds': typeof ApiShapesFeedsRoute
+  '/api/shapes/filter-rules': typeof ApiShapesFilterRulesRoute
+  '/api/shapes/settings': typeof ApiShapesSettingsRoute
+  '/api/shapes/tags': typeof ApiShapesTagsRoute
   '/_frame/feeds/': typeof FrameFeedsIndexRoute
   '/_frame/inbox/': typeof FrameInboxIndexRoute
   '/_frame/tags/': typeof FrameTagsIndexRoute
@@ -192,6 +246,12 @@ export interface FileRouteTypes {
     | '/articles/$articleId'
     | '/tags/$tagId'
     | '/api/auth/$'
+    | '/api/shapes/article-tags'
+    | '/api/shapes/articles'
+    | '/api/shapes/feeds'
+    | '/api/shapes/filter-rules'
+    | '/api/shapes/settings'
+    | '/api/shapes/tags'
     | '/feeds/'
     | '/inbox/'
     | '/tags/'
@@ -211,6 +271,12 @@ export interface FileRouteTypes {
     | '/articles/$articleId'
     | '/tags/$tagId'
     | '/api/auth/$'
+    | '/api/shapes/article-tags'
+    | '/api/shapes/articles'
+    | '/api/shapes/feeds'
+    | '/api/shapes/filter-rules'
+    | '/api/shapes/settings'
+    | '/api/shapes/tags'
     | '/feeds'
     | '/inbox'
     | '/tags'
@@ -231,6 +297,12 @@ export interface FileRouteTypes {
     | '/_frame/articles/$articleId'
     | '/_frame/tags/$tagId'
     | '/api/auth/$'
+    | '/api/shapes/article-tags'
+    | '/api/shapes/articles'
+    | '/api/shapes/feeds'
+    | '/api/shapes/filter-rules'
+    | '/api/shapes/settings'
+    | '/api/shapes/tags'
     | '/_frame/feeds/'
     | '/_frame/inbox/'
     | '/_frame/tags/'
@@ -249,6 +321,12 @@ export interface RootRouteChildren {
   SignupRoute: typeof SignupRoute
   ApiFeedsRoute: typeof ApiFeedsRoute
   ApiAuthSplatRoute: typeof ApiAuthSplatRoute
+  ApiShapesArticleTagsRoute: typeof ApiShapesArticleTagsRoute
+  ApiShapesArticlesRoute: typeof ApiShapesArticlesRoute
+  ApiShapesFeedsRoute: typeof ApiShapesFeedsRoute
+  ApiShapesFilterRulesRoute: typeof ApiShapesFilterRulesRoute
+  ApiShapesSettingsRoute: typeof ApiShapesSettingsRoute
+  ApiShapesTagsRoute: typeof ApiShapesTagsRoute
   ApiArticlesArticleIdAudioRoute: typeof ApiArticlesArticleIdAudioRoute
 }
 
@@ -330,6 +408,48 @@ declare module '@tanstack/solid-router' {
       fullPath: '/feeds/'
       preLoaderRoute: typeof FrameFeedsIndexRouteImport
       parentRoute: typeof FrameRoute
+    }
+    '/api/shapes/tags': {
+      id: '/api/shapes/tags'
+      path: '/api/shapes/tags'
+      fullPath: '/api/shapes/tags'
+      preLoaderRoute: typeof ApiShapesTagsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/shapes/settings': {
+      id: '/api/shapes/settings'
+      path: '/api/shapes/settings'
+      fullPath: '/api/shapes/settings'
+      preLoaderRoute: typeof ApiShapesSettingsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/shapes/filter-rules': {
+      id: '/api/shapes/filter-rules'
+      path: '/api/shapes/filter-rules'
+      fullPath: '/api/shapes/filter-rules'
+      preLoaderRoute: typeof ApiShapesFilterRulesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/shapes/feeds': {
+      id: '/api/shapes/feeds'
+      path: '/api/shapes/feeds'
+      fullPath: '/api/shapes/feeds'
+      preLoaderRoute: typeof ApiShapesFeedsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/shapes/articles': {
+      id: '/api/shapes/articles'
+      path: '/api/shapes/articles'
+      fullPath: '/api/shapes/articles'
+      preLoaderRoute: typeof ApiShapesArticlesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/shapes/article-tags': {
+      id: '/api/shapes/article-tags'
+      path: '/api/shapes/article-tags'
+      fullPath: '/api/shapes/article-tags'
+      preLoaderRoute: typeof ApiShapesArticleTagsRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/api/auth/$': {
       id: '/api/auth/$'
@@ -418,6 +538,12 @@ const rootRouteChildren: RootRouteChildren = {
   SignupRoute: SignupRoute,
   ApiFeedsRoute: ApiFeedsRoute,
   ApiAuthSplatRoute: ApiAuthSplatRoute,
+  ApiShapesArticleTagsRoute: ApiShapesArticleTagsRoute,
+  ApiShapesArticlesRoute: ApiShapesArticlesRoute,
+  ApiShapesFeedsRoute: ApiShapesFeedsRoute,
+  ApiShapesFilterRulesRoute: ApiShapesFilterRulesRoute,
+  ApiShapesSettingsRoute: ApiShapesSettingsRoute,
+  ApiShapesTagsRoute: ApiShapesTagsRoute,
   ApiArticlesArticleIdAudioRoute: ApiArticlesArticleIdAudioRoute,
 }
 export const routeTree = rootRouteImport

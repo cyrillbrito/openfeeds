@@ -82,7 +82,7 @@ function FeedArticles() {
 
   const handleUpdateArticle = (
     articleId: string,
-    updates: { isRead?: boolean; tags?: string[] },
+    updates: { isRead?: boolean; isArchived?: boolean },
   ) => {
     // Track session-read articles
     if (updates.isRead === true) {
@@ -91,7 +91,7 @@ function FeedArticles() {
 
     articlesCollection.update(articleId, (draft) => {
       if (updates.isRead !== undefined) draft.isRead = updates.isRead;
-      if (updates.tags !== undefined) draft.tags = updates.tags;
+      if (updates.isArchived !== undefined) draft.isArchived = updates.isArchived;
     });
   };
 

@@ -54,6 +54,12 @@ Each app/package has its own `AGENTS.md` with specific patterns and guidelines.
 - Optimistic updates → server sync via server functions
 - Entities defined in `apps/web/src/entities/`
 
+**Electric SQL Sync:**
+
+- Uses Electric SQL for real-time data synchronization
+- Shape-based subscriptions filter data per-user
+- See "User ID Denormalization" below for critical schema requirements
+
 **Server Functions:**
 
 - TanStack Start `createServerFn` for data operations
@@ -188,3 +194,52 @@ export function getDbConfig(): DbConfig {
 - Run `bun check-types` after changes
 - TypeScript strict mode enabled
 - Lint with oxlint (type-aware)
+
+## User ID Denormalization
+
+**Every table must have a `user_id` column with an index.**
+
+This is required because:
+
+1. **Electric SQL limitation**: Shape where clauses cannot perform JOINs or subqueries. You can only filter on columns that exist directly on the table.
+
+2. **Multi-tenant filtering**: All data is filtered by user. Without `user_id` on junction tables (like `article_tags`), we'd need to build `WHERE article_id IN (...)` clauses with potentially thousands of IDs, causing HTTP 414 (URI Too Long) errors.
+
+3. **Query performance**: Indexes on `user_id` enable fast filtering for both Electric sync and server-side queries.
+
+**Pattern:**
+
+```typescript
+// Junction tables MUST include user_id
+export const articleTags = pgTable(
+  'article_tags',
+  {
+    id: text('id').primaryKey(),
+    userId: text('user_id')
+      .notNull()
+      .references(() => user.id, { onDelete: 'cascade' }),
+    articleId: text('article_id')
+      .notNull()
+      .references(() => articles.id, { onDelete: 'cascade' }),
+    tagId: text('tag_id')
+      .notNull()
+      .references(() => tags.id, { onDelete: 'cascade' }),
+  },
+  (table) => [
+    index('article_tags_user_id_idx').on(table.userId), // Always index user_id
+    // ... other indexes
+  ],
+);
+```
+
+**Electric SQL documentation reference:**
+
+> "For multi-level include trees, you can denormalise the filtering column onto the lower tables so that you can sync with a simple where clause."
+> — https://electric-sql.com/docs/guides/shapes#include-tree-workarounds
+
+**Checklist for new tables:**
+
+- [ ] Add `user_id` column with foreign key to `user.id`
+- [ ] Add `index('table_name_user_id_idx').on(table.userId)`
+- [ ] Include `userId` in insert operations
+- [ ] Update shape handlers to filter by `user_id`

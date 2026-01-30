@@ -1,8 +1,8 @@
+# Production: all services internal except web
 services:
   postgres:
     image: postgres:18.1-alpine
-    ports:
-      - '5432:5432'
+    # No ports exposed - internal only
     environment:
       POSTGRES_DB: openfeeds
       POSTGRES_USER: postgres
@@ -12,6 +12,12 @@ services:
     networks:
       - rss-network
     restart: unless-stopped
+    command:
+      - postgres
+      - -c
+      - listen_addresses=*
+      - -c
+      - wal_level=logical # Required for Electric SQL
     healthcheck:
       test: ['CMD-SHELL', 'pg_isready -U postgres -d openfeeds']
       interval: 5s
@@ -20,12 +26,27 @@ services:
 
   redis:
     image: redis:7-alpine
+    # No ports exposed - internal only
     volumes:
       - redis_data:/data
     networks:
       - rss-network
     restart: unless-stopped
     command: redis-server --save 60 1 --loglevel warning
+
+  # Electric SQL sync service (proxied through web app for auth)
+  electric:
+    image: electricsql/electric:latest
+    # No ports exposed - proxied through web app
+    environment:
+      DATABASE_URL: postgresql://postgres:postgres@postgres:5432/openfeeds?sslmode=disable
+      ELECTRIC_INSECURE: true # Safe - proxied through authenticated web app
+    networks:
+      - rss-network
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: unless-stopped
 
   migrator:
     image: ghcr.io/cyrillbrito/openfeeds-migrations:latest

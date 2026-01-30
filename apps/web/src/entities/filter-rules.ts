@@ -1,23 +1,26 @@
+import { snakeCamelMapper } from '@electric-sql/client';
 import { filterRuleSchema } from '@repo/shared/schemas';
 import type { CreateFilterRuleApi, FilterRule } from '@repo/shared/types';
-import { queryCollectionOptions } from '@tanstack/query-db-collection';
+import { electricCollectionOptions } from '@tanstack/electric-db-collection';
 import { createCollection, eq, useLiveQuery } from '@tanstack/solid-db';
-import { queryClient } from '~/query-client';
+import { getShapeUrl } from '~/lib/electric-client';
 import {
   $$createFilterRules,
   $$deleteFilterRules,
-  $$getAllFilterRules,
   $$updateFilterRules,
 } from './filter-rules.server';
 
+// Filter Rules Collection - Electric-powered real-time sync
 export const filterRulesCollection = createCollection(
-  queryCollectionOptions({
+  electricCollectionOptions({
     id: 'filter-rules',
-    queryKey: ['filter-rules'],
-    queryClient,
-    getKey: (item: FilterRule) => item.id,
     schema: filterRuleSchema,
-    queryFn: async () => (await $$getAllFilterRules()) ?? [],
+    getKey: (item) => item.id,
+
+    shapeOptions: {
+      url: getShapeUrl('filter-rules'),
+      columnMapper: snakeCamelMapper(),
+    },
 
     onInsert: async ({ transaction }) => {
       const rules = transaction.mutations.map((mutation) => {
