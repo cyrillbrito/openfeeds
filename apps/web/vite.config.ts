@@ -21,6 +21,8 @@ export default defineConfig({
     tailwindcss(),
     tanstackStart({
       spa: { enabled: true },
+      // Disable prerendering - all routes require auth, nothing useful to prerender
+      prerender: { enabled: false },
     }),
     solidPlugin({ ssr: true }),
   ],
