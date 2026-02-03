@@ -1,11 +1,5 @@
 import { TanStackDevtools } from '@tanstack/solid-devtools';
-import {
-  ClientOnly,
-  createRootRouteWithContext,
-  HeadContent,
-  Outlet,
-  Scripts,
-} from '@tanstack/solid-router';
+import { ClientOnly, createRootRoute, HeadContent, Outlet, Scripts } from '@tanstack/solid-router';
 import { TanStackRouterDevtoolsPanel } from '@tanstack/solid-router-devtools';
 import { onMount, Suspense } from 'solid-js';
 import { HydrationScript } from 'solid-js/web';
@@ -16,7 +10,7 @@ import { ToastProvider } from '../hooks/toast';
 import interCss from '../inter/inter.css?url';
 import appCss from '../styles/app.css?url';
 
-export const Route = createRootRouteWithContext<{}>()({
+export const Route = createRootRoute({
   ssr: false,
   head: () => ({
     meta: [
