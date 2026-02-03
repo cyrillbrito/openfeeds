@@ -1,6 +1,6 @@
 # Domain Package - Business Logic
 
-All business logic for OpenFeeds. Shared by web (server functions), server (auth/jobs), and worker (job processing).
+All business logic for OpenFeeds. Shared by web (server functions) and worker (job processing).
 
 ## Commands
 
@@ -19,7 +19,7 @@ bun check-types
 **Does NOT own:**
 
 - BullMQ Worker instances → `apps/worker`
-- HTTP routes → `apps/server`
+- HTTP routes → `apps/web` (server functions)
 
 ## Key Modules
 

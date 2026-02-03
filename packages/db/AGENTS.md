@@ -66,7 +66,7 @@ export const articlesTable = sqliteTable('articles', {
 
 **Auth Schema Updates:**
 
-1. Update Better Auth configuration in `../../apps/server/src/auth.ts`
+1. Update Better Auth configuration in `../../apps/web/src/lib/auth.ts`
 2. Run `bun auth-db-generate` to regenerate auth schema
 3. Migration files are created automatically
 4. Run `bun migrate` to apply changes

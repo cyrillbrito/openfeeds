@@ -1,7 +1,7 @@
 # Domain Logic & Worker Split
 
 **Date:** 2025-11-05  
-**Status:** Proposed
+**Status:** Completed (apps/server removed)
 
 ## Why
 

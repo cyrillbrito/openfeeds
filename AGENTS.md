@@ -28,7 +28,6 @@ Each app/package has its own `AGENTS.md` with specific patterns and guidelines.
 | App               | Description                          | Details                        |
 | ----------------- | ------------------------------------ | ------------------------------ |
 | `apps/web/`       | SolidJS + TanStack Start (main app)  | See `apps/web/AGENTS.md`       |
-| `apps/server/`    | **DEPRECATED** - Elysia API          | See `apps/server/AGENTS.md`    |
 | `apps/worker/`    | BullMQ background job processor      | See `apps/worker/AGENTS.md`    |
 | `apps/migrator/`  | Database migration runner            | -                              |
 | `apps/e2e/`       | Playwright tests + visual regression | See `apps/e2e/AGENTS.md`       |
@@ -65,7 +64,6 @@ Each app/package has its own `AGENTS.md` with specific patterns and guidelines.
 - TanStack Start `createServerFn` for data operations
 - Auth middleware provides user context
 - Calls `@repo/domain` for business logic
-- **All new API endpoints should be added here, not in Elysia**
 
 **Background Processing:**
 
@@ -91,7 +89,7 @@ Each app/package has its own `AGENTS.md` with specific patterns and guidelines.
 
 ```
 ┌─────────────────────────────────────────────────────────────────┐
-│ App (web, worker, server)                                       │
+│ App (web, worker)                                               │
 │ ┌─────────────────────────────────────────────────────────────┐ │
 │ │ src/env.ts - t3-env defines & validates env vars            │ │
 │ └─────────────────────────────────────────────────────────────┘ │

@@ -24,7 +24,7 @@ bun benchmark    # Run performance benchmark
 
 - Enqueue jobs → `@repo/domain`
 - Contain business logic → `@repo/domain`
-- Run HTTP server → `apps/server`
+- Run HTTP server → `apps/web`
 
 ## Key Files
 
