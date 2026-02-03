@@ -1,9 +1,8 @@
 import { TanStackDevtools } from '@tanstack/solid-devtools';
-import { ClientOnly, createRootRoute, HeadContent, Outlet, Scripts } from '@tanstack/solid-router';
+import { createRootRoute, HeadContent, Outlet, Scripts } from '@tanstack/solid-router';
 import { TanStackRouterDevtoolsPanel } from '@tanstack/solid-router-devtools';
 import { onMount, Suspense } from 'solid-js';
 import { HydrationScript } from 'solid-js/web';
-import { CenterLoader } from '~/components/Loader';
 import { SessionReadProvider } from '~/hooks/session-read';
 import { ThemeProvider } from '~/hooks/theme';
 import { ToastProvider } from '../hooks/toast';
@@ -11,7 +10,6 @@ import interCss from '../inter/inter.css?url';
 import appCss from '../styles/app.css?url';
 
 export const Route = createRootRoute({
-  ssr: false,
   head: () => ({
     meta: [
       { charset: 'utf-8' },
@@ -50,26 +48,22 @@ function RootComponent() {
       </head>
       <body>
         <Suspense>
-          <ClientOnly fallback={<CenterLoader />}>
-            <ThemeProvider>
-              <SessionReadProvider>
-                <ToastProvider>
-                  <Outlet />
-                  <TanStackDevtools
-                    config={{
-                      hideUntilHover: true,
-                    }}
-                    plugins={[
-                      {
-                        name: 'Router',
-                        render: () => <TanStackRouterDevtoolsPanel />,
-                      },
-                    ]}
-                  />
-                </ToastProvider>
-              </SessionReadProvider>
-            </ThemeProvider>
-          </ClientOnly>
+          <ThemeProvider>
+            <SessionReadProvider>
+              <ToastProvider>
+                <Outlet />
+                <TanStackDevtools
+                  config={{ hideUntilHover: true }}
+                  plugins={[
+                    {
+                      name: 'Router',
+                      render: () => <TanStackRouterDevtoolsPanel />,
+                    },
+                  ]}
+                />
+              </ToastProvider>
+            </SessionReadProvider>
+          </ThemeProvider>
         </Suspense>
 
         <Scripts />

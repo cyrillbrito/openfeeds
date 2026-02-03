@@ -1,4 +1,4 @@
-import { createFileRoute, Link, Outlet, useLocation } from '@tanstack/solid-router';
+import { ClientOnly, createFileRoute, Link, Outlet, useLocation } from '@tanstack/solid-router';
 import BookmarkPlusIcon from 'lucide-solid/icons/bookmark-plus';
 import InboxIcon from 'lucide-solid/icons/inbox';
 import LibraryIcon from 'lucide-solid/icons/library';
@@ -48,73 +48,77 @@ function FrameLayout() {
         <input id="my-drawer" type="checkbox" class="drawer-toggle" />
         {/* min-h-dvh instead of min-h-screen to handle mobile browser UI (address bar) correctly on rotation */}
         <div class="drawer-content flex min-h-dvh flex-col">
-          <Suspense fallback={<CenterLoader />}>
-            <Outlet />
-          </Suspense>
+          <ClientOnly fallback={<CenterLoader />}>
+            <Suspense fallback={<CenterLoader />}>
+              <Outlet />
+            </Suspense>
+          </ClientOnly>
         </div>
 
         <div class="drawer-side z-10 shadow-sm">
           <label for="my-drawer" aria-label="close sidebar" class="drawer-overlay"></label>
           {/* h-dvh instead of h-screen to handle mobile browser UI correctly on rotation */}
           <aside class="menu bg-base-100 border-base-300 flex h-dvh w-80 flex-col flex-nowrap border-r p-4">
-            {/* Menu Header */}
+            <ClientOnly fallback={<CenterLoader />}>
+              {/* Menu Header */}
 
-            <div class="mt-2 flex items-center justify-center gap-2">
-              <img src="/logo.svg" class="h-10 w-10" alt="OpenFeeds logo" />
-              <h2 class="text-lg font-bold">OpenFeeds</h2>
-            </div>
-            <div class="divider"></div>
-
-            <div class="flex-1 overflow-y-auto">
-              {/* Navigation */}
-              <ul class="mb-6 space-y-1">
-                <li>
-                  <Link
-                    to="/inbox"
-                    class="flex items-center gap-3"
-                    activeProps={{ class: 'menu-active' }}
-                  >
-                    <InboxIcon size={20} />
-                    Inbox
-                  </Link>
-                </li>
-                <li>
-                  <button
-                    class="hover:bg-base-200 flex w-full items-center gap-3 rounded-lg px-3 py-2 text-left transition-colors"
-                    onClick={() => addFeedModalController.open()}
-                  >
-                    <SearchIcon size={20} />
-                    Discover
-                  </button>
-                </li>
-                <li>
-                  <button
-                    class="hover:bg-base-200 flex w-full items-center gap-3 rounded-lg px-3 py-2 text-left transition-colors"
-                    onClick={() => saveArticleModalController.open()}
-                  >
-                    <BookmarkPlusIcon size={20} />
-                    Save Article
-                  </button>
-                </li>
-                <li>
-                  <Link
-                    to="/feeds"
-                    class="flex items-center gap-3"
-                    activeProps={{ class: 'menu-active' }}
-                  >
-                    <LibraryIcon size={20} />
-                    Manage Feeds
-                  </Link>
-                </li>
-              </ul>
-
+              <div class="mt-2 flex items-center justify-center gap-2">
+                <img src="/logo.svg" class="h-10 w-10" alt="OpenFeeds logo" />
+                <h2 class="text-lg font-bold">OpenFeeds</h2>
+              </div>
               <div class="divider"></div>
 
-              <DrawerTags />
-            </div>
+              <div class="flex-1 overflow-y-auto">
+                {/* Navigation */}
+                <ul class="mb-6 space-y-1">
+                  <li>
+                    <Link
+                      to="/inbox"
+                      class="flex items-center gap-3"
+                      activeProps={{ class: 'menu-active' }}
+                    >
+                      <InboxIcon size={20} />
+                      Inbox
+                    </Link>
+                  </li>
+                  <li>
+                    <button
+                      class="hover:bg-base-200 flex w-full items-center gap-3 rounded-lg px-3 py-2 text-left transition-colors"
+                      onClick={() => addFeedModalController.open()}
+                    >
+                      <SearchIcon size={20} />
+                      Discover
+                    </button>
+                  </li>
+                  <li>
+                    <button
+                      class="hover:bg-base-200 flex w-full items-center gap-3 rounded-lg px-3 py-2 text-left transition-colors"
+                      onClick={() => saveArticleModalController.open()}
+                    >
+                      <BookmarkPlusIcon size={20} />
+                      Save Article
+                    </button>
+                  </li>
+                  <li>
+                    <Link
+                      to="/feeds"
+                      class="flex items-center gap-3"
+                      activeProps={{ class: 'menu-active' }}
+                    >
+                      <LibraryIcon size={20} />
+                      Manage Feeds
+                    </Link>
+                  </li>
+                </ul>
 
-            <div class="divider"></div>
-            <UserMenu />
+                <div class="divider"></div>
+
+                <DrawerTags />
+              </div>
+
+              <div class="divider"></div>
+              <UserMenu />
+            </ClientOnly>
           </aside>
         </div>
       </div>
