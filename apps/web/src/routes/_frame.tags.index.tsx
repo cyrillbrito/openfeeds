@@ -5,7 +5,6 @@ import PlusIcon from 'lucide-solid/icons/plus';
 import { createSignal, For, Show, Suspense } from 'solid-js';
 import { CenterLoader } from '~/components/Loader';
 import { useTags } from '~/entities/tags';
-import { Card } from '../components/Card';
 import { ColorIndicator } from '../components/ColorIndicator';
 import { DeleteTagModal } from '../components/DeleteTagModal';
 import { Dropdown } from '../components/Dropdown';
@@ -52,7 +51,7 @@ function TagsComponent() {
         </button>
       </Header>
 
-      <div class="container mx-auto px-2 py-3 sm:p-6">
+      <div class="mx-auto w-full max-w-2xl px-2 py-3 sm:p-6">
         <div class="mb-6">
           <p class="text-base-content-gray">Organize your feeds with custom tags and colors</p>
         </div>
@@ -91,46 +90,43 @@ function TagsComponent() {
               </div>
             }
           >
-            <div class="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+            <div class="grid grid-cols-2 gap-3">
               <For each={tagsQuery.data!}>
                 {(tag) => (
-                  <Card class="cursor-pointer hover:shadow-lg">
-                    <div class="flex items-center justify-between">
+                  <div class="border-base-300 bg-base-100 flex items-center justify-between gap-2 rounded-lg border px-3 py-3 shadow-sm">
+                    <div class="min-w-0">
                       <div class="flex items-center gap-2">
                         <ColorIndicator class={getTagDotColor(tag.color)} />
-                        <h2 class="card-title">{tag.name}</h2>
+                        <span class="truncate font-medium">{tag.name}</span>
                       </div>
-
-                      <div onClick={(e) => e.stopPropagation()}>
-                        <Dropdown
-                          end
-                          btnClasses="btn-circle btn-ghost"
-                          btnContent={<EllipsisVerticalIcon size={20} />}
-                        >
-                          <li>
-                            <button onClick={() => handleEditTag(tag)}>Edit</button>
-                          </li>
-                          <li>
-                            <button
-                              class="text-error"
-                              onClick={() => {
-                                setTagToDelete(tag);
-                                deleteModalController.open();
-                              }}
-                            >
-                              Delete
-                            </button>
-                          </li>
-                        </Dropdown>
+                      <div class="text-base-content-gray mt-1 text-xs">
+                        Created <TimeAgo date={tag.createdAt} />
                       </div>
                     </div>
 
-                    <div class="mt-4">
-                      <div class="text-base-content-gray text-sm">
-                        Created: <TimeAgo date={tag.createdAt} />
-                      </div>
+                    <div onClick={(e) => e.stopPropagation()}>
+                      <Dropdown
+                        end
+                        btnClasses="btn-circle btn-ghost btn-sm"
+                        btnContent={<EllipsisVerticalIcon size={16} />}
+                      >
+                        <li>
+                          <button onClick={() => handleEditTag(tag)}>Edit</button>
+                        </li>
+                        <li>
+                          <button
+                            class="text-error"
+                            onClick={() => {
+                              setTagToDelete(tag);
+                              deleteModalController.open();
+                            }}
+                          >
+                            Delete
+                          </button>
+                        </li>
+                      </Dropdown>
                     </div>
-                  </Card>
+                  </div>
                 )}
               </For>
             </div>

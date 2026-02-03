@@ -20,9 +20,10 @@ The global background is `base-100`. Components only need explicit `bg-base-100`
 
 ## Content Width
 
-- Main content area: `max-w-4xl` constraint for readability on large screens
+- Main content area: `max-w-2xl` constraint for readability on large screens
 - Full-width on mobile, centered with padding on desktop
-- Article cards and feed lists respect this constraint
+- Pattern: `mx-auto w-full max-w-2xl px-2 py-3 sm:p-6`
+- Article cards, feed lists, and management pages respect this constraint
 
 ## Spacing
 
