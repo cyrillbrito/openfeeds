@@ -6,7 +6,8 @@ import CloudDownloadIcon from 'lucide-solid/icons/cloud-download';
 import EllipsisVerticalIcon from 'lucide-solid/icons/ellipsis-vertical';
 import PlusIcon from 'lucide-solid/icons/plus';
 import SearchIcon from 'lucide-solid/icons/search';
-import { createMemo, createSignal, For, Show, Suspense } from 'solid-js';
+import { createMemo, createSignal, For, Match, Show, Switch } from 'solid-js';
+import { CenterLoader } from '~/components/Loader';
 import { useFeeds } from '~/entities/feeds';
 import { useTags } from '~/entities/tags';
 import { AddFeedModal } from '../components/AddFeedModal';
@@ -123,57 +124,57 @@ function FeedsComponent() {
           feed={editingFeed()}
         />
 
-        <Suspense
-          fallback={
-            <div class="flex justify-center py-12">
-              <span class="loading loading-spinner loading-lg"></span>
-            </div>
-          }
-        >
-          <Show
-            when={feedsQuery.data && feedsQuery.data.length > 0}
-            fallback={
-              <div class="py-16 text-center">
-                {/* RSS Feeds SVG Illustration */}
-                <div class="mb-8 flex justify-center">
-                  <FeedIllustration />
-                </div>
+        <Switch>
+          {/* Loading state */}
+          <Match when={feedsQuery.data === undefined}>
+            <CenterLoader />
+          </Match>
 
-                <h2 class="mb-4 text-3xl font-bold">No RSS Feeds Yet</h2>
-                <p class="text-base-content-gray mx-auto mb-8 max-w-md">
-                  Start building your personalized news feed by adding your favorite RSS sources.
-                  Stay updated with the latest content from blogs, news sites, and more.
-                </p>
+          {/* Empty state - no feeds */}
+          <Match when={feedsQuery.data?.length === 0}>
+            <div class="py-16 text-center">
+              {/* RSS Feeds SVG Illustration */}
+              <div class="mb-8 flex justify-center">
+                <FeedIllustration />
+              </div>
 
-                <div class="flex flex-col justify-center gap-3 sm:flex-row">
-                  <button
-                    class="btn btn-outline btn-lg"
-                    onClick={() => importOpmlModalController.open()}
-                  >
-                    <CloudDownloadIcon size={20} class="mr-2" />
-                    Import OPML
-                  </button>
-                  <button
-                    class="btn btn-primary btn-lg"
-                    onClick={() => addFeedModalController.open()}
-                  >
-                    <PlusIcon size={20} class="mr-2" />
-                    Add Your First Feed
-                  </button>
-                </div>
+              <h2 class="mb-4 text-3xl font-bold">No RSS Feeds Yet</h2>
+              <p class="text-base-content-gray mx-auto mb-8 max-w-md">
+                Start building your personalized news feed by adding your favorite RSS sources. Stay
+                updated with the latest content from blogs, news sites, and more.
+              </p>
 
-                <div class="text-base-content/50 mt-8 text-sm">
-                  <p>Not sure where to start? Try popular feeds like:</p>
-                  <div class="mt-3 flex flex-wrap justify-center gap-2">
-                    <span class="badge badge-outline">Tech News</span>
-                    <span class="badge badge-outline">Blog Posts</span>
-                    <span class="badge badge-outline">News Sites</span>
-                    <span class="badge badge-outline">Podcasts</span>
-                  </div>
+              <div class="flex flex-col justify-center gap-3 sm:flex-row">
+                <button
+                  class="btn btn-outline btn-lg"
+                  onClick={() => importOpmlModalController.open()}
+                >
+                  <CloudDownloadIcon size={20} class="mr-2" />
+                  Import OPML
+                </button>
+                <button
+                  class="btn btn-primary btn-lg"
+                  onClick={() => addFeedModalController.open()}
+                >
+                  <PlusIcon size={20} class="mr-2" />
+                  Add Your First Feed
+                </button>
+              </div>
+
+              <div class="text-base-content/50 mt-8 text-sm">
+                <p>Not sure where to start? Try popular feeds like:</p>
+                <div class="mt-3 flex flex-wrap justify-center gap-2">
+                  <span class="badge badge-outline">Tech News</span>
+                  <span class="badge badge-outline">Blog Posts</span>
+                  <span class="badge badge-outline">News Sites</span>
+                  <span class="badge badge-outline">Podcasts</span>
                 </div>
               </div>
-            }
-          >
+            </div>
+          </Match>
+
+          {/* Has feeds */}
+          <Match when={feedsQuery.data && feedsQuery.data.length > 0}>
             <Show
               when={filteredFeeds().length > 0}
               fallback={
@@ -318,8 +319,8 @@ function FeedsComponent() {
                 </For>
               </div>
             </Show>
-          </Show>
-        </Suspense>
+          </Match>
+        </Switch>
       </div>
     </>
   );

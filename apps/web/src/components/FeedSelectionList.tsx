@@ -1,5 +1,6 @@
 import type { DiscoveredFeed } from '@repo/shared/types';
 import { createSignal, For, Show } from 'solid-js';
+import { CenterLoader } from './Loader';
 
 interface FeedSelectionListProps {
   feeds: DiscoveredFeed[];
@@ -55,9 +56,7 @@ export function FeedSelectionList(props: FeedSelectionListProps) {
       </Show>
 
       <Show when={props.isLoading}>
-        <div class="flex items-center justify-center py-8">
-          <span class="loading loading-spinner loading-lg"></span>
-        </div>
+        <CenterLoader />
       </Show>
     </div>
   );

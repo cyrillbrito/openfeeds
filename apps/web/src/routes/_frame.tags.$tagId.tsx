@@ -166,17 +166,7 @@ function TagArticles() {
 
       <div class="mx-auto w-full max-w-2xl px-2 pb-3 sm:px-6 sm:pb-6">
         <Suspense fallback={<CenterLoader />}>
-          <Show
-            when={feedsQuery.data && tagsQuery.data}
-            fallback={
-              <>
-                {() => {
-                  alert('when={feedsQuery.data && tagsQuery.data}');
-                  return <>SHOW FALLBACK</>;
-                }}
-              </>
-            }
-          >
+          <Show when={feedsQuery() && tagsQuery()}>
             <ArticleList
               articles={articles()}
               feeds={feedsQuery.data!}

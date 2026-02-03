@@ -4,7 +4,7 @@ import InboxIcon from 'lucide-solid/icons/inbox';
 import LibraryIcon from 'lucide-solid/icons/library';
 import PlusIcon from 'lucide-solid/icons/plus';
 import SearchIcon from 'lucide-solid/icons/search';
-import { createEffect, For, Suspense } from 'solid-js';
+import { createEffect, For, onMount, Suspense } from 'solid-js';
 import { useTags } from '~/entities/tags';
 import { authMiddleware } from '~/server/middleware/auth.ts';
 import { AddFeedModal } from '../components/AddFeedModal';
@@ -28,13 +28,15 @@ function FrameLayout() {
   let saveArticleModalController!: ModalController;
   const location = useLocation();
 
-  // Close drawer on navigation (mobile only)
-  createEffect(() => {
-    void location().pathname; // Track pathname changes
-    const drawerCheckbox = document.getElementById('my-drawer') as HTMLInputElement;
-    if (drawerCheckbox) {
-      drawerCheckbox.checked = false;
-    }
+  // Close drawer on navigation (mobile only) - runs only on client
+  onMount(() => {
+    createEffect(() => {
+      void location().pathname; // Track pathname changes
+      const drawerCheckbox = document.getElementById('my-drawer') as HTMLInputElement;
+      if (drawerCheckbox) {
+        drawerCheckbox.checked = false;
+      }
+    });
   });
 
   return (
@@ -46,16 +48,7 @@ function FrameLayout() {
         <input id="my-drawer" type="checkbox" class="drawer-toggle" />
         {/* min-h-dvh instead of min-h-screen to handle mobile browser UI (address bar) correctly on rotation */}
         <div class="drawer-content flex min-h-dvh flex-col">
-          <Suspense
-            fallback={
-              <>
-                {() => {
-                  console.info('Suspense _frame');
-                  return <CenterLoader />;
-                }}
-              </>
-            }
-          >
+          <Suspense fallback={<CenterLoader />}>
             <Outlet />
           </Suspense>
         </div>

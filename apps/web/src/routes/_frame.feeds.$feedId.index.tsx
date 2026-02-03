@@ -5,6 +5,7 @@ import MoreVerticalIcon from 'lucide-solid/icons/more-vertical';
 import ShuffleIcon from 'lucide-solid/icons/shuffle';
 import VideoIcon from 'lucide-solid/icons/video';
 import { createSignal, For, onMount, Show, Suspense } from 'solid-js';
+import { CenterLoader } from '~/components/Loader';
 import { articlesCollection } from '~/entities/articles';
 import { useFeeds } from '~/entities/feeds';
 import { useTags } from '~/entities/tags';
@@ -261,24 +262,8 @@ function FeedArticles() {
       />
 
       <div class="mx-auto w-full max-w-2xl px-2 pb-3 sm:px-6 sm:pb-6">
-        <Suspense
-          fallback={
-            <div class="flex justify-center py-12">
-              <span class="loading loading-spinner loading-lg"></span>
-            </div>
-          }
-        >
-          <Show
-            when={feedsQuery.data && tagsQuery.data}
-            fallback={
-              <>
-                {() => {
-                  alert('when={feedsQuery.data && tagsQuery.data}');
-                  return <>SHOW FALLBACK</>;
-                }}
-              </>
-            }
-          >
+        <Suspense fallback={<CenterLoader />}>
+          <Show when={feedsQuery.data && tagsQuery.data}>
             <ArticleList
               articles={articles()}
               feeds={feedsQuery.data!}

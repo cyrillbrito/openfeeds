@@ -3,6 +3,7 @@ import { createFileRoute } from '@tanstack/solid-router';
 import EllipsisVerticalIcon from 'lucide-solid/icons/ellipsis-vertical';
 import PlusIcon from 'lucide-solid/icons/plus';
 import { createSignal, For, Show, Suspense } from 'solid-js';
+import { CenterLoader } from '~/components/Loader';
 import { useTags } from '~/entities/tags';
 import { Card } from '../components/Card';
 import { ColorIndicator } from '../components/ColorIndicator';
@@ -68,13 +69,7 @@ function TagsComponent() {
           onDeleteComplete={() => setTagToDelete(null)}
           onClose={() => setTagToDelete(null)}
         />
-        <Suspense
-          fallback={
-            <div class="flex justify-center py-12">
-              <span class="loading loading-spinner loading-lg"></span>
-            </div>
-          }
-        >
+        <Suspense fallback={<CenterLoader />}>
           <Show
             when={tagsQuery.data && tagsQuery.data.length > 0}
             fallback={

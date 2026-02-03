@@ -1,8 +1,15 @@
 import { TanStackDevtools } from '@tanstack/solid-devtools';
-import { createRootRouteWithContext, HeadContent, Outlet, Scripts } from '@tanstack/solid-router';
+import {
+  ClientOnly,
+  createRootRouteWithContext,
+  HeadContent,
+  Outlet,
+  Scripts,
+} from '@tanstack/solid-router';
 import { TanStackRouterDevtoolsPanel } from '@tanstack/solid-router-devtools';
 import { onMount, Suspense } from 'solid-js';
 import { HydrationScript } from 'solid-js/web';
+import { CenterLoader } from '~/components/Loader';
 import { SessionReadProvider } from '~/hooks/session-read';
 import { ThemeProvider } from '~/hooks/theme';
 import { ToastProvider } from '../hooks/toast';
@@ -49,24 +56,26 @@ function RootComponent() {
       </head>
       <body>
         <Suspense>
-          <ThemeProvider>
-            <SessionReadProvider>
-              <ToastProvider>
-                <Outlet />
-                <TanStackDevtools
-                  config={{
-                    hideUntilHover: true,
-                  }}
-                  plugins={[
-                    {
-                      name: 'Router',
-                      render: () => <TanStackRouterDevtoolsPanel />,
-                    },
-                  ]}
-                />
-              </ToastProvider>
-            </SessionReadProvider>
-          </ThemeProvider>
+          <ClientOnly fallback={<CenterLoader />}>
+            <ThemeProvider>
+              <SessionReadProvider>
+                <ToastProvider>
+                  <Outlet />
+                  <TanStackDevtools
+                    config={{
+                      hideUntilHover: true,
+                    }}
+                    plugins={[
+                      {
+                        name: 'Router',
+                        render: () => <TanStackRouterDevtoolsPanel />,
+                      },
+                    ]}
+                  />
+                </ToastProvider>
+              </SessionReadProvider>
+            </ThemeProvider>
+          </ClientOnly>
         </Suspense>
 
         <Scripts />
