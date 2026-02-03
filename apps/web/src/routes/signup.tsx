@@ -5,12 +5,12 @@ import posthog from 'posthog-js';
 import { createSignal, Show } from 'solid-js';
 import { Card } from '../components/Card.tsx';
 import { Loader } from '../components/Loader';
-import { fetchUser, useRegister } from '../hooks/use-auth.ts';
+import { authClient } from '../hooks/use-auth.ts';
 
 export const Route = createFileRoute('/signup')({
   beforeLoad: async () => {
-    const user = await fetchUser();
-    if (user) {
+    const { data } = await authClient.getSession();
+    if (data?.user) {
       throw redirect({ to: '/' });
     }
   },
@@ -25,12 +25,12 @@ export const Route = createFileRoute('/signup')({
 function SignUpPage() {
   const navigate = useNavigate();
   const search = Route.useSearch();
-  const registerMutation = useRegister();
   const [name, setName] = createSignal('');
   const [email, setEmail] = createSignal('');
   const [password, setPassword] = createSignal('');
   const [confirmPassword, setConfirmPassword] = createSignal('');
   const [error, setError] = createSignal<string | null>(null);
+  const [isLoading, setIsLoading] = createSignal(false);
 
   const handleSignUp = async (e: Event) => {
     e.preventDefault();
@@ -42,13 +42,20 @@ function SignUpPage() {
       return;
     }
 
+    setIsLoading(true);
+
     const [err] = await attemptAsync(
-      registerMutation.mutateAsync({
-        email: email(),
-        password: password(),
-        name: name(),
-      }),
+      authClient.signUp.email(
+        {
+          email: email(),
+          password: password(),
+          name: name(),
+        },
+        { throw: true },
+      ),
     );
+
+    setIsLoading(false);
 
     if (err) {
       if (err instanceof BetterFetchError) {
@@ -85,7 +92,7 @@ function SignUpPage() {
               value={name()}
               onInput={(e) => setName(e.currentTarget.value)}
               required
-              disabled={registerMutation.isPending}
+              disabled={isLoading()}
             />
           </div>
 
@@ -100,7 +107,7 @@ function SignUpPage() {
               value={email()}
               onInput={(e) => setEmail(e.currentTarget.value)}
               required
-              disabled={registerMutation.isPending}
+              disabled={isLoading()}
             />
           </div>
 
@@ -115,7 +122,7 @@ function SignUpPage() {
               value={password()}
               onInput={(e) => setPassword(e.currentTarget.value)}
               required
-              disabled={registerMutation.isPending}
+              disabled={isLoading()}
             />
             <label class="label">
               <span class="label-text-alt text-base-content-gray">
@@ -135,7 +142,7 @@ function SignUpPage() {
               value={confirmPassword()}
               onInput={(e) => setConfirmPassword(e.currentTarget.value)}
               required
-              disabled={registerMutation.isPending}
+              disabled={isLoading()}
             />
           </div>
 
@@ -159,15 +166,11 @@ function SignUpPage() {
           </Show>
 
           <div class="form-control mt-6">
-            <button
-              type="submit"
-              class="btn btn-primary w-full"
-              disabled={registerMutation.isPending}
-            >
-              <Show when={registerMutation.isPending}>
+            <button type="submit" class="btn btn-primary w-full" disabled={isLoading()}>
+              <Show when={isLoading()}>
                 <Loader />
               </Show>
-              {registerMutation.isPending ? 'Creating Account...' : 'Create Account'}
+              {isLoading() ? 'Creating Account...' : 'Create Account'}
             </button>
           </div>
         </form>

@@ -7,12 +7,12 @@ import posthog from 'posthog-js';
 import { createSignal, Show } from 'solid-js';
 import { Card } from '../components/Card.tsx';
 import { Loader } from '../components/Loader';
-import { fetchUser, useForgotPassword } from '../hooks/use-auth.ts';
+import { authClient } from '../hooks/use-auth.ts';
 
 export const Route = createFileRoute('/forgot-password')({
   beforeLoad: async () => {
-    const user = await fetchUser();
-    if (user) {
+    const { data } = await authClient.getSession();
+    if (data?.user) {
       throw redirect({ to: '/' });
     }
   },
@@ -26,20 +26,27 @@ export const Route = createFileRoute('/forgot-password')({
 
 function ForgotPasswordPage() {
   const search = Route.useSearch();
-  const forgotPasswordMutation = useForgotPassword();
   const [email, setEmail] = createSignal(search()?.email || '');
   const [error, setError] = createSignal<string | null>(null);
   const [success, setSuccess] = createSignal(false);
+  const [isLoading, setIsLoading] = createSignal(false);
 
   const handleSubmit = async (e: Event) => {
     e.preventDefault();
     setError(null);
+    setIsLoading(true);
 
     const [err] = await attemptAsync(
-      forgotPasswordMutation.mutateAsync({
-        email: email(),
-      }),
+      authClient.requestPasswordReset(
+        {
+          email: email(),
+          redirectTo: '/reset-password',
+        },
+        { throw: true },
+      ),
     );
+
+    setIsLoading(false);
 
     if (err) {
       if (err instanceof BetterFetchError) {
@@ -85,7 +92,7 @@ function ForgotPasswordPage() {
                 value={email()}
                 onInput={(e) => setEmail(e.currentTarget.value)}
                 required
-                disabled={forgotPasswordMutation.isPending}
+                disabled={isLoading()}
               />
             </div>
 
@@ -97,15 +104,11 @@ function ForgotPasswordPage() {
             </Show>
 
             <div class="form-control mt-6">
-              <button
-                type="submit"
-                class="btn btn-primary w-full"
-                disabled={forgotPasswordMutation.isPending}
-              >
-                <Show when={forgotPasswordMutation.isPending}>
+              <button type="submit" class="btn btn-primary w-full" disabled={isLoading()}>
+                <Show when={isLoading()}>
                   <Loader />
                 </Show>
-                {forgotPasswordMutation.isPending ? 'Sending...' : 'Send Reset Link'}
+                {isLoading() ? 'Sending...' : 'Send Reset Link'}
               </button>
             </div>
           </form>

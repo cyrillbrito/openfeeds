@@ -6,12 +6,12 @@ import posthog from 'posthog-js';
 import { createSignal, Show } from 'solid-js';
 import { Card } from '../components/Card.tsx';
 import { Loader } from '../components/Loader';
-import { fetchUser, useResetPassword } from '../hooks/use-auth.ts';
+import { authClient } from '../hooks/use-auth.ts';
 
 export const Route = createFileRoute('/reset-password')({
   beforeLoad: async () => {
-    const user = await fetchUser();
-    if (user) {
+    const { data } = await authClient.getSession();
+    if (data?.user) {
       throw redirect({ to: '/' });
     }
   },
@@ -27,10 +27,10 @@ export const Route = createFileRoute('/reset-password')({
 function ResetPasswordPage() {
   const navigate = useNavigate();
   const search = Route.useSearch();
-  const resetPasswordMutation = useResetPassword();
   const [password, setPassword] = createSignal('');
   const [confirmPassword, setConfirmPassword] = createSignal('');
   const [error, setError] = createSignal<string | null>(null);
+  const [isLoading, setIsLoading] = createSignal(false);
 
   // Check for token error from Better Auth redirect
   const tokenError = search()?.error;
@@ -50,12 +50,19 @@ function ResetPasswordPage() {
       return;
     }
 
+    setIsLoading(true);
+
     const [err] = await attemptAsync(
-      resetPasswordMutation.mutateAsync({
-        newPassword: password(),
-        token,
-      }),
+      authClient.resetPassword(
+        {
+          newPassword: password(),
+          token,
+        },
+        { throw: true },
+      ),
     );
+
+    setIsLoading(false);
 
     if (err) {
       if (err instanceof BetterFetchError) {
@@ -111,7 +118,7 @@ function ResetPasswordPage() {
                 value={password()}
                 onInput={(e) => setPassword(e.currentTarget.value)}
                 required
-                disabled={resetPasswordMutation.isPending}
+                disabled={isLoading()}
               />
               <label class="label">
                 <span class="label-text-alt text-base-content-gray">
@@ -131,7 +138,7 @@ function ResetPasswordPage() {
                 value={confirmPassword()}
                 onInput={(e) => setConfirmPassword(e.currentTarget.value)}
                 required
-                disabled={resetPasswordMutation.isPending}
+                disabled={isLoading()}
               />
             </div>
 
@@ -143,15 +150,11 @@ function ResetPasswordPage() {
             </Show>
 
             <div class="form-control mt-6">
-              <button
-                type="submit"
-                class="btn btn-primary w-full"
-                disabled={resetPasswordMutation.isPending}
-              >
-                <Show when={resetPasswordMutation.isPending}>
+              <button type="submit" class="btn btn-primary w-full" disabled={isLoading()}>
+                <Show when={isLoading()}>
                   <Loader />
                 </Show>
-                {resetPasswordMutation.isPending ? 'Resetting...' : 'Reset Password'}
+                {isLoading() ? 'Resetting...' : 'Reset Password'}
               </button>
             </div>
           </form>

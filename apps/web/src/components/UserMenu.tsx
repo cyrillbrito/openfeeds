@@ -7,15 +7,14 @@ import SettingsIcon from 'lucide-solid/icons/settings';
 import SunIcon from 'lucide-solid/icons/sun';
 import { Suspense } from 'solid-js';
 import { useTheme } from '../hooks/theme.tsx';
-import { useLogout, useUser } from '../hooks/use-auth.ts';
+import { authClient } from '../hooks/use-auth.ts';
 import { Dropdown } from './Dropdown';
 
 export function UserMenu() {
   const { theme, setTheme, actualTheme } = useTheme();
-  const user$ = useUser();
-  const logoutMutation = useLogout();
+  const session = authClient.useSession();
 
-  const user = () => user$.data;
+  const user = () => session().data?.user;
 
   const getThemeIcon = () => {
     const current = theme();
@@ -39,13 +38,22 @@ export function UserMenu() {
   };
 
   const getUserInitials = () => {
-    const user1 = user();
-    if (!user1?.name) return 'U';
-    return user1.name
+    const u = user();
+    if (!u?.name) return 'U';
+    return u.name
       .split(' ')
       .map((word: string) => word.charAt(0).toUpperCase())
       .join('')
       .slice(0, 2);
+  };
+
+  const handleSignOut = async () => {
+    try {
+      await authClient.signOut();
+      window.location.href = '/signin';
+    } catch (error) {
+      console.error('Sign out error:', error);
+    }
   };
 
   return (
@@ -124,13 +132,7 @@ export function UserMenu() {
         {/* Sign Out */}
         <li>
           <button
-            onClick={async () => {
-              try {
-                await logoutMutation.mutateAsync();
-              } catch (error) {
-                console.error('Sign out error:', error);
-              }
-            }}
+            onClick={handleSignOut}
             class="text-error hover:text-error flex items-center gap-3 px-4 py-2"
           >
             <LogOutIcon size={16} />

@@ -1,6 +1,4 @@
 import { TanStackDevtools } from '@tanstack/solid-devtools';
-import type { QueryClient } from '@tanstack/solid-query';
-import { SolidQueryDevtoolsPanel } from '@tanstack/solid-query-devtools';
 import { createRootRouteWithContext, HeadContent, Outlet, Scripts } from '@tanstack/solid-router';
 import { TanStackRouterDevtoolsPanel } from '@tanstack/solid-router-devtools';
 import { onMount, Suspense } from 'solid-js';
@@ -11,7 +9,7 @@ import { ToastProvider } from '../hooks/toast';
 import interCss from '../inter/inter.css?url';
 import appCss from '../styles/app.css?url';
 
-export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()({
+export const Route = createRootRouteWithContext<{}>()({
   ssr: false,
   head: () => ({
     meta: [
@@ -63,10 +61,6 @@ function RootComponent() {
                     {
                       name: 'Router',
                       render: () => <TanStackRouterDevtoolsPanel />,
-                    },
-                    {
-                      name: 'Query',
-                      render: () => <SolidQueryDevtoolsPanel />,
                     },
                   ]}
                 />

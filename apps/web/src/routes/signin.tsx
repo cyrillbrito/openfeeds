@@ -5,12 +5,12 @@ import posthog from 'posthog-js';
 import { createSignal, Show } from 'solid-js';
 import { Card } from '../components/Card.tsx';
 import { Loader } from '../components/Loader';
-import { fetchUser, useLogin } from '../hooks/use-auth.ts';
+import { authClient } from '../hooks/use-auth.ts';
 
 export const Route = createFileRoute('/signin')({
   beforeLoad: async () => {
-    const user = await fetchUser();
-    if (user) {
+    const { data } = await authClient.getSession();
+    if (data?.user) {
       throw redirect({ to: '/' });
     }
   },
@@ -26,21 +26,27 @@ export const Route = createFileRoute('/signin')({
 function SignInPage() {
   const navigate = useNavigate();
   const search = Route.useSearch();
-  const loginMutation = useLogin();
   const [email, setEmail] = createSignal('');
   const [password, setPassword] = createSignal('');
   const [error, setError] = createSignal<string | null>(null);
+  const [isLoading, setIsLoading] = createSignal(false);
 
   const handleSignIn = async (e: Event) => {
     e.preventDefault();
     setError(null);
+    setIsLoading(true);
 
     const [err] = await attemptAsync(
-      loginMutation.mutateAsync({
-        email: email(),
-        password: password(),
-      }),
+      authClient.signIn.email(
+        {
+          email: email(),
+          password: password(),
+        },
+        { throw: true },
+      ),
     );
+
+    setIsLoading(false);
 
     if (err) {
       if (err instanceof BetterFetchError) {
@@ -77,7 +83,7 @@ function SignInPage() {
               value={email()}
               onInput={(e) => setEmail(e.currentTarget.value)}
               required
-              disabled={loginMutation.isPending}
+              disabled={isLoading()}
             />
           </div>
 
@@ -92,7 +98,7 @@ function SignInPage() {
               value={password()}
               onInput={(e) => setPassword(e.currentTarget.value)}
               required
-              disabled={loginMutation.isPending}
+              disabled={isLoading()}
             />
             <label class="label">
               <Link
@@ -125,11 +131,11 @@ function SignInPage() {
           </Show>
 
           <div class="form-control mt-6">
-            <button type="submit" class="btn btn-primary w-full" disabled={loginMutation.isPending}>
-              <Show when={loginMutation.isPending}>
+            <button type="submit" class="btn btn-primary w-full" disabled={isLoading()}>
+              <Show when={isLoading()}>
                 <Loader />
               </Show>
-              {loginMutation.isPending ? 'Signing In...' : 'Sign In'}
+              {isLoading() ? 'Signing In...' : 'Sign In'}
             </button>
           </div>
         </form>

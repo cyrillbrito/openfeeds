@@ -54,7 +54,7 @@ cd ../..
 
 # Web
 cd apps/web
-bun add daisyui @tanstack/solid-query @tanstack/solid-query-devtools posthog-js tailwind-merge \
+bun add daisyui posthog-js tailwind-merge \
   @solid-primitives/autofocus @solid-primitives/date @solid-primitives/scheduled
 cd ../..
 
