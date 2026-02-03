@@ -1,5 +1,5 @@
 {
-  "id": "74666052-c512-45f8-b9fe-64a0b7a8e245",
+  "id": "1fb366d3-b974-4305-bb76-2199c900bca4",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "version": "7",
   "dialect": "postgresql",
@@ -363,6 +363,12 @@
           "primaryKey": true,
           "notNull": true
         },
+        "user_id": {
+          "name": "user_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
         "article_id": {
           "name": "article_id",
           "type": "text",
@@ -377,6 +383,21 @@
         }
       },
       "indexes": {
+        "article_tags_user_id_idx": {
+          "name": "article_tags_user_id_idx",
+          "columns": [
+            {
+              "expression": "user_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
         "unique_article_tag": {
           "name": "unique_article_tag",
           "columns": [
@@ -398,21 +419,6 @@
           "method": "btree",
           "with": {}
         },
-        "article_tags_article_idx": {
-          "name": "article_tags_article_idx",
-          "columns": [
-            {
-              "expression": "article_id",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": false,
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
-        },
         "article_tags_tag_idx": {
           "name": "article_tags_tag_idx",
           "columns": [
@@ -430,6 +436,19 @@
         }
       },
       "foreignKeys": {
+        "article_tags_user_id_user_id_fk": {
+          "name": "article_tags_user_id_user_id_fk",
+          "tableFrom": "article_tags",
+          "tableTo": "user",
+          "columnsFrom": [
+            "user_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
         "article_tags_article_id_articles_id_fk": {
           "name": "article_tags_article_id_articles_id_fk",
           "tableFrom": "article_tags",
@@ -547,6 +566,12 @@
           "primaryKey": false,
           "notNull": false
         },
+        "content_extracted_at": {
+          "name": "content_extracted_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false
+        },
         "created_at": {
           "name": "created_at",
           "type": "timestamp",
@@ -631,6 +656,12 @@
           "primaryKey": true,
           "notNull": true
         },
+        "user_id": {
+          "name": "user_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
         "feed_id": {
           "name": "feed_id",
           "type": "text",
@@ -645,6 +676,21 @@
         }
       },
       "indexes": {
+        "feed_tags_user_id_idx": {
+          "name": "feed_tags_user_id_idx",
+          "columns": [
+            {
+              "expression": "user_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
         "unique_feed_tag": {
           "name": "unique_feed_tag",
           "columns": [
@@ -665,9 +711,37 @@
           "concurrently": false,
           "method": "btree",
           "with": {}
+        },
+        "feed_tags_tag_idx": {
+          "name": "feed_tags_tag_idx",
+          "columns": [
+            {
+              "expression": "tag_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
         }
       },
       "foreignKeys": {
+        "feed_tags_user_id_user_id_fk": {
+          "name": "feed_tags_user_id_user_id_fk",
+          "tableFrom": "feed_tags",
+          "tableTo": "user",
+          "columnsFrom": [
+            "user_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
         "feed_tags_feed_id_feeds_id_fk": {
           "name": "feed_tags_feed_id_feeds_id_fk",
           "tableFrom": "feed_tags",
@@ -830,6 +904,12 @@
           "primaryKey": true,
           "notNull": true
         },
+        "user_id": {
+          "name": "user_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
         "feed_id": {
           "name": "feed_id",
           "type": "text",
@@ -870,6 +950,21 @@
         }
       },
       "indexes": {
+        "filter_rules_user_id_idx": {
+          "name": "filter_rules_user_id_idx",
+          "columns": [
+            {
+              "expression": "user_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
         "filter_rules_feed_id_idx": {
           "name": "filter_rules_feed_id_idx",
           "columns": [
@@ -902,6 +997,19 @@
         }
       },
       "foreignKeys": {
+        "filter_rules_user_id_user_id_fk": {
+          "name": "filter_rules_user_id_user_id_fk",
+          "tableFrom": "filter_rules",
+          "tableTo": "user",
+          "columnsFrom": [
+            "user_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
         "filter_rules_feed_id_feeds_id_fk": {
           "name": "filter_rules_feed_id_feeds_id_fk",
           "tableFrom": "filter_rules",
@@ -929,20 +1037,21 @@
         "user_id": {
           "name": "user_id",
           "type": "text",
-          "primaryKey": false,
+          "primaryKey": true,
           "notNull": true
         },
-        "key": {
-          "name": "key",
+        "theme": {
+          "name": "theme",
           "type": "text",
           "primaryKey": false,
-          "notNull": true
+          "notNull": true,
+          "default": "'system'"
         },
-        "value": {
-          "name": "value",
-          "type": "jsonb",
+        "auto_archive_days": {
+          "name": "auto_archive_days",
+          "type": "integer",
           "primaryKey": false,
-          "notNull": true
+          "notNull": false
         },
         "updated_at": {
           "name": "updated_at",
@@ -952,29 +1061,7 @@
           "default": "now()"
         }
       },
-      "indexes": {
-        "settings_user_key_idx": {
-          "name": "settings_user_key_idx",
-          "columns": [
-            {
-              "expression": "user_id",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            },
-            {
-              "expression": "key",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": true,
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
-        }
-      },
+      "indexes": {},
       "foreignKeys": {
         "settings_user_id_user_id_fk": {
           "name": "settings_user_id_user_id_fk",
@@ -1033,21 +1120,6 @@
         }
       },
       "indexes": {
-        "tags_user_id_idx": {
-          "name": "tags_user_id_idx",
-          "columns": [
-            {
-              "expression": "user_id",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": false,
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
-        },
         "tags_user_name_idx": {
           "name": "tags_user_name_idx",
           "columns": [

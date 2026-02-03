@@ -1,26 +1,18 @@
 import { snakeCamelMapper } from '@electric-sql/client';
-import { AppSettingsSchema } from '@repo/shared/schemas';
-import type { AppSettings, ArchiveResult } from '@repo/shared/types';
+import { SettingsSchema } from '@repo/shared/schemas';
+import type { ArchiveResult, Settings } from '@repo/shared/types';
 import { electricCollectionOptions } from '@tanstack/electric-db-collection';
 import { createCollection, useLiveQuery } from '@tanstack/solid-db';
-import { z } from 'zod';
 import { getShapeUrl } from '~/lib/electric-client';
-import { articlesCollection } from './articles';
 import { $$triggerAutoArchive, $$updateSettings } from './settings.server';
 
-// Extend the schema to include an ID for collection compatibility
-const SettingsWithIdSchema = AppSettingsSchema.extend({
-  id: z.number(),
-});
-
-type SettingsWithId = z.infer<typeof SettingsWithIdSchema>;
-
-// Settings Collection (singleton pattern) - Electric-powered real-time sync
+// Settings Collection - Electric-powered real-time sync
+// One row per user, userId is the primary key
 export const settingsCollection = createCollection(
   electricCollectionOptions({
     id: 'settings',
-    schema: SettingsWithIdSchema,
-    getKey: (item: SettingsWithId) => item.id,
+    schema: SettingsSchema,
+    getKey: (item) => item.userId,
 
     shapeOptions: {
       url: getShapeUrl('settings'),
@@ -29,7 +21,7 @@ export const settingsCollection = createCollection(
 
     onUpdate: async ({ transaction }) => {
       const updates = transaction.mutations.map(
-        (mutation) => mutation.changes as Partial<AppSettings>,
+        (mutation) => mutation.changes as Partial<Settings>,
       );
       await $$updateSettings({ data: updates });
     },
@@ -45,18 +37,15 @@ export const settingsCollection = createCollection(
 );
 
 /**
- * Hook to get the current settings
- * Returns the settings object directly (unwrapped from array)
+ * Hook to get the current user settings.
+ * Returns the first (and only) settings row for the user.
  */
 export function useSettings() {
   const query = useLiveQuery((q) => q.from({ settings: settingsCollection }));
 
   return {
     get data() {
-      const item = query.data?.[0];
-      if (!item) return undefined;
-      const { id: _id, ...settings } = item;
-      return settings as AppSettings;
+      return query()?.[0];
     },
     get isLoading() {
       return query.isLoading;
@@ -71,10 +60,6 @@ export function useSettings() {
  * Trigger auto-archive for old articles based on settings
  */
 export async function triggerAutoArchive(): Promise<ArchiveResult> {
-  const result = await $$triggerAutoArchive();
-
-  // Refetch articles to reflect archived status
-  articlesCollection.utils.refetch();
-
-  return result;
+  // Electric SQL automatically syncs archived articles
+  return await $$triggerAutoArchive();
 }

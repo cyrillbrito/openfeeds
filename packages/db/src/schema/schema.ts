@@ -1,5 +1,13 @@
 import { relations } from 'drizzle-orm';
-import { boolean, index, jsonb, pgTable, text, timestamp, uniqueIndex } from 'drizzle-orm/pg-core';
+import {
+  boolean,
+  index,
+  integer,
+  pgTable,
+  text,
+  timestamp,
+  uniqueIndex,
+} from 'drizzle-orm/pg-core';
 import { user } from './auth';
 
 export const feeds = pgTable(
@@ -46,6 +54,7 @@ export const articles = pgTable(
     isRead: boolean('is_read').default(false),
     isArchived: boolean('is_archived').default(false),
     cleanContent: text('clean_content'), // processed readable content
+    contentExtractedAt: timestamp('content_extracted_at'), // when content was extracted
     createdAt: timestamp('created_at').notNull().defaultNow(),
   },
   (table) => [
@@ -116,21 +125,18 @@ export const articleTags = pgTable(
 );
 
 /**
- * Not really sure why doing settings as key-value.
- * Since they can be kind of dynamic, to see if this works well.
+ * Settings - one row per user with column-based settings.
+ * Uses userId as primary key (1:1 relationship with user).
  */
-export const settings = pgTable(
-  'settings',
-  {
-    userId: text('user_id')
-      .notNull()
-      .references(() => user.id, { onDelete: 'cascade' }),
-    key: text('key').notNull(),
-    value: jsonb('value').notNull(),
-    updatedAt: timestamp('updated_at').notNull().defaultNow(),
-  },
-  (table) => [uniqueIndex('settings_user_key_idx').on(table.userId, table.key)],
-);
+export const settings = pgTable('settings', {
+  userId: text('user_id')
+    .primaryKey()
+    .references(() => user.id, { onDelete: 'cascade' }),
+  theme: text('theme').notNull().default('system'),
+  /** null = use app default (allows changing default without migration) */
+  autoArchiveDays: integer('auto_archive_days'),
+  updatedAt: timestamp('updated_at').notNull().defaultNow(),
+});
 
 export const filterRules = pgTable(
   'filter_rules',
@@ -242,5 +248,6 @@ export type DbArticle = typeof articles.$inferSelect;
 export type DbTag = typeof tags.$inferSelect;
 export type DbFeedTag = typeof feedTags.$inferSelect;
 export type DbArticleTag = typeof articleTags.$inferSelect;
-export type DbSetting = typeof settings.$inferSelect;
+export type DbSettings = typeof settings.$inferSelect;
+export type DbInsertSettings = typeof settings.$inferInsert;
 export type DbFilterRule = typeof filterRules.$inferSelect;

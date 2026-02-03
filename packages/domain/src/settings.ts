@@ -1,51 +1,74 @@
-import { getDb, settings } from '@repo/db';
-import { defaultSettings, type AppSettings } from '@repo/shared/types';
-import { and, eq } from 'drizzle-orm';
+import { getDb, settings as settingsTable } from '@repo/db';
+import { getEffectiveAutoArchiveDays, type Settings } from '@repo/shared/types';
+import { eq } from 'drizzle-orm';
 
 /**
- * Gets the user's application settings, falling back to defaults if not found
+ * Creates settings row for a new user.
+ * Called when a user signs up.
  */
-export async function getUserSettings(userId: string): Promise<AppSettings> {
+export async function createSettings(userId: string): Promise<void> {
   const db = getDb();
-  const defaultSetting = await db.query.settings.findFirst({
-    where: and(eq(settings.userId, userId), eq(settings.key, 'default')),
-  });
-
-  if (!defaultSetting) {
-    return defaultSettings;
-  }
-
-  // Merge with defaults in case new settings were added
-  const userSettings = {
-    ...defaultSettings,
-    ...(defaultSetting.value as AppSettings),
-  };
-
-  return userSettings;
+  await db.insert(settingsTable).values({ userId });
 }
 
 /**
- * Updates the user's application settings
+ * Gets the user's settings.
+ * Returns default values if no row exists.
  */
-export async function updateUserSettings(
-  userId: string,
-  updates: Partial<AppSettings>,
-): Promise<AppSettings> {
+export async function getSettings(userId: string): Promise<Settings> {
   const db = getDb();
-  const currentSettings = await getUserSettings(userId);
-  const newSettings = { ...currentSettings, ...updates };
+  const settings = await db.query.settings.findFirst({
+    where: eq(settingsTable.userId, userId),
+  });
+
+  if (!settings) {
+    return {
+      userId,
+      theme: 'system',
+      autoArchiveDays: null,
+    };
+  }
+
+  return {
+    userId: settings.userId,
+    theme: settings.theme as Settings['theme'],
+    autoArchiveDays: settings.autoArchiveDays,
+  };
+}
+
+/**
+ * Updates the user's settings (upsert).
+ * Pass null for autoArchiveDays to reset to app default.
+ */
+export async function updateSettings(
+  userId: string,
+  updates: Partial<Omit<Settings, 'userId'>>,
+): Promise<Settings> {
+  const db = getDb();
+  const currentSettings = await getSettings(userId);
+
+  // Merge updates - undefined means "don't change"
+  const newSettings: Settings = {
+    userId,
+    theme: updates.theme !== undefined ? updates.theme : currentSettings.theme,
+    autoArchiveDays:
+      updates.autoArchiveDays !== undefined
+        ? updates.autoArchiveDays
+        : currentSettings.autoArchiveDays,
+  };
 
   await db
-    .insert(settings)
+    .insert(settingsTable)
     .values({
       userId,
-      key: 'default',
-      value: newSettings,
+      theme: newSettings.theme,
+      autoArchiveDays: newSettings.autoArchiveDays,
     })
     .onConflictDoUpdate({
-      target: [settings.userId, settings.key],
+      target: settingsTable.userId,
       set: {
-        value: newSettings,
+        theme: newSettings.theme,
+        autoArchiveDays: newSettings.autoArchiveDays,
         updatedAt: new Date(),
       },
     });
@@ -54,10 +77,10 @@ export async function updateUserSettings(
 }
 
 /**
- * Gets the cutoff date for auto-archiving articles based on user settings.
+ * Gets the cutoff date for auto-archiving articles based on settings.
  */
 export async function getAutoArchiveCutoffDate(userId: string): Promise<Date> {
-  const userSettings = await getUserSettings(userId);
-  const autoArchiveDays = userSettings.autoArchiveDays;
-  return new Date(Date.now() - autoArchiveDays * 24 * 60 * 60 * 1000);
+  const settings = await getSettings(userId);
+  const days = getEffectiveAutoArchiveDays(settings);
+  return new Date(Date.now() - days * 24 * 60 * 60 * 1000);
 }

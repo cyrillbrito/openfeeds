@@ -1,17 +1,17 @@
 import {
-  getUserSettings as domainGetUserSettings,
+  getSettings as domainGetSettings,
   performArchiveArticles as domainPerformArchiveArticles,
-  updateUserSettings as domainUpdateUserSettings,
+  updateSettings as domainUpdateSettings,
 } from '@repo/domain';
 import { UpdateSettingsSchema } from '@repo/shared/schemas';
 import { createServerFn } from '@tanstack/solid-start';
 import { z } from 'zod';
 import { authMiddleware } from '~/server/middleware/auth';
 
-export const $$getUserSettings = createServerFn({ method: 'GET' })
+export const $$getSettings = createServerFn({ method: 'GET' })
   .middleware([authMiddleware])
   .handler(({ context }) => {
-    return domainGetUserSettings(context.user.id);
+    return domainGetSettings(context.user.id);
   });
 
 export const $$updateSettings = createServerFn({ method: 'POST' })
@@ -20,7 +20,7 @@ export const $$updateSettings = createServerFn({ method: 'POST' })
   .handler(({ context, data }) => {
     // Settings is a singleton, so we just take the first update
     const updates = data[0] || {};
-    return domainUpdateUserSettings(context.user.id, updates);
+    return domainUpdateSettings(context.user.id, updates);
   });
 
 export const $$triggerAutoArchive = createServerFn({ method: 'POST' })

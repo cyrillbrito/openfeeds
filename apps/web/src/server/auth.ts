@@ -1,5 +1,5 @@
 import { getDb } from '@repo/db';
-import { sendPasswordResetEmail, sendVerificationEmail } from '@repo/domain';
+import { createSettings, sendPasswordResetEmail, sendVerificationEmail } from '@repo/domain';
 import { betterAuth } from 'better-auth';
 import { drizzleAdapter } from 'better-auth/adapters/drizzle';
 import { tanstackStartCookies } from 'better-auth/tanstack-start';
@@ -8,6 +8,16 @@ import { env } from '../env';
 export const auth = betterAuth({
   database: drizzleAdapter(getDb(), { provider: 'pg' }),
   trustedOrigins: [env.VITE_CLIENT_DOMAIN],
+  databaseHooks: {
+    user: {
+      create: {
+        after: async (user) => {
+          // Create default settings for new users
+          await createSettings(user.id);
+        },
+      },
+    },
+  },
   emailAndPassword: {
     enabled: true,
     requireEmailVerification: !env.SIMPLE_AUTH,

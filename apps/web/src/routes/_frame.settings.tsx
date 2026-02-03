@@ -1,4 +1,9 @@
-import type { ArchiveResult } from '@repo/shared/types';
+import {
+  DEFAULT_AUTO_ARCHIVE_DAYS,
+  getEffectiveAutoArchiveDays,
+  isAutoArchiveDaysDefault,
+  type ArchiveResult,
+} from '@repo/shared/types';
 import { createFileRoute } from '@tanstack/solid-router';
 import { createSignal, Show } from 'solid-js';
 import { $$exportOpml } from '~/entities/feeds.server';
@@ -12,10 +17,11 @@ export const Route = createFileRoute('/_frame/settings')({
 
 export default function SettingsPage() {
   const settingsQuery = useSettings();
+  const settings = () => settingsQuery.data;
   const [editMode, setEditMode] = createSignal(false);
   const [formData, setFormData] = createSignal<{
     theme?: 'light' | 'dark' | 'system';
-    autoArchiveDays?: number;
+    autoArchiveDays?: number | null;
   }>({});
   const [showMarkReadDialog, setShowMarkReadDialog] = createSignal(false);
   const [archiveResult, setArchiveResult] = createSignal<ArchiveResult | null>(null);
@@ -42,8 +48,11 @@ export default function SettingsPage() {
   };
 
   const handleUpdate = () => {
+    const currentSettings = settings();
+    if (!currentSettings) return;
+
     const changes = formData();
-    settingsCollection.update(1, (draft) => {
+    settingsCollection.update(currentSettings.userId, (draft) => {
       if (changes.theme !== undefined) draft.theme = changes.theme;
       if (changes.autoArchiveDays !== undefined) draft.autoArchiveDays = changes.autoArchiveDays;
     });
@@ -70,217 +79,194 @@ export default function SettingsPage() {
     <>
       <Header title="Settings" />
 
-      <div class="container mx-auto px-2 py-3 sm:p-6">
+      <div class="mx-auto w-full max-w-2xl px-2 py-3 sm:p-6">
         <div class="mb-6">
           <p class="text-base-content-gray">
             Manage your application preferences and configuration.
           </p>
         </div>
 
-        <Card>
-          <Show when={settingsQuery.isLoading}>
-            <div class="flex items-center justify-center py-8">
-              <span class="loading loading-spinner loading-lg mr-3"></span>
-              <span class="text-lg">Loading settings...</span>
-            </div>
-          </Show>
+        <Show when={settingsQuery.isLoading}>
+          <div class="flex items-center justify-center py-8">
+            <span class="loading loading-spinner loading-lg mr-3"></span>
+            <span class="text-lg">Loading settings...</span>
+          </div>
+        </Show>
 
-          <Show when={settingsQuery.isError}>
-            <div class="alert alert-error">
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                class="h-6 w-6 shrink-0 stroke-current"
-                fill="none"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"
-                />
-              </svg>
-              <span>Error loading settings</span>
-            </div>
-          </Show>
+        <Show when={settingsQuery.isError}>
+          <div class="alert alert-error">
+            <span>Error loading settings</span>
+          </div>
+        </Show>
 
-          <Show when={settingsQuery.data && !settingsQuery.isLoading}>
-            <div class="space-y-6">
+        <Show when={settings() && !settingsQuery.isLoading}>
+          <div class="space-y-6">
+            <Card>
               <Show when={!editMode()}>
-                <div>
-                  <div class="mb-4 flex items-center justify-between">
-                    <h2 class="text-base-content text-lg font-semibold">Application Settings</h2>
-                    <button
-                      class="btn btn-primary btn-sm"
-                      onClick={() => {
-                        setFormData({ ...settingsQuery.data });
-                        setEditMode(true);
-                      }}
-                    >
-                      Edit Settings
-                    </button>
+                <div class="mb-4 flex items-center justify-between">
+                  <h2 class="text-base-content font-semibold">Application Settings</h2>
+                  <button
+                    class="btn btn-primary btn-sm"
+                    onClick={() => {
+                      setFormData({
+                        theme: settings()?.theme,
+                        autoArchiveDays: settings()?.autoArchiveDays,
+                      });
+                      setEditMode(true);
+                    }}
+                  >
+                    Edit
+                  </button>
+                </div>
+
+                <div class="space-y-3 text-sm">
+                  <div class="flex justify-between">
+                    <span class="text-base-content-gray">Theme</span>
+                    <span class="capitalize">{settings()!.theme}</span>
                   </div>
-
-                  <div class="space-y-4">
-                    <div class="form-control">
-                      <label class="label">
-                        <span class="label-text font-medium">Theme</span>
-                      </label>
-                      <div class="text-base-content capitalize">{settingsQuery.data!.theme}</div>
-                    </div>
-
-                    <div class="form-control">
-                      <label class="label">
-                        <span class="label-text font-medium">Auto-archive after</span>
-                      </label>
-                      <div class="text-base-content">
-                        {settingsQuery.data!.autoArchiveDays} days
-                      </div>
-                    </div>
+                  <div class="flex justify-between">
+                    <span class="text-base-content-gray">Auto-archive after</span>
+                    <span>
+                      {getEffectiveAutoArchiveDays(settings()!)} days
+                      <Show when={isAutoArchiveDaysDefault(settings()!)}>
+                        <span class="text-base-content-gray ml-1">(default)</span>
+                      </Show>
+                    </span>
                   </div>
                 </div>
               </Show>
 
               <Show when={editMode()}>
-                <div>
-                  <div class="mb-4 flex items-center justify-between">
-                    <h2 class="text-base-content text-lg font-semibold">Edit Settings</h2>
-                    <div class="space-x-2">
-                      <button
-                        class="btn btn-ghost btn-sm"
-                        onClick={() => {
-                          setEditMode(false);
-                          setFormData({});
-                        }}
-                      >
-                        Cancel
-                      </button>
-                      <button class="btn btn-primary btn-sm" onClick={handleUpdate}>
-                        Save
-                      </button>
-                    </div>
+                <div class="mb-4 flex items-center justify-between">
+                  <h2 class="text-base-content font-semibold">Edit Settings</h2>
+                  <div class="space-x-2">
+                    <button
+                      class="btn btn-ghost btn-sm"
+                      onClick={() => {
+                        setEditMode(false);
+                        setFormData({});
+                      }}
+                    >
+                      Cancel
+                    </button>
+                    <button class="btn btn-primary btn-sm" onClick={handleUpdate}>
+                      Save
+                    </button>
+                  </div>
+                </div>
+
+                <div class="space-y-4">
+                  <div class="form-control">
+                    <label class="label">
+                      <span class="label-text font-medium">Theme</span>
+                    </label>
+                    <select
+                      class="select select-bordered w-full"
+                      value={formData().theme ?? settings()!.theme}
+                      onChange={(e) => {
+                        const value = e.target.value as 'light' | 'dark' | 'system';
+                        setFormData({
+                          ...formData(),
+                          theme: value,
+                        });
+                      }}
+                    >
+                      <option value="system">System</option>
+                      <option value="light">Light</option>
+                      <option value="dark">Dark</option>
+                    </select>
                   </div>
 
-                  <div class="space-y-4">
-                    <div class="form-control">
-                      <label class="label">
-                        <span class="label-text font-medium">Theme</span>
-                      </label>
-                      <select
-                        class="select select-bordered w-full"
-                        value={formData().theme || settingsQuery.data!.theme}
-                        onChange={(e) =>
-                          setFormData({
-                            ...formData(),
-                            theme: e.target.value as 'light' | 'dark' | 'system',
-                          })
-                        }
-                      >
-                        <option value="system">System</option>
-                        <option value="light">Light</option>
-                        <option value="dark">Dark</option>
-                      </select>
-                    </div>
-
-                    <div class="form-control">
-                      <label class="label">
-                        <span class="label-text font-medium">Auto-archive after (days)</span>
-                      </label>
-                      <input
-                        type="number"
-                        class="input input-bordered w-full"
-                        min="1"
-                        max="365"
-                        value={formData().autoArchiveDays || settingsQuery.data!.autoArchiveDays}
-                        onInput={(e) =>
-                          setFormData({
-                            ...formData(),
-                            autoArchiveDays: parseInt(e.target.value),
-                          })
-                        }
-                      />
-                      <label class="label">
-                        <span class="label-text-alt text-base-content-gray">
-                          Articles older than this will be automatically archived
-                        </span>
-                      </label>
-                    </div>
+                  <div class="form-control">
+                    <label class="label">
+                      <span class="label-text font-medium">Auto-archive after (days)</span>
+                    </label>
+                    <input
+                      type="number"
+                      class="input input-bordered w-full"
+                      min="1"
+                      max="365"
+                      value={formData().autoArchiveDays ?? getEffectiveAutoArchiveDays(settings()!)}
+                      onInput={(e) =>
+                        setFormData({
+                          ...formData(),
+                          autoArchiveDays: parseInt(e.target.value),
+                        })
+                      }
+                    />
+                    <label class="label">
+                      <span class="label-text-alt text-base-content-gray">
+                        Articles older than this will be automatically archived (default:{' '}
+                        {DEFAULT_AUTO_ARCHIVE_DAYS} days).{' '}
+                        <button
+                          type="button"
+                          class="link link-primary"
+                          onClick={() => setFormData({ ...formData(), autoArchiveDays: null })}
+                        >
+                          Reset to default
+                        </button>
+                      </span>
+                    </label>
                   </div>
                 </div>
               </Show>
+            </Card>
 
-              <div class="divider"></div>
-
-              <div>
-                <h3 class="text-md text-base-content mb-3 font-medium">Data Management</h3>
-                <div class="space-y-4">
-                  <Card>
-                    <h4 class="card-title text-base">Export Feeds</h4>
-                    <p class="text-base-content-gray mb-4 text-sm">
-                      Export all your feeds as an OPML file. You can use this to backup your
-                      subscriptions or import them into another RSS reader.
-                    </p>
-                    <div class="card-actions">
-                      <button
-                        class="btn btn-primary btn-sm"
-                        onClick={handleExportOpml}
-                        disabled={isExporting()}
-                      >
-                        <Show when={isExporting()}>
-                          <span class="loading loading-spinner loading-xs mr-2"></span>
-                        </Show>
-                        Export OPML
-                      </button>
-                    </div>
-                  </Card>
+            <Card>
+              <div class="flex items-center justify-between">
+                <div>
+                  <h3 class="font-semibold">Export Feeds</h3>
+                  <p class="text-base-content-gray text-sm">Download your feeds as OPML</p>
                 </div>
+                <button
+                  class="btn btn-primary btn-sm"
+                  onClick={handleExportOpml}
+                  disabled={isExporting()}
+                >
+                  <Show when={isExporting()}>
+                    <span class="loading loading-spinner loading-xs mr-2"></span>
+                  </Show>
+                  Export
+                </button>
               </div>
+            </Card>
 
-              <div class="divider"></div>
-
-              <div>
-                <h3 class="text-md text-base-content mb-3 font-medium">Maintenance Actions</h3>
-                <div class="space-y-4">
-                  <Card>
-                    <h4 class="card-title text-base">Archive Old Articles</h4>
-                    <p class="text-base-content-gray mb-4 text-sm">
-                      Manually trigger the auto-archive process to archive all articles older than{' '}
-                      {settingsQuery.data?.autoArchiveDays} days.
-                    </p>
-                    <div class="card-actions">
-                      <button
-                        class="btn btn-warning btn-sm"
-                        onClick={handleTriggerAutoArchive}
-                        disabled={isArchiving()}
-                      >
-                        <Show when={isArchiving()}>
-                          <span class="loading loading-spinner loading-xs mr-2"></span>
-                        </Show>
-                        Archive Old Articles
-                      </button>
-                    </div>
-                    <Show when={archiveError()}>
-                      <div class="alert alert-error alert-sm mt-2">
-                        <span class="text-xs">Error: {archiveError()}</span>
-                      </div>
-                    </Show>
-                  </Card>
+            <Card>
+              <div class="flex items-center justify-between">
+                <div>
+                  <h3 class="font-semibold">Archive Old Articles</h3>
+                  <p class="text-base-content-gray text-sm">
+                    Archive articles older than {getEffectiveAutoArchiveDays(settings()!)} days
+                  </p>
                 </div>
+                <button
+                  class="btn btn-warning btn-sm"
+                  onClick={handleTriggerAutoArchive}
+                  disabled={isArchiving()}
+                >
+                  <Show when={isArchiving()}>
+                    <span class="loading loading-spinner loading-xs mr-2"></span>
+                  </Show>
+                  Archive
+                </button>
               </div>
-
-              <div class="divider"></div>
-
-              <div>
-                <h3 class="text-md text-base-content mb-3 font-medium">Debug Information</h3>
-                <div class="bg-neutral overflow-auto rounded p-4">
-                  <pre class="text-neutral-content text-sm whitespace-pre-wrap">
-                    {JSON.stringify(settingsQuery.data, null, 2)}
-                  </pre>
+              <Show when={archiveError()}>
+                <div class="alert alert-error alert-sm mt-2">
+                  <span class="text-xs">Error: {archiveError()}</span>
                 </div>
+              </Show>
+            </Card>
+
+            <Card>
+              <h3 class="mb-2 font-semibold">Debug Information</h3>
+              <div class="bg-neutral overflow-auto rounded p-3">
+                <pre class="text-neutral-content text-xs whitespace-pre-wrap">
+                  {JSON.stringify(settingsQuery.data, null, 2)}
+                </pre>
               </div>
-            </div>
-          </Show>
-        </Card>
+            </Card>
+          </div>
+        </Show>
 
         {/* Archive Result Dialog */}
         <Show when={showMarkReadDialog()}>
