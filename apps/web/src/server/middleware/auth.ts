@@ -2,7 +2,7 @@ import { redirect } from '@tanstack/solid-router';
 import { createMiddleware } from '@tanstack/solid-start';
 import { getRequestHeaders } from '@tanstack/solid-start/server';
 import type { Session, User } from 'better-auth';
-import { getAuth } from '../auth';
+import { auth } from '../auth';
 
 export type AuthContext = { user: User; session: Session };
 
@@ -12,7 +12,7 @@ export type AuthContext = { user: User; session: Session };
  */
 export const authMiddleware = createMiddleware().server(async ({ request, next }) => {
   const headers = getRequestHeaders();
-  const session = await getAuth().api.getSession({ headers });
+  const session = await auth.api.getSession({ headers });
   if (!session) {
     const url = new URL(request.url);
     throw redirect({
@@ -29,7 +29,7 @@ export const authMiddleware = createMiddleware().server(async ({ request, next }
  */
 export const authRequestMiddleware = createMiddleware({ type: 'request' }).server<AuthContext>(
   async ({ request, next }) => {
-    const session = await getAuth().api.getSession({ headers: request.headers });
+    const session = await auth.api.getSession({ headers: request.headers });
     if (!session) {
       return new Response(JSON.stringify({ message: 'Unauthorized' }), {
         status: 401,

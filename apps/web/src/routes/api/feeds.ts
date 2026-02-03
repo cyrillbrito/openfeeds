@@ -1,6 +1,6 @@
 import * as feedsDomain from '@repo/domain';
 import { createFileRoute } from '@tanstack/solid-router';
-import { getAuth } from '~/server/auth';
+import { auth } from '~/server/auth';
 
 function corsHeaders(request: Request) {
   const origin = request.headers.get('Origin') || '';
@@ -30,7 +30,7 @@ export const Route = createFileRoute('/api/feeds')({
       POST: async ({ request }) => {
         const headers = corsHeaders(request);
 
-        const session = await getAuth().api.getSession({ headers: request.headers });
+        const session = await auth.api.getSession({ headers: request.headers });
         if (!session) {
           return Response.json({ message: 'Unauthorized' }, { status: 401, headers });
         }

@@ -5,7 +5,7 @@
     ".": "./src/index.ts"
   },
   "scripts": {
-    "generate:auth-schema": "bunx --bun @better-auth/cli@latest generate --config ../../apps/web/src/server/auth2.ts --output ./src/schema/auth.ts --yes",
+    "generate:auth-schema": "bunx --bun @better-auth/cli@latest generate --config ../../apps/web/src/server/auth.ts --output ./src/schema/auth.ts --yes",
     "generate:migrations": "bun --bun drizzle-kit generate"
   },
   "dependencies": {

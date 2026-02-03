@@ -27,16 +27,7 @@ RUN --mount=type=cache,target=/root/.bun/install/cache bun install --frozen-lock
 # Copy the full pruned source code
 COPY --from=pruner /home/bun/app/out/full/ .
 
-# Build the web app (TanStack Start outputs to .output/)
-# Create .env file with dummy values for prerendering
-# The Nitro prerender spawns a subprocess that needs these env vars
-# Using a file ensures they're available regardless of how the process is spawned
-RUN echo 'BETTER_AUTH_SECRET=build-time-placeholder' >> apps/web/.env && \
-    echo 'CLIENT_DOMAIN=http://localhost:3000' >> apps/web/.env && \
-    echo 'DATABASE_URL=postgresql://placeholder:placeholder@localhost:5432/placeholder' >> apps/web/.env
-
 RUN bun run build --filter=@repo/web
-
 
 # Runner stage - final production image
 FROM base AS runner

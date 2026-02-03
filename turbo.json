@@ -9,7 +9,6 @@
       "env": [
         "VITE_*",
         "BETTER_AUTH_SECRET",
-        "CLIENT_DOMAIN",
         "DB_PATH",
         "ENABLE_CORS",
         "POSTHOG_PUBLIC_KEY",
@@ -38,7 +37,6 @@
       "env": [
         "VITE_*",
         "BETTER_AUTH_SECRET",
-        "CLIENT_DOMAIN",
         "DB_PATH",
         "ENABLE_CORS",
         "POSTHOG_PUBLIC_KEY",

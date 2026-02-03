@@ -16,8 +16,12 @@ export const env = createEnv({
     // Auth
     BETTER_AUTH_SECRET: z.string(),
     SIMPLE_AUTH: z.stringbool().default(false),
-    CLIENT_DOMAIN: z.url(),
   },
-  runtimeEnv: process.env,
+  clientPrefix: 'VITE_',
+  client: {
+    // Used by both client (auth client baseURL) and server (trustedOrigins)
+    VITE_CLIENT_DOMAIN: z.url(),
+  },
+  runtimeEnv: { ...process.env, ...import.meta.env },
   emptyStringAsUndefined: true,
 });

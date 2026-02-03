@@ -1,6 +1,6 @@
 import { getArticleAudioBuffer } from '@repo/domain';
 import { createFileRoute } from '@tanstack/solid-router';
-import { getAuth } from '~/server/auth';
+import { auth } from '~/server/auth';
 
 /**
  * Streaming endpoint for audio files.
@@ -18,7 +18,7 @@ export const Route = createFileRoute('/api/articles/$articleId/audio')({
   server: {
     handlers: {
       GET: async ({ request, params }: { request: Request; params: { articleId: string } }) => {
-        const session = await getAuth().api.getSession({ headers: request.headers });
+        const session = await auth.api.getSession({ headers: request.headers });
         if (!session) {
           return Response.json({ message: 'Unauthorized' }, { status: 401 });
         }
