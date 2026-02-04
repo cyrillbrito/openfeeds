@@ -1,6 +1,11 @@
 import { createEnv } from '@t3-oss/env-core';
 import { z } from 'zod';
 
+/*
+  Avoid using VITE_ variables since these are set at built time.
+  Not very useful since we want to build the image once, and deploy in many envs.
+*/
+
 export const env = createEnv({
   server: {
     DATABASE_URL: z.url(),
@@ -16,13 +21,9 @@ export const env = createEnv({
     // Auth
     BETTER_AUTH_SECRET: z.string(),
     SIMPLE_AUTH: z.stringbool().default(false),
+    CLIENT_DOMAIN: z.url(),
   },
-  clientPrefix: 'VITE_',
-  client: {
-    // Used by both client (auth client baseURL) and server (trustedOrigins)
-    VITE_CLIENT_DOMAIN: z.url(),
-  },
-  runtimeEnv: { ...process.env, ...import.meta.env },
+  runtimeEnv: process.env,
   emptyStringAsUndefined: true,
   onValidationError: (issues) => {
     throw new Error(`Invalid environment variables: ${JSON.stringify(issues, null, 2)}`);

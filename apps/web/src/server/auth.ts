@@ -7,7 +7,7 @@ import { env } from '../env';
 
 export const auth = betterAuth({
   database: drizzleAdapter(getDb(), { provider: 'pg' }),
-  trustedOrigins: [env.VITE_CLIENT_DOMAIN],
+  trustedOrigins: [env.CLIENT_DOMAIN],
   databaseHooks: {
     user: {
       create: {
