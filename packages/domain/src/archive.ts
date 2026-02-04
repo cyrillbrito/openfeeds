@@ -1,13 +1,8 @@
 import { articles, getDb } from '@repo/db';
 import { attemptAsyncFn, startTimer } from '@repo/shared/utils';
 import { and, eq, lt } from 'drizzle-orm';
+import { getAutoArchiveCutoffDate, type ArchiveResult } from './entities/settings';
 import { logToFile, logToFileDump } from './logger-file';
-import { getAutoArchiveCutoffDate } from './settings';
-
-export interface ArchiveResult {
-  markedCount: number;
-  cutoffDate: string;
-}
 
 export async function autoArchiveArticles(userId: string): Promise<void> {
   const [error] = await attemptAsyncFn(async () => {

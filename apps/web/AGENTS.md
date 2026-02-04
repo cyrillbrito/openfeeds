@@ -83,60 +83,64 @@ import { LazyModal } from './LazyModal';
 
 **Entity Collections:**
 
-Each entity in `src/entities/` follows this pattern:
+Each entity in `src/entities/` is split into two files:
+
+- **`entity.ts`** - Collection definition + hooks (client-side)
+- **`entity.server.ts`** - Server functions (server-side)
 
 ```tsx
-import { queryCollectionOptions } from '@tanstack/query-db-collection';
+// entities/feeds.ts (client-side collection)
+import { FeedSchema } from '@repo/domain/client';  // Client-safe import
+import { electricCollectionOptions } from '@tanstack/electric-db-collection';
 import { createCollection, useLiveQuery } from '@tanstack/solid-db';
-import { createServerFn } from '@tanstack/solid-start';
+import { $$createFeeds, $$deleteFeeds } from './feeds.server';
 
-// Server functions (run on server)
-const $$getAll = createServerFn({ method: 'GET' })
-  .middleware([authMiddleware])
-  .handler(({ context }) => {
-    const db = getUserDb(context.user.id);
-    return domain.getAll(db);
-  });
-
-const $$create = createServerFn({ method: 'POST' })
-  .middleware([authMiddleware])
-  .inputValidator(CreateSchema)
-  .handler(({ context, data }) => {
-    const db = getUserDb(context.user.id);
-    return domain.create(data, db);
-  });
-
-// Collection (client-side with sync)
-export const itemsCollection = createCollection(
-  queryCollectionOptions({
-    id: 'items',
-    queryKey: ['items'],
-    queryClient,
+export const feedsCollection = createCollection(
+  electricCollectionOptions({
+    id: 'feeds',
+    schema: FeedSchema,
     getKey: (item) => item.id,
-    schema: ItemSchema,
-    queryFn: () => $$getAll(),
+    shapeOptions: { url: getShapeUrl('feeds') },
     onInsert: async ({ transaction }) => {
-      /* sync to server */
+      await $$createFeeds({ data: [...] });
     },
-    onUpdate: async ({ transaction }) => {
-      /* sync to server */
-    },
-    onDelete: async ({ transaction }) => {
-      /* sync to server */
-    },
+    // ...
   }),
 );
 
-// Hook for components
-export function useItems() {
-  return useLiveQuery((q) => q.from({ item: itemsCollection }));
+export function useFeeds() {
+  return useLiveQuery((q) => q.from({ feed: feedsCollection }));
 }
+```
+
+```tsx
+// entities/feeds.server.ts (server functions)
+import * as feedsDomain from '@repo/domain'; // Server import
+import { createServerFn } from '@tanstack/solid-start';
+import { authMiddleware } from '~/server/middleware/auth';
+
+export const $$createFeeds = createServerFn({ method: 'POST' })
+  .middleware([authMiddleware])
+  .handler(async ({ context, data }) => {
+    return feedsDomain.createFeeds(context.user.id, data);
+  });
+```
+
+**Import pattern for `@repo/domain`:**
+
+```typescript
+// Client code (components, routes, entity.ts files)
+
+// Server code (entity.server.ts, server/, api routes)
+import { createFeed } from '@repo/domain';
+import { FeedSchema, type Feed } from '@repo/domain/client';
 ```
 
 **Key Points:**
 
-- `createServerFn` defines server functions (RPC-style)
-- `createCollection` creates client-side collection with sync callbacks
+- Client files import schemas/types from `@repo/domain/client`
+- Server files import functions from `@repo/domain`
+- `createCollection` creates client-side collection with Electric SQL sync
 - `useLiveQuery` provides reactive data access
 - Auth via `authMiddleware` in `src/server/middleware/auth.ts`
 

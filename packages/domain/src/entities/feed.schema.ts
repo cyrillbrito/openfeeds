@@ -11,10 +11,12 @@ export const FeedSchema = z.object({
   lastSyncAt: z.iso.datetime().nullable(),
   tags: z.array(z.string()),
 });
+export type Feed = z.infer<typeof FeedSchema>;
 
 export const CreateFeedSchema = z.object({
   url: z.url(),
 });
+export type CreateFeed = z.infer<typeof CreateFeedSchema>;
 
 export const UpdateFeedSchema = z.object({
   title: z.string().optional(),
@@ -23,15 +25,11 @@ export const UpdateFeedSchema = z.object({
   icon: z.string().nullable().optional(),
   tags: z.array(z.string()).optional(),
 });
-
-export const DiscoveryRequestSchema = z.object({
-  url: z.url(),
-});
+export type UpdateFeed = z.infer<typeof UpdateFeedSchema>;
 
 export const DiscoveredFeedSchema = z.object({
   url: z.string(),
   title: z.string(),
   type: z.string().optional(),
 });
-
-export const DiscoveryResponseSchema = z.array(DiscoveredFeedSchema);
+export type DiscoveredFeed = z.infer<typeof DiscoveredFeedSchema>;

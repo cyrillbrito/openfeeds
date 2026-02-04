@@ -1,10 +1,11 @@
 import {
   createFilterRule,
+  createFilterRuleApiSchema,
   deleteFilterRule,
   getAllFilterRules,
   updateFilterRule,
+  updateFilterRuleSchema,
 } from '@repo/domain';
-import { createFilterRuleApiSchema, updateFilterRuleSchema } from '@repo/shared/schemas';
 import { createServerFn } from '@tanstack/solid-start';
 import { z } from 'zod';
 import { authMiddleware } from '~/server/middleware/auth';

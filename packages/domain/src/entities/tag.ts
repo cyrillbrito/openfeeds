@@ -1,9 +1,12 @@
 import { getDb, tags } from '@repo/db';
-import { type CreateTag, type Tag, type UpdateTag } from '@repo/shared/types';
 import { attemptAsync, createId } from '@repo/shared/utils';
 import { and, eq, sql } from 'drizzle-orm';
-import { tagDbToApi } from './db-utils';
-import { assert, ConflictError, NotFoundError, UnexpectedError } from './errors';
+import { tagDbToApi } from '../db-utils';
+import { assert, ConflictError, NotFoundError, UnexpectedError } from '../errors';
+import type { CreateTag, Tag, UpdateTag } from './tag.schema';
+
+// Re-export schemas and types from schema file
+export * from './tag.schema';
 
 export async function getAllTags(userId: string): Promise<Tag[]> {
   const db = getDb();

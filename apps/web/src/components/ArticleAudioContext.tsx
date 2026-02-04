@@ -1,4 +1,4 @@
-import type { WordTiming } from '@repo/shared/types';
+import type { WordTiming } from '@repo/domain/client';
 import { createContext, createSignal, useContext, type ParentProps } from 'solid-js';
 
 export type AudioState =

@@ -1,4 +1,4 @@
-import type { Feed } from '@repo/shared/types';
+import type { Feed } from '@repo/domain/client';
 import { Link } from '@tanstack/solid-router';
 import { createEffect, createMemo, createSignal, Match, Show, Suspense, Switch } from 'solid-js';
 import { feedsCollection } from '~/entities/feeds';

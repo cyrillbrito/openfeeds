@@ -1,4 +1,4 @@
-import type { WordTiming } from '@repo/shared/types';
+import type { WordTiming } from '@repo/domain/client';
 import { createEffect, createMemo, createSignal, onMount, Show } from 'solid-js';
 import { useArticleAudio } from './ArticleAudioContext';
 

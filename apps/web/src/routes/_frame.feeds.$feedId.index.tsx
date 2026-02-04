@@ -1,4 +1,4 @@
-import type { Feed } from '@repo/shared/types';
+import type { Feed } from '@repo/domain/client';
 import { eq, useLiveQuery } from '@tanstack/solid-db';
 import { createFileRoute, Link } from '@tanstack/solid-router';
 import MoreVerticalIcon from 'lucide-solid/icons/more-vertical';

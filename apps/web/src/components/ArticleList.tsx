@@ -1,4 +1,4 @@
-import type { Article, Feed, Tag } from '@repo/shared/types';
+import type { Article, Feed, Tag } from '@repo/domain/client';
 import { Link } from '@tanstack/solid-router';
 import ChevronDownIcon from 'lucide-solid/icons/chevron-down';
 import { createSignal, For, Show, type JSX } from 'solid-js';

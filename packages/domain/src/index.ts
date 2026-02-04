@@ -1,25 +1,28 @@
-// Domain logic exports
+// Entity modules - schemas, types, and CRUD functions
+export * from './entities/article';
+export * from './entities/article-tag';
+export * from './entities/common';
+export * from './entities/feed';
+export * from './entities/filter-rule';
+export * from './entities/settings';
+export * from './entities/tag';
+
+// Non-entity domain logic (operations that span multiple entities or do specialized work)
 export * from './archive';
-export * from './article-tags';
-export * from './articles';
 export * from './email';
 export * from './errors';
-export * from './feed-details';
-export * from './feeds';
-export * from './filter-rules';
 export * from './export';
+export * from './feed-details';
 export * from './import';
 export * from './rss-fetch';
 export * from './rule-evaluation';
-export * from './settings';
-export * from './tags';
 export * from './tts';
 
 // Utilities
 export * from './db-utils';
 export * from './logger-file';
 
-// Infrastructure - new config-based pattern
+// Infrastructure - config-based pattern
 export {
   initDomain,
   getConfig,

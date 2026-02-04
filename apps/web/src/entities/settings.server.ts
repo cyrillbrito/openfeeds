@@ -2,8 +2,8 @@ import {
   getSettings as domainGetSettings,
   performArchiveArticles as domainPerformArchiveArticles,
   updateSettings as domainUpdateSettings,
+  UpdateSettingsSchema,
 } from '@repo/domain';
-import { UpdateSettingsSchema } from '@repo/shared/schemas';
 import { createServerFn } from '@tanstack/solid-start';
 import { z } from 'zod';
 import { authMiddleware } from '~/server/middleware/auth';

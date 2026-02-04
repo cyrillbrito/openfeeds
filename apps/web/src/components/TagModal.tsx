@@ -1,4 +1,4 @@
-import type { Tag, TagColor } from '@repo/shared/types';
+import type { Tag, TagColor } from '@repo/domain/client';
 import { createId } from '@repo/shared/utils';
 import CircleAlertIcon from 'lucide-solid/icons/circle-alert';
 import { createEffect, createSignal, For, Show } from 'solid-js';

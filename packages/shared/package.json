@@ -2,8 +2,6 @@
   "name": "@repo/shared",
   "type": "module",
   "exports": {
-    "./types": "./src/types/index.ts",
-    "./schemas": "./src/schemas/index.ts",
     "./utils": "./src/utils/index.ts"
   },
   "scripts": {},

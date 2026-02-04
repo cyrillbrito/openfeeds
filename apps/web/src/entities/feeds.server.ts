@@ -1,5 +1,5 @@
 import * as feedsDomain from '@repo/domain';
-import { CreateFeedSchema, UpdateFeedSchema } from '@repo/shared/schemas';
+import { CreateFeedSchema, UpdateFeedSchema } from '@repo/domain';
 import { createServerFn } from '@tanstack/solid-start';
 import { z } from 'zod';
 import { authMiddleware } from '~/server/middleware/auth';

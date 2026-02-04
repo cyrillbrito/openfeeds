@@ -1,6 +1,5 @@
 import { snakeCamelMapper } from '@electric-sql/client';
-import { SettingsSchema } from '@repo/shared/schemas';
-import type { ArchiveResult, Settings } from '@repo/shared/types';
+import { SettingsSchema, type ArchiveResult, type Settings } from '@repo/domain/client';
 import { electricCollectionOptions } from '@tanstack/electric-db-collection';
 import { createCollection, useLiveQuery } from '@tanstack/solid-db';
 import { getShapeUrl } from '~/lib/electric-client';

@@ -1,6 +1,9 @@
 import { getDb, settings as settingsTable } from '@repo/db';
-import { getEffectiveAutoArchiveDays, type Settings } from '@repo/shared/types';
 import { eq } from 'drizzle-orm';
+import type { Settings } from './settings.schema';
+
+// Re-export schemas and types from schema file
+export * from './settings.schema';
 
 /**
  * Creates settings row for a new user.
@@ -79,6 +82,7 @@ export async function updateSettings(
  * Gets the cutoff date for auto-archiving articles based on settings.
  */
 export async function getAutoArchiveCutoffDate(userId: string): Promise<Date> {
+  const { getEffectiveAutoArchiveDays } = await import('./settings.schema');
   const settings = await getSettings(userId);
   const days = getEffectiveAutoArchiveDays(settings);
   return new Date(Date.now() - days * 24 * 60 * 60 * 1000);

@@ -3,6 +3,7 @@
   "type": "module",
   "exports": {
     ".": "./src/index.ts",
+    "./client": "./src/client.ts",
     "./logger": "./src/logger.ts",
     "./db-provider": "./src/db-provider.ts",
     "./environment": "./src/environment.ts"

@@ -1,4 +1,4 @@
-import type { Article, Feed, Tag } from '@repo/shared/types';
+import type { Article, Feed, Tag } from '@repo/domain/client';
 import { Link, useNavigate } from '@tanstack/solid-router';
 import ArchiveIcon from 'lucide-solid/icons/archive';
 import CheckIcon from 'lucide-solid/icons/check';

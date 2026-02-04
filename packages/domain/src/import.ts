@@ -1,11 +1,15 @@
 import { feeds, feedTags, getDb, tags } from '@repo/db';
-import { type ImportResult } from '@repo/shared/types';
 import { attemptAsync, createId } from '@repo/shared/utils';
 import { eq } from 'drizzle-orm';
 import { parseOpml } from 'feedsmith';
 import { assert } from './errors';
 import { logger } from './logger';
 import { enqueueFeedDetail, enqueueFeedSync } from './queues';
+
+export interface ImportResult {
+  imported: number;
+  failed: string[];
+}
 
 type OPMLOutlines = NonNullable<NonNullable<ReturnType<typeof parseOpml>['body']>['outlines']>;
 

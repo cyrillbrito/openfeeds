@@ -1,4 +1,4 @@
-import type { Tag } from '@repo/shared/types';
+import type { Tag } from '@repo/domain/client';
 import { createFileRoute } from '@tanstack/solid-router';
 import EllipsisVerticalIcon from 'lucide-solid/icons/ellipsis-vertical';
 import PlusIcon from 'lucide-solid/icons/plus';

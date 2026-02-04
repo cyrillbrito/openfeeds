@@ -1,4 +1,4 @@
-import type { Tag } from '@repo/shared/types';
+import type { Tag } from '@repo/domain/client';
 import { createId } from '@repo/shared/utils';
 import { eq, useLiveQuery } from '@tanstack/solid-db';
 import { Link } from '@tanstack/solid-router';

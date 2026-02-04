@@ -1,23 +1,16 @@
 import * as articlesDomain from '@repo/domain';
-import { CreateArticleFromUrlSchema, UpdateArticleSchema } from '@repo/shared/schemas';
+import {
+  ArticleQueryInputSchema,
+  CreateArticleFromUrlSchema,
+  UpdateArticleSchema,
+} from '@repo/domain';
 import { createServerFn } from '@tanstack/solid-start';
 import { z } from 'zod';
 import { authMiddleware } from '~/server/middleware/auth';
 
-const ArticleQuerySchema = z.object({
-  feedId: z.string().optional(),
-  tagId: z.string().optional(),
-  isRead: z.boolean().optional(),
-  isArchived: z.boolean().optional(),
-  type: z.enum(['all', 'shorts']).optional(),
-  limit: z.number().optional(),
-  ids: z.array(z.string()).optional(),
-  urlLike: z.string().optional(),
-});
-
 export const $$getArticles = createServerFn({ method: 'GET' })
   .middleware([authMiddleware])
-  .inputValidator(ArticleQuerySchema)
+  .inputValidator(ArticleQueryInputSchema)
   .handler(({ context, data: query }) => {
     return articlesDomain.getArticles(query, context.user.id);
   });

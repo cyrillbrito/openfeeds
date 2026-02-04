@@ -3,7 +3,7 @@ import {
   getEffectiveAutoArchiveDays,
   isAutoArchiveDaysDefault,
   type ArchiveResult,
-} from '@repo/shared/types';
+} from '@repo/domain/client';
 import { createFileRoute } from '@tanstack/solid-router';
 import { createSignal, Show } from 'solid-js';
 import { Card } from '~/components/Card';

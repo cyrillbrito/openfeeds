@@ -1,4 +1,4 @@
-import type { WordTiming } from '@repo/shared/types';
+import type { WordTiming } from '@repo/domain/client';
 import Headphones from 'lucide-solid/icons/headphones';
 import Loader2 from 'lucide-solid/icons/loader-2';
 import Pause from 'lucide-solid/icons/pause';

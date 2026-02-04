@@ -1,4 +1,4 @@
-import type { Article, Feed } from '@repo/shared/types';
+import type { Article, Feed } from '@repo/domain/client';
 import { Link } from '@tanstack/solid-router';
 import ArrowLeftIcon from 'lucide-solid/icons/arrow-left';
 import ChevronLeftIcon from 'lucide-solid/icons/chevron-left';

@@ -1,13 +1,17 @@
 import { articles, feeds, filterRules, getDb } from '@repo/db';
+import { attemptAsync, createId } from '@repo/shared/utils';
+import { and, eq } from 'drizzle-orm';
+import { filterRuleDbToApi } from '../db-utils';
+import { assert, NotFoundError, UnexpectedError } from '../errors';
 import {
+  shouldMarkAsRead,
   type CreateFilterRuleApi,
   type FilterRule,
   type UpdateFilterRule,
-} from '@repo/shared/types';
-import { attemptAsync, createId, shouldMarkAsRead } from '@repo/shared/utils';
-import { and, eq } from 'drizzle-orm';
-import { filterRuleDbToApi } from './db-utils';
-import { assert, NotFoundError, UnexpectedError } from './errors';
+} from './filter-rule.schema';
+
+// Re-export schemas and types from schema file
+export * from './filter-rule.schema';
 
 export async function getAllFilterRules(userId: string): Promise<FilterRule[]> {
   const db = getDb();

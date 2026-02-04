@@ -1,4 +1,4 @@
-import type { Feed } from '@repo/shared/types';
+import type { Feed } from '@repo/domain/client';
 import { debounce } from '@solid-primitives/scheduled';
 import { createFileRoute, Link } from '@tanstack/solid-router';
 import CircleAlertIcon from 'lucide-solid/icons/circle-alert';

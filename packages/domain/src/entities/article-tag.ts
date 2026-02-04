@@ -1,7 +1,10 @@
 import { articleTags, getDb } from '@repo/db';
-import { type ArticleTag } from '@repo/shared/types';
 import { createId } from '@repo/shared/utils';
 import { and, eq, inArray } from 'drizzle-orm';
+import type { ArticleTag, CreateArticleTag } from './article-tag.schema';
+
+// Re-export schemas and types from schema file
+export * from './article-tag.schema';
 
 export async function getAllArticleTags(userId: string): Promise<ArticleTag[]> {
   const db = getDb();
@@ -16,11 +19,6 @@ export async function getAllArticleTags(userId: string): Promise<ArticleTag[]> {
     })
     .from(articleTags)
     .where(eq(articleTags.userId, userId));
-}
-
-export interface CreateArticleTag {
-  articleId: string;
-  tagId: string;
 }
 
 export async function createArticleTags(

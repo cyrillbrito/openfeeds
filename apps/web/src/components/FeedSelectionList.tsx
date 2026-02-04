@@ -1,4 +1,4 @@
-import type { DiscoveredFeed } from '@repo/shared/types';
+import type { DiscoveredFeed } from '@repo/domain/client';
 import { createSignal, For, Show } from 'solid-js';
 import { CenterLoader } from './Loader';
 

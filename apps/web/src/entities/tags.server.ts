@@ -1,5 +1,5 @@
 import * as tagsDomain from '@repo/domain';
-import { CreateTagSchema, UpdateTagSchema } from '@repo/shared/schemas';
+import { CreateTagSchema, UpdateTagSchema } from '@repo/domain';
 import { createServerFn } from '@tanstack/solid-start';
 import { z } from 'zod';
 import { authMiddleware } from '~/server/middleware/auth';

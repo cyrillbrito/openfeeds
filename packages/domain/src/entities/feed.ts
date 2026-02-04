@@ -1,16 +1,14 @@
 import { feeds, feedTags, getDb, type DbInsertFeed } from '@repo/db';
 import { discoverFeeds } from '@repo/discovery/server';
-import {
-  type CreateFeed,
-  type DiscoveredFeed,
-  type Feed,
-  type UpdateFeed,
-} from '@repo/shared/types';
 import { attemptAsync, createId } from '@repo/shared/utils';
 import { and, eq } from 'drizzle-orm';
-import { feedDbToApi, type DbFeedWithTags } from './db-utils';
-import { assert, BadRequestError, ConflictError, NotFoundError, UnexpectedError } from './errors';
-import { enqueueFeedDetail, enqueueFeedSync } from './queues';
+import { feedDbToApi, type DbFeedWithTags } from '../db-utils';
+import { assert, BadRequestError, ConflictError, NotFoundError, UnexpectedError } from '../errors';
+import { enqueueFeedDetail, enqueueFeedSync } from '../queues';
+import type { CreateFeed, DiscoveredFeed, Feed, UpdateFeed } from './feed.schema';
+
+// Re-export schemas and types from schema file
+export * from './feed.schema';
 
 export async function getAllFeeds(userId: string): Promise<Feed[]> {
   const db = getDb();

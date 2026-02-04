@@ -1,7 +1,7 @@
 import { feeds, getDb } from '@repo/db';
-import type { Feed } from '@repo/shared/types';
 import { attemptAsync } from '@repo/shared/utils';
 import { and, eq } from 'drizzle-orm';
+import { type Feed } from './entities/feed';
 import { assert } from './errors';
 import { fetchRss, type ParseFeedResult } from './rss-fetch';
 

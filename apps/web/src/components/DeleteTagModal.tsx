@@ -1,4 +1,4 @@
-import type { Tag } from '@repo/shared/types';
+import type { Tag } from '@repo/domain/client';
 import { Show } from 'solid-js';
 import { tagsCollection } from '~/entities/tags';
 import { LazyModal, type ModalController } from './LazyModal';

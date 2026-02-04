@@ -1,6 +1,5 @@
 import { snakeCamelMapper } from '@electric-sql/client';
-import { filterRuleSchema } from '@repo/shared/schemas';
-import type { CreateFilterRuleApi, FilterRule } from '@repo/shared/types';
+import { filterRuleSchema, type CreateFilterRuleApi, type FilterRule } from '@repo/domain/client';
 import { electricCollectionOptions } from '@tanstack/electric-db-collection';
 import { createCollection, eq, useLiveQuery } from '@tanstack/solid-db';
 import { getShapeUrl } from '~/lib/electric-client';

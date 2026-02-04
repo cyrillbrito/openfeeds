@@ -1,4 +1,4 @@
-import type { Feed } from '@repo/shared/types';
+import type { Feed } from '@repo/domain/client';
 import TriangleAlertIcon from 'lucide-solid/icons/triangle-alert';
 import { Show } from 'solid-js';
 import { feedsCollection } from '~/entities/feeds';

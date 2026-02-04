@@ -1,7 +1,8 @@
 import { articles, feeds, filterRules, getDb } from '@repo/db';
-import { attemptAsyncFn, shouldMarkAsRead } from '@repo/shared/utils';
+import { attemptAsyncFn } from '@repo/shared/utils';
 import { and, eq } from 'drizzle-orm';
 import { filterRuleDbToApi } from './db-utils';
+import { shouldMarkAsRead } from './entities/filter-rule';
 
 /**
  * Evaluates filter rules for a given feed and article title.

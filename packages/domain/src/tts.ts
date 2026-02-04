@@ -1,10 +1,13 @@
 import { existsSync } from 'node:fs';
 import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
-import type { ArticleAudioMetadata, WordTiming } from '@repo/shared/types';
-import { getArticleWithContent } from './articles';
 import { getConfig } from './config';
+import { getArticleWithContent } from './entities/article';
+import { type ArticleAudioMetadata, type WordTiming } from './entities/tts.schema';
 import { NotFoundError } from './errors';
+
+// Re-export client-safe types
+export * from './entities/tts.schema';
 
 /** Unreal Speech API response */
 interface UnrealSpeechResponse {

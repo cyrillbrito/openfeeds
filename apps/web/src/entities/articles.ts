@@ -1,29 +1,9 @@
 import { snakeCamelMapper } from '@electric-sql/client';
+import { ElectricArticleSchema } from '@repo/domain/client';
 import { electricCollectionOptions } from '@tanstack/electric-db-collection';
 import { createCollection } from '@tanstack/solid-db';
-import { z } from 'zod';
 import { getShapeUrl } from '~/lib/electric-client';
 import { $$createArticle, $$updateArticles } from './articles.server';
-
-// Schema matching application format (camelCase)
-// Electric returns snake_case from DB, columnMapper converts to camelCase
-// Note: `hasCleanContent` is a computed field, not in DB
-const ElectricArticleSchema = z.object({
-  id: z.string(),
-  feedId: z.string().nullable(),
-  title: z.string(),
-  url: z.string().nullable(),
-  description: z.string().nullable(),
-  content: z.string().nullable(),
-  author: z.string().nullable(),
-  pubDate: z.coerce.date().nullable(),
-  isRead: z.boolean().nullable(),
-  isArchived: z.boolean().nullable(),
-  cleanContent: z.string().nullable(), // Raw DB column
-  createdAt: z.coerce.date(),
-  // Add computed field with default for client-side use
-  hasCleanContent: z.boolean().optional().default(false),
-});
 
 // Articles Collection - Electric-powered real-time sync
 export const articlesCollection = createCollection(

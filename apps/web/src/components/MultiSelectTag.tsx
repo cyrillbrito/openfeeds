@@ -1,4 +1,4 @@
-import type { Tag } from '@repo/shared/types';
+import type { Tag } from '@repo/domain/client';
 import { autofocus } from '@solid-primitives/autofocus';
 import CheckIcon from 'lucide-solid/icons/check';
 import SearchIcon from 'lucide-solid/icons/search';
