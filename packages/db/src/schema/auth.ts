@@ -1,3 +1,6 @@
+/**
+ * Auth tables - BetterAuth schema (don't modify without updating auth config)
+ */
 import { relations } from 'drizzle-orm';
 import { boolean, index, pgTable, text, timestamp } from 'drizzle-orm/pg-core';
 

@@ -111,10 +111,8 @@ export async function updateFilterRule(
     throw new NotFoundError();
   }
 
-  // Prepare update data
-  const ruleUpdateData: any = {
-    updatedAt: new Date(),
-  };
+  // Prepare update data (updatedAt auto-set by Drizzle $onUpdate)
+  const ruleUpdateData: Partial<typeof filterRules.$inferInsert> = {};
 
   if (data.pattern !== undefined) {
     ruleUpdateData.pattern = data.pattern;

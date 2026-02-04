@@ -10,6 +10,7 @@ import {
 } from 'drizzle-orm/pg-core';
 import { user } from './auth';
 
+/** RSS/Atom feed subscriptions (unique per user+feedUrl) */
 export const feeds = pgTable(
   'feeds',
   {
@@ -19,15 +20,17 @@ export const feeds = pgTable(
       .references(() => user.id, { onDelete: 'cascade' }),
     title: text('title').notNull(),
     description: text('description'),
-    /** Webpage url */
+    /** Website URL (not the feed URL) */
     url: text('url').notNull(),
-    /** RSS Feed url */
+    /** RSS/Atom feed URL for fetching articles */
     feedUrl: text('feed_url').notNull(),
-    /** Site favicon/icon url */
     icon: text('icon'),
-    /** last time articles where fetched */
     lastSyncAt: timestamp('last_sync_at'),
     createdAt: timestamp('created_at').notNull().defaultNow(),
+    updatedAt: timestamp('updated_at')
+      .$onUpdate(() => new Date())
+      .notNull()
+      .defaultNow(),
   },
   (table) => [
     index('feeds_user_id_idx').on(table.userId),
@@ -35,6 +38,11 @@ export const feeds = pgTable(
   ],
 );
 
+/**
+ * Articles from RSS feeds or user-saved URLs
+ * - feedId null = saved from URL (not from feed)
+ * - guid used for deduplication during RSS sync
+ */
 export const articles = pgTable(
   'articles',
   {
@@ -42,20 +50,27 @@ export const articles = pgTable(
     userId: text('user_id')
       .notNull()
       .references(() => user.id, { onDelete: 'cascade' }),
-    /** Null for articles saved from URL (not tied to a feed) */
+    /** Null for user-saved URLs */
     feedId: text('feed_id').references(() => feeds.id, { onDelete: 'cascade' }),
     title: text('title').notNull(),
     url: text('url'),
     description: text('description'),
-    content: text('content'), // full article content if available
+    /** Original HTML content from RSS */
+    content: text('content'),
     author: text('author'),
+    /** RSS guid for deduplication */
     guid: text('guid'),
     pubDate: timestamp('pub_date'),
     isRead: boolean('is_read').default(false),
     isArchived: boolean('is_archived').default(false),
-    cleanContent: text('clean_content'), // processed readable content
-    contentExtractedAt: timestamp('content_extracted_at'), // when content was extracted
+    /** Readable content (extracted on-demand) */
+    cleanContent: text('clean_content'),
+    contentExtractedAt: timestamp('content_extracted_at'),
     createdAt: timestamp('created_at').notNull().defaultNow(),
+    updatedAt: timestamp('updated_at')
+      .$onUpdate(() => new Date())
+      .notNull()
+      .defaultNow(),
   },
   (table) => [
     index('articles_user_id_idx').on(table.userId),
@@ -63,6 +78,7 @@ export const articles = pgTable(
   ],
 );
 
+/** User tags for organizing feeds/articles (feed tags auto-apply to new articles) */
 export const tags = pgTable(
   'tags',
   {
@@ -71,16 +87,18 @@ export const tags = pgTable(
       .notNull()
       .references(() => user.id, { onDelete: 'cascade' }),
     name: text('name').notNull(),
-    // TODO Enum the color
-    // FIXME: Should we validate color values at the database level?
-    /** Can be one of the chromatic tailwind colors or null */
+    /** Tailwind color name - validated at API layer */
     color: text('color'),
     createdAt: timestamp('created_at').notNull().defaultNow(),
+    updatedAt: timestamp('updated_at')
+      .$onUpdate(() => new Date())
+      .notNull()
+      .defaultNow(),
   },
   (table) => [uniqueIndex('tags_user_name_idx').on(table.userId, table.name)],
 );
 
-// Many-to-many relationship between feeds and tags
+/** Feed-tag junction (userId denormalized for easy sync) */
 export const feedTags = pgTable(
   'feed_tags',
   {
@@ -102,7 +120,7 @@ export const feedTags = pgTable(
   ],
 );
 
-// Many-to-many relationship between articles and tags
+/** Article-tag junction (userId denormalized for easy sync) */
 export const articleTags = pgTable(
   'article_tags',
   {
@@ -124,20 +142,21 @@ export const articleTags = pgTable(
   ],
 );
 
-/**
- * Settings - one row per user with column-based settings.
- * Uses userId as primary key (1:1 relationship with user).
- */
+/** User preferences (1:1 with user, created lazily) */
 export const settings = pgTable('settings', {
   userId: text('user_id')
     .primaryKey()
     .references(() => user.id, { onDelete: 'cascade' }),
   theme: text('theme').notNull().default('system'),
-  /** null = use app default (allows changing default without migration) */
+  /** null = use app default */
   autoArchiveDays: integer('auto_archive_days'),
-  updatedAt: timestamp('updated_at').notNull().defaultNow(),
+  updatedAt: timestamp('updated_at')
+    .$onUpdate(() => new Date())
+    .notNull()
+    .defaultNow(),
 });
 
+/** Per-feed rules to auto-mark articles as read based on title matching */
 export const filterRules = pgTable(
   'filter_rules',
   {
@@ -148,11 +167,16 @@ export const filterRules = pgTable(
     feedId: text('feed_id')
       .notNull()
       .references(() => feeds.id, { onDelete: 'cascade' }),
+    /** Text to match against article title */
     pattern: text('pattern').notNull(),
-    operator: text('operator').notNull(), // 'includes' or 'not_includes'
+    /** 'includes' or 'not_includes' */
+    operator: text('operator').notNull(),
     isActive: boolean('is_active').notNull().default(true),
     createdAt: timestamp('created_at').notNull().defaultNow(),
-    updatedAt: timestamp('updated_at'),
+    updatedAt: timestamp('updated_at')
+      .$onUpdate(() => new Date())
+      .notNull()
+      .defaultNow(),
   },
   (table) => [
     index('filter_rules_user_id_idx').on(table.userId),
