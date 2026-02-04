@@ -69,7 +69,6 @@ export async function updateSettings(
       set: {
         theme: newSettings.theme,
         autoArchiveDays: newSettings.autoArchiveDays,
-        updatedAt: new Date(),
       },
     });
 
