@@ -27,6 +27,10 @@ export const feeds = pgTable(
     icon: text('icon'),
     lastSyncAt: timestamp('last_sync_at'),
     createdAt: timestamp('created_at').notNull().defaultNow(),
+    updatedAt: timestamp('updated_at')
+      .$onUpdate(() => new Date())
+      .notNull()
+      .defaultNow(),
   },
   (table) => [
     index('feeds_user_id_idx').on(table.userId),
@@ -63,6 +67,10 @@ export const articles = pgTable(
     cleanContent: text('clean_content'),
     contentExtractedAt: timestamp('content_extracted_at'),
     createdAt: timestamp('created_at').notNull().defaultNow(),
+    updatedAt: timestamp('updated_at')
+      .$onUpdate(() => new Date())
+      .notNull()
+      .defaultNow(),
   },
   (table) => [
     index('articles_user_id_idx').on(table.userId),
@@ -83,6 +91,10 @@ export const tags = pgTable(
     /** Tailwind color name - validated at API layer */
     color: text('color'),
     createdAt: timestamp('created_at').notNull().defaultNow(),
+    updatedAt: timestamp('updated_at')
+      .$onUpdate(() => new Date())
+      .notNull()
+      .defaultNow(),
   },
   (table) => [uniqueIndex('tags_user_name_idx').on(table.userId, table.name)],
 );
@@ -139,7 +151,10 @@ export const settings = pgTable('settings', {
   theme: text('theme').notNull().default('system'),
   /** null = use app default (7 days) */
   autoArchiveDays: integer('auto_archive_days'),
-  updatedAt: timestamp('updated_at').notNull().defaultNow(),
+  updatedAt: timestamp('updated_at')
+    .$onUpdate(() => new Date())
+    .notNull()
+    .defaultNow(),
 });
 
 /** Per-feed rules to auto-mark articles as read based on title matching */
@@ -159,7 +174,10 @@ export const filterRules = pgTable(
     operator: text('operator').notNull(),
     isActive: boolean('is_active').notNull().default(true),
     createdAt: timestamp('created_at').notNull().defaultNow(),
-    updatedAt: timestamp('updated_at'),
+    updatedAt: timestamp('updated_at')
+      .$onUpdate(() => new Date())
+      .notNull()
+      .defaultNow(),
   },
   (table) => [
     index('filter_rules_user_id_idx').on(table.userId),
