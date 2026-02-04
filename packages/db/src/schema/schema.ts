@@ -20,7 +20,7 @@ export const feeds = pgTable(
       .references(() => user.id, { onDelete: 'cascade' }),
     title: text('title').notNull(),
     description: text('description'),
-    /** Website homepage URL (not the feed URL) */
+    /** Website URL (not the feed URL) */
     url: text('url').notNull(),
     /** RSS/Atom feed URL for fetching articles */
     feedUrl: text('feed_url').notNull(),
@@ -75,7 +75,6 @@ export const articles = pgTable(
   (table) => [
     index('articles_user_id_idx').on(table.userId),
     index('articles_feed_id_idx').on(table.feedId),
-    index('articles_guid_idx').on(table.guid),
   ],
 );
 
@@ -99,7 +98,7 @@ export const tags = pgTable(
   (table) => [uniqueIndex('tags_user_name_idx').on(table.userId, table.name)],
 );
 
-/** Feed-tag junction (userId denormalized for RLS) */
+/** Feed-tag junction (userId denormalized for easy sync) */
 export const feedTags = pgTable(
   'feed_tags',
   {
@@ -121,7 +120,7 @@ export const feedTags = pgTable(
   ],
 );
 
-/** Article-tag junction (userId denormalized for RLS) */
+/** Article-tag junction (userId denormalized for easy sync) */
 export const articleTags = pgTable(
   'article_tags',
   {
@@ -149,7 +148,7 @@ export const settings = pgTable('settings', {
     .primaryKey()
     .references(() => user.id, { onDelete: 'cascade' }),
   theme: text('theme').notNull().default('system'),
-  /** null = use app default (7 days) */
+  /** null = use app default */
   autoArchiveDays: integer('auto_archive_days'),
   updatedAt: timestamp('updated_at')
     .$onUpdate(() => new Date())
