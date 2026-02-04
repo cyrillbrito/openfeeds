@@ -1,6 +1,8 @@
+import { feeds, getDb } from '@repo/db';
 import * as feedsDomain from '@repo/domain';
 import { CreateFeedSchema, UpdateFeedSchema } from '@repo/domain';
 import { createServerFn } from '@tanstack/solid-start';
+import { eq } from 'drizzle-orm';
 import { z } from 'zod';
 import { authMiddleware } from '~/server/middleware/auth';
 
@@ -18,16 +20,27 @@ export const $$importOpml = createServerFn({ method: 'POST' })
     return feedsDomain.importOpmlFeeds(data.opmlContent, context.user.id);
   });
 
-export const $$exportOpml = createServerFn({ method: 'GET' })
+export const $$exportOpml = createServerFn()
   .middleware([authMiddleware])
   .handler(({ context }) => {
     return feedsDomain.exportOpmlFeeds(context.user.id);
   });
 
-export const $$getAllFeeds = createServerFn({ method: 'GET' })
+export const $$getAllFeeds = createServerFn()
   .middleware([authMiddleware])
   .handler(({ context }) => {
     return feedsDomain.getAllFeeds(context.user.id);
+  });
+
+export const $$hasAnyFeeds = createServerFn()
+  .middleware([authMiddleware])
+  .handler(async ({ context }) => {
+    const db = getDb();
+    const feed = await db.query.feeds.findFirst({
+      columns: { id: true },
+      where: eq(feeds.userId, context.user.id),
+    });
+    return feed !== undefined;
   });
 
 export const $$createFeeds = createServerFn({ method: 'POST' })
