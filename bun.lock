@@ -110,6 +110,7 @@
         "@repo/domain": "workspace:*",
         "@repo/readability": "workspace:*",
         "@repo/shared": "workspace:*",
+        "@t3-oss/env-core": "^0.13.10",
         "bullmq": "^5.67.1",
         "drizzle-orm": "catalog:",
         "zod": "catalog:",
