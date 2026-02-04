@@ -1,3 +1,6 @@
+/**
+ * Auth tables - BetterAuth schema (don't modify without updating auth config)
+ */
 import { relations } from 'drizzle-orm';
 import { boolean, index, pgTable, text, timestamp } from 'drizzle-orm/pg-core';
 
@@ -32,6 +35,7 @@ export const session = pgTable(
   (table) => [index('session_userId_idx').on(table.userId)],
 );
 
+/** Links OAuth providers (Google, GitHub) to users */
 export const account = pgTable(
   'account',
   {
@@ -47,6 +51,7 @@ export const account = pgTable(
     accessTokenExpiresAt: timestamp('access_token_expires_at'),
     refreshTokenExpiresAt: timestamp('refresh_token_expires_at'),
     scope: text('scope'),
+    /** For email/password auth only */
     password: text('password'),
     createdAt: timestamp('created_at').notNull(),
     updatedAt: timestamp('updated_at')
@@ -56,6 +61,7 @@ export const account = pgTable(
   (table) => [index('account_userId_idx').on(table.userId)],
 );
 
+/** Email verification, password reset, magic links */
 export const verification = pgTable(
   'verification',
   {

@@ -67,7 +67,6 @@ export const BulkUpdateArticlesSchema = z.object({
 export const ArticleStatsSchema = z.object({
   total: z.number(),
   unread: z.number(),
-  starred: z.number(),
   byFeed: z.record(z.string(), z.number()),
 });
 
