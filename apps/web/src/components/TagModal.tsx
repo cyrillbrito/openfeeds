@@ -3,7 +3,7 @@ import { createId } from '@repo/shared/utils';
 import CircleAlertIcon from 'lucide-solid/icons/circle-alert';
 import { createEffect, createSignal, For, Show } from 'solid-js';
 import { tagsCollection } from '~/entities/tags';
-import { availableTagColors, getTagDotColor } from '../utils/tagColors';
+import { availableTagColors, getTagDotColor } from '~/utils/tagColors';
 import { ColorIndicator } from './ColorIndicator';
 import { LazyModal, type ModalController } from './LazyModal';
 

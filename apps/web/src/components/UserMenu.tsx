@@ -6,8 +6,8 @@ import MoonIcon from 'lucide-solid/icons/moon';
 import SettingsIcon from 'lucide-solid/icons/settings';
 import SunIcon from 'lucide-solid/icons/sun';
 import { Suspense } from 'solid-js';
-import { useTheme } from '../hooks/theme.tsx';
-import { authClient } from '../hooks/use-auth.ts';
+import { authClient } from '~/lib/auth-client';
+import { useTheme } from '~/providers/theme';
 import { Dropdown } from './Dropdown';
 
 export function UserMenu() {

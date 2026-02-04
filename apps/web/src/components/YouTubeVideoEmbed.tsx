@@ -1,7 +1,7 @@
 import PlayIcon from 'lucide-solid/icons/play';
 import { createSignal, Show } from 'solid-js';
 import { twMerge } from 'tailwind-merge';
-import { extractYouTubeVideoId } from '../utils/youtube';
+import { extractYouTubeVideoId } from '~/utils/youtube';
 
 interface YouTubeVideoEmbedProps {
   url: string;

@@ -6,8 +6,8 @@ import InboxIcon from 'lucide-solid/icons/inbox';
 import RssIcon from 'lucide-solid/icons/rss';
 import { Show } from 'solid-js';
 import { twMerge } from 'tailwind-merge';
-import { containsHtml, downshiftHeadings, sanitizeHtml, stripAnchors } from '../utils/html';
-import { extractYouTubeVideoId, isYouTubeUrl } from '../utils/youtube';
+import { containsHtml, downshiftHeadings, sanitizeHtml, stripAnchors } from '~/utils/html';
+import { extractYouTubeVideoId, isYouTubeUrl } from '~/utils/youtube';
 import { ArticleTagManager } from './ArticleTagManager';
 import { TimeAgo } from './TimeAgo';
 

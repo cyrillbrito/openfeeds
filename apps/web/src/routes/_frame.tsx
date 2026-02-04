@@ -5,16 +5,16 @@ import LibraryIcon from 'lucide-solid/icons/library';
 import PlusIcon from 'lucide-solid/icons/plus';
 import SearchIcon from 'lucide-solid/icons/search';
 import { createEffect, For, onMount, Suspense } from 'solid-js';
+import { AddFeedModal } from '~/components/AddFeedModal';
+import { ColorIndicator } from '~/components/ColorIndicator';
+import { type ModalController } from '~/components/LazyModal';
+import { CenterLoader, Loader } from '~/components/Loader';
+import { SaveArticleModal } from '~/components/SaveArticleModal';
+import { TagModal } from '~/components/TagModal';
+import { UserMenu } from '~/components/UserMenu';
 import { useTags } from '~/entities/tags';
 import { authMiddleware } from '~/server/middleware/auth.ts';
-import { AddFeedModal } from '../components/AddFeedModal';
-import { ColorIndicator } from '../components/ColorIndicator';
-import { type ModalController } from '../components/LazyModal';
-import { CenterLoader, Loader } from '../components/Loader.tsx';
-import { SaveArticleModal } from '../components/SaveArticleModal';
-import { TagModal } from '../components/TagModal.tsx';
-import { UserMenu } from '../components/UserMenu.tsx';
-import { getTagDotColor } from '../utils/tagColors';
+import { getTagDotColor } from '~/utils/tagColors';
 
 export const Route = createFileRoute('/_frame')({
   server: {

@@ -3,11 +3,11 @@ import { createRootRoute, HeadContent, Outlet, Scripts } from '@tanstack/solid-r
 import { TanStackRouterDevtoolsPanel } from '@tanstack/solid-router-devtools';
 import { onMount, Suspense } from 'solid-js';
 import { HydrationScript } from 'solid-js/web';
-import { SessionReadProvider } from '~/hooks/session-read';
-import { ThemeProvider } from '~/hooks/theme';
-import { ToastProvider } from '../hooks/toast';
-import interCss from '../inter/inter.css?url';
-import appCss from '../styles/app.css?url';
+import interCss from '~/assets/inter/inter.css?url';
+import { SessionReadProvider } from '~/providers/session-read';
+import { ThemeProvider } from '~/providers/theme';
+import { ToastProvider } from '~/providers/toast';
+import appCss from '~/styles/app.css?url';
 
 export const Route = createRootRoute({
   head: () => ({

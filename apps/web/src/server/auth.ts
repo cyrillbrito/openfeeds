@@ -3,7 +3,7 @@ import { createSettings, sendPasswordResetEmail, sendVerificationEmail } from '@
 import { betterAuth } from 'better-auth';
 import { drizzleAdapter } from 'better-auth/adapters/drizzle';
 import { tanstackStartCookies } from 'better-auth/tanstack-start';
-import { env } from '../env';
+import { env } from '~/env';
 
 export const auth = betterAuth({
   database: drizzleAdapter(getDb(), { provider: 'pg' }),

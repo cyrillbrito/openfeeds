@@ -5,7 +5,7 @@ import { Link } from '@tanstack/solid-router';
 import PlusIcon from 'lucide-solid/icons/plus';
 import { For } from 'solid-js';
 import { articleTagsCollection } from '~/entities/article-tags';
-import { getTagDotColor } from '../utils/tagColors';
+import { getTagDotColor } from '~/utils/tagColors';
 import { ColorIndicator } from './ColorIndicator';
 
 interface ArticleTagManagerProps {

@@ -2,7 +2,7 @@ import { Link } from '@tanstack/solid-router';
 import ArrowDownIcon from 'lucide-solid/icons/arrow-down';
 import ArrowUpIcon from 'lucide-solid/icons/arrow-up';
 import { Show } from 'solid-js';
-import type { SortOrder } from '~/common/routing';
+import type { SortOrder } from '~/utils/routing';
 
 interface SortToggleProps {
   currentSort: SortOrder;

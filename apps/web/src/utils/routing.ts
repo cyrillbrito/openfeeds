@@ -1,4 +1,4 @@
-import type { ReadStatus } from '../components/ReadStatusToggle';
+import type { ReadStatus } from '~/components/ReadStatusToggle';
 
 export type SortOrder = 'newest' | 'oldest';
 

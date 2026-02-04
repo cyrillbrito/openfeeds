@@ -4,20 +4,20 @@ import ArchiveIcon from 'lucide-solid/icons/archive';
 import ArrowLeftIcon from 'lucide-solid/icons/arrow-left';
 import InboxIcon from 'lucide-solid/icons/inbox';
 import { Show, Suspense } from 'solid-js';
+import { ArchiveIconButton } from '~/components/ArchiveIconButton';
+import { ArticleAudioProvider } from '~/components/ArticleAudioContext';
+import { ArticleAudioPlayer } from '~/components/ArticleAudioPlayer';
+import { ArticleTagManager } from '~/components/ArticleTagManager';
+import { Header } from '~/components/Header';
+import { HighlightedArticleContent } from '~/components/HighlightedArticleContent';
+import { Loader } from '~/components/Loader';
+import { ReadIconButton } from '~/components/ReadIconButton';
+import { TimeAgo } from '~/components/TimeAgo';
 import { articlesCollection } from '~/entities/articles';
 import { useFeeds } from '~/entities/feeds';
 import { useTags } from '~/entities/tags';
-import { ArchiveIconButton } from '../components/ArchiveIconButton';
-import { ArticleAudioProvider } from '../components/ArticleAudioContext';
-import { ArticleAudioPlayer } from '../components/ArticleAudioPlayer';
-import { ArticleTagManager } from '../components/ArticleTagManager';
-import { Header } from '../components/Header';
-import { HighlightedArticleContent } from '../components/HighlightedArticleContent';
-import { Loader } from '../components/Loader';
-import { ReadIconButton } from '../components/ReadIconButton';
-import { TimeAgo } from '../components/TimeAgo';
-import { containsHtml, downshiftHeadings, sanitizeHtml } from '../utils/html';
-import { extractYouTubeVideoId, isYouTubeUrl } from '../utils/youtube';
+import { containsHtml, downshiftHeadings, sanitizeHtml } from '~/utils/html';
+import { extractYouTubeVideoId, isYouTubeUrl } from '~/utils/youtube';
 
 export const Route = createFileRoute('/_frame/articles/$articleId')({
   component: ArticleView,

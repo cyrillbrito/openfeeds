@@ -1,6 +1,6 @@
 import CircleAlertIcon from 'lucide-solid/icons/circle-alert';
 import { createSignal, For, Show } from 'solid-js';
-import { applyFilterRules } from '~/entities/actions';
+import { $$applyFilterRules } from '~/entities/actions.server';
 import { useFilterRules } from '~/entities/filter-rules';
 import { AddRuleForm } from './AddRuleForm';
 import { RuleItem } from './RuleItem';
@@ -39,7 +39,7 @@ export function RuleManager(props: RuleManagerProps) {
     try {
       setApplyError(null);
       setIsApplying(true);
-      const result = await applyFilterRules(props.feedId);
+      const result = await $$applyFilterRules({ data: { feedId: props.feedId } });
 
       // Show a success message or toast
       alert(

@@ -1,6 +1,6 @@
 import PlayIcon from 'lucide-solid/icons/play';
 import { createSignal } from 'solid-js';
-import { extractYouTubeVideoId, getYouTubeEmbedUrl, isYouTubeShorts } from '../utils/youtube';
+import { extractYouTubeVideoId, getYouTubeEmbedUrl, isYouTubeShorts } from '~/utils/youtube';
 
 interface YouTubeEmbedProps {
   url: string;

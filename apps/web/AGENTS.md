@@ -23,12 +23,61 @@ bun check-types   # TypeScript checking
 
 ## Directory Structure
 
-- `src/routes/` - File-based routing
-- `src/entities/` - Local-first collections + server functions
-- `src/components/` - UI components
-- `src/server/` - Server-only code (auth middleware)
-- `src/hooks/` - Custom hooks
-- `src/lib/` - Utilities
+```
+src/
+  assets/           # Static assets (fonts, images)
+    inter/          # Inter font files
+  components/       # UI components (client-side only)
+  entities/         # Local-first collections + server functions
+    *.ts            # Client-side collection definitions
+    *.server.ts     # Server functions for entities
+  lib/              # Configured third-party clients
+    auth-client.ts  # Better Auth client (client-side)
+    electric-*.ts   # Electric SQL clients
+  providers/        # Context providers (JSX)
+    theme.tsx       # Theme context (light/dark/system)
+    toast.tsx       # Toast notifications
+    session-read.tsx
+  server/           # Server-only code
+    auth.ts         # Better Auth server config
+    middleware/     # Request middleware
+  utils/            # Pure utility functions
+    html.ts         # HTML sanitization
+    youtube.ts      # YouTube URL helpers
+    routing.ts      # Route search validation
+    tagColors.ts    # Tag color helpers
+  routes/           # File-based routing
+    api/            # API routes for external consumers
+  styles/           # Global CSS
+  env.ts            # Environment variables (t3-env)
+```
+
+### Server Code Rule
+
+Server code should ONLY live in:
+
+- `src/server/` - Auth config, middleware
+- `src/entities/*.server.ts` - Entity server functions
+- `src/routes/` - Route loaders and API routes
+
+All other folders (`components/`, `lib/`, `providers/`, `utils/`) must be client-safe.
+
+### Import Convention
+
+Use `~/` for cross-folder imports, `./` for same-folder imports:
+
+```tsx
+// Same folder - use relative imports
+
+// Cross-folder - use ~/ alias
+import { Header } from '~/components/Header';
+import { authClient } from '~/lib/auth-client';
+import { useTheme } from '~/providers/theme';
+// Avoid going up directories
+import { Header } from '../components/Header'; // Don't do this
+import { ColorIndicator } from './ColorIndicator';
+import { LazyModal } from './LazyModal';
+```
 
 ## Local-First Pattern
 

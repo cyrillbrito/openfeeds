@@ -3,17 +3,17 @@ import { createFileRoute } from '@tanstack/solid-router';
 import EllipsisVerticalIcon from 'lucide-solid/icons/ellipsis-vertical';
 import PlusIcon from 'lucide-solid/icons/plus';
 import { createSignal, For, Show, Suspense } from 'solid-js';
+import { ColorIndicator } from '~/components/ColorIndicator';
+import { DeleteTagModal } from '~/components/DeleteTagModal';
+import { Dropdown } from '~/components/Dropdown';
+import { Header } from '~/components/Header';
+import { TagsIllustration } from '~/components/Icons';
+import { type ModalController } from '~/components/LazyModal';
 import { CenterLoader } from '~/components/Loader';
+import { TagModal } from '~/components/TagModal';
+import { TimeAgo } from '~/components/TimeAgo';
 import { useTags } from '~/entities/tags';
-import { ColorIndicator } from '../components/ColorIndicator';
-import { DeleteTagModal } from '../components/DeleteTagModal';
-import { Dropdown } from '../components/Dropdown';
-import { Header } from '../components/Header';
-import { TagsIllustration } from '../components/Icons';
-import { type ModalController } from '../components/LazyModal';
-import { TagModal } from '../components/TagModal';
-import { TimeAgo } from '../components/TimeAgo';
-import { getTagDotColor } from '../utils/tagColors';
+import { getTagDotColor } from '~/utils/tagColors';
 
 export const Route = createFileRoute('/_frame/tags/')({
   component: TagsComponent,

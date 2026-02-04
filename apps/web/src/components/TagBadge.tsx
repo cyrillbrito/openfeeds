@@ -1,5 +1,5 @@
 import { twMerge } from 'tailwind-merge';
-import { getTagDotColor } from '../utils/tagColors';
+import { getTagDotColor } from '~/utils/tagColors';
 import { ColorIndicator } from './ColorIndicator';
 
 interface TagBadgeProps {

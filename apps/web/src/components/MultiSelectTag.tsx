@@ -3,7 +3,7 @@ import { autofocus } from '@solid-primitives/autofocus';
 import CheckIcon from 'lucide-solid/icons/check';
 import SearchIcon from 'lucide-solid/icons/search';
 import { createEffect, createSignal, For, onCleanup, Show } from 'solid-js';
-import { getTagDotColor } from '../utils/tagColors';
+import { getTagDotColor } from '~/utils/tagColors';
 import { ColorIndicator } from './ColorIndicator';
 
 // prevents from being tree-shaken by TS

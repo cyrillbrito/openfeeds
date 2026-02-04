@@ -1,5 +1,5 @@
 import { twMerge } from 'tailwind-merge';
-import { extractYouTubeVideoId } from '../utils/youtube';
+import { extractYouTubeVideoId } from '~/utils/youtube';
 
 interface YouTubeShortsEmbedProps {
   url: string;

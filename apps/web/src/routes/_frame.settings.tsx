@@ -6,10 +6,10 @@ import {
 } from '@repo/shared/types';
 import { createFileRoute } from '@tanstack/solid-router';
 import { createSignal, Show } from 'solid-js';
+import { Card } from '~/components/Card';
+import { Header } from '~/components/Header';
 import { $$exportOpml } from '~/entities/feeds.server';
 import { settingsCollection, triggerAutoArchive, useSettings } from '~/entities/settings';
-import { Card } from '../components/Card';
-import { Header } from '../components/Header';
 
 export const Route = createFileRoute('/_frame/settings')({
   component: SettingsPage,

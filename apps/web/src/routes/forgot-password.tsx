@@ -5,9 +5,9 @@ import CircleCheckIcon from 'lucide-solid/icons/circle-check';
 import CircleXIcon from 'lucide-solid/icons/circle-x';
 import posthog from 'posthog-js';
 import { createSignal, Show } from 'solid-js';
-import { Card } from '../components/Card.tsx';
-import { Loader } from '../components/Loader';
-import { authClient } from '../hooks/use-auth.ts';
+import { Card } from '~/components/Card';
+import { Loader } from '~/components/Loader';
+import { authClient } from '~/lib/auth-client';
 
 export const Route = createFileRoute('/forgot-password')({
   beforeLoad: async () => {

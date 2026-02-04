@@ -3,7 +3,7 @@ import { createId } from '@repo/shared/utils';
 import CircleAlertIcon from 'lucide-solid/icons/circle-alert';
 import { createSignal, For, Show } from 'solid-js';
 import { filterRulesCollection } from '~/entities/filter-rules';
-import { authClient } from '~/hooks/use-auth';
+import { authClient } from '~/lib/auth-client';
 
 interface AddRuleFormProps {
   feedId: string;
