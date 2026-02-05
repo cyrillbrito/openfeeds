@@ -17,19 +17,20 @@ export function ArticleTagManager(props: ArticleTagManagerProps) {
   let triggerRef: HTMLButtonElement | undefined;
   let popoverRef: HTMLDivElement | undefined;
 
-  // Query article tags for this specific article
+  // Query article-tags for this specific article
   const articleTagsQuery = useLiveQuery((q) =>
     q
       .from({ articleTag: articleTagsCollection })
       .where(({ articleTag }) => eq(articleTag.articleId, props.articleId)),
   );
 
-  const selectedTagIds = () => (articleTagsQuery.data ?? []).map((at) => at.tagId);
+  const articleTags = () => articleTagsQuery.data ?? [];
+  const selectedTagIds = () => articleTags().map((at) => at.tagId);
   const selectedTags = () => props.tags.filter((t) => selectedTagIds().includes(t.id));
   const availableTags = () => props.tags.filter((tag) => !selectedTagIds().includes(tag.id));
 
   const removeTag = (tagId: string) => {
-    const articleTag = (articleTagsQuery.data ?? []).find((at) => at.tagId === tagId);
+    const articleTag = articleTags().find((at) => at.tagId === tagId);
     if (articleTag) {
       articleTagsCollection.delete(articleTag.id);
     }

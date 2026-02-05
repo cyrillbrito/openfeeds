@@ -2,8 +2,8 @@ import type { Feed } from '@repo/domain/client';
 import { eq, useLiveQuery } from '@tanstack/solid-db';
 import { createFileRoute, Link } from '@tanstack/solid-router';
 import { MoreVertical, Shuffle, Video } from 'lucide-solid';
-import { createSignal, For, onMount, Show, Suspense } from 'solid-js';
-import { ArticleList } from '~/components/ArticleList';
+import { createMemo, createSignal, For, onMount, Show, Suspense } from 'solid-js';
+import { ArticleList, ARTICLES_PER_PAGE } from '~/components/ArticleList';
 import { ArticleListToolbar } from '~/components/ArticleListToolbar';
 import { ColorIndicator } from '~/components/ColorIndicator';
 import { DeleteFeedModal } from '~/components/DeleteFeedModal';
@@ -37,10 +37,27 @@ function FeedArticles() {
 
   onMount(() => setViewKey(`feed:${feedId()}`));
 
+  // Pagination state - lifted from ArticleList
+  const [visibleCount, setVisibleCount] = createSignal(ARTICLES_PER_PAGE);
+
   // Only filter by isRead on server when showing 'read' status
   const isRead = () => (readStatus() === 'read' ? true : null);
 
+  // Query articles with orderBy and limit for pagination
   const articlesQuery = useLiveQuery((q) => {
+    let query = q
+      .from({ article: articlesCollection })
+      .where(({ article }) => eq(article.feedId, feedId()));
+
+    if (isRead() !== null) {
+      query = query.where(({ article }) => eq(article.isRead, isRead()));
+    }
+
+    return query.orderBy(({ article }) => article.pubDate, 'desc').limit(visibleCount());
+  });
+
+  // Query for total count (without limit)
+  const totalCountQuery = useLiveQuery((q) => {
     let query = q
       .from({ article: articlesCollection })
       .where(({ article }) => eq(article.feedId, feedId()));
@@ -65,7 +82,7 @@ function FeedArticles() {
   const handleMarkAllArchived = async () => {
     try {
       setIsMarkingAllArchived(true);
-      const articleIds = (articlesQuery.data || []).map((a) => a.id);
+      const articleIds = (totalCountQuery.data || []).map((a) => a.id);
       if (articleIds.length > 0) {
         articlesCollection.update(articleIds, (drafts) => {
           drafts.forEach((d) => (d.isArchived = true));
@@ -94,16 +111,27 @@ function FeedArticles() {
     });
   };
 
-  const articles = () => {
-    const allArticles = articlesQuery.data || [];
-    if (readStatus() !== 'unread') return allArticles;
+  // Filter for session-read articles (client-side)
+  const filteredArticles = createMemo(() => {
+    const articles = articlesQuery.data || [];
+    if (readStatus() !== 'unread') return articles;
 
-    // Show unread + session-read articles
-    return allArticles.filter((a) => !a.isRead || sessionReadIds().has(a.id));
+    return articles.filter((a) => !a.isRead || sessionReadIds().has(a.id));
+  });
+
+  const totalCount = () => {
+    const allArticles = totalCountQuery.data || [];
+    if (readStatus() !== 'unread') return allArticles.length;
+
+    return allArticles.filter((a) => !a.isRead || sessionReadIds().has(a.id)).length;
   };
 
   const unreadCount = () => {
-    return articles().filter((article) => !article.isRead).length;
+    return filteredArticles().filter((article) => !article.isRead).length;
+  };
+
+  const handleLoadMore = () => {
+    setVisibleCount((prev) => prev + ARTICLES_PER_PAGE);
   };
 
   const currentFeed = () => {
@@ -255,7 +283,7 @@ function FeedArticles() {
           </>
         }
         unreadCount={unreadCount()}
-        totalCount={articles().length}
+        totalCount={totalCount()}
         readStatus={readStatus()}
       />
 
@@ -263,9 +291,11 @@ function FeedArticles() {
         <Suspense fallback={<CenterLoader />}>
           <Show when={feedsQuery.data && tagsQuery.data}>
             <ArticleList
-              articles={articles()}
+              articles={filteredArticles()}
               feeds={feedsQuery.data!}
               tags={tagsQuery.data!}
+              totalCount={totalCount()}
+              onLoadMore={handleLoadMore}
               onUpdateArticle={handleUpdateArticle}
               readStatus={readStatus()}
               context="feed"

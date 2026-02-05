@@ -1,7 +1,7 @@
 import type { Article, Feed, Tag } from '@repo/domain/client';
 import { Link } from '@tanstack/solid-router';
 import { ChevronDown } from 'lucide-solid';
-import { createSignal, For, Show, type JSX } from 'solid-js';
+import { For, Show, type JSX } from 'solid-js';
 import { ArticleCard } from './ArticleCard';
 import {
   AllCaughtUpIllustration,
@@ -11,12 +11,14 @@ import {
 } from './Icons';
 import type { ReadStatus } from './ReadStatusToggle';
 
-const ARTICLES_PER_PAGE = 20;
+export const ARTICLES_PER_PAGE = 20;
 
 interface ArticleListProps {
   articles: Article[];
   feeds: Feed[];
   tags: Tag[];
+  totalCount: number; // Total articles available (for "load more" button)
+  onLoadMore: () => void; // Callback to load more
   onUpdateArticle: (articleId: string, updates: { isRead?: boolean; isArchived?: boolean }) => void;
   readStatus?: ReadStatus;
   context?: 'inbox' | 'feed' | 'tag';
@@ -120,15 +122,9 @@ export function ArticleList(props: ArticleListProps) {
 
   const emptyState = getContextualEmptyState();
 
-  const [visibleCount, setVisibleCount] = createSignal(ARTICLES_PER_PAGE);
-
-  const visibleArticles = () => props.articles.slice(0, visibleCount());
-  const hasMoreArticles = () => props.articles.length > visibleCount();
-  const remainingCount = () => props.articles.length - visibleCount();
-
-  const handleLoadMore = () => {
-    setVisibleCount((prev) => prev + ARTICLES_PER_PAGE);
-  };
+  // Parent controls pagination now - we just show what we receive
+  const hasMoreArticles = () => props.articles.length < props.totalCount;
+  const remainingCount = () => props.totalCount - props.articles.length;
 
   return (
     <Show
@@ -156,7 +152,7 @@ export function ArticleList(props: ArticleListProps) {
       }
     >
       <div class="divide-base-300 w-full divide-y">
-        <For each={visibleArticles()}>
+        <For each={props.articles}>
           {(article) => (
             <ArticleCard
               article={article}
@@ -170,7 +166,7 @@ export function ArticleList(props: ArticleListProps) {
 
       <Show when={hasMoreArticles()}>
         <div class="mt-6 flex justify-center">
-          <button class="btn btn-outline btn-wide gap-2" onClick={handleLoadMore}>
+          <button class="btn btn-outline btn-wide gap-2" onClick={props.onLoadMore}>
             <ChevronDown size={20} />
             Load More ({remainingCount()} remaining)
           </button>

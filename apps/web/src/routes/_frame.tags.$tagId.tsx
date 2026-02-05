@@ -2,7 +2,7 @@ import { eq, useLiveQuery } from '@tanstack/solid-db';
 import { createFileRoute, Link } from '@tanstack/solid-router';
 import { Shuffle } from 'lucide-solid';
 import { createMemo, createSignal, onMount, Show, Suspense } from 'solid-js';
-import { ArticleList } from '~/components/ArticleList';
+import { ArticleList, ARTICLES_PER_PAGE } from '~/components/ArticleList';
 import { ArticleListToolbar } from '~/components/ArticleListToolbar';
 import { Header } from '~/components/Header';
 import { LazyModal, type ModalController } from '~/components/LazyModal';
@@ -32,13 +32,34 @@ function TagArticles() {
 
   onMount(() => setViewKey(`tag:${tagId()}`));
 
+  // Pagination state - lifted from ArticleList
+  const [visibleCount, setVisibleCount] = createSignal(ARTICLES_PER_PAGE);
+
   // Only filter by isRead on server when showing 'read' status
   const isRead = () => (readStatus() === 'read' ? true : null);
 
   const tagsQuery = useTags();
   const feedsQuery = useFeeds();
 
+  // Query articles with join, orderBy, and limit for pagination
   const articlesQuery = useLiveQuery((q) => {
+    let query = q
+      .from({ article: articlesCollection })
+      .innerJoin({ articleTag: articleTagsCollection }, ({ article, articleTag }) =>
+        eq(article.id, articleTag.articleId),
+      )
+      .where(({ articleTag }) => eq(articleTag.tagId, tagId()))
+      .select(({ article }) => ({ ...article }));
+
+    if (isRead() !== null) {
+      query = query.where(({ article }) => eq(article.isRead, isRead()));
+    }
+
+    return query.orderBy(({ article }) => article.pubDate, 'desc').limit(visibleCount());
+  });
+
+  // Query for total count (without limit)
+  const totalCountQuery = useLiveQuery((q) => {
     let query = q
       .from({ article: articlesCollection })
       .innerJoin({ articleTag: articleTagsCollection }, ({ article, articleTag }) =>
@@ -60,7 +81,7 @@ function TagArticles() {
   const handleMarkAllArchived = async () => {
     try {
       setIsMarkingAllArchived(true);
-      const articleIds = (articlesQuery.data || []).map((a) => a.id);
+      const articleIds = (totalCountQuery.data || []).map((a) => a.id);
       if (articleIds.length > 0) {
         articlesCollection.update(articleIds, (drafts) => {
           drafts.forEach((d) => (d.isArchived = true));
@@ -91,26 +112,27 @@ function TagArticles() {
     });
   };
 
-  // Sort articles by pubDate (newest first)
-  const sortedArticles = createMemo(() => {
-    const allArticles = articlesQuery.data || [];
-    return [...allArticles].sort((a, b) => {
-      const dateA = new Date(a.pubDate || 0).getTime();
-      const dateB = new Date(b.pubDate || 0).getTime();
-      return dateB - dateA; // newest first
-    });
+  // Filter for session-read articles (client-side)
+  const filteredArticles = createMemo(() => {
+    const articles = articlesQuery.data || [];
+    if (readStatus() !== 'unread') return articles;
+
+    return articles.filter((a) => !a.isRead || sessionReadIds().has(a.id));
   });
 
-  const articles = () => {
-    const allArticles = sortedArticles();
-    if (readStatus() !== 'unread') return allArticles;
+  const totalCount = () => {
+    const allArticles = totalCountQuery.data || [];
+    if (readStatus() !== 'unread') return allArticles.length;
 
-    // Show unread + session-read articles
-    return allArticles.filter((a) => !a.isRead || sessionReadIds().has(a.id));
+    return allArticles.filter((a) => !a.isRead || sessionReadIds().has(a.id)).length;
   };
 
   const unreadCount = () => {
-    return articles().filter((article) => !article.isRead).length;
+    return filteredArticles().filter((article) => !article.isRead).length;
+  };
+
+  const handleLoadMore = () => {
+    setVisibleCount((prev) => prev + ARTICLES_PER_PAGE);
   };
 
   return (
@@ -160,17 +182,19 @@ function TagArticles() {
           </>
         }
         unreadCount={unreadCount()}
-        totalCount={articles().length}
+        totalCount={totalCount()}
         readStatus={readStatus()}
       />
 
       <div class="mx-auto w-full max-w-2xl px-2 pb-3 sm:px-6 sm:pb-6">
         <Suspense fallback={<CenterLoader />}>
-          <Show when={feedsQuery() && tagsQuery()}>
+          <Show when={feedsQuery.data && tagsQuery.data}>
             <ArticleList
-              articles={articles()}
+              articles={filteredArticles()}
               feeds={feedsQuery.data!}
               tags={tagsQuery.data!}
+              totalCount={totalCount()}
+              onLoadMore={handleLoadMore}
               onUpdateArticle={handleUpdateArticle}
               readStatus={readStatus()}
               context="tag"

@@ -2,7 +2,7 @@ import { eq, useLiveQuery } from '@tanstack/solid-db';
 import { createFileRoute, Link } from '@tanstack/solid-router';
 import { Video } from 'lucide-solid';
 import { createMemo, createSignal, onMount, Show, Suspense } from 'solid-js';
-import { ArticleList } from '~/components/ArticleList';
+import { ArticleList, ARTICLES_PER_PAGE } from '~/components/ArticleList';
 import { ArticleListToolbar } from '~/components/ArticleListToolbar';
 import { CommonErrorBoundary } from '~/components/CommonErrorBoundary';
 import { Header } from '~/components/Header';
@@ -31,11 +31,29 @@ function Inbox() {
 
   onMount(() => setViewKey('inbox'));
 
+  // Pagination state - lifted from ArticleList
+  const [visibleCount, setVisibleCount] = createSignal(ARTICLES_PER_PAGE);
+
   // Only filter by isRead on server when showing 'read' status
   // For 'unread', we handle filtering client-side to support session-read tracking
   const isRead = () => (readStatus() === 'read' ? true : null);
 
+  // Query articles with orderBy and limit for pagination
   const articlesQuery = useLiveQuery((q) => {
+    let query = q
+      .from({ article: articlesCollection })
+      .where(({ article }) => eq(article.isArchived, false));
+
+    if (isRead() !== null) {
+      query = query.where(({ article }) => eq(article.isRead, isRead()));
+    }
+
+    const direction = sortOrder() === 'oldest' ? 'asc' : 'desc';
+    return query.orderBy(({ article }) => article.pubDate, direction).limit(visibleCount());
+  });
+
+  // Query for total count (without limit) - needed for pagination UI and "mark all archived"
+  const totalCountQuery = useLiveQuery((q) => {
     let query = q
       .from({ article: articlesCollection })
       .where(({ article }) => eq(article.isArchived, false));
@@ -57,7 +75,8 @@ function Inbox() {
   const handleMarkAllArchived = async () => {
     try {
       setIsMarkingAllArchived(true);
-      const articleIds = (articlesQuery.data || []).map((a) => a.id);
+      // Use totalCountQuery to get ALL article IDs (not just visible)
+      const articleIds = (totalCountQuery.data || []).map((a) => a.id);
       if (articleIds.length > 0) {
         articlesCollection.update(articleIds, (drafts) => {
           drafts.forEach((d) => (d.isArchived = true));
@@ -71,26 +90,24 @@ function Inbox() {
     }
   };
 
-  const filteredArticles = () => {
+  // Filter for session-read articles (client-side)
+  const filteredArticles = createMemo(() => {
     const articles = articlesQuery.data || [];
     if (readStatus() !== 'unread') return articles;
 
     return articles.filter((a) => !a.isRead || sessionReadIds().has(a.id));
-  };
-
-  const sortedArticles = createMemo(() => {
-    const articles = [...filteredArticles()];
-    const isOldestFirst = sortOrder() === 'oldest';
-
-    return articles.sort((a, b) => {
-      const dateA = new Date(a.pubDate || 0).getTime();
-      const dateB = new Date(b.pubDate || 0).getTime();
-      return isOldestFirst ? dateA - dateB : dateB - dateA;
-    });
   });
 
   const totalCount = () => {
-    return articlesQuery.data?.length || 0;
+    const allArticles = totalCountQuery.data || [];
+    if (readStatus() !== 'unread') return allArticles.length;
+
+    // For unread, apply same filter to get accurate count
+    return allArticles.filter((a) => !a.isRead || sessionReadIds().has(a.id)).length;
+  };
+
+  const handleLoadMore = () => {
+    setVisibleCount((prev) => prev + ARTICLES_PER_PAGE);
   };
 
   const handleUpdateArticle = (
@@ -180,9 +197,11 @@ function Inbox() {
           <Suspense fallback={<CenterLoader />}>
             <Show when={feedsQuery.data && tagsQuery.data}>
               <ArticleList
-                articles={sortedArticles()}
+                articles={filteredArticles()}
                 feeds={feedsQuery.data!}
                 tags={tagsQuery.data!}
+                totalCount={totalCount()}
+                onLoadMore={handleLoadMore}
                 onUpdateArticle={handleUpdateArticle}
                 readStatus={readStatus()}
                 context="inbox"
