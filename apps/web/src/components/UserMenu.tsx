@@ -1,10 +1,5 @@
 import { Link } from '@tanstack/solid-router';
-import ChevronsUpDownIcon from 'lucide-solid/icons/chevrons-up-down';
-import LogOutIcon from 'lucide-solid/icons/log-out';
-import MonitorIcon from 'lucide-solid/icons/monitor';
-import MoonIcon from 'lucide-solid/icons/moon';
-import SettingsIcon from 'lucide-solid/icons/settings';
-import SunIcon from 'lucide-solid/icons/sun';
+import { ChevronsUpDown, LogOut, Monitor, Moon, Settings, Sun } from 'lucide-solid';
 import { Suspense } from 'solid-js';
 import { authClient } from '~/lib/auth-client';
 import { useTheme } from '~/providers/theme';
@@ -21,14 +16,14 @@ export function UserMenu() {
     const actual = actualTheme();
 
     if (current === 'system') {
-      return <MonitorIcon size={16} />;
+      return <Monitor size={16} />;
     }
 
     if (actual === 'dracula') {
-      return <MoonIcon size={16} />;
+      return <Moon size={16} />;
     }
 
-    return <SunIcon size={16} />;
+    return <Sun size={16} />;
   };
 
   const getThemeLabel = () => {
@@ -74,14 +69,14 @@ export function UserMenu() {
                 {user()?.email || ''}
               </div>
             </div>
-            <ChevronsUpDownIcon size={16} class="text-base-content-gray shrink-0" />
+            <ChevronsUpDown size={16} class="text-base-content-gray shrink-0" />
           </>
         }
       >
         {/* Settings */}
         <li>
           <Link to="/settings" class="flex items-center gap-3 px-4 py-2">
-            <SettingsIcon size={16} />
+            <Settings size={16} />
             <span>Settings</span>
           </Link>
         </li>
@@ -101,7 +96,7 @@ export function UserMenu() {
                   onClick={() => setTheme('light')}
                   class={`flex items-center gap-3 ${theme() === 'light' ? 'active' : ''}`}
                 >
-                  <SunIcon size={16} />
+                  <Sun size={16} />
                   Light
                 </button>
               </li>
@@ -110,7 +105,7 @@ export function UserMenu() {
                   onClick={() => setTheme('dark')}
                   class={`flex items-center gap-3 ${theme() === 'dark' ? 'active' : ''}`}
                 >
-                  <MoonIcon size={16} />
+                  <Moon size={16} />
                   Dark
                 </button>
               </li>
@@ -119,7 +114,7 @@ export function UserMenu() {
                   onClick={() => setTheme('system')}
                   class={`flex items-center gap-3 ${theme() === 'system' ? 'active' : ''}`}
                 >
-                  <MonitorIcon size={16} />
+                  <Monitor size={16} />
                   System
                 </button>
               </li>
@@ -135,7 +130,7 @@ export function UserMenu() {
             onClick={handleSignOut}
             class="text-error hover:text-error flex items-center gap-3 px-4 py-2"
           >
-            <LogOutIcon size={16} />
+            <LogOut size={16} />
             <span>Sign Out</span>
           </button>
         </li>

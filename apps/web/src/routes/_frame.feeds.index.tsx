@@ -1,11 +1,7 @@
 import type { Feed } from '@repo/domain/client';
 import { debounce } from '@solid-primitives/scheduled';
 import { createFileRoute, Link } from '@tanstack/solid-router';
-import CircleAlertIcon from 'lucide-solid/icons/circle-alert';
-import CloudDownloadIcon from 'lucide-solid/icons/cloud-download';
-import EllipsisVerticalIcon from 'lucide-solid/icons/ellipsis-vertical';
-import PlusIcon from 'lucide-solid/icons/plus';
-import SearchIcon from 'lucide-solid/icons/search';
+import { CircleAlert, CloudDownload, EllipsisVertical, Plus, Search } from 'lucide-solid';
 import { createMemo, createSignal, For, Match, Show, Switch } from 'solid-js';
 import { AddFeedModal } from '~/components/AddFeedModal';
 import { Card } from '~/components/Card';
@@ -82,11 +78,11 @@ function FeedsComponent() {
       <Header title="Manage Feeds">
         <div class="flex gap-2">
           <button class="btn btn-outline btn-sm" onClick={() => importOpmlModalController.open()}>
-            <CloudDownloadIcon size={20} />
+            <CloudDownload size={20} />
             <span class="hidden sm:inline">Import OPML</span>
           </button>
           <button class="btn btn-primary btn-sm" onClick={() => addFeedModalController.open()}>
-            <PlusIcon size={20} />
+            <Plus size={20} />
             <span class="hidden sm:inline">Add Feed</span>
           </button>
         </div>
@@ -98,7 +94,7 @@ function FeedsComponent() {
 
           {/* Search Input */}
           <label class="input input-bordered flex w-full max-w-md items-center gap-2">
-            <SearchIcon size={24} class="h-[1em] opacity-50" />
+            <Search size={24} class="h-[1em] opacity-50" />
             <input
               type="search"
               placeholder="Search feeds..."
@@ -149,14 +145,14 @@ function FeedsComponent() {
                   class="btn btn-outline btn-lg"
                   onClick={() => importOpmlModalController.open()}
                 >
-                  <CloudDownloadIcon size={20} class="mr-2" />
+                  <CloudDownload size={20} class="mr-2" />
                   Import OPML
                 </button>
                 <button
                   class="btn btn-primary btn-lg"
                   onClick={() => addFeedModalController.open()}
                 >
-                  <PlusIcon size={20} class="mr-2" />
+                  <Plus size={20} class="mr-2" />
                   Add Your First Feed
                 </button>
               </div>
@@ -180,7 +176,7 @@ function FeedsComponent() {
               fallback={
                 <div class="py-16 text-center">
                   <div class="mb-4">
-                    <CircleAlertIcon size={64} class="text-base-content/30 mx-auto" />
+                    <CircleAlert size={64} class="text-base-content/30 mx-auto" />
                   </div>
                   <h2 class="mb-2 text-2xl font-bold">No feeds found</h2>
                   <p class="text-base-content-gray">
@@ -202,7 +198,7 @@ function FeedsComponent() {
                           <Dropdown
                             end
                             btnClasses="btn-circle btn-ghost btn-sm"
-                            btnContent={<EllipsisVerticalIcon size={20} />}
+                            btnContent={<EllipsisVertical size={20} />}
                           >
                             <li>
                               <button

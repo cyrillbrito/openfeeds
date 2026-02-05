@@ -1,5 +1,5 @@
 import { Link } from '@tanstack/solid-router';
-import ShuffleIcon from 'lucide-solid/icons/shuffle';
+import { Shuffle } from 'lucide-solid';
 import { twMerge } from 'tailwind-merge';
 
 interface ShuffleButtonProps {
@@ -32,7 +32,7 @@ export function ShuffleButton(props: ShuffleButtonProps) {
         )}
         title={props.currentSeed ? 'Turn off shuffle' : 'Shuffle article order'}
       >
-        <ShuffleIcon size={16} />
+        <Shuffle size={16} />
         Shuffle
       </button>
     </Link>

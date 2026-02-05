@@ -1,6 +1,4 @@
-import CircleAlertIcon from 'lucide-solid/icons/circle-alert';
-import CircleCheckIcon from 'lucide-solid/icons/circle-check';
-import TriangleAlertIcon from 'lucide-solid/icons/triangle-alert';
+import { CircleAlert, CircleCheck, TriangleAlert } from 'lucide-solid';
 import { createSignal, Match, Show, Switch } from 'solid-js';
 import { $$importOpml } from '~/entities/feeds.server';
 import { LazyModal, type ModalController } from './LazyModal';
@@ -79,20 +77,20 @@ function ImportOpmlForm(props: ImportOpmlFormProps) {
           <div class="mb-4">
             <Show when={importError()}>
               <div class="alert alert-error">
-                <CircleAlertIcon size={20} />
+                <CircleAlert size={20} />
                 <span>{importError()}</span>
               </div>
             </Show>
 
             <Show when={importResult()}>
               <div class="alert alert-success mb-3">
-                <CircleCheckIcon size={20} />
+                <CircleCheck size={20} />
                 <span>Successfully imported {importResult()!.imported} feeds</span>
               </div>
 
               <Show when={importResult()!.failed.length > 0}>
                 <div class="alert alert-warning">
-                  <TriangleAlertIcon size={20} />
+                  <TriangleAlert size={20} />
                   <div>
                     <div class="font-bold">
                       Failed to import {importResult()!.failed.length} feeds:

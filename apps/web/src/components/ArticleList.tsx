@@ -1,6 +1,6 @@
 import type { Article, Feed, Tag } from '@repo/domain/client';
 import { Link } from '@tanstack/solid-router';
-import ChevronDownIcon from 'lucide-solid/icons/chevron-down';
+import { ChevronDown } from 'lucide-solid';
 import { createSignal, For, Show, type JSX } from 'solid-js';
 import { ArticleCard } from './ArticleCard';
 import {
@@ -171,7 +171,7 @@ export function ArticleList(props: ArticleListProps) {
       <Show when={hasMoreArticles()}>
         <div class="mt-6 flex justify-center">
           <button class="btn btn-outline btn-wide gap-2" onClick={handleLoadMore}>
-            <ChevronDownIcon size={20} />
+            <ChevronDown size={20} />
             Load More ({remainingCount()} remaining)
           </button>
         </div>

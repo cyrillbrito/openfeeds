@@ -1,7 +1,7 @@
 import { BetterFetchError } from '@better-fetch/fetch';
 import { attemptAsync } from '@repo/shared/utils';
 import { createFileRoute, Link, redirect, useNavigate } from '@tanstack/solid-router';
-import CircleXIcon from 'lucide-solid/icons/circle-x';
+import { CircleX } from 'lucide-solid';
 import posthog from 'posthog-js';
 import { createSignal, Show } from 'solid-js';
 import { Card } from '~/components/Card';
@@ -91,7 +91,7 @@ function ResetPasswordPage() {
           fallback={
             <div class="space-y-4">
               <div class="alert alert-error">
-                <CircleXIcon class="h-6 w-6 shrink-0" />
+                <CircleX class="h-6 w-6 shrink-0" />
                 <span>
                   {tokenError === 'INVALID_TOKEN'
                     ? 'This reset link is invalid or has expired'
@@ -144,7 +144,7 @@ function ResetPasswordPage() {
 
             <Show when={error()}>
               <div class="alert alert-error">
-                <CircleXIcon class="h-6 w-6 shrink-0" />
+                <CircleX class="h-6 w-6 shrink-0" />
                 <span>{error()}</span>
               </div>
             </Show>

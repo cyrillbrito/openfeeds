@@ -1,7 +1,6 @@
 import type { Tag } from '@repo/domain/client';
 import { createFileRoute } from '@tanstack/solid-router';
-import EllipsisVerticalIcon from 'lucide-solid/icons/ellipsis-vertical';
-import PlusIcon from 'lucide-solid/icons/plus';
+import { EllipsisVertical, Plus } from 'lucide-solid';
 import { createSignal, For, Show, Suspense } from 'solid-js';
 import { ColorIndicator } from '~/components/ColorIndicator';
 import { DeleteTagModal } from '~/components/DeleteTagModal';
@@ -46,7 +45,7 @@ function TagsComponent() {
     <>
       <Header title="Manage Tags">
         <button class="btn btn-primary btn-sm" onClick={handleCreateTag}>
-          <PlusIcon size={20} />
+          <Plus size={20} />
           <span class="hidden sm:inline">Create Tag</span>
         </button>
       </Header>
@@ -84,7 +83,7 @@ function TagsComponent() {
                 </p>
 
                 <button class="btn btn-primary btn-lg" onClick={() => tagModalController.open()}>
-                  <PlusIcon size={20} class="mr-2" />
+                  <Plus size={20} class="mr-2" />
                   Create Your First Tag
                 </button>
               </div>
@@ -108,7 +107,7 @@ function TagsComponent() {
                       <Dropdown
                         end
                         btnClasses="btn-circle btn-ghost btn-sm"
-                        btnContent={<EllipsisVerticalIcon size={16} />}
+                        btnContent={<EllipsisVertical size={16} />}
                       >
                         <li>
                           <button onClick={() => handleEditTag(tag)}>Edit</button>

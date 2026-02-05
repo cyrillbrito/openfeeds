@@ -1,5 +1,5 @@
 import { createId } from '@repo/shared/utils';
-import CircleAlertIcon from 'lucide-solid/icons/circle-alert';
+import { CircleAlert } from 'lucide-solid';
 import { createSignal, Show } from 'solid-js';
 import { articleTagsCollection } from '~/entities/article-tags';
 import { articlesCollection } from '~/entities/articles';
@@ -124,7 +124,7 @@ function SaveArticleForm(props: SaveArticleFormProps) {
 
       <Show when={error()}>
         <div class="alert alert-error mb-4">
-          <CircleAlertIcon size={20} />
+          <CircleAlert size={20} />
           <span>{error()}</span>
         </div>
       </Show>

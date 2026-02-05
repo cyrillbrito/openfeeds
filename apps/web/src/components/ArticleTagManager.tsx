@@ -2,7 +2,7 @@ import type { Tag } from '@repo/domain/client';
 import { createId } from '@repo/shared/utils';
 import { eq, useLiveQuery } from '@tanstack/solid-db';
 import { Link } from '@tanstack/solid-router';
-import PlusIcon from 'lucide-solid/icons/plus';
+import { Plus } from 'lucide-solid';
 import { For } from 'solid-js';
 import { articleTagsCollection } from '~/entities/article-tags';
 import { getTagDotColor } from '~/utils/tagColors';
@@ -91,7 +91,7 @@ export function ArticleTagManager(props: ArticleTagManagerProps) {
           class="btn btn-ghost btn-xs gap-1"
           onClick={openPopover}
         >
-          <PlusIcon size={12} />
+          <Plus size={12} />
           <span>Tag</span>
         </button>
       </div>

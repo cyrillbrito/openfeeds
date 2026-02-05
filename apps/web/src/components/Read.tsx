@@ -1,5 +1,4 @@
-import CheckIcon from 'lucide-solid/icons/check';
-import CircleCheckIcon from 'lucide-solid/icons/circle-check';
+import { Check, CircleCheck } from 'lucide-solid';
 import { createSignal, Show } from 'solid-js';
 import { twMerge } from 'tailwind-merge';
 
@@ -26,8 +25,8 @@ export function ReadButton(props: { read?: boolean; setRead?: (read: boolean) =>
       onClick={handleClick}
       title={props.read ? 'Mark as unread' : 'Mark as read'}
     >
-      <Show when={props.read} fallback={<CheckIcon size={20} />}>
-        <CircleCheckIcon size={20} />
+      <Show when={props.read} fallback={<Check size={20} />}>
+        <CircleCheck size={20} />
       </Show>
       <span class="ml-1 hidden sm:inline">{props.read ? 'Read' : 'Mark Read'}</span>
     </button>
@@ -51,7 +50,7 @@ export function KeepUnreadButton(props: {
         class="btn btn-soft btn-info hover:btn-soft hover:btn-error"
         onClick={() => props.setKeepUnread(false)}
       >
-        <CheckIcon size={20} />
+        <Check size={20} />
         Keep Unread
       </button>
     </Show>

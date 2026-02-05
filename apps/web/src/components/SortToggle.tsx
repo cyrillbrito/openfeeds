@@ -1,6 +1,5 @@
 import { Link } from '@tanstack/solid-router';
-import ArrowDownIcon from 'lucide-solid/icons/arrow-down';
-import ArrowUpIcon from 'lucide-solid/icons/arrow-up';
+import { ArrowDown, ArrowUp } from 'lucide-solid';
 import { Show } from 'solid-js';
 import type { SortOrder } from '~/utils/routing';
 
@@ -20,8 +19,8 @@ export function SortToggle(props: SortToggleProps) {
       class="btn btn-ghost btn-sm gap-1"
       title={`Currently: ${label()} first. Click to toggle.`}
     >
-      <Show when={isNewest()} fallback={<ArrowUpIcon size={16} />}>
-        <ArrowDownIcon size={16} />
+      <Show when={isNewest()} fallback={<ArrowUp size={16} />}>
+        <ArrowDown size={16} />
       </Show>
       <span class="hidden sm:inline">{label()}</span>
     </Link>

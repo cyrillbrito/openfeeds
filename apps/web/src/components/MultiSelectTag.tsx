@@ -1,7 +1,6 @@
 import type { Tag } from '@repo/domain/client';
 import { autofocus } from '@solid-primitives/autofocus';
-import CheckIcon from 'lucide-solid/icons/check';
-import SearchIcon from 'lucide-solid/icons/search';
+import { Check, Search } from 'lucide-solid';
 import { createEffect, createSignal, For, onCleanup, Show } from 'solid-js';
 import { getTagDotColor } from '~/utils/tagColors';
 import { ColorIndicator } from './ColorIndicator';
@@ -143,7 +142,7 @@ function MultiSelectTagDropdown(props: MultiSelectTagDropdownProps) {
       {/* Search Input */}
       <Show when={showSearch()}>
         <label class="input input-ghost outline-none!">
-          <SearchIcon size={16} />
+          <Search size={16} />
           <input
             type="text"
             placeholder="Search..."
@@ -188,7 +187,7 @@ function MultiSelectTagDropdown(props: MultiSelectTagDropdownProps) {
               >
                 <div class="flex w-5 items-center justify-center">
                   <Show when={isSelected()}>
-                    <CheckIcon size={16} class="text-primary" />
+                    <Check size={16} class="text-primary" />
                   </Show>
                 </div>
                 <ColorIndicator class={getTagDotColor(tag.color)} />

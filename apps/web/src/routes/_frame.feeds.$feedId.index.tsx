@@ -1,9 +1,7 @@
 import type { Feed } from '@repo/domain/client';
 import { eq, useLiveQuery } from '@tanstack/solid-db';
 import { createFileRoute, Link } from '@tanstack/solid-router';
-import MoreVerticalIcon from 'lucide-solid/icons/more-vertical';
-import ShuffleIcon from 'lucide-solid/icons/shuffle';
-import VideoIcon from 'lucide-solid/icons/video';
+import { MoreVertical, Shuffle, Video } from 'lucide-solid';
 import { createSignal, For, onMount, Show, Suspense } from 'solid-js';
 import { ArticleList } from '~/components/ArticleList';
 import { ArticleListToolbar } from '~/components/ArticleListToolbar';
@@ -123,11 +121,11 @@ function FeedArticles() {
             search={{ readStatus: readStatus() }}
             class="btn btn-accent btn-sm"
           >
-            <VideoIcon size={20} />
+            <Video size={20} />
             <span class="hidden sm:inline">Shorts</span>
           </Link>
           <Show when={currentFeed()}>
-            <Dropdown end btnClasses="btn-sm" btnContent={<MoreVerticalIcon size={20} />}>
+            <Dropdown end btnClasses="btn-sm" btnContent={<MoreVertical size={20} />}>
               <li>
                 <button onClick={() => editFeedModalController.open()}>Edit Feed</button>
               </li>
@@ -243,7 +241,7 @@ function FeedArticles() {
                     : { ...prev, seed: Math.floor(Math.random() * 9999999999) + 1000000000 }
                 }
               >
-                <ShuffleIcon size={16} />
+                <Shuffle size={16} />
                 {seed() ? 'Turn off shuffle' : 'Shuffle'}
               </Link>
             </li>

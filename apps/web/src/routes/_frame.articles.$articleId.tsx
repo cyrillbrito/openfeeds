@@ -1,8 +1,6 @@
 import { eq, useLiveQuery } from '@tanstack/solid-db';
 import { createFileRoute, Link, useRouter } from '@tanstack/solid-router';
-import ArchiveIcon from 'lucide-solid/icons/archive';
-import ArrowLeftIcon from 'lucide-solid/icons/arrow-left';
-import InboxIcon from 'lucide-solid/icons/inbox';
+import { Archive, ArrowLeft, Inbox } from 'lucide-solid';
 import { Show, Suspense } from 'solid-js';
 import { ArchiveIconButton } from '~/components/ArchiveIconButton';
 import { ArticleAudioProvider } from '~/components/ArticleAudioContext';
@@ -75,7 +73,7 @@ function ArticleView() {
     <>
       <Header title={article()?.title}>
         <button onClick={handleBack} class="btn btn-ghost btn-sm">
-          <ArrowLeftIcon size={20} />
+          <ArrowLeft size={20} />
           <span class="hidden sm:inline">Back</span>
         </button>
       </Header>
@@ -132,9 +130,9 @@ function ArticleView() {
                     <div class="flex items-center gap-1">
                       <Show
                         when={art().isArchived}
-                        fallback={<InboxIcon size={16} class="text-base-content/40" />}
+                        fallback={<Inbox size={16} class="text-base-content/40" />}
                       >
-                        <ArchiveIcon size={16} class="text-base-content/40" />
+                        <Archive size={16} class="text-base-content/40" />
                       </Show>
                       <Show
                         when={feed()}

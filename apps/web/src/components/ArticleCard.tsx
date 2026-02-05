@@ -1,9 +1,6 @@
 import type { Article, Feed, Tag } from '@repo/domain/client';
 import { Link, useNavigate } from '@tanstack/solid-router';
-import ArchiveIcon from 'lucide-solid/icons/archive';
-import CheckIcon from 'lucide-solid/icons/check';
-import InboxIcon from 'lucide-solid/icons/inbox';
-import RssIcon from 'lucide-solid/icons/rss';
+import { Archive, Check, Inbox, Rss } from 'lucide-solid';
 import { Show } from 'solid-js';
 import { twMerge } from 'tailwind-merge';
 import { containsHtml, downshiftHeadings, sanitizeHtml, stripAnchors } from '~/utils/html';
@@ -74,7 +71,7 @@ export function ArticleCard(props: ArticleCardProps) {
           fallback={
             <div class="shrink-0 pt-0.5">
               <div class="bg-base-300 flex size-8 items-center justify-center rounded-full md:size-10">
-                <RssIcon size={12} class="text-base-content/50 md:size-4" />
+                <Rss size={12} class="text-base-content/50 md:size-4" />
               </div>
             </div>
           }
@@ -89,7 +86,7 @@ export function ArticleCard(props: ArticleCardProps) {
               when={feedIcon()}
               fallback={
                 <div class="bg-base-300 flex size-8 items-center justify-center rounded-full md:size-10">
-                  <RssIcon size={12} class="text-base-content/50 md:size-4" />
+                  <Rss size={12} class="text-base-content/50 md:size-4" />
                 </div>
               }
             >
@@ -104,7 +101,7 @@ export function ArticleCard(props: ArticleCardProps) {
                 }}
               />
               <div class="bg-base-300 flex hidden size-8 items-center justify-center rounded-full md:size-10">
-                <RssIcon size={12} class="text-base-content/50 md:size-4" />
+                <Rss size={12} class="text-base-content/50 md:size-4" />
               </div>
             </Show>
           </Link>
@@ -191,7 +188,7 @@ export function ArticleCard(props: ArticleCardProps) {
           onClick={handleMarkRead}
           title={props.article.isRead ? 'Mark as unread' : 'Mark as read'}
         >
-          <CheckIcon size={14} class="md:size-4" />
+          <Check size={14} class="md:size-4" />
           <span>{props.article.isRead ? 'Read' : 'Mark read'}</span>
         </button>
 
@@ -205,11 +202,8 @@ export function ArticleCard(props: ArticleCardProps) {
           onClick={handleArchive}
           title={props.article.isArchived ? 'Unarchive' : 'Archive'}
         >
-          <Show
-            when={props.article.isArchived}
-            fallback={<ArchiveIcon size={14} class="md:size-4" />}
-          >
-            <InboxIcon size={14} class="md:size-4" />
+          <Show when={props.article.isArchived} fallback={<Archive size={14} class="md:size-4" />}>
+            <Inbox size={14} class="md:size-4" />
           </Show>
           <span>{props.article.isArchived ? 'Archived' : 'Archive'}</span>
         </button>

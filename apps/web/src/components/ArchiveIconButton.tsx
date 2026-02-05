@@ -1,5 +1,4 @@
-import ArchiveIcon from 'lucide-solid/icons/archive';
-import InboxIcon from 'lucide-solid/icons/inbox';
+import { Archive, Inbox } from 'lucide-solid';
 import { Show } from 'solid-js';
 import { twMerge } from 'tailwind-merge';
 
@@ -22,8 +21,8 @@ export function ArchiveIconButton(props: {
       onClick={handleClick}
       title={props.archived ? 'Unarchive (show in inbox)' : 'Archive'}
     >
-      <Show when={props.archived} fallback={<ArchiveIcon class="size-4 sm:size-6" />}>
-        <InboxIcon class="size-4 sm:size-6" />
+      <Show when={props.archived} fallback={<Archive class="size-4 sm:size-6" />}>
+        <Inbox class="size-4 sm:size-6" />
       </Show>
     </button>
   );

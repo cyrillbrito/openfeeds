@@ -1,4 +1,4 @@
-import PlayIcon from 'lucide-solid/icons/play';
+import { Play } from 'lucide-solid';
 import { createSignal } from 'solid-js';
 import { extractYouTubeVideoId, getYouTubeEmbedUrl, isYouTubeShorts } from '~/utils/youtube';
 
@@ -48,7 +48,7 @@ export function YouTubeEmbed(props: YouTubeEmbedProps) {
           />
           <div class="absolute inset-0 flex items-center justify-center bg-black/20 transition-colors group-hover:bg-black/30">
             <div class="rounded-full bg-red-600 p-4 transition-colors hover:bg-red-700">
-              <PlayIcon size={24} class="ml-1 text-white" />
+              <Play size={24} class="ml-1 text-white" />
             </div>
           </div>
           <div class="absolute right-2 bottom-2 rounded bg-black/80 px-2 py-1 text-xs text-white">

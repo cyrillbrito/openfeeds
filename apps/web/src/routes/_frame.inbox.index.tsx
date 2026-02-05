@@ -1,6 +1,6 @@
 import { eq, useLiveQuery } from '@tanstack/solid-db';
 import { createFileRoute, Link } from '@tanstack/solid-router';
-import VideoIcon from 'lucide-solid/icons/video';
+import { Video } from 'lucide-solid';
 import { createMemo, createSignal, onMount, Show, Suspense } from 'solid-js';
 import { ArticleList } from '~/components/ArticleList';
 import { ArticleListToolbar } from '~/components/ArticleListToolbar';
@@ -131,7 +131,7 @@ function Inbox() {
             search={{ readStatus: readStatus() }}
             class="btn btn-accent btn-sm"
           >
-            <VideoIcon size={20} />
+            <Video size={20} />
             <span class="hidden sm:inline">Shorts</span>
           </Link>
         </div>

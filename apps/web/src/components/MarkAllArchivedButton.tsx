@@ -1,4 +1,4 @@
-import TriangleAlertIcon from 'lucide-solid/icons/triangle-alert';
+import { TriangleAlert } from 'lucide-solid';
 import { createSignal, Show } from 'solid-js';
 import { LazyModal, type ModalController } from './LazyModal';
 
@@ -93,7 +93,7 @@ function MarkAllArchivedConfirmation(props: MarkAllArchivedConfirmationProps) {
         </Show>
 
         <div class="alert alert-info mt-4">
-          <TriangleAlertIcon size={20} />
+          <TriangleAlert size={20} />
           <span class="text-sm">Archived articles will no longer appear in your inbox.</span>
         </div>
       </div>

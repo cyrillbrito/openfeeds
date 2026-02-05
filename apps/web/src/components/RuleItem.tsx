@@ -1,5 +1,5 @@
 import { FilterOperator, type FilterRule } from '@repo/domain/client';
-import CircleAlertIcon from 'lucide-solid/icons/circle-alert';
+import { CircleAlert } from 'lucide-solid';
 import { createSignal, For, Show } from 'solid-js';
 import { filterRulesCollection } from '~/entities/filter-rules';
 
@@ -167,7 +167,7 @@ export function RuleItem(props: RuleItemProps) {
 
           <Show when={error()}>
             <div class="alert alert-error alert-sm">
-              <CircleAlertIcon size={16} />
+              <CircleAlert size={16} />
               <span class="text-sm">{error()}</span>
             </div>
           </Show>

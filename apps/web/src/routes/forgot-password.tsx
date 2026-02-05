@@ -1,8 +1,7 @@
 import { BetterFetchError } from '@better-fetch/fetch';
 import { attemptAsync } from '@repo/shared/utils';
 import { createFileRoute, Link, redirect } from '@tanstack/solid-router';
-import CircleCheckIcon from 'lucide-solid/icons/circle-check';
-import CircleXIcon from 'lucide-solid/icons/circle-x';
+import { CircleCheck, CircleX } from 'lucide-solid';
 import posthog from 'posthog-js';
 import { createSignal, Show } from 'solid-js';
 import { Card } from '~/components/Card';
@@ -75,7 +74,7 @@ function ForgotPasswordPage() {
           when={!success()}
           fallback={
             <div class="alert alert-success">
-              <CircleCheckIcon class="h-6 w-6 shrink-0" />
+              <CircleCheck class="h-6 w-6 shrink-0" />
               <span>Check your email for a password reset link</span>
             </div>
           }
@@ -98,7 +97,7 @@ function ForgotPasswordPage() {
 
             <Show when={error()}>
               <div class="alert alert-error">
-                <CircleXIcon class="h-6 w-6 shrink-0" />
+                <CircleX class="h-6 w-6 shrink-0" />
                 <span>{error()}</span>
               </div>
             </Show>

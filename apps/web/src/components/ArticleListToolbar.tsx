@@ -1,4 +1,4 @@
-import EllipsisVerticalIcon from 'lucide-solid/icons/ellipsis-vertical';
+import { EllipsisVertical } from 'lucide-solid';
 import { Show, type JSXElement } from 'solid-js';
 import { Dropdown } from './Dropdown';
 import type { ReadStatus } from './ReadStatusToggle';
@@ -45,7 +45,7 @@ export function ArticleListToolbar(props: ArticleListToolbarProps) {
         {/* Mobile: Show dropdown menu */}
         <Show when={props.mobileMenuContent}>
           <div class="md:hidden">
-            <Dropdown end btnClasses="btn-sm" btnContent={<EllipsisVerticalIcon size={20} />}>
+            <Dropdown end btnClasses="btn-sm" btnContent={<EllipsisVertical size={20} />}>
               {props.mobileMenuContent}
             </Dropdown>
           </div>

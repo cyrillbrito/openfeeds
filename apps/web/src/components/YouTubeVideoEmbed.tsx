@@ -1,4 +1,4 @@
-import PlayIcon from 'lucide-solid/icons/play';
+import { Play } from 'lucide-solid';
 import { createSignal, Show } from 'solid-js';
 import { twMerge } from 'tailwind-merge';
 import { extractYouTubeVideoId } from '~/utils/youtube';
@@ -47,7 +47,7 @@ export function YouTubeVideoEmbed(props: YouTubeVideoEmbedProps) {
             />
             <div class="absolute inset-0 flex items-center justify-center bg-black/20 transition-colors group-hover:bg-black/30">
               <div class="rounded-full bg-red-600 p-3 transition-all duration-200 hover:scale-110 hover:bg-red-700 sm:p-4">
-                <PlayIcon size={24} class="ml-0.5 h-6 w-6 text-white sm:h-8 sm:w-8" />
+                <Play size={24} class="ml-0.5 h-6 w-6 text-white sm:h-8 sm:w-8" />
               </div>
             </div>
             <div class="absolute right-2 bottom-2 rounded bg-black/80 px-2 py-1 text-xs font-medium text-white">

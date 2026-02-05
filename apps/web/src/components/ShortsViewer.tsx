@@ -1,11 +1,6 @@
 import type { Article, Feed } from '@repo/domain/client';
 import { Link } from '@tanstack/solid-router';
-import ArrowLeftIcon from 'lucide-solid/icons/arrow-left';
-import ChevronLeftIcon from 'lucide-solid/icons/chevron-left';
-import ChevronRightIcon from 'lucide-solid/icons/chevron-right';
-import EllipsisVerticalIcon from 'lucide-solid/icons/ellipsis-vertical';
-import ShuffleIcon from 'lucide-solid/icons/shuffle';
-import XIcon from 'lucide-solid/icons/x';
+import { ArrowLeft, ChevronLeft, ChevronRight, EllipsisVertical, Shuffle, X } from 'lucide-solid';
 import {
   createEffect,
   createSignal,
@@ -122,7 +117,7 @@ export function ShortsViewer(props: ShortsViewerProps) {
             params={props.backLink.params}
             class="btn btn-circle btn-ghost"
           >
-            <ArrowLeftIcon size={20} />
+            <ArrowLeft size={20} />
           </Link>
         </div>
 
@@ -177,7 +172,7 @@ export function ShortsViewer(props: ShortsViewerProps) {
             <Dropdown
               end
               btnClasses="btn-sm btn-ghost btn-circle text-white"
-              btnContent={<EllipsisVerticalIcon size={20} />}
+              btnContent={<EllipsisVertical size={20} />}
             >
               <li>
                 <Link
@@ -189,7 +184,7 @@ export function ShortsViewer(props: ShortsViewerProps) {
                   }
                   class="flex items-center gap-2"
                 >
-                  <ShuffleIcon size={16} />
+                  <Shuffle size={16} />
                   {props.seed ? 'Turn off shuffle' : 'Shuffle'}
                 </Link>
               </li>
@@ -232,7 +227,7 @@ export function ShortsViewer(props: ShortsViewerProps) {
           fallback={(error, reset) => (
             <div class="flex flex-col items-center justify-center bg-black text-center text-white">
               <div class="mb-4">
-                <XIcon size={96} class="text-red-500" />
+                <X size={96} class="text-red-500" />
               </div>
               <h2 class="mb-2 text-2xl font-semibold text-white">Something went wrong</h2>
               <p class="mb-6 text-white/60">{error.message}</p>
@@ -290,7 +285,7 @@ export function ShortsViewer(props: ShortsViewerProps) {
                       class="btn btn-circle btn-outline absolute left-4 z-10 border-white/50 bg-black/50 text-white shadow-lg hover:bg-white/20"
                       onClick={goToPrevious}
                     >
-                      <ChevronLeftIcon size={24} />
+                      <ChevronLeft size={24} />
                     </button>
                   </div>
                 </Show>
@@ -312,7 +307,7 @@ export function ShortsViewer(props: ShortsViewerProps) {
                     >
                       <Show
                         when={currentIndex() === totalShorts() - 1 && props.isLoadingMore}
-                        fallback={<ChevronRightIcon size={24} />}
+                        fallback={<ChevronRight size={24} />}
                       >
                         <span class="loading loading-spinner loading-sm"></span>
                       </Show>

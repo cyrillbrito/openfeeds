@@ -1,9 +1,5 @@
 import { ClientOnly, createFileRoute, Link, Outlet, useLocation } from '@tanstack/solid-router';
-import BookmarkPlusIcon from 'lucide-solid/icons/bookmark-plus';
-import InboxIcon from 'lucide-solid/icons/inbox';
-import LibraryIcon from 'lucide-solid/icons/library';
-import PlusIcon from 'lucide-solid/icons/plus';
-import SearchIcon from 'lucide-solid/icons/search';
+import { BookmarkPlus, Inbox, Library, Plus, Search } from 'lucide-solid';
 import { createEffect, For, onMount, Suspense } from 'solid-js';
 import { AddFeedModal } from '~/components/AddFeedModal';
 import { ColorIndicator } from '~/components/ColorIndicator';
@@ -77,7 +73,7 @@ function FrameLayout() {
                       class="flex items-center gap-3"
                       activeProps={{ class: 'menu-active' }}
                     >
-                      <InboxIcon size={20} />
+                      <Inbox size={20} />
                       Inbox
                     </Link>
                   </li>
@@ -86,7 +82,7 @@ function FrameLayout() {
                       class="hover:bg-base-200 flex w-full items-center gap-3 rounded-lg px-3 py-2 text-left transition-colors"
                       onClick={() => addFeedModalController.open()}
                     >
-                      <SearchIcon size={20} />
+                      <Search size={20} />
                       Discover
                     </button>
                   </li>
@@ -95,7 +91,7 @@ function FrameLayout() {
                       class="hover:bg-base-200 flex w-full items-center gap-3 rounded-lg px-3 py-2 text-left transition-colors"
                       onClick={() => saveArticleModalController.open()}
                     >
-                      <BookmarkPlusIcon size={20} />
+                      <BookmarkPlus size={20} />
                       Save Article
                     </button>
                   </li>
@@ -105,7 +101,7 @@ function FrameLayout() {
                       class="flex items-center gap-3"
                       activeProps={{ class: 'menu-active' }}
                     >
-                      <LibraryIcon size={20} />
+                      <Library size={20} />
                       Manage Feeds
                     </Link>
                   </li>
@@ -147,7 +143,7 @@ function DrawerTags() {
           onClick={() => createModalController.open()}
           title="Add new tag"
         >
-          <PlusIcon size={12} class="text-base-content-gray" />
+          <Plus size={12} class="text-base-content-gray" />
         </button>
       </div>
       <Suspense

@@ -1,6 +1,6 @@
 import { eq, useLiveQuery } from '@tanstack/solid-db';
 import { createFileRoute, Link } from '@tanstack/solid-router';
-import ShuffleIcon from 'lucide-solid/icons/shuffle';
+import { Shuffle } from 'lucide-solid';
 import { createMemo, createSignal, onMount, Show, Suspense } from 'solid-js';
 import { ArticleList } from '~/components/ArticleList';
 import { ArticleListToolbar } from '~/components/ArticleListToolbar';
@@ -146,7 +146,7 @@ function TagArticles() {
                     : { ...prev, seed: Math.floor(Math.random() * 9999999999) + 1000000000 }
                 }
               >
-                <ShuffleIcon size={16} />
+                <Shuffle size={16} />
                 {seed() ? 'Turn off shuffle' : 'Shuffle'}
               </Link>
             </li>

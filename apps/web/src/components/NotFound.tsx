@@ -1,5 +1,5 @@
 import { Link } from '@tanstack/solid-router';
-import FileQuestion from 'lucide-solid/icons/file-question';
+import { FileQuestion } from 'lucide-solid';
 
 export function NotFound() {
   return (

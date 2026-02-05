@@ -1,5 +1,5 @@
 import type { Feed } from '@repo/domain/client';
-import TriangleAlertIcon from 'lucide-solid/icons/triangle-alert';
+import { TriangleAlert } from 'lucide-solid';
 import { Show } from 'solid-js';
 import { feedsCollection } from '~/entities/feeds';
 import { LazyModal, type ModalController } from './LazyModal';
@@ -60,7 +60,7 @@ function DeleteFeedForm(props: DeleteFeedFormProps) {
         </div>
 
         <div class="alert alert-warning mt-4">
-          <TriangleAlertIcon size={20} />
+          <TriangleAlert size={20} />
           <span class="text-sm">All articles from this feed will also be deleted.</span>
         </div>
       </div>

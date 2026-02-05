@@ -1,8 +1,5 @@
 import type { WordTiming } from '@repo/domain/client';
-import Headphones from 'lucide-solid/icons/headphones';
-import Loader2 from 'lucide-solid/icons/loader-2';
-import Pause from 'lucide-solid/icons/pause';
-import Play from 'lucide-solid/icons/play';
+import { Headphones, Loader2, Pause, Play } from 'lucide-solid';
 import { createEffect, createSignal, onCleanup, onMount, Show } from 'solid-js';
 import { $$generateArticleAudio, $$getArticleAudio } from '~/entities/article-audio.server';
 import { useArticleAudio } from './ArticleAudioContext';

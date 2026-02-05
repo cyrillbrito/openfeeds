@@ -1,4 +1,4 @@
-import CircleAlertIcon from 'lucide-solid/icons/circle-alert';
+import { CircleAlert } from 'lucide-solid';
 import { createSignal, For, Show } from 'solid-js';
 import { $$applyFilterRules } from '~/entities/actions.server';
 import { useFilterRules } from '~/entities/filter-rules';
@@ -89,7 +89,7 @@ export function RuleManager(props: RuleManagerProps) {
 
       <Show when={applyError()}>
         <div class="alert alert-error">
-          <CircleAlertIcon size={20} />
+          <CircleAlert size={20} />
           <span>{applyError()}</span>
         </div>
       </Show>
@@ -142,7 +142,7 @@ export function RuleManager(props: RuleManagerProps) {
 
       <Show when={filterRulesQuery.isError}>
         <div class="alert alert-error">
-          <CircleAlertIcon size={20} />
+          <CircleAlert size={20} />
           <span>Failed to load filter rules. Please try again.</span>
         </div>
       </Show>
