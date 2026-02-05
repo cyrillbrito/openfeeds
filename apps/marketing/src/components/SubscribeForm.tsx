@@ -1,6 +1,6 @@
 import { createSignal, Show } from 'solid-js';
 
-export default function WaitlistForm() {
+export default function SubscribeForm() {
   const [email, setEmail] = createSignal('');
   const [submitted, setSubmitted] = createSignal(false);
   const [loading, setLoading] = createSignal(false);
@@ -20,16 +20,16 @@ export default function WaitlistForm() {
         body: JSON.stringify({ email: email() }),
       });
 
-      const data = await response.json();
+      const data = (await response.json()) as { success?: boolean; error?: string };
 
       if (data.success) {
         setSubmitted(true);
       } else {
-        setError(data.error || 'Failed to join waitlist');
+        setError(data.error ?? 'Failed to subscribe');
       }
     } catch (err) {
-      setError('Failed to join waitlist. Please try again.');
-      console.error('Waitlist error:', err);
+      setError('Failed to subscribe. Please try again.');
+      console.error('Subscribe error:', err);
     } finally {
       setLoading(false);
     }
@@ -41,8 +41,8 @@ export default function WaitlistForm() {
         when={!submitted()}
         fallback={
           <div class="border-accent bg-accent/10 text-foreground rounded-lg border-2 px-6 py-4">
-            <p class="text-lg font-semibold">✓ You're on the list!</p>
-            <p class="text-sm opacity-70">We'll notify you when we launch.</p>
+            <p class="text-lg font-semibold">You're subscribed!</p>
+            <p class="text-sm opacity-70">We'll keep you posted on updates.</p>
           </div>
         }
       >
@@ -59,18 +59,15 @@ export default function WaitlistForm() {
           <button
             type="submit"
             disabled={loading()}
-            class="bg-accent hover:bg-accent/90 rounded-lg px-8 py-3 text-base font-semibold text-white transition-all hover:shadow-lg disabled:cursor-not-allowed disabled:opacity-50"
+            class="bg-accent hover:bg-accent/90 rounded-lg px-6 py-3 text-base font-semibold text-white transition-all hover:shadow-lg disabled:cursor-not-allowed disabled:opacity-50"
           >
-            {loading() ? 'Joining...' : 'Join Waitlist'}
+            {loading() ? 'Subscribing...' : 'Subscribe'}
           </button>
         </form>
       </Show>
       <Show when={error()}>
         <p class="mt-2 text-sm text-red-600">{error()}</p>
       </Show>
-      <p class="text-foreground/60 mt-4 text-sm">
-        Join the waitlist to be the first to know when we launch
-      </p>
     </div>
   );
 }

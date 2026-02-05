@@ -4,7 +4,7 @@ import { Resend } from 'resend';
 export const prerender = false;
 
 export const POST: APIRoute = async ({ request }) => {
-  const { email } = await request.json();
+  const { email } = await request.json<{ email: string }>();
 
   const resendApiKey = import.meta.env.RESEND_API_KEY;
   const resendAudienceId = import.meta.env.RESEND_AUDIENCE_ID;
@@ -13,7 +13,7 @@ export const POST: APIRoute = async ({ request }) => {
     return new Response(
       JSON.stringify({
         success: false,
-        error: 'Waitlist service not configured',
+        error: 'Subscribe service not configured',
       }),
       {
         status: 500,
@@ -33,7 +33,7 @@ export const POST: APIRoute = async ({ request }) => {
     return new Response(
       JSON.stringify({
         success: true,
-        message: 'Successfully added to waitlist',
+        message: 'Successfully subscribed',
       }),
       {
         status: 200,
@@ -45,7 +45,7 @@ export const POST: APIRoute = async ({ request }) => {
     return new Response(
       JSON.stringify({
         success: false,
-        error: 'Failed to add to waitlist',
+        error: 'Failed to subscribe',
       }),
       {
         status: 500,

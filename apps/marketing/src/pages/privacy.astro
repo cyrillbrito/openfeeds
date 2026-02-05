@@ -1,0 +1,170 @@
+---
+import Layout from '../layouts/Layout.astro';
+---
+
+<Layout>
+  <div class="bg-background min-h-screen">
+    <article class="mx-auto max-w-3xl px-6 py-16">
+      <h1 class="text-foreground mb-8 text-4xl font-bold">Privacy Policy</h1>
+      <p class="text-foreground/70 mb-8">Last updated: February 2025</p>
+
+      <div class="prose prose-lg text-foreground/90 max-w-none space-y-6">
+        <section>
+          <h2 class="text-foreground mb-4 text-2xl font-semibold">1. Introduction</h2>
+          <p>
+            OpenFeeds ("we", "our", "us") is committed to protecting your privacy. This Privacy
+            Policy explains how we collect, use, and safeguard your information when you use our
+            service.
+          </p>
+          <p class="mt-2">
+            OpenFeeds is operated from Portugal. For privacy inquiries, contact us at{' '}
+            <a href="mailto:contact@openfeeds.app" class="text-accent hover:underline">
+              contact@openfeeds.app
+            </a>.
+          </p>
+        </section>
+
+        <section>
+          <h2 class="text-foreground mb-4 text-2xl font-semibold">2. Information We Collect</h2>
+          <h3 class="text-foreground mb-2 mt-4 text-xl font-medium">Account Information</h3>
+          <p>When you create an account, we collect:</p>
+          <ul class="ml-6 mt-2 list-disc space-y-2">
+            <li>Email address</li>
+            <li>Password (stored securely using industry-standard hashing)</li>
+          </ul>
+
+          <h3 class="text-foreground mb-2 mt-4 text-xl font-medium">Usage Data</h3>
+          <p>We collect information about how you use the Service:</p>
+          <ul class="ml-6 mt-2 list-disc space-y-2">
+            <li>Feed subscriptions you create</li>
+            <li>Articles you read or mark as read</li>
+            <li>Tags and organizational preferences</li>
+          </ul>
+
+          <h3 class="text-foreground mb-2 mt-4 text-xl font-medium">Technical Data</h3>
+          <p>We automatically collect:</p>
+          <ul class="ml-6 mt-2 list-disc space-y-2">
+            <li>IP address</li>
+            <li>Browser type and version</li>
+            <li>Device information</li>
+            <li>Usage analytics (via PostHog)</li>
+          </ul>
+        </section>
+
+        <section>
+          <h2 class="text-foreground mb-4 text-2xl font-semibold">3. How We Use Your Information</h2>
+          <p>We use your information to:</p>
+          <ul class="ml-6 mt-2 list-disc space-y-2">
+            <li>Provide and maintain the Service</li>
+            <li>Sync your feeds and reading progress across devices</li>
+            <li>Send important service-related communications</li>
+            <li>Improve and optimize the Service</li>
+            <li>Detect and prevent fraud or abuse</li>
+          </ul>
+        </section>
+
+        <section>
+          <h2 class="text-foreground mb-4 text-2xl font-semibold">4. Data Storage and Security</h2>
+          <p>
+            Your data is stored securely using industry-standard practices. We use encryption in
+            transit (HTTPS) and implement appropriate security measures to protect against
+            unauthorized access.
+          </p>
+          <p class="mt-2">
+            As an open-source project, you can also self-host OpenFeeds and maintain complete
+            control over your data.
+          </p>
+        </section>
+
+        <section>
+          <h2 class="text-foreground mb-4 text-2xl font-semibold">5. Data Sharing</h2>
+          <p>We do not sell your personal information. We may share data with:</p>
+          <ul class="ml-6 mt-2 list-disc space-y-2">
+            <li>Service providers who help us operate the Service (see below)</li>
+            <li>Law enforcement when required by law</li>
+          </ul>
+
+          <h3 class="text-foreground mb-2 mt-4 text-xl font-medium">Service Providers</h3>
+          <p>We use the following third-party services to operate OpenFeeds:</p>
+          <ul class="ml-6 mt-2 list-disc space-y-2">
+            <li>Cloudflare - Hosting and content delivery</li>
+            <li>Electric SQL - Real-time data synchronization</li>
+            <li>PostHog - Analytics (EU-hosted)</li>
+            <li>Resend - Transactional emails</li>
+          </ul>
+        </section>
+
+        <section>
+          <h2 class="text-foreground mb-4 text-2xl font-semibold">6. Your Rights</h2>
+          <p>You have the right to:</p>
+          <ul class="ml-6 mt-2 list-disc space-y-2">
+            <li>Access your personal data</li>
+            <li>Correct inaccurate data</li>
+            <li>Delete your account and associated data</li>
+            <li>Export your data</li>
+            <li>Opt out of analytics tracking</li>
+          </ul>
+          <p class="mt-2">
+            To exercise these rights, contact us at{' '}
+            <a href="mailto:contact@openfeeds.app" class="text-accent hover:underline">
+              contact@openfeeds.app
+            </a>.
+          </p>
+        </section>
+
+        <section>
+          <h2 class="text-foreground mb-4 text-2xl font-semibold">7. Cookies and Tracking</h2>
+          <p>We use:</p>
+          <ul class="ml-6 mt-2 list-disc space-y-2">
+            <li>Essential cookies for authentication and session management</li>
+            <li>Analytics (PostHog) to understand how users interact with the Service</li>
+          </ul>
+          <p class="mt-2">
+            You can disable cookies in your browser settings, though this may affect Service
+            functionality.
+          </p>
+        </section>
+
+        <section>
+          <h2 class="text-foreground mb-4 text-2xl font-semibold">8. Third-Party Services</h2>
+          <p>
+            The Service fetches content from third-party RSS feeds. When you subscribe to a feed, we
+            make requests to those external servers on your behalf. We do not share your personal
+            information with feed publishers.
+          </p>
+        </section>
+
+        <section>
+          <h2 class="text-foreground mb-4 text-2xl font-semibold">9. Data Retention</h2>
+          <p>
+            We retain your data for as long as your account is active. When you delete your account,
+            we will delete your personal data within 30 days, except where retention is required by
+            law.
+          </p>
+        </section>
+
+        <section>
+          <h2 class="text-foreground mb-4 text-2xl font-semibold">10. Changes to This Policy</h2>
+          <p>
+            We may update this Privacy Policy from time to time. We will notify you of significant
+            changes via email or through the Service.
+          </p>
+        </section>
+
+        <section>
+          <h2 class="text-foreground mb-4 text-2xl font-semibold">11. Contact Us</h2>
+          <p>
+            For privacy-related questions or concerns, please contact us at{' '}
+            <a href="mailto:contact@openfeeds.app" class="text-accent hover:underline">
+              contact@openfeeds.app
+            </a>.
+          </p>
+        </section>
+      </div>
+
+      <div class="mt-12 border-t border-foreground/20 pt-8">
+        <a href="/" class="text-accent hover:underline">&larr; Back to Home</a>
+      </div>
+    </article>
+  </div>
+</Layout>

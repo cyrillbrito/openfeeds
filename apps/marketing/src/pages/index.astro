@@ -3,7 +3,7 @@ import { Image } from 'astro:assets';
 import articleReaderView from '../assets/article-reader-view.png';
 import feedListView from '../assets/feed-list-view.png';
 import tagsManagement from '../assets/tags-management.png';
-import WaitlistForm from '../components/WaitlistForm';
+import SubscribeForm from '../components/SubscribeForm';
 import Layout from '../layouts/Layout.astro';
 ---
 
@@ -22,8 +22,18 @@ import Layout from '../layouts/Layout.astro';
           No algorithms. No distractions. Just the content you choose to follow, organized your way.
         </p>
 
-        <!-- Email Signup Form -->
-        <WaitlistForm client:load />
+        <!-- CTA Buttons -->
+        <div class="flex flex-col items-center gap-4">
+          <a
+            href="/signup"
+            class="bg-accent hover:bg-accent/90 relative inline-block rounded-lg px-8 py-3 text-base font-semibold text-white transition-all hover:shadow-lg"
+          >
+            Get Started Free
+            <span class="absolute -right-2 -top-2 rounded-full bg-white px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-foreground shadow-sm ring-1 ring-foreground/10">
+              Beta
+            </span>
+          </a>
+        </div>
       </div>
     </section>
 
@@ -192,29 +202,39 @@ import Layout from '../layouts/Layout.astro';
       </div>
     </section>
 
-    <!-- Final CTA -->
-    <section class="mx-auto max-w-3xl px-6 py-16 text-center">
-      <h2 class="text-foreground mb-4 text-3xl font-bold md:text-4xl">
-        Take back control of your content
-      </h2>
-      <p class="text-foreground/70 mb-8 text-lg">
-        Join the waitlist and be among the first to experience a calmer, more intentional way to
-        consume content.
-      </p>
-      <button
-        onclick="window.scrollTo({ top: 0, behavior: 'smooth' })"
-        class="bg-accent hover:bg-accent/90 inline-block rounded-lg px-8 py-3 text-base font-semibold text-white transition-all hover:shadow-lg"
-      >
-        Join the Waitlist
-      </button>
+    <!-- Newsletter Section -->
+    <section class="bg-accent/10 border-accent/20 border-y py-12">
+      <div class="mx-auto max-w-xl px-6 text-center">
+        <h3 class="text-foreground mb-2 text-xl font-bold">Get updates</h3>
+        <p class="text-foreground/70 mb-6 text-sm">
+          New features, tips, and occasional news. No spam, unsubscribe anytime.
+        </p>
+        <SubscribeForm client:load />
+      </div>
     </section>
 
     <!-- Footer -->
     <footer class="border-foreground/20 bg-background border-t py-8">
-      <div class="mx-auto max-w-6xl px-6 text-center">
-        <p class="text-foreground/60 text-sm">
-          © 2025 OpenFeeds. Built for people who value their attention.
-        </p>
+      <div class="mx-auto max-w-6xl px-6">
+        <div class="flex flex-col items-center gap-4 sm:flex-row sm:justify-between">
+          <p class="text-foreground/60 text-sm">
+            © 2025 OpenFeeds. Built for people who value their attention.
+          </p>
+          <div class="flex items-center gap-6 text-sm">
+            <a href="/terms" class="text-foreground/60 hover:text-foreground transition-colors">
+              Terms
+            </a>
+            <a href="/privacy" class="text-foreground/60 hover:text-foreground transition-colors">
+              Privacy
+            </a>
+            <a
+              href="mailto:contact@openfeeds.app"
+              class="text-foreground/60 hover:text-foreground transition-colors"
+            >
+              Contact
+            </a>
+          </div>
+        </div>
       </div>
     </footer>
   </div>
