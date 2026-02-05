@@ -30,12 +30,12 @@
     "test": "echo '123'"
   },
   "devDependencies": {
-    "@ianvs/prettier-plugin-sort-imports": "^4.7.0",
-    "@types/bun": "^1.3.6",
-    "oxlint": "^1.41.0",
+    "@ianvs/prettier-plugin-sort-imports": "^4.7.1",
+    "@types/bun": "^1.3.8",
+    "oxlint": "^1.43.0",
     "prettier": "^3.8.1",
     "prettier-plugin-tailwindcss": "^0.7.2",
-    "turbo": "^2.7.6"
+    "turbo": "^2.8.3"
   },
   "packageManager": "bun@1.3.0",
   "patchedDependencies": {

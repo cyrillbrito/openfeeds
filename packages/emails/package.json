@@ -13,15 +13,15 @@
     "check-types": "tsc --build"
   },
   "dependencies": {
-    "@react-email/components": "1.0.6",
-    "react": "^19.2.3",
-    "react-dom": "^19.2.3"
+    "@react-email/components": "1.0.7",
+    "react": "^19.2.4",
+    "react-dom": "^19.2.4"
   },
   "devDependencies": {
-    "@react-email/preview-server": "5.2.5",
-    "@types/react": "^19.2.9",
+    "@react-email/preview-server": "5.2.7",
+    "@types/react": "^19.2.13",
     "@types/react-dom": "^19.2.3",
-    "react-email": "5.2.5",
-    "tsdown": "^0.20.1"
+    "react-email": "5.2.7",
+    "tsdown": "^0.20.3"
   }
 }
