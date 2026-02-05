@@ -158,12 +158,10 @@
         "posthog-node": "^5.24.10",
         "redaxios": "^0.5.1",
         "resend": "^6.9.1",
-        "sanitize-html": "^2.17.0",
         "zod": "catalog:",
       },
       "devDependencies": {
         "@types/bun": "^1.3.8",
-        "@types/sanitize-html": "^2.16.0",
         "typescript": "catalog:",
       },
     },
@@ -187,9 +185,11 @@
       "dependencies": {
         "@mozilla/readability": "^0.6.0",
         "happy-dom": "^20.5.0",
+        "sanitize-html": "^2.17.0",
       },
       "devDependencies": {
         "@types/bun": "^1.3.8",
+        "@types/sanitize-html": "^2.16.0",
         "typescript": "catalog:",
       },
     },

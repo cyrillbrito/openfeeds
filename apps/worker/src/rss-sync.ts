@@ -8,6 +8,7 @@ import {
   type ParseFeedResult,
 } from '@repo/domain';
 import { logger } from '@repo/domain/logger';
+import { sanitizeHtml } from '@repo/readability/sanitize';
 import { attemptAsync, createId } from '@repo/shared/utils';
 import { and, eq, isNull, lt, or } from 'drizzle-orm';
 
@@ -15,8 +16,8 @@ import { and, eq, isNull, lt, or } from 'drizzle-orm';
 export interface NormalizedFeedItem {
   guid: string | null;
   title: string;
-  content: string | null;
-  description: string | null;
+  content: string | null | undefined;
+  description: string | null | undefined;
   url: string | null;
   pubDate: Date;
   author: string | null;
@@ -28,8 +29,8 @@ function getNormalizedItems(feedResult: ParseFeedResult): NormalizedFeedItem[] {
     return items.map((item) => ({
       guid: item.guid?.value || null,
       title: item.title || '',
-      content: item.description || null,
-      description: item.description || null,
+      content: sanitizeHtml(item.description),
+      description: sanitizeHtml(item.description),
       url: item.link || null,
       pubDate: item.pubDate ? new Date(item.pubDate) : new Date(),
       author:
@@ -40,8 +41,8 @@ function getNormalizedItems(feedResult: ParseFeedResult): NormalizedFeedItem[] {
     return entries.map((entry) => ({
       guid: entry.id || null,
       title: entry.title || '',
-      content: entry.content || null,
-      description: entry.summary || null,
+      content: sanitizeHtml(entry.content),
+      description: sanitizeHtml(entry.summary),
       url: entry.links?.find((link) => link.rel !== 'self')?.href || null,
       pubDate: entry.published
         ? new Date(entry.published)

@@ -3,7 +3,7 @@ import { Link, useNavigate } from '@tanstack/solid-router';
 import { Archive, Check, Inbox, Rss } from 'lucide-solid';
 import { Show } from 'solid-js';
 import { twMerge } from 'tailwind-merge';
-import { containsHtml, downshiftHeadings, sanitizeHtml, stripAnchors } from '~/utils/html';
+import { containsHtml, downshiftHeadings } from '~/utils/html';
 import { extractYouTubeVideoId, isYouTubeUrl } from '~/utils/youtube';
 import { ArticleTagManager } from './ArticleTagManager';
 import { TimeAgo } from './TimeAgo';
@@ -142,11 +142,7 @@ export function ArticleCard(props: ArticleCardProps) {
         >
           <div
             class="prose prose-sm text-base-content prose-headings:text-base-content prose-a:text-primary prose-strong:text-base-content prose-code:text-base-content prose-blockquote:text-base-content/80 mt-2 mb-3 line-clamp-5 text-sm leading-relaxed md:text-base"
-            innerHTML={stripAnchors(
-              downshiftHeadings(
-                sanitizeHtml(props.article.description || props.article.content || ''),
-              ),
-            )}
+            innerHTML={downshiftHeadings(props.article.description || props.article.content || '')}
           />
         </Show>
       </Show>

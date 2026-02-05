@@ -14,7 +14,7 @@ import { TimeAgo } from '~/components/TimeAgo';
 import { articlesCollection } from '~/entities/articles';
 import { useFeeds } from '~/entities/feeds';
 import { useTags } from '~/entities/tags';
-import { containsHtml, downshiftHeadings, sanitizeHtml } from '~/utils/html';
+import { containsHtml, downshiftHeadings } from '~/utils/html';
 import { extractYouTubeVideoId, isYouTubeUrl } from '~/utils/youtube';
 
 export const Route = createFileRoute('/_frame/articles/$articleId')({
@@ -229,7 +229,7 @@ function ArticleView() {
                             >
                               <div
                                 innerHTML={downshiftHeadings(
-                                  sanitizeHtml(art().description || art().content || ''),
+                                  art().description || art().content || '',
                                   2,
                                 )}
                               />
