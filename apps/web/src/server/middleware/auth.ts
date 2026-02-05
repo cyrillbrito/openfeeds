@@ -15,10 +15,10 @@ export const authMiddleware = createMiddleware().server(async ({ request, next }
   const session = await auth.api.getSession({ headers });
   if (!session) {
     const url = new URL(request.url);
-    throw redirect({
-      to: '/signin',
-      search: { redirect: url.pathname + url.search },
-    });
+    const redirectPath = url.pathname + url.search;
+    // Only include redirect param if it's a meaningful path (not just "/")
+    const search = redirectPath && redirectPath !== '/' ? { redirect: redirectPath } : undefined;
+    throw redirect({ to: '/signin', search });
   }
   return next({ context: { user: session.user, session: session.session } as AuthContext });
 });
