@@ -38,5 +38,6 @@ WORKDIR /app
 COPY --from=builder /home/bun/app/apps/web/.output ./.output
 COPY --from=builder /home/bun/app/node_modules ./node_modules
 
-EXPOSE 3000
+ENV PORT=80
+EXPOSE 80
 CMD ["bun", "--bun", "run", ".output/server/index.mjs"]

@@ -70,7 +70,7 @@ services:
       context: .
       dockerfile: apps/web/Dockerfile
     ports:
-      - '3200:3000'
+      - '3200:80'
     environment:
       - CLIENT_DOMAIN=${CLIENT_DOMAIN:-http://localhost:3200}
       - DATABASE_URL=postgresql://postgres:postgres@postgres:5432/openfeeds
@@ -79,7 +79,6 @@ services:
       - SIMPLE_AUTH=${SIMPLE_AUTH:-true}
       - POSTHOG_PUBLIC_KEY=$POSTHOG_PUBLIC_KEY
       - REDIS_HOST=redis
-      - REDIS_PORT=6379
       # TTS Configuration (optional)
       - UNREAL_SPEECH_API_KEY=$UNREAL_SPEECH_API_KEY
       - TTS_DEFAULT_VOICE=$TTS_DEFAULT_VOICE
@@ -103,7 +102,6 @@ services:
     environment:
       - DATABASE_URL=postgresql://postgres:postgres@postgres:5432/openfeeds
       - REDIS_HOST=redis
-      - REDIS_PORT=6379
       - POSTHOG_PUBLIC_KEY=$POSTHOG_PUBLIC_KEY
       - RESEND_API_KEY=$RESEND_API_KEY
     depends_on:

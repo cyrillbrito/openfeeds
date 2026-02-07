@@ -45,6 +45,12 @@ export async function proxyElectricRequest({
     originUrl.searchParams.set('where', where);
   }
 
+  // Append Electric Cloud credentials if configured
+  if (env.ELECTRIC_SOURCE_ID) {
+    originUrl.searchParams.set('source_id', env.ELECTRIC_SOURCE_ID);
+    originUrl.searchParams.set('source_secret', env.ELECTRIC_SOURCE_SECRET!);
+  }
+
   const response = await fetch(originUrl);
 
   // Fetch decompresses the body but doesn't remove the
