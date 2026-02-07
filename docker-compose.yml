@@ -10,7 +10,7 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data
     networks:
-      - rss-network
+      - openfeeds-network
     restart: unless-stopped
     command:
       - postgres
@@ -30,7 +30,7 @@ services:
     volumes:
       - redis_data:/data
     networks:
-      - rss-network
+      - openfeeds-network
     restart: unless-stopped
     command: redis-server --save 60 1 --loglevel warning
 
@@ -42,7 +42,7 @@ services:
       DATABASE_URL: postgresql://postgres:postgres@postgres:5432/openfeeds?sslmode=disable
       ELECTRIC_INSECURE: true # Safe - proxied through authenticated web app
     networks:
-      - rss-network
+      - openfeeds-network
     depends_on:
       postgres:
         condition: service_healthy
@@ -53,7 +53,7 @@ services:
     environment:
       - DATABASE_URL=postgresql://postgres:postgres@postgres:5432/openfeeds
     networks:
-      - rss-network
+      - openfeeds-network
     depends_on:
       postgres:
         condition: service_healthy
@@ -83,7 +83,7 @@ services:
       migrator:
         condition: service_completed_successfully
     networks:
-      - rss-network
+      - openfeeds-network
     restart: unless-stopped
 
   worker:
@@ -102,7 +102,7 @@ services:
       migrator:
         condition: service_completed_successfully
     networks:
-      - rss-network
+      - openfeeds-network
     restart: unless-stopped
 
   # Optional: Queue management UI (not required for the app to run)
@@ -115,7 +115,7 @@ services:
     depends_on:
       - redis
     networks:
-      - rss-network
+      - openfeeds-network
     restart: unless-stopped
 
 volumes:
@@ -125,5 +125,5 @@ volumes:
     driver: local
 
 networks:
-  rss-network:
+  openfeeds-network:
     driver: bridge
