@@ -241,3 +241,8 @@ export const articleTags = pgTable(
 - [ ] Add `index('table_name_user_id_idx').on(table.userId)`
 - [ ] Include `userId` in insert operations
 - [ ] Update shape handlers to filter by `user_id`
+- [ ] If Electric-synced: add to publication and set replica identity (see below)
+
+## Electric SQL Setup (Manual Mode)
+
+Electric SQL runs in **manual publication mode** (`ELECTRIC_MANUAL_TABLE_PUBLISHING=true`). Publications and replica identity are managed via migrations. See `packages/db/AGENTS.md` for details on adding/removing synced tables.

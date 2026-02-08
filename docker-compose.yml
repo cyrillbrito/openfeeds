@@ -36,8 +36,9 @@ services:
   electric:
     image: electricsql/electric:latest
     environment:
-      DATABASE_URL: postgresql://postgres:postgres@postgres:5432/openfeeds?sslmode=disable
+      DATABASE_URL: postgresql://electric_user:electric_password@postgres:5432/openfeeds?sslmode=disable
       ELECTRIC_INSECURE: true # Safe - proxied through authenticated web app
+      ELECTRIC_MANUAL_TABLE_PUBLISHING: true
     networks:
       - openfeeds-network
     depends_on:

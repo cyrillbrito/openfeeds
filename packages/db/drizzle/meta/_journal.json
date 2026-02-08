@@ -5,8 +5,15 @@
     {
       "idx": 0,
       "version": "7",
-      "when": 1770505331262,
-      "tag": "0000_nifty_overlord",
+      "when": 1770582294858,
+      "tag": "0000_initial_setup",
+      "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1770582378058,
+      "tag": "0001_enable_electric",
       "breakpoints": true
     }
   ]
