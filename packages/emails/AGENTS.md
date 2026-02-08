@@ -32,7 +32,7 @@ import { ResetPassword } from '@repo/emails';
 
 // With Resend - pass React element directly (Resend handles rendering)
 await resend.emails.send({
-  from: 'OpenFeeds <noreply@openfeeds.app>',
+  from: 'OpenFeeds <noreply@mail.openfeeds.app>',
   to: email,
   subject: 'Reset your password',
   react: ResetPassword({ resetUrl: '...' }),

@@ -15,7 +15,7 @@ function getResend(): Resend | null {
   return _resend;
 }
 
-const FROM_EMAIL = 'OpenFeeds <noreply@openfeeds.app>';
+const FROM_EMAIL = 'OpenFeeds <noreply@mail.openfeeds.app>';
 
 export async function sendVerificationEmail(email: string, url: string) {
   const resend = getResend();
