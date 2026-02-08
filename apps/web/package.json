@@ -11,7 +11,9 @@
     "check-types": "tsc --noEmit"
   },
   "dependencies": {
+    "@better-auth/oauth-provider": "^1.4.18",
     "@electric-sql/client": "^1.5.1",
+    "@modelcontextprotocol/sdk": "^1.26.0",
     "@repo/db": "workspace:*",
     "@repo/discovery": "workspace:*",
     "@repo/domain": "workspace:*",

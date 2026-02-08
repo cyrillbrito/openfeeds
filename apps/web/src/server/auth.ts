@@ -1,3 +1,4 @@
+import { oauthProvider } from '@better-auth/oauth-provider';
 import { getDb } from '@repo/db';
 import {
   createSettings,
@@ -8,7 +9,8 @@ import {
 import { betterAuth } from 'better-auth';
 import { drizzleAdapter } from 'better-auth/adapters/drizzle';
 import { createAuthMiddleware } from 'better-auth/api';
-import { tanstackStartCookies } from 'better-auth/tanstack-start';
+import { jwt } from 'better-auth/plugins';
+import { tanstackStartCookies } from 'better-auth/tanstack-start/solid';
 import { env } from '~/env';
 
 export const auth = betterAuth({
@@ -26,6 +28,7 @@ export const auth = betterAuth({
       }
     }),
   },
+  disabledPaths: ['/token'], // Disabled in favor of /oauth2/token from oauthProvider
   databaseHooks: {
     user: {
       create: {
@@ -53,5 +56,16 @@ export const auth = betterAuth({
   session: {
     cookieCache: { enabled: true, maxAge: 5 * 60 },
   },
-  plugins: [tanstackStartCookies()],
+  plugins: [
+    tanstackStartCookies(),
+    jwt(),
+    oauthProvider({
+      loginPage: '/signin',
+      consentPage: '/oauth/consent',
+      allowDynamicClientRegistration: true,
+      allowUnauthenticatedClientRegistration: true, // Required for MCP clients (public clients)
+      scopes: ['openid', 'profile', 'email', 'offline_access', 'mcp:tools'],
+      validAudiences: [`${env.TRUSTED_ORIGINS[0]}/api/mcp`], // TODO REVIEW
+    }),
+  ],
 });

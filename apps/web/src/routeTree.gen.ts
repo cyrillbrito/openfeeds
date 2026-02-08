@@ -15,6 +15,7 @@ import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as ForgotPasswordRouteImport } from './routes/forgot-password'
 import { Route as FrameRouteImport } from './routes/_frame'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as OauthConsentRouteImport } from './routes/oauth/consent'
 import { Route as ApiFeedsRouteImport } from './routes/api/feeds'
 import { Route as FrameSettingsRouteImport } from './routes/_frame.settings'
 import { Route as FrameTagsIndexRouteImport } from './routes/_frame.tags.index'
@@ -62,6 +63,11 @@ const FrameRoute = FrameRouteImport.update({
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const OauthConsentRoute = OauthConsentRouteImport.update({
+  id: '/oauth/consent',
+  path: '/oauth/consent',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ApiFeedsRoute = ApiFeedsRouteImport.update({
@@ -170,6 +176,7 @@ export interface FileRoutesByFullPath {
   '/signup': typeof SignupRoute
   '/settings': typeof FrameSettingsRoute
   '/api/feeds': typeof ApiFeedsRoute
+  '/oauth/consent': typeof OauthConsentRoute
   '/articles/$articleId': typeof FrameArticlesArticleIdRoute
   '/tags/$tagId': typeof FrameTagsTagIdRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
@@ -196,6 +203,7 @@ export interface FileRoutesByTo {
   '/signup': typeof SignupRoute
   '/settings': typeof FrameSettingsRoute
   '/api/feeds': typeof ApiFeedsRoute
+  '/oauth/consent': typeof OauthConsentRoute
   '/articles/$articleId': typeof FrameArticlesArticleIdRoute
   '/tags/$tagId': typeof FrameTagsTagIdRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
@@ -224,6 +232,7 @@ export interface FileRoutesById {
   '/signup': typeof SignupRoute
   '/_frame/settings': typeof FrameSettingsRoute
   '/api/feeds': typeof ApiFeedsRoute
+  '/oauth/consent': typeof OauthConsentRoute
   '/_frame/articles/$articleId': typeof FrameArticlesArticleIdRoute
   '/_frame/tags/$tagId': typeof FrameTagsTagIdRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
@@ -252,6 +261,7 @@ export interface FileRouteTypes {
     | '/signup'
     | '/settings'
     | '/api/feeds'
+    | '/oauth/consent'
     | '/articles/$articleId'
     | '/tags/$tagId'
     | '/api/auth/$'
@@ -278,6 +288,7 @@ export interface FileRouteTypes {
     | '/signup'
     | '/settings'
     | '/api/feeds'
+    | '/oauth/consent'
     | '/articles/$articleId'
     | '/tags/$tagId'
     | '/api/auth/$'
@@ -305,6 +316,7 @@ export interface FileRouteTypes {
     | '/signup'
     | '/_frame/settings'
     | '/api/feeds'
+    | '/oauth/consent'
     | '/_frame/articles/$articleId'
     | '/_frame/tags/$tagId'
     | '/api/auth/$'
@@ -332,6 +344,7 @@ export interface RootRouteChildren {
   SigninRoute: typeof SigninRoute
   SignupRoute: typeof SignupRoute
   ApiFeedsRoute: typeof ApiFeedsRoute
+  OauthConsentRoute: typeof OauthConsentRoute
   ApiAuthSplatRoute: typeof ApiAuthSplatRoute
   ApiShapesArticleTagsRoute: typeof ApiShapesArticleTagsRoute
   ApiShapesArticlesRoute: typeof ApiShapesArticlesRoute
@@ -385,6 +398,13 @@ declare module '@tanstack/solid-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/oauth/consent': {
+      id: '/oauth/consent'
+      path: '/oauth/consent'
+      fullPath: '/oauth/consent'
+      preLoaderRoute: typeof OauthConsentRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/feeds': {
@@ -557,6 +577,7 @@ const rootRouteChildren: RootRouteChildren = {
   SigninRoute: SigninRoute,
   SignupRoute: SignupRoute,
   ApiFeedsRoute: ApiFeedsRoute,
+  OauthConsentRoute: OauthConsentRoute,
   ApiAuthSplatRoute: ApiAuthSplatRoute,
   ApiShapesArticleTagsRoute: ApiShapesArticleTagsRoute,
   ApiShapesArticlesRoute: ApiShapesArticlesRoute,
