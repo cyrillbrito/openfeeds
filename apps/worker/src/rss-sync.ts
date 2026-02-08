@@ -4,7 +4,6 @@ import {
   evaluateFilterRules,
   fetchRss,
   getAutoArchiveCutoffDate,
-  logToFile,
   type ParseFeedResult,
 } from '@repo/domain';
 import { logger } from '@repo/domain/logger';
@@ -190,7 +189,6 @@ export async function syncSingleFeed(userId: string, feedId: string): Promise<vo
   );
 
   if (feedSyncErr) {
-    await logToFile('sync', `Feed: ${feed.title}\nError: ${JSON.stringify(feedSyncErr, null, 2)}`);
     logger.error(feedSyncErr, {
       operation: 'sync_feed',
       feedId: feed.id,

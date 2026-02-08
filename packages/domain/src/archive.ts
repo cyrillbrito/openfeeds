@@ -2,7 +2,6 @@ import { articles, getDb } from '@repo/db';
 import { attemptAsyncFn, startTimer } from '@repo/shared/utils';
 import { and, eq, lt } from 'drizzle-orm';
 import { getAutoArchiveCutoffDate, type ArchiveResult } from './entities/settings';
-import { logToFile, logToFileDump } from './logger-file';
 
 export async function autoArchiveArticles(userId: string): Promise<void> {
   const [error] = await attemptAsyncFn(async () => {
@@ -12,17 +11,10 @@ export async function autoArchiveArticles(userId: string): Promise<void> {
     console.log(
       `Auto-archived ${result.markedCount} articles in ${timer.elapsed().toFixed(2)} seconds`,
     );
-
-    // Log to file for tracking
-    await logToFile(
-      'auto-archive',
-      `Archived ${result.markedCount} articles (before ${result.cutoffDate})`,
-    );
   });
 
   if (error) {
     console.error('Error in autoArchiveArticles:', error);
-    await logToFileDump('auto-archive', error);
   }
 }
 

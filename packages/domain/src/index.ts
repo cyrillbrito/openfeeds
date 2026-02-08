@@ -20,11 +20,11 @@ export * from './tts';
 
 // Utilities
 export * from './db-utils';
-export * from './logger-file';
 
 // Infrastructure - config-based pattern
 export {
   initDomain,
+  shutdownDomain,
   getConfig,
   getRedisConnection,
   QUEUE_NAMES,

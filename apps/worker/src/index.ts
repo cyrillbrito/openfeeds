@@ -1,5 +1,11 @@
 import { initDb } from '@repo/db';
-import { initDomain, initializeScheduledJobs, logger, QUEUE_NAMES } from '@repo/domain';
+import {
+  initDomain,
+  initializeScheduledJobs,
+  logger,
+  QUEUE_NAMES,
+  shutdownDomain,
+} from '@repo/domain';
 import { env } from './env';
 import {
   createAutoArchiveWorker,
@@ -17,7 +23,8 @@ initDomain({
     host: env.REDIS_HOST,
     port: env.REDIS_PORT,
   },
-  posthogPublicKey: env.POSTHOG_PUBLIC_KEY,
+  posthogKey: env.POSTHOG_PUBLIC_KEY,
+  posthogApp: 'worker',
   resendApiKey: env.RESEND_API_KEY,
 });
 
@@ -74,10 +81,12 @@ async function shutdown() {
   console.log('🛑 Shutting down workers gracefully...');
   try {
     await Promise.all(workers.map((w) => w.close()));
+    await shutdownDomain();
     console.log('✅ All workers closed successfully');
     process.exit(0);
   } catch (error) {
     logger.error(error as Error, { operation: 'shutdown' });
+    await shutdownDomain();
     process.exit(1);
   }
 }

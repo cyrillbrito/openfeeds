@@ -7,9 +7,14 @@ import interCss from '~/assets/inter/inter.css?url';
 import { SessionReadProvider } from '~/providers/session-read';
 import { ThemeProvider } from '~/providers/theme';
 import { ToastProvider } from '~/providers/toast';
+import { $$getPublicConfig } from '~/server/public-config';
 import appCss from '~/styles/app.css?url';
 
 export const Route = createRootRoute({
+  beforeLoad: async () => {
+    const config = await $$getPublicConfig();
+    return { publicConfig: config };
+  },
   head: () => ({
     meta: [
       { charset: 'utf-8' },
@@ -36,8 +41,15 @@ export const Route = createRootRoute({
 });
 
 function RootComponent() {
+  const context = Route.useRouteContext();
+
   onMount(() => {
-    import('../utils/posthog');
+    const posthogKey = context().publicConfig.posthogKey;
+    if (posthogKey) {
+      import('../utils/posthog').then(({ initPosthog }) => {
+        initPosthog(posthogKey);
+      });
+    }
   });
 
   return (

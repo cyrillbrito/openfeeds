@@ -1,15 +1,10 @@
 import posthog from 'posthog-js';
 
-posthog.init('phc_V6I0xn1Ptmx3QVqXzLNAK22H6D58kR3SJTYg1JdVEx', {
-  api_host: 'https://eu.i.posthog.com',
-  person_profiles: 'identified_only',
+export function initPosthog(key: string) {
+  posthog.init(key, {
+    api_host: 'https://eu.i.posthog.com',
+    person_profiles: 'identified_only',
+  });
 
-  // TODO Enables session tracking across FE and BE
-  //   __add_tracing_headers: [
-  //   env.VITE_API_URL || '',
-  //   'localhost:3000',
-  //   'localhost:3001',
-  //   '*',
-  //   'localhost',
-  // ],
-});
+  posthog.register({ app: 'web' });
+}

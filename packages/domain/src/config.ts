@@ -1,4 +1,5 @@
 import type { ConnectionOptions } from 'bullmq';
+import { PostHog } from 'posthog-node';
 
 /**
  * Configuration required to initialize the domain package.
@@ -14,7 +15,10 @@ export interface DomainConfig {
     host: string;
     port: number;
   };
-  posthogPublicKey?: string;
+  /** PostHog API key. When set, errors are reported to PostHog. */
+  posthogKey?: string;
+  /** Label attached to every PostHog event to identify the source app (e.g. 'server', 'worker') */
+  posthogApp?: string;
   resendApiKey?: string;
   unrealSpeechApiKey?: string;
   ttsDefaultVoice?: string;
@@ -22,6 +26,7 @@ export interface DomainConfig {
 
 // Internal state - populated by initDomain()
 let _config: DomainConfig | null = null;
+let _posthog: PostHog | null = null;
 
 /**
  * Initialize the domain package with configuration.
@@ -31,6 +36,13 @@ let _config: DomainConfig | null = null;
  */
 export function initDomain(config: DomainConfig): void {
   _config = config;
+
+  if (config.posthogKey) {
+    _posthog = new PostHog(config.posthogKey, {
+      host: 'https://eu.i.posthog.com',
+      enableExceptionAutocapture: true,
+    });
+  }
 }
 
 /**
@@ -41,6 +53,18 @@ export function getConfig(): DomainConfig {
     throw new Error('Domain not initialized. Call initDomain() first.');
   }
   return _config;
+}
+
+/** Get the PostHog client, or null if not configured. */
+export function getPosthog(): PostHog | null {
+  return _posthog;
+}
+
+/** Flush pending PostHog events. Call on process exit. */
+export async function shutdownDomain(): Promise<void> {
+  if (_posthog) {
+    await _posthog.shutdown();
+  }
 }
 
 /**
