@@ -149,12 +149,7 @@ export const articleTags = pgTable(
 - [ ] Update shared Zod schemas to include `userId`
 - [ ] Update domain functions to pass `userId` on insert
 - [ ] Update shape handlers to filter by `user_id`
-- [ ] If Electric-synced: create a migration to grant access, add to publication, and set replica identity:
-  ```sql
-  GRANT SELECT ON new_table TO electric_user;
-  ALTER PUBLICATION electric_publication_default ADD TABLE new_table;
-  ALTER TABLE new_table REPLICA IDENTITY FULL;
-  ```
+- [ ] If Electric-synced: Electric automatically manages publications and replica identity in automatic mode. No migration needed.
 
 ### Reference
 
@@ -162,27 +157,9 @@ See Electric SQL docs: https://electric-sql.com/docs/guides/shapes#include-tree-
 
 > "For multi-level include trees, you can denormalise the filtering column onto the lower tables so that you can sync with a simple where clause."
 
-## Electric SQL Manual Mode
+## Electric SQL (Automatic Mode)
 
-Electric SQL runs with `ELECTRIC_MANUAL_TABLE_PUBLISHING=true`. A dedicated `electric_user` role (with `REPLICATION` + `SELECT`) connects Electric to the database. Role, grants, publication, and replica identity are all set up in migration `0001_enable_electric.sql`.
-
-**Why manual mode:** PlanetScale Postgres (production) doesn't allow true superuser access, so Electric can't manage publications automatically. Same setup is used locally for consistency.
-
-**Adding a synced table** — create a migration:
-
-```sql
-GRANT SELECT ON new_table TO electric_user;
-ALTER PUBLICATION electric_publication_default ADD TABLE new_table;
-ALTER TABLE new_table REPLICA IDENTITY FULL;
-```
-
-**Removing a synced table:**
-
-```sql
-ALTER PUBLICATION electric_publication_default DROP TABLE old_table;
-```
-
-**Production:** Change the `electric_user` password after running migrations: `ALTER ROLE electric_user WITH PASSWORD 'secure_password';`
+Electric SQL runs in automatic mode — it manages publications, replica identity, and table subscriptions automatically. Electric connects as the default `postgres` role (which has `REPLICATION` + full data access on PlanetScale). No dedicated `electric_user` or manual publication setup is needed.
 
 ## Drizzle Features
 

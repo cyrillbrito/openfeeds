@@ -43,9 +43,8 @@ services:
     ports:
       - '3060:3000'
     environment:
-      DATABASE_URL: postgresql://electric_user:electric_password@postgres:5432/openfeeds?sslmode=disable
+      DATABASE_URL: postgresql://postgres:postgres@postgres:5432/openfeeds?sslmode=disable
       ELECTRIC_INSECURE: true
-      ELECTRIC_MANUAL_TABLE_PUBLISHING: true
     networks:
       - openfeeds-network
     depends_on:
