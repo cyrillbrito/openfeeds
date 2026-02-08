@@ -22,6 +22,7 @@ initDomain({
   redis: {
     host: env.REDIS_HOST,
     port: env.REDIS_PORT,
+    password: env.REDIS_PASSWORD,
   },
   posthogKey: env.POSTHOG_PUBLIC_KEY,
   posthogApp: 'worker',

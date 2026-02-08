@@ -14,6 +14,7 @@ export interface DomainConfig {
   redis: {
     host: string;
     port: number;
+    password?: string;
   };
   /** PostHog API key. When set, errors are reported to PostHog. */
   posthogKey?: string;
@@ -75,6 +76,7 @@ export function getRedisConnection(): ConnectionOptions {
   return {
     host: config.redis.host,
     port: config.redis.port,
+    ...(config.redis.password && { password: config.redis.password }),
   };
 }
 

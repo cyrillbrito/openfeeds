@@ -6,6 +6,7 @@ export const env = createEnv({
     DATABASE_URL: z.url(),
     REDIS_HOST: z.string().default('localhost'),
     REDIS_PORT: z.coerce.number().default(6379),
+    REDIS_PASSWORD: z.string().optional(),
     POSTHOG_PUBLIC_KEY: z
       .string()
       .optional()

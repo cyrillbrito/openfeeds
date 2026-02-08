@@ -15,6 +15,7 @@ export const env = createEnv({
     DATA_PATH: z.string().optional(), // Local file storage for audio, etc.
     REDIS_HOST: z.string().default('localhost'),
     REDIS_PORT: z.coerce.number().default(6379),
+    REDIS_PASSWORD: z.string().optional(),
     POSTHOG_PUBLIC_KEY: z.string().optional(),
     RESEND_API_KEY: z.string().optional(),
     // TTS (Unreal Speech)
