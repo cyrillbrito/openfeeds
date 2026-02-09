@@ -11,7 +11,7 @@ interface DropdownProps {
 
 export function Dropdown(props: DropdownProps) {
   let triggerRef: HTMLDivElement | undefined;
-  let popoverRef: HTMLUListElement | undefined;
+  let popoverRef: HTMLDivElement | undefined;
 
   const [isOpen, setIsOpen] = createSignal(false);
 
@@ -19,16 +19,22 @@ export function Dropdown(props: DropdownProps) {
     if (!triggerRef || !popoverRef) return;
     const bounds = triggerRef.getBoundingClientRect();
 
+    popoverRef.style.position = 'fixed';
+
     if (props.top) {
       popoverRef.style.bottom = `${window.innerHeight - bounds.top + 4}px`;
+      popoverRef.style.top = 'auto';
     } else {
       popoverRef.style.top = `${bounds.bottom + 4}px`;
+      popoverRef.style.bottom = 'auto';
     }
 
     if (props.end) {
       popoverRef.style.right = `${window.innerWidth - bounds.right}px`;
+      popoverRef.style.left = 'auto';
     } else {
       popoverRef.style.left = `${bounds.left}px`;
+      popoverRef.style.right = 'auto';
     }
   };
 
@@ -81,15 +87,15 @@ export function Dropdown(props: DropdownProps) {
       >
         {props.btnContent}
       </div>
-      <ul
+      <div
         ref={(el) => (popoverRef = el)}
         popover="auto"
         role="menu"
-        class="menu bg-base-200 border-base-300 rounded-box m-0 w-52 border shadow"
+        class="bg-base-200 border-base-300 rounded-box m-0 w-52 border p-0 shadow"
         onClick={handleMenuClick}
       >
-        {props.children}
-      </ul>
+        <ul class="menu">{props.children}</ul>
+      </div>
     </div>
   );
 }
