@@ -4,6 +4,7 @@ import { Shuffle } from 'lucide-solid';
 import { createMemo, createSignal, onMount, Show, Suspense } from 'solid-js';
 import { ArticleList, ARTICLES_PER_PAGE } from '~/components/ArticleList';
 import { ArticleListToolbar } from '~/components/ArticleListToolbar';
+import { ColorIndicator } from '~/components/ColorIndicator';
 import { Header } from '~/components/Header';
 import { LazyModal, type ModalController } from '~/components/LazyModal';
 import { CenterLoader } from '~/components/Loader';
@@ -16,6 +17,7 @@ import { useFeeds } from '~/entities/feeds';
 import { useTags } from '~/entities/tags';
 import { useSessionRead } from '~/providers/session-read';
 import { validateReadStatusSearch } from '~/utils/routing';
+import { getTagDotColor } from '~/utils/tagColors';
 
 export const Route = createFileRoute('/_frame/tags/$tagId')({
   validateSearch: validateReadStatusSearch,
@@ -81,7 +83,7 @@ function TagArticles() {
   const handleMarkAllArchived = async () => {
     try {
       setIsMarkingAllArchived(true);
-      const articleIds = (totalCountQuery.data || []).map((a) => a.id);
+      const articleIds = (totalCountQuery() || []).map((a) => a.id);
       if (articleIds.length > 0) {
         articlesCollection.update(articleIds, (drafts) => {
           drafts.forEach((d) => (d.isArchived = true));
@@ -95,7 +97,7 @@ function TagArticles() {
     }
   };
 
-  const tag = () => tagsQuery.data?.find((t) => t.id === tagId());
+  const tag = createMemo(() => tagsQuery()?.find((t) => t.id === tagId()));
 
   const handleUpdateArticle = (
     articleId: string,
@@ -114,14 +116,14 @@ function TagArticles() {
 
   // Filter for session-read articles (client-side)
   const filteredArticles = createMemo(() => {
-    const articles = articlesQuery.data || [];
+    const articles = articlesQuery() || [];
     if (readStatus() !== 'unread') return articles;
 
     return articles.filter((a) => !a.isRead || sessionReadIds().has(a.id));
   });
 
   const totalCount = () => {
-    const allArticles = totalCountQuery.data || [];
+    const allArticles = totalCountQuery() || [];
     if (readStatus() !== 'unread') return allArticles.length;
 
     return allArticles.filter((a) => !a.isRead || sessionReadIds().has(a.id)).length;
@@ -137,7 +139,18 @@ function TagArticles() {
 
   return (
     <>
-      <Header title={tag()?.name || `Tag #${tagId()}`} />
+      <Header
+        title={
+          tag() ? (
+            <div class="flex items-center gap-2.5">
+              <ColorIndicator class={getTagDotColor(tag()!.color)} />
+              <span>{tag()!.name}</span>
+            </div>
+          ) : (
+            'Tag'
+          )
+        }
+      />
 
       <div class="mx-auto w-full max-w-2xl px-2 py-3 sm:p-6 xl:max-w-3xl">
         <p class="text-base-content-gray">Articles from feeds tagged with this label</p>
@@ -188,11 +201,11 @@ function TagArticles() {
 
       <div class="mx-auto w-full max-w-2xl px-2 pb-3 sm:px-6 sm:pb-6 xl:max-w-3xl">
         <Suspense fallback={<CenterLoader />}>
-          <Show when={feedsQuery.data && tagsQuery.data}>
+          <Show when={feedsQuery() && tagsQuery()}>
             <ArticleList
               articles={filteredArticles()}
-              feeds={feedsQuery.data!}
-              tags={tagsQuery.data!}
+              feeds={feedsQuery()!}
+              tags={tagsQuery()!}
               totalCount={totalCount()}
               onLoadMore={handleLoadMore}
               onUpdateArticle={handleUpdateArticle}

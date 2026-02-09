@@ -3,7 +3,7 @@ import type { JSXElement } from 'solid-js';
 
 interface HeaderProps {
   children?: JSXElement;
-  title?: string;
+  title?: JSXElement;
 }
 
 export function Header(props: HeaderProps) {
