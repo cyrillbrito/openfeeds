@@ -154,7 +154,7 @@ function Inbox() {
         </div>
       </Header>
 
-      <div class="mx-auto w-full max-w-2xl px-2 py-3 sm:p-6">
+      <div class="mx-auto w-full max-w-2xl px-2 py-3 sm:p-6 xl:max-w-3xl">
         <p class="text-base-content-gray">Latest articles from all your RSS feeds</p>
       </div>
 
@@ -192,7 +192,7 @@ function Inbox() {
         readStatus={readStatus()}
       />
 
-      <div class="mx-auto w-full max-w-2xl px-2 pb-3 sm:px-6 sm:pb-6">
+      <div class="mx-auto w-full max-w-2xl px-2 pb-3 sm:px-6 sm:pb-6 xl:max-w-3xl">
         <CommonErrorBoundary>
           <Suspense fallback={<CenterLoader />}>
             <Show when={feedsQuery.data && tagsQuery.data}>

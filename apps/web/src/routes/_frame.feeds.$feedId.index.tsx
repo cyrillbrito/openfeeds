@@ -174,7 +174,7 @@ function FeedArticles() {
         </div>
       </Header>
 
-      <div class="mx-auto w-full max-w-2xl px-2 py-3 sm:p-6">
+      <div class="mx-auto w-full max-w-2xl px-2 py-3 sm:p-6 xl:max-w-3xl">
         <Show when={currentFeed()}>
           {(feed) => (
             <div class="mb-4 flex items-start gap-4 sm:gap-5">
@@ -287,7 +287,7 @@ function FeedArticles() {
         readStatus={readStatus()}
       />
 
-      <div class="mx-auto w-full max-w-2xl px-2 pb-3 sm:px-6 sm:pb-6">
+      <div class="mx-auto w-full max-w-2xl px-2 pb-3 sm:px-6 sm:pb-6 xl:max-w-3xl">
         <Suspense fallback={<CenterLoader />}>
           <Show when={feedsQuery.data && tagsQuery.data}>
             <ArticleList

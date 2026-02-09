@@ -78,7 +78,7 @@ function ArticleView() {
         </button>
       </Header>
 
-      <div class="mx-auto min-h-screen w-full max-w-2xl px-4 py-4 md:px-6 md:py-6">
+      <div class="mx-auto min-h-screen w-full max-w-2xl px-4 py-4 md:px-6 md:py-6 xl:max-w-3xl">
         {/* Content */}
         <Suspense
           fallback={
@@ -192,7 +192,7 @@ function ArticleView() {
                     <ArticleAudioPlayer articleId={art().id} />
                     <HighlightedArticleContent
                       html={cleanContent()!}
-                      class="prose prose-lg text-base-content prose-headings:text-base-content prose-a:text-primary prose-strong:text-base-content prose-code:text-base-content prose-blockquote:text-base-content/80 max-w-none"
+                      class="prose prose-lg xl:prose-xl text-base-content prose-headings:text-base-content prose-a:text-primary prose-strong:text-base-content prose-code:text-base-content prose-blockquote:text-base-content/80 max-w-none"
                     />
                   </ArticleAudioProvider>
                 </Show>
@@ -213,7 +213,7 @@ function ArticleView() {
 
                   {/* Video Description */}
                   <Show when={cleanContent() || art().description || art().content}>
-                    <div class="prose prose-lg text-base-content prose-headings:text-base-content prose-a:text-primary prose-strong:text-base-content prose-code:text-base-content prose-blockquote:text-base-content/80 max-w-none">
+                    <div class="prose prose-lg xl:prose-xl text-base-content prose-headings:text-base-content prose-a:text-primary prose-strong:text-base-content prose-code:text-base-content prose-blockquote:text-base-content/80 max-w-none">
                       <Show
                         when={cleanContent()}
                         fallback={
