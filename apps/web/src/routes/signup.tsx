@@ -67,16 +67,15 @@ function SignUpPage() {
       return;
     }
 
-    // When email verification is required, Better Auth returns token: null
-    // and does not create a session. Show a "check your email" message.
-    if (!result?.token) {
+    if (result?.token) {
+      // Redirect to original page or default to root (which will smart-redirect)
+      const redirectTo = search()?.redirect || '/';
+      void navigate({ to: redirectTo, replace: true });
+    } else {
+      // When email verification is required, Better Auth returns token: null
+      // and does not create a session. Show a "check your email" message.
       setVerificationSent(true);
-      return;
     }
-
-    // Redirect to original page or default to root (which will smart-redirect)
-    const redirectTo = search()?.redirect || '/';
-    void navigate({ to: redirectTo, replace: true });
   };
 
   return (
