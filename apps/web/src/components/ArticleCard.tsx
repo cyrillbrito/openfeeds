@@ -1,5 +1,5 @@
 import type { Article, Feed, Tag } from '@repo/domain/client';
-import { Link, useNavigate } from '@tanstack/solid-router';
+import { Link } from '@tanstack/solid-router';
 import { Archive, Check, Inbox, Rss } from 'lucide-solid';
 import { Show } from 'solid-js';
 import { twMerge } from 'tailwind-merge';
@@ -16,8 +16,6 @@ interface ArticleCardProps {
 }
 
 export function ArticleCard(props: ArticleCardProps) {
-  const navigate = useNavigate();
-
   const feed = () =>
     props.article.feedId ? props.feeds.find((f) => f.id === props.article.feedId) : null;
   const feedName = () => feed()?.title || (props.article.feedId ? 'Loading...' : 'Saved Article');
@@ -32,39 +30,32 @@ export function ArticleCard(props: ArticleCardProps) {
   const isVideo = () => props.article.url && isYouTubeUrl(props.article.url);
   const videoId = () => (props.article.url ? extractYouTubeVideoId(props.article.url) : null);
 
-  const handleCardClick = (e: MouseEvent) => {
-    const target = e.target as HTMLElement;
-    if (target.closest('button') || target.closest('a') || target.closest('[data-tag-manager]')) {
-      return;
-    }
-
-    markAsRead();
-    navigate({
-      to: '/articles/$articleId',
-      params: { articleId: props.article.id.toString() },
-    });
-  };
-
-  const handleMarkRead = (e: MouseEvent) => {
-    e.stopPropagation();
+  const handleMarkRead = () => {
     props.onUpdateArticle(props.article.id, { isRead: !props.article.isRead });
   };
 
-  const handleArchive = (e: MouseEvent) => {
-    e.stopPropagation();
+  const handleArchive = () => {
     props.onUpdateArticle(props.article.id, { isArchived: !props.article.isArchived });
   };
 
   return (
     <article
       class={twMerge(
-        'hover:bg-base-200/50 w-full cursor-pointer px-4 transition-all md:px-6',
+        'hover:bg-base-200/50 relative w-full cursor-pointer px-4 transition-all md:px-6',
         props.article.isRead && 'opacity-50',
         // Video articles have thumbnails adding visual bulk; text-only articles need more padding for breathing room
         isVideo() ? 'py-3 md:py-4' : 'py-4 md:py-5',
       )}
-      onClick={handleCardClick}
     >
+      {/* Stretched link — covers entire card for navigation */}
+      <Link
+        to="/articles/$articleId"
+        params={{ articleId: props.article.id.toString() }}
+        class="absolute inset-0"
+        tabIndex={-1}
+        aria-hidden="true"
+        onClick={markAsRead}
+      />
       <div class="mb-1.5 flex gap-2 md:gap-3">
         <Show
           when={props.article.feedId}
@@ -79,8 +70,7 @@ export function ArticleCard(props: ArticleCardProps) {
           <Link
             to="/feeds/$feedId"
             params={{ feedId: props.article.feedId! }}
-            class="shrink-0 pt-0.5"
-            onClick={(e) => e.stopPropagation()}
+            class="relative shrink-0 pt-0.5"
           >
             <Show
               when={feedIcon()}
@@ -108,7 +98,14 @@ export function ArticleCard(props: ArticleCardProps) {
         </Show>
         <div class="min-w-0 flex-1">
           <h2 class="text-base-content line-clamp-2 text-[15px] leading-snug font-medium md:text-lg">
-            {props.article.title}
+            <Link
+              to="/articles/$articleId"
+              params={{ articleId: props.article.id.toString() }}
+              class="relative"
+              onClick={markAsRead}
+            >
+              {props.article.title}
+            </Link>
           </h2>
           <div class="text-base-content/50 flex items-center gap-1.5 text-xs md:text-sm">
             <Show
@@ -118,8 +115,7 @@ export function ArticleCard(props: ArticleCardProps) {
               <Link
                 to="/feeds/$feedId"
                 params={{ feedId: props.article.feedId! }}
-                class="text-base-content/60 truncate hover:underline"
-                onClick={(e) => e.stopPropagation()}
+                class="text-base-content/60 relative truncate hover:underline"
               >
                 {feedName()}
               </Link>
@@ -167,13 +163,13 @@ export function ArticleCard(props: ArticleCardProps) {
 
       {/* Tags */}
       <Show when={props.tags.length > 0}>
-        <div class="mb-2" data-tag-manager>
+        <div class="relative mb-2">
           <ArticleTagManager articleId={props.article.id} tags={props.tags} />
         </div>
       </Show>
 
       {/* Actions */}
-      <div class="-ml-1 flex items-center gap-4">
+      <div class="relative -ml-1 flex items-center gap-4">
         <button
           class={twMerge(
             'flex items-center gap-1 rounded px-1.5 py-1 text-xs transition-colors md:gap-1.5 md:text-sm',
