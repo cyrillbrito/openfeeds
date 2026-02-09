@@ -1,7 +1,7 @@
 import { eq, useLiveQuery } from '@tanstack/solid-db';
 import { createFileRoute, Link, useRouter } from '@tanstack/solid-router';
 import { Archive, ArrowLeft, Inbox } from 'lucide-solid';
-import { Show, Suspense } from 'solid-js';
+import { createEffect, createSignal, on, Show, Suspense } from 'solid-js';
 import { ArchiveIconButton } from '~/components/ArchiveIconButton';
 import { ArticleAudioProvider } from '~/components/ArticleAudioContext';
 import { ArticleAudioPlayer } from '~/components/ArticleAudioPlayer';
@@ -12,6 +12,7 @@ import { Loader } from '~/components/Loader';
 import { ReadIconButton } from '~/components/ReadIconButton';
 import { TimeAgo } from '~/components/TimeAgo';
 import { articlesCollection } from '~/entities/articles';
+import { $$extractArticleContent } from '~/entities/articles.server';
 import { useFeeds } from '~/entities/feeds';
 import { useTags } from '~/entities/tags';
 import { containsHtml, downshiftHeadings } from '~/utils/html';
@@ -32,6 +33,27 @@ function ArticleView() {
 
   const article = () => articleQuery()[0];
   const cleanContent = () => article()?.cleanContent;
+  const contentExtractedAt = () => article()?.contentExtractedAt;
+
+  const [isExtracting, setIsExtracting] = createSignal(false);
+
+  // Trigger content extraction when article is loaded but content hasn't been extracted yet
+  createEffect(
+    on(
+      () => article()?.id,
+      (id) => {
+        const art = article();
+        if (!id || !art) return;
+        // Skip if already extracted, already extracting, is a video, or has no URL
+        if (contentExtractedAt() || isExtracting() || !art.url || isYouTubeUrl(art.url)) return;
+
+        setIsExtracting(true);
+        $$extractArticleContent({ data: { id } }).finally(() => {
+          setIsExtracting(false);
+        });
+      },
+    ),
+  );
 
   const feedsQuery = useFeeds();
   const tagsQuery = useTags();
@@ -244,16 +266,27 @@ function ArticleView() {
                 </Show>
 
                 {/* Loading state for content extraction */}
-                <Show when={!isVideo() && articleQuery.isLoading}>
-                  <div class="flex justify-center py-12">
+                <Show when={!isVideo() && (articleQuery.isLoading || isExtracting())}>
+                  <div class="flex flex-col items-center justify-center gap-3 py-12">
                     <Loader />
+                    <p class="text-base-content/60 text-sm">Preparing readable content...</p>
                   </div>
                 </Show>
 
-                {/* No content fallback - only show after loading completes */}
-                <Show when={!isVideo() && !articleQuery.isLoading && !cleanContent()}>
+                {/* No content fallback - only show after extraction has been attempted */}
+                <Show
+                  when={
+                    !isVideo() &&
+                    !articleQuery.isLoading &&
+                    !isExtracting() &&
+                    !cleanContent() &&
+                    contentExtractedAt()
+                  }
+                >
                   <div class="py-8 text-center">
-                    <p class="text-warning">This article doesn't have readable content available</p>
+                    <p class="text-base-content/60">
+                      Readable content could not be extracted for this article.
+                    </p>
                     <Show when={art().url}>
                       <a
                         href={art().url!}

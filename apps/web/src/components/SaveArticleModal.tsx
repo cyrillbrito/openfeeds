@@ -67,6 +67,7 @@ function SaveArticleForm(props: SaveArticleFormProps) {
         isRead: false,
         isArchived: false,
         cleanContent: null,
+        contentExtractedAt: null,
         hasCleanContent: false,
         createdAt: new Date().toISOString(),
       });
