@@ -94,7 +94,7 @@ export function Dropdown(props: DropdownProps) {
         class="bg-base-200 border-base-300 rounded-box m-0 w-52 border p-0 shadow"
         onClick={handleMenuClick}
       >
-        <ul class="menu">{props.children}</ul>
+        <ul class="menu w-full">{props.children}</ul>
       </div>
     </div>
   );
