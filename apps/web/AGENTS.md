@@ -196,7 +196,7 @@ See [UI_DESIGN.md](./UI_DESIGN.md) for full design language documentation.
 - `base-100` - Default app background (global)
 - `base-200` - Elevated surfaces (dropdowns, tooltips, hover states)
 - `base-300` - Borders
-- Content width constrained to `max-w-2xl` on desktop
+- Content width constrained to `max-w-2xl xl:max-w-3xl` (widens from 672px to 768px on xl screens)
 
 **Tailwind v4:**
 

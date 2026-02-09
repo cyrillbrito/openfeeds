@@ -80,7 +80,7 @@ export default function SettingsPage() {
     <>
       <Header title="Settings" />
 
-      <div class="mx-auto w-full max-w-2xl px-2 py-3 sm:p-6">
+      <div class="mx-auto w-full max-w-2xl px-2 py-3 sm:p-6 xl:max-w-3xl">
         <div class="mb-6">
           <p class="text-base-content-gray">
             Manage your application preferences and configuration.
