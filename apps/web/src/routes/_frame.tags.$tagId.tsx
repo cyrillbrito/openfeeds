@@ -4,6 +4,7 @@ import { Shuffle } from 'lucide-solid';
 import { createMemo, createSignal, onMount, Show, Suspense } from 'solid-js';
 import { ArticleList, ARTICLES_PER_PAGE } from '~/components/ArticleList';
 import { ArticleListToolbar } from '~/components/ArticleListToolbar';
+import { ColorIndicator } from '~/components/ColorIndicator';
 import { Header } from '~/components/Header';
 import { LazyModal, type ModalController } from '~/components/LazyModal';
 import { CenterLoader } from '~/components/Loader';
@@ -16,6 +17,7 @@ import { useFeeds } from '~/entities/feeds';
 import { useTags } from '~/entities/tags';
 import { useSessionRead } from '~/providers/session-read';
 import { validateReadStatusSearch } from '~/utils/routing';
+import { getTagDotColor } from '~/utils/tagColors';
 
 export const Route = createFileRoute('/_frame/tags/$tagId')({
   validateSearch: validateReadStatusSearch,
@@ -137,7 +139,18 @@ function TagArticles() {
 
   return (
     <>
-      <Header title={tag() ? `Tag #${tag()!.name}` : 'Tag'} />
+      <Header
+        title={
+          tag() ? (
+            <div class="flex items-center gap-2.5">
+              <ColorIndicator class={getTagDotColor(tag()!.color)} />
+              <span>{tag()!.name}</span>
+            </div>
+          ) : (
+            'Tag'
+          )
+        }
+      />
 
       <div class="mx-auto w-full max-w-2xl px-2 py-3 sm:p-6 xl:max-w-3xl">
         <p class="text-base-content-gray">Articles from feeds tagged with this label</p>
