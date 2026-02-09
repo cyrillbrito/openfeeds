@@ -87,6 +87,7 @@ export const ElectricArticleSchema = z.object({
   isRead: z.boolean().nullable(),
   isArchived: z.boolean().nullable(),
   cleanContent: z.string().nullable(),
+  contentExtractedAt: z.coerce.date().nullable(),
   createdAt: z.coerce.date(),
   hasCleanContent: z.boolean().optional().default(false),
 });

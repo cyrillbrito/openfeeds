@@ -30,3 +30,10 @@ export const $$createArticle = createServerFn({ method: 'POST' })
   .handler(({ context, data }) => {
     return articlesDomain.createArticle(data, context.user.id);
   });
+
+export const $$extractArticleContent = createServerFn({ method: 'POST' })
+  .middleware([authMiddleware])
+  .inputValidator(z.object({ id: z.string() }))
+  .handler(({ context, data }) => {
+    return articlesDomain.extractArticleContent(data.id, context.user.id);
+  });

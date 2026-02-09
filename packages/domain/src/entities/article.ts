@@ -175,6 +175,55 @@ export async function getArticleWithContent(
   };
 }
 
+/**
+ * Extract readable content for an article on-demand.
+ * Fetches the article URL, runs Readability, and stores the result.
+ * Skips if content was already extracted (contentExtractedAt is set).
+ */
+export async function extractArticleContent(id: string, userId: string): Promise<void> {
+  const db = getDb();
+  const article = await db.query.articles.findFirst({
+    where: and(eq(articles.id, id), eq(articles.userId, userId)),
+  });
+
+  if (!article) {
+    throw new NotFoundError();
+  }
+
+  // Already extracted (even if cleanContent is null - means extraction was attempted)
+  if (article.contentExtractedAt) {
+    return;
+  }
+
+  // Nothing to extract from
+  if (!article.url || isYouTubeUrl(article.url)) {
+    return;
+  }
+
+  try {
+    const extracted = await fetchArticleContent(article.url);
+
+    const updateData: {
+      cleanContent: string | null;
+      contentExtractedAt: Date;
+      description?: string;
+    } = {
+      cleanContent: extracted.content ?? null,
+      contentExtractedAt: new Date(),
+    };
+
+    if (!article.description && extracted.excerpt) {
+      updateData.description = extracted.excerpt;
+    }
+
+    await db.update(articles).set(updateData).where(eq(articles.id, id));
+  } catch (error) {
+    // Mark as extracted even on failure to avoid retrying indefinitely
+    await db.update(articles).set({ contentExtractedAt: new Date() }).where(eq(articles.id, id));
+    console.error(`Failed to extract content for article ${id}:`, error);
+  }
+}
+
 export async function updateArticle(
   id: string,
   data: UpdateArticle,
