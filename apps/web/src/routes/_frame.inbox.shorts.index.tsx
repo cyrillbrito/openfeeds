@@ -33,7 +33,7 @@ function InboxShorts() {
       query = query.where(({ article }) => eq(article.isRead, isRead()));
     }
 
-    return query;
+    return query.orderBy(({ article }) => article.pubDate, 'desc');
   });
 
   const feedsQuery = useFeeds();
