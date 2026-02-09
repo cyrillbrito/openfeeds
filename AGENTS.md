@@ -202,11 +202,39 @@ but branch new add-tag-filtering                           # Create branch if ne
 # ... make changes ...
 but status --json                                          # Get file/change IDs
 but commit add-tag-filtering -m "Add tag filter" --changes <id>,<id>  # Commit specific files
+but push add-tag-filtering                                 # Push branch to remote
+but pr new add-tag-filtering -F /tmp/pr.md                 # Create PR from file
+```
+
+**Creating pull requests:**
+
+Use `but pr new <branch>` — NOT `gh pr create`. The `but` command handles authentication via SSH (which is configured), while `gh` may have expired tokens.
+
+- **Non-interactive mode:** Must provide one of: `-m` (message), `-F` (file), or `-t` (default/auto).
+- **Recommended: use `-F <file>`** — Write PR title and description to a temp file, then pass it. First line = title, rest = body. This avoids shell escaping issues with `-m`.
+- `-t` (default) uses the commit message(s) as title/description automatically.
+
+```bash
+# Option 1: Write to temp file (recommended for multi-line descriptions)
+# First line = PR title, remaining lines = PR body
+cat > /tmp/pr.md << 'EOF'
+Fix tag page header showing undefined
+
+- Fix tag page displaying "Tag #undefined" in the header
+- Switch from deprecated .data to accessor pattern
+EOF
+but pr new my-branch -F /tmp/pr.md
+
+# Option 2: Use default commit message as PR content
+but pr new my-branch -t
+
+# Option 3: Inline message (single line only, avoid special chars)
+but pr new my-branch -m "Fix: resolve undefined tag in header"
 ```
 
 **Key rules:**
 
-- Use `but` for all write operations (commit, branch, push). Read-only git commands (`git log`, `git diff`) are fine.
+- Use `but` for all write operations (commit, branch, push, PRs). Read-only git commands (`git log`, `git diff`) are fine.
 - Commit early and often -- GitButler makes editing history trivial (`squash`, `absorb`, `reword`).
 - **ALWAYS use `--changes <id>,<id>` to commit only the specific files you changed.** Never commit without `--changes` — omitting it commits ALL uncommitted changes (including unrelated files from other tools or branches). Run `but status --json` first to get the correct file IDs.
 - Keep branches focused: one theme/feature per branch.
