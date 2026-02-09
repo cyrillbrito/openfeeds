@@ -1,19 +1,17 @@
 import { BetterFetchError } from '@better-fetch/fetch';
 import { attemptAsync } from '@repo/shared/utils';
-import { createFileRoute, Link, redirect, useNavigate } from '@tanstack/solid-router';
+import { createFileRoute, Link, useNavigate } from '@tanstack/solid-router';
 import { CircleX } from 'lucide-solid';
 import posthog from 'posthog-js';
 import { createSignal, Show } from 'solid-js';
 import { Card } from '~/components/Card';
 import { Loader } from '~/components/Loader';
 import { authClient } from '~/lib/auth-client';
+import { guestMiddleware } from '~/server/middleware/auth';
 
 export const Route = createFileRoute('/reset-password')({
-  beforeLoad: async () => {
-    const { data } = await authClient.getSession();
-    if (data?.user) {
-      throw redirect({ to: '/' });
-    }
+  server: {
+    middleware: [guestMiddleware],
   },
   validateSearch: (search): { token?: string; error?: string } => {
     return {

@@ -24,6 +24,19 @@ export const authMiddleware = createMiddleware().server(async ({ request, next }
 });
 
 /**
+ * Server middleware for guest-only pages (signin, signup, forgot-password, reset-password)
+ * Redirects authenticated users to the app root
+ */
+export const guestMiddleware = createMiddleware().server(async ({ next }) => {
+  const headers = getRequestHeaders();
+  const session = await auth.api.getSession({ headers });
+  if (session) {
+    throw redirect({ to: '/' });
+  }
+  return next();
+});
+
+/**
  * Request middleware for API route handlers (createFileRoute server.handlers)
  * Returns 401 Unauthorized if not authenticated
  */
