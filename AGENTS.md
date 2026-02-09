@@ -186,6 +186,31 @@ export function getDbConfig(): DbConfig {
 4. **Init once at startup** - Before any imports that use the config
 5. **Fail fast** - Accessing config before init throws immediately
 
+## Version Control (GitButler)
+
+**This repo uses GitButler workspace mode. Use `but` commands instead of `git` for all write operations.**
+
+Load the `but` skill for full command reference and workflows.
+
+**Always group changes into a relevant branch.** Before committing, check if a branch already exists for the type of work you're doing (`but status --json`). If one exists, commit there. If not, create a new branch (`but branch new <name>`).
+
+**Example workflow:**
+
+```bash
+but status --json                                          # Check existing branches
+but branch new add-tag-filtering                           # Create branch if needed
+# ... make changes ...
+but status --json                                          # Get file/change IDs
+but commit add-tag-filtering -m "Add tag filter" --changes <id>,<id>  # Commit specific files
+```
+
+**Key rules:**
+
+- Use `but` for all write operations (commit, branch, push). Read-only git commands (`git log`, `git diff`) are fine.
+- Commit early and often -- GitButler makes editing history trivial (`squash`, `absorb`, `reword`).
+- **ALWAYS use `--changes <id>,<id>` to commit only the specific files you changed.** Never commit without `--changes` — omitting it commits ALL uncommitted changes (including unrelated files from other tools or branches). Run `but status --json` first to get the correct file IDs.
+- Keep branches focused: one theme/feature per branch.
+
 ## Code Quality
 
 - Never modify tsconfig or use `// @ts-ignore`
