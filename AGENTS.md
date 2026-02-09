@@ -236,6 +236,7 @@ but pr new my-branch -m "Fix: resolve undefined tag in header"
 
 - Use `but` for all write operations (commit, branch, push, PRs). Read-only git commands (`git log`, `git diff`) are fine.
 - Commit early and often -- GitButler makes editing history trivial (`squash`, `absorb`, `reword`).
+- **Never use `but amend` or `but absorb` unless explicitly asked.** Always create new commits. This preserves history visibility so changes can be reviewed incrementally.
 - **ALWAYS use `--changes <id>,<id>` to commit only the specific files you changed.** Never commit without `--changes` — omitting it commits ALL uncommitted changes (including unrelated files from other tools or branches). Run `but status --json` first to get the correct file IDs.
 - Keep branches focused: one theme/feature per branch.
 
