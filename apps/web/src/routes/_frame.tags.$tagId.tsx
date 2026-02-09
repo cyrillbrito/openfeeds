@@ -137,7 +137,7 @@ function TagArticles() {
 
   return (
     <>
-      <Header title={tag()?.name || `Tag #${tagId()}`} />
+      <Header title={tag() ? `Tag #${tag()!.name}` : 'Tag'} />
 
       <div class="mx-auto w-full max-w-2xl px-2 py-3 sm:p-6 xl:max-w-3xl">
         <p class="text-base-content-gray">Articles from feeds tagged with this label</p>
