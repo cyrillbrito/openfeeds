@@ -8,8 +8,7 @@
     "preview": "vite preview",
     "test": "vitest run",
     "start": "bun .output/server/index.mjs",
-    "check-types": "tsc --noEmit",
-    "docker:publish": "docker build -f ./Dockerfile -t ghcr.io/cyrillbrito/openfeeds-web:latest ../.. && docker push ghcr.io/cyrillbrito/openfeeds-web:latest"
+    "check-types": "tsc --noEmit"
   },
   "dependencies": {
     "@electric-sql/client": "^1.5.1",
