@@ -191,10 +191,10 @@ function FeedsComponent() {
               <div class="grid gap-3">
                 <For each={filteredFeeds()}>
                   {(feed) => (
-                    <Card class="overflow-hidden transition-shadow hover:shadow-md">
+                    <Card class="transition-shadow hover:shadow-md">
                       <div class="relative">
                         {/* Actions Dropdown - Top Right */}
-                        <div class="absolute top-0 right-0 z-10">
+                        <div class="absolute top-0 right-0">
                           <Dropdown
                             end
                             btnClasses="btn-circle btn-ghost btn-sm"
