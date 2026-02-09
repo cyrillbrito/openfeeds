@@ -56,9 +56,6 @@
         "WORKER_CONCURRENCY_FEED_DETAILS",
         "WORKER_CONCURRENCY_AUTO_ARCHIVE"
       ]
-    },
-    "docker:publish": {
-      "cache": false
     }
   }
 }
