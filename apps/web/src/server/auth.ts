@@ -28,12 +28,7 @@ export const auth = betterAuth({
   },
   emailVerification: {
     sendVerificationEmail: async ({ user, url }) => {
-      // Rewrite callbackURL to /signin so the user lands on the app (not marketing site)
-      // after clicking the verification link. Better Auth defaults to "/" which the
-      // Cloudflare router sends to the marketing page.
-      const verifyUrl = new URL(url);
-      verifyUrl.searchParams.set('callbackURL', '/signin');
-      await sendVerificationEmail(user.email, verifyUrl.toString());
+      await sendVerificationEmail(user.email, url);
     },
     sendOnSignUp: !env.SIMPLE_AUTH,
   },

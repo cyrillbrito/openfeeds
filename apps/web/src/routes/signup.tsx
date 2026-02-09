@@ -50,6 +50,7 @@ function SignUpPage() {
           email: email(),
           password: password(),
           name: name(),
+          callbackURL: '/signin',
         },
         { throw: true },
       ),
