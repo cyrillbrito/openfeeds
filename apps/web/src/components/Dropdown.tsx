@@ -1,4 +1,4 @@
-import type { JSXElement } from 'solid-js';
+import { createUniqueId, type JSXElement } from 'solid-js';
 import { twMerge } from 'tailwind-merge';
 
 interface DropdownProps {
@@ -9,24 +9,39 @@ interface DropdownProps {
   children: JSXElement;
 }
 
+let counter = 0;
+
 export function Dropdown(props: DropdownProps) {
+  const id = `dropdown-${createUniqueId()}`;
+  const anchor = `--anchor-${++counter}`;
+
+  // Close popover when a menu item is clicked
+  const handleMenuClick = (e: MouseEvent) => {
+    const target = e.target as HTMLElement;
+    if (target.closest('button, a')) {
+      document.getElementById(id)?.hidePopover();
+    }
+  };
+
   return (
-    <div
-      classList={{
-        dropdown: true,
-        'dropdown-end': props.end,
-        'dropdown-top': props.top,
-      }}
-    >
-      <div tabindex="0" role="button" class={twMerge('btn', props.btnClasses)}>
+    <>
+      <button
+        class={twMerge('btn', props.btnClasses)}
+        popovertarget={id}
+        style={{ 'anchor-name': anchor }}
+      >
         {props.btnContent}
-      </div>
+      </button>
       <ul
-        tabindex="0"
-        class="dropdown-content menu bg-base-200 border-base-300 rounded-box z-1 w-52 border shadow"
+        popover="auto"
+        id={id}
+        role="menu"
+        class={`dropdown menu bg-base-200 border-base-300 rounded-box w-52 border p-2 shadow-sm ${props.end ? 'dropdown-end' : ''} ${props.top ? 'dropdown-top' : ''}`}
+        style={{ 'position-anchor': anchor }}
+        onClick={handleMenuClick}
       >
         {props.children}
       </ul>
-    </div>
+    </>
   );
 }

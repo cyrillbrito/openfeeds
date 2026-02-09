@@ -228,6 +228,21 @@ export function MyModal(props: MyModalProps) {
 
 Uses `<Show>` internally - destroys content when closed, fresh state on reopen.
 
+**Dropdown (Popover-based):**
+
+```tsx
+<Dropdown end btnClasses="btn-sm" btnContent={<EllipsisVertical size={20} />}>
+  <li>
+    <button onClick={handleEdit}>Edit</button>
+  </li>
+  <li>
+    <button onClick={handleDelete}>Delete</button>
+  </li>
+</Dropdown>
+```
+
+Uses native Popover API (`popover="auto"`) — renders in browser top-layer, immune to `overflow: hidden` and z-index issues. See `UI_DESIGN.md` "Overlays & Layering" for full rules.
+
 ## API Routes
 
 TanStack Start can expose traditional API routes in `src/routes/api/`. Use for external integrations (e.g., browser extension).

@@ -8,6 +8,7 @@ import { createFileRoute } from '@tanstack/solid-router';
 import { createSignal, Show } from 'solid-js';
 import { Card } from '~/components/Card';
 import { Header } from '~/components/Header';
+import { LazyModal, type ModalController } from '~/components/LazyModal';
 import { $$exportOpml } from '~/entities/feeds.server';
 import { settingsCollection, triggerAutoArchive, useSettings } from '~/entities/settings';
 
@@ -23,7 +24,7 @@ export default function SettingsPage() {
     theme?: 'light' | 'dark' | 'system';
     autoArchiveDays?: number | null;
   }>({});
-  const [showMarkReadDialog, setShowMarkReadDialog] = createSignal(false);
+  let archiveResultModalController!: ModalController;
   const [archiveResult, setArchiveResult] = createSignal<ArchiveResult | null>(null);
   const [isArchiving, setIsArchiving] = createSignal(false);
   const [archiveError, setArchiveError] = createSignal<string | null>(null);
@@ -66,7 +67,7 @@ export default function SettingsPage() {
       setArchiveError(null);
       const result = await triggerAutoArchive();
       setArchiveResult(result);
-      setShowMarkReadDialog(true);
+      archiveResultModalController.open();
     } catch (err) {
       console.error('Failed to trigger auto-archive:', err);
       setArchiveError(err instanceof Error ? err.message : 'Failed to archive');
@@ -269,38 +270,31 @@ export default function SettingsPage() {
         </Show>
 
         {/* Archive Result Dialog */}
-        <Show when={showMarkReadDialog()}>
-          <div class="modal modal-open">
-            <div class="modal-box">
-              <h3 class="mb-4 text-lg font-bold">Archive Results</h3>
-              <Show when={archiveResult()}>
-                <div class="space-y-3">
-                  <div class="stat">
-                    <div class="stat-title">Articles Archived</div>
-                    <div class="stat-value text-2xl">{archiveResult()!.markedCount}</div>
-                  </div>
-                  <div class="stat">
-                    <div class="stat-title">Cutoff Date</div>
-                    <div class="stat-desc">
-                      {new Date(archiveResult()!.cutoffDate).toLocaleString()}
-                    </div>
-                  </div>
+        <LazyModal
+          controller={(c) => (archiveResultModalController = c)}
+          title="Archive Results"
+          onClose={() => setArchiveResult(null)}
+        >
+          <Show when={archiveResult()}>
+            <div class="space-y-3">
+              <div class="stat">
+                <div class="stat-title">Articles Archived</div>
+                <div class="stat-value text-2xl">{archiveResult()!.markedCount}</div>
+              </div>
+              <div class="stat">
+                <div class="stat-title">Cutoff Date</div>
+                <div class="stat-desc">
+                  {new Date(archiveResult()!.cutoffDate).toLocaleString()}
                 </div>
-              </Show>
-              <div class="modal-action">
-                <button
-                  class="btn btn-primary"
-                  onClick={() => {
-                    setShowMarkReadDialog(false);
-                    setArchiveResult(null);
-                  }}
-                >
-                  Close
-                </button>
               </div>
             </div>
+          </Show>
+          <div class="modal-action">
+            <button class="btn btn-primary" onClick={() => archiveResultModalController.close()}>
+              Close
+            </button>
           </div>
-        </Show>
+        </LazyModal>
       </div>
     </>
   );
