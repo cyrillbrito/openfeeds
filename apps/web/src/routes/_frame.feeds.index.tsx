@@ -188,7 +188,7 @@ function FeedsComponent() {
                 </div>
               }
             >
-              <div class="grid gap-3">
+              <div class="grid w-full gap-3">
                 <For each={filteredFeeds()}>
                   {(feed) => (
                     <Card class="transition-shadow hover:shadow-md">
