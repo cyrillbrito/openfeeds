@@ -18,6 +18,7 @@ on:
 
 jobs:
   build:
+    name: Build ${{ matrix.app }}
     runs-on: ubuntu-latest
     permissions:
       contents: read
