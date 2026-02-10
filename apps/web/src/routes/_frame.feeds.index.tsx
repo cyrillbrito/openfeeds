@@ -14,6 +14,7 @@ import { FeedIllustration } from '~/components/Icons';
 import { ImportOpmlModal } from '~/components/ImportOpmlModal';
 import { type ModalController } from '~/components/LazyModal';
 import { CenterLoader } from '~/components/Loader';
+import { useFeedTags } from '~/entities/feed-tags';
 import { useFeeds } from '~/entities/feeds';
 import { useTags } from '~/entities/tags';
 import { getTagDotColor } from '~/utils/tagColors';
@@ -31,6 +32,7 @@ export const Route = createFileRoute('/_frame/feeds/')({
 
 function FeedsComponent() {
   const feedsQuery = useFeeds();
+  const feedTagsQuery = useFeedTags();
   const tagsQuery = useTags();
   const navigate = Route.useNavigate();
   const search = Route.useSearch();
@@ -263,30 +265,38 @@ function FeedsComponent() {
                             )}
 
                             {/* Tags */}
-                            <Show when={feed.tags && feed.tags.length > 0}>
-                              <div class="mb-3 flex flex-wrap gap-1.5">
-                                <For each={feed.tags}>
-                                  {(tagId) => {
-                                    const tag = tagsQuery.data?.find((t) => t.id === tagId);
-                                    if (tag) {
-                                      return (
-                                        <Link
-                                          to="/tags/$tagId"
-                                          params={{ tagId: tag.id.toString() }}
-                                        >
-                                          <div class="badge badge-sm gap-1.5 transition-all hover:brightness-90">
-                                            <ColorIndicator class={getTagDotColor(tag.color)} />
-                                            <span>{tag.name}</span>
-                                          </div>
-                                        </Link>
-                                      );
-                                    } else {
-                                      return <></>;
-                                    }
-                                  }}
-                                </For>
-                              </div>
-                            </Show>
+                            {(() => {
+                              const feedTagIds = () =>
+                                (feedTagsQuery.data ?? [])
+                                  .filter((ft) => ft.feedId === feed.id)
+                                  .map((ft) => ft.tagId);
+                              return (
+                                <Show when={feedTagIds().length > 0}>
+                                  <div class="mb-3 flex flex-wrap gap-1.5">
+                                    <For each={feedTagIds()}>
+                                      {(tagId) => {
+                                        const tag = tagsQuery.data?.find((t) => t.id === tagId);
+                                        if (tag) {
+                                          return (
+                                            <Link
+                                              to="/tags/$tagId"
+                                              params={{ tagId: tag.id.toString() }}
+                                            >
+                                              <div class="badge badge-sm gap-1.5 transition-all hover:brightness-90">
+                                                <ColorIndicator class={getTagDotColor(tag.color)} />
+                                                <span>{tag.name}</span>
+                                              </div>
+                                            </Link>
+                                          );
+                                        } else {
+                                          return <></>;
+                                        }
+                                      }}
+                                    </For>
+                                  </div>
+                                </Show>
+                              );
+                            })()}
 
                             {/* Links */}
                             <div class="flex flex-wrap gap-3 text-xs">

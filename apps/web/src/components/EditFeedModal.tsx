@@ -1,7 +1,9 @@
 import type { Feed } from '@repo/domain/client';
+import { createId } from '@repo/shared/utils';
+import { eq, useLiveQuery } from '@tanstack/solid-db';
 import { Link } from '@tanstack/solid-router';
 import { createEffect, createMemo, createSignal, Match, Show, Suspense, Switch } from 'solid-js';
-import { feedsCollection } from '~/entities/feeds';
+import { feedTagsCollection } from '~/entities/feed-tags';
 import { useTags } from '~/entities/tags';
 import { LazyModal, type ModalController } from './LazyModal';
 import { MultiSelectTag } from './MultiSelectTag';
@@ -39,23 +41,54 @@ interface EditFeedFormProps {
 function EditFeedForm(props: EditFeedFormProps) {
   const tagsQuery = useTags();
 
+  const feedTagsQuery = useLiveQuery((q) =>
+    q
+      .from({ feedTag: feedTagsCollection })
+      .where(({ feedTag }) => eq(feedTag.feedId, props.feed.id)),
+  );
+
   const [activeTab, setActiveTab] = createSignal<'tags' | 'rules'>('tags');
   const [selectedTagIds, setSelectedTagIds] = createSignal<string[]>([]);
 
-  // Initialize selected tags when component is created
+  // Initialize selected tags from the feed-tags collection
   createEffect(() => {
-    setSelectedTagIds([...props.feed.tags]);
+    const feedTags = feedTagsQuery.data ?? [];
+    setSelectedTagIds(feedTags.map((ft) => ft.tagId));
+  });
+
+  const originalTagIds = createMemo(() => {
+    const feedTags = feedTagsQuery.data ?? [];
+    return feedTags.map((ft) => ft.tagId);
   });
 
   const handleUpdateTags = () => {
-    feedsCollection.update(props.feed.id, (draft) => {
-      draft.tags = selectedTagIds();
-    });
+    const currentIds = new Set(selectedTagIds());
+    const originalIds = new Set(originalTagIds());
+    const feedTags = feedTagsQuery() ?? [];
+
+    // Delete removed tags
+    const toDelete = feedTags.filter((ft) => !currentIds.has(ft.tagId));
+    if (toDelete.length > 0) {
+      feedTagsCollection.delete(toDelete.map((ft) => ft.id));
+    }
+
+    // Insert new tags
+    const toInsert = [...currentIds].filter((tagId) => !originalIds.has(tagId));
+    if (toInsert.length > 0) {
+      feedTagsCollection.insert(
+        toInsert.map((tagId) => ({
+          id: createId(),
+          userId: '', // Will be set server-side
+          feedId: props.feed.id,
+          tagId,
+        })),
+      );
+    }
   };
 
   const hasTagChanges = createMemo(() => {
     const current = selectedTagIds().slice().sort();
-    const original = props.feed.tags.slice().sort();
+    const original = originalTagIds().slice().sort();
 
     if (current.length !== original.length) return true;
     return current.some((id, index) => id !== original[index]);
@@ -143,7 +176,7 @@ function EditFeedForm(props: EditFeedFormProps) {
                         <button
                           type="button"
                           class="btn btn-ghost btn-sm"
-                          onClick={() => setSelectedTagIds([...props.feed.tags])}
+                          onClick={() => setSelectedTagIds([...originalTagIds()])}
                         >
                           Reset
                         </button>

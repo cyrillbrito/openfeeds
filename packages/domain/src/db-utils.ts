@@ -37,14 +37,10 @@ export function articleDbToApi(dbArticle: DbArticle): Article {
   };
 }
 
-export interface DbFeedWithTags extends DbFeed {
-  feedTags: { tagId: string }[];
-}
-
 /**
  * Convert database feed to API feed format
  */
-export function feedDbToApi(dbFeed: DbFeedWithTags): Feed {
+export function feedDbToApi(dbFeed: DbFeed): Feed {
   return {
     id: dbFeed.id,
     url: dbFeed.url, // webpage URL
@@ -54,7 +50,6 @@ export function feedDbToApi(dbFeed: DbFeedWithTags): Feed {
     description: dbFeed.description,
     createdAt: dbFeed.createdAt.toISOString(),
     lastSyncAt: dbFeed.lastSyncAt?.toISOString() ?? null,
-    tags: dbFeed.feedTags.map((ft) => ft.tagId),
   };
 }
 

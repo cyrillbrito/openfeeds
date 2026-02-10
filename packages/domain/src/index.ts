@@ -3,6 +3,7 @@ export * from './entities/article';
 export * from './entities/article-tag';
 export * from './entities/common';
 export * from './entities/feed';
+export * from './entities/feed-tag';
 export * from './entities/filter-rule';
 export * from './entities/settings';
 export * from './entities/tag';

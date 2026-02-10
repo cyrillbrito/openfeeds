@@ -24,6 +24,7 @@ import { Route as ApiShapesTagsRouteImport } from './routes/api/shapes/tags'
 import { Route as ApiShapesSettingsRouteImport } from './routes/api/shapes/settings'
 import { Route as ApiShapesFilterRulesRouteImport } from './routes/api/shapes/filter-rules'
 import { Route as ApiShapesFeedsRouteImport } from './routes/api/shapes/feeds'
+import { Route as ApiShapesFeedTagsRouteImport } from './routes/api/shapes/feed-tags'
 import { Route as ApiShapesArticlesRouteImport } from './routes/api/shapes/articles'
 import { Route as ApiShapesArticleTagsRouteImport } from './routes/api/shapes/article-tags'
 import { Route as ApiAuthSplatRouteImport } from './routes/api/auth/$'
@@ -108,6 +109,11 @@ const ApiShapesFeedsRoute = ApiShapesFeedsRouteImport.update({
   path: '/api/shapes/feeds',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiShapesFeedTagsRoute = ApiShapesFeedTagsRouteImport.update({
+  id: '/api/shapes/feed-tags',
+  path: '/api/shapes/feed-tags',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiShapesArticlesRoute = ApiShapesArticlesRouteImport.update({
   id: '/api/shapes/articles',
   path: '/api/shapes/articles',
@@ -169,6 +175,7 @@ export interface FileRoutesByFullPath {
   '/api/auth/$': typeof ApiAuthSplatRoute
   '/api/shapes/article-tags': typeof ApiShapesArticleTagsRoute
   '/api/shapes/articles': typeof ApiShapesArticlesRoute
+  '/api/shapes/feed-tags': typeof ApiShapesFeedTagsRoute
   '/api/shapes/feeds': typeof ApiShapesFeedsRoute
   '/api/shapes/filter-rules': typeof ApiShapesFilterRulesRoute
   '/api/shapes/settings': typeof ApiShapesSettingsRoute
@@ -194,6 +201,7 @@ export interface FileRoutesByTo {
   '/api/auth/$': typeof ApiAuthSplatRoute
   '/api/shapes/article-tags': typeof ApiShapesArticleTagsRoute
   '/api/shapes/articles': typeof ApiShapesArticlesRoute
+  '/api/shapes/feed-tags': typeof ApiShapesFeedTagsRoute
   '/api/shapes/feeds': typeof ApiShapesFeedsRoute
   '/api/shapes/filter-rules': typeof ApiShapesFilterRulesRoute
   '/api/shapes/settings': typeof ApiShapesSettingsRoute
@@ -221,6 +229,7 @@ export interface FileRoutesById {
   '/api/auth/$': typeof ApiAuthSplatRoute
   '/api/shapes/article-tags': typeof ApiShapesArticleTagsRoute
   '/api/shapes/articles': typeof ApiShapesArticlesRoute
+  '/api/shapes/feed-tags': typeof ApiShapesFeedTagsRoute
   '/api/shapes/feeds': typeof ApiShapesFeedsRoute
   '/api/shapes/filter-rules': typeof ApiShapesFilterRulesRoute
   '/api/shapes/settings': typeof ApiShapesSettingsRoute
@@ -248,6 +257,7 @@ export interface FileRouteTypes {
     | '/api/auth/$'
     | '/api/shapes/article-tags'
     | '/api/shapes/articles'
+    | '/api/shapes/feed-tags'
     | '/api/shapes/feeds'
     | '/api/shapes/filter-rules'
     | '/api/shapes/settings'
@@ -273,6 +283,7 @@ export interface FileRouteTypes {
     | '/api/auth/$'
     | '/api/shapes/article-tags'
     | '/api/shapes/articles'
+    | '/api/shapes/feed-tags'
     | '/api/shapes/feeds'
     | '/api/shapes/filter-rules'
     | '/api/shapes/settings'
@@ -299,6 +310,7 @@ export interface FileRouteTypes {
     | '/api/auth/$'
     | '/api/shapes/article-tags'
     | '/api/shapes/articles'
+    | '/api/shapes/feed-tags'
     | '/api/shapes/feeds'
     | '/api/shapes/filter-rules'
     | '/api/shapes/settings'
@@ -323,6 +335,7 @@ export interface RootRouteChildren {
   ApiAuthSplatRoute: typeof ApiAuthSplatRoute
   ApiShapesArticleTagsRoute: typeof ApiShapesArticleTagsRoute
   ApiShapesArticlesRoute: typeof ApiShapesArticlesRoute
+  ApiShapesFeedTagsRoute: typeof ApiShapesFeedTagsRoute
   ApiShapesFeedsRoute: typeof ApiShapesFeedsRoute
   ApiShapesFilterRulesRoute: typeof ApiShapesFilterRulesRoute
   ApiShapesSettingsRoute: typeof ApiShapesSettingsRoute
@@ -437,6 +450,13 @@ declare module '@tanstack/solid-router' {
       preLoaderRoute: typeof ApiShapesFeedsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/shapes/feed-tags': {
+      id: '/api/shapes/feed-tags'
+      path: '/api/shapes/feed-tags'
+      fullPath: '/api/shapes/feed-tags'
+      preLoaderRoute: typeof ApiShapesFeedTagsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/shapes/articles': {
       id: '/api/shapes/articles'
       path: '/api/shapes/articles'
@@ -540,6 +560,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiAuthSplatRoute: ApiAuthSplatRoute,
   ApiShapesArticleTagsRoute: ApiShapesArticleTagsRoute,
   ApiShapesArticlesRoute: ApiShapesArticlesRoute,
+  ApiShapesFeedTagsRoute: ApiShapesFeedTagsRoute,
   ApiShapesFeedsRoute: ApiShapesFeedsRoute,
   ApiShapesFilterRulesRoute: ApiShapesFilterRulesRoute,
   ApiShapesSettingsRoute: ApiShapesSettingsRoute,
