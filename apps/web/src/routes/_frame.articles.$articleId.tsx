@@ -1,6 +1,7 @@
 import { eq, useLiveQuery } from '@tanstack/solid-db';
 import { createFileRoute, Link, useRouter } from '@tanstack/solid-router';
 import { Archive, ArrowLeft, Inbox } from 'lucide-solid';
+import posthog from 'posthog-js';
 import { createEffect, createSignal, on, Show, Suspense } from 'solid-js';
 import { ArchiveIconButton } from '~/components/ArchiveIconButton';
 import { ArticleAudioProvider } from '~/components/ArticleAudioContext';
@@ -36,6 +37,27 @@ function ArticleView() {
   const contentExtractedAt = () => article()?.contentExtractedAt;
 
   const [isExtracting, setIsExtracting] = createSignal(false);
+
+  // Track article view when loaded (only once per article view)
+  const [trackedArticleId, setTrackedArticleId] = createSignal<string | null>(null);
+  createEffect(
+    on(
+      () => article()?.id,
+      (id) => {
+        const art = article();
+        if (!id || !art) return;
+        // Only track once per article view
+        if (trackedArticleId() === id) return;
+        setTrackedArticleId(id);
+
+        posthog.capture('articles:article_view', {
+          article_id: id,
+          feed_id: art.feedId,
+          source: 'direct', // Direct view from URL or navigation
+        });
+      },
+    ),
+  );
 
   // Trigger content extraction when article is loaded but content hasn't been extracted yet
   createEffect(

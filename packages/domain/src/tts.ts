@@ -1,8 +1,8 @@
 import { existsSync } from 'node:fs';
 import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
-import { getConfig } from './config';
-import { getConfig } from './config';
+import { trackEvent } from './analytics';
+import { getConfig, getConfig } from './config';
 import { getArticleWithContent } from './entities/article';
 import { type ArticleAudioMetadata, type WordTiming } from './entities/tts.schema';
 import { NotFoundError, TtsNotConfiguredError } from './errors';
@@ -245,6 +245,11 @@ export async function generateArticleAudio(
   // Save timestamps/metadata
   const timestampsPath = getTimestampsPath(userId, articleId);
   await writeFile(timestampsPath, JSON.stringify(metadata, null, 2));
+
+  trackEvent(userId, 'tts:audio_generate', {
+    article_id: articleId,
+    duration_ms: Math.round(duration * 1000),
+  });
 
   return metadata;
 }

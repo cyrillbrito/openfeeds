@@ -69,6 +69,16 @@ function SignUpPage() {
     }
 
     if (result?.token) {
+      // Identify user for PostHog (signup event tracked server-side)
+      const session = await authClient.getSession();
+      if (session.data?.user) {
+        posthog.identify(session.data.user.id, {
+          email: session.data.user.email,
+          name: session.data.user.name,
+          created_at: session.data.user.createdAt,
+        });
+      }
+
       // Redirect to original page or default to root (which will smart-redirect)
       const redirectTo = search()?.redirect || '/';
       void navigate({ to: redirectTo, replace: true });

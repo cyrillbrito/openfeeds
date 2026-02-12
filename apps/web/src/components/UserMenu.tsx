@@ -1,5 +1,6 @@
 import { Link } from '@tanstack/solid-router';
 import { ChevronsUpDown, LogOut, Monitor, Moon, Settings, Sun } from 'lucide-solid';
+import posthog from 'posthog-js';
 import { Suspense } from 'solid-js';
 import { authClient } from '~/lib/auth-client';
 import { useTheme } from '~/providers/theme';
@@ -45,6 +46,7 @@ export function UserMenu() {
   const handleSignOut = async () => {
     try {
       await authClient.signOut();
+      posthog.reset();
       window.location.href = '/signin';
     } catch (error) {
       console.error('Sign out error:', error);

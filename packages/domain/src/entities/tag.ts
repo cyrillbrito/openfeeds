@@ -1,6 +1,7 @@
 import { getDb, tags } from '@repo/db';
 import { attemptAsync, createId } from '@repo/shared/utils';
 import { and, eq, sql } from 'drizzle-orm';
+import { trackEvent } from '../analytics';
 import { tagDbToApi } from '../db-utils';
 import { assert, ConflictError, NotFoundError, UnexpectedError } from '../errors';
 import type { CreateTag, Tag, UpdateTag } from './tag.schema';
@@ -64,6 +65,11 @@ export async function createTag(data: CreateTag & { id?: string }, userId: strin
   const newTag = dbResult[0];
   assert(newTag, 'Created tag must exist');
 
+  trackEvent(userId, 'tags:tag_create', {
+    tag_id: newTag.id,
+    color: newTag.color ?? 'default',
+  });
+
   return tagDbToApi(newTag);
 }
 
@@ -113,4 +119,6 @@ export async function deleteTag(id: string, userId: string): Promise<void> {
   await getTagById(id, userId);
 
   await db.delete(tags).where(and(eq(tags.id, id), eq(tags.userId, userId)));
+
+  trackEvent(userId, 'tags:tag_delete', { tag_id: id });
 }

@@ -56,6 +56,15 @@ function SignInPage() {
       return;
     }
 
+    // Identify user for PostHog (signin event tracked server-side)
+    const session = await authClient.getSession();
+    if (session.data?.user) {
+      posthog.identify(session.data.user.id, {
+        email: session.data.user.email,
+        name: session.data.user.name,
+      });
+    }
+
     // Redirect to original page or default to root (which will smart-redirect)
     const redirectTo = search()?.redirect || '/';
     void navigate({ to: redirectTo, replace: true });
