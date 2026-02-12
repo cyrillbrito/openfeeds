@@ -1,10 +1,11 @@
 import { existsSync } from 'node:fs';
 import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
+import { trackEvent } from './analytics';
 import { getConfig } from './config';
 import { getArticleWithContent } from './entities/article';
 import { type ArticleAudioMetadata, type WordTiming } from './entities/tts.schema';
-import { NotFoundError } from './errors';
+import { NotFoundError, TtsNotConfiguredError } from './errors';
 
 // Re-export client-safe types
 export * from './entities/tts.schema';
@@ -24,14 +25,22 @@ interface UnrealSpeechTimestamp {
 }
 
 /**
- * Get the audio directory path for a user
+ * Check if TTS feature is properly configured.
+ * Returns true if both dataPath and API key are set.
+ */
+export function isTtsConfigured(): boolean {
+  const config = getConfig();
+  return Boolean(config.dataPath && config.unrealSpeechApiKey);
+}
+
+/**
+ * Get the audio directory path for a user.
+ * Throws TtsNotConfiguredError if dataPath is not set.
  */
 function getAudioDir(userId: string): string {
   const dataPath = getConfig().dataPath;
   if (!dataPath) {
-    throw new Error(
-      'dataPath is not configured. Set dataPath in initDomain() to use TTS features.',
-    );
+    throw new TtsNotConfiguredError();
   }
   return join(dataPath, 'audio', userId);
 }
@@ -135,10 +144,11 @@ export async function generateArticleAudio(
   userId: string,
   options?: { voice?: string },
 ): Promise<ArticleAudioMetadata> {
-  const apiKey = getConfig().unrealSpeechApiKey;
-  if (!apiKey) {
-    throw new Error('UNREAL_SPEECH_API_KEY is not configured');
+  const config = getConfig();
+  if (!config.dataPath || !config.unrealSpeechApiKey) {
+    throw new TtsNotConfiguredError();
   }
+  const apiKey = config.unrealSpeechApiKey;
 
   // Check if audio already exists
   if (articleAudioExists(userId, articleId)) {
