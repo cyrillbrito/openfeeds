@@ -1,7 +1,11 @@
 import type { WordTiming } from '@repo/domain/client';
 import { Headphones, Loader2, Pause, Play } from 'lucide-solid';
-import { createEffect, createSignal, onCleanup, onMount, Show } from 'solid-js';
-import { $$generateArticleAudio, $$getArticleAudio } from '~/entities/article-audio.server';
+import { createEffect, createResource, createSignal, onCleanup, onMount, Show } from 'solid-js';
+import {
+  $$generateArticleAudio,
+  $$getArticleAudio,
+  $$isTtsAvailable,
+} from '~/entities/article-audio.server';
 import { useArticleAudio } from './ArticleAudioContext';
 
 interface ArticleAudioPlayerProps {
@@ -15,6 +19,10 @@ export function ArticleAudioPlayer(props: ArticleAudioPlayerProps) {
   const [duration, setDuration] = createSignal<number>(0);
   const [currentTime, setCurrentTime] = createSignal<number>(0);
   const [error, setError] = createSignal<string | null>(null);
+
+  // Check if TTS is available on the server
+  const [ttsAvailable] = createResource(() => $$isTtsAvailable());
+  const isTtsAvailable = () => ttsAvailable()?.available ?? false;
 
   let audioRef: HTMLAudioElement | undefined;
   let animationFrameId: number | undefined;
@@ -156,6 +164,11 @@ export function ArticleAudioPlayer(props: ArticleAudioPlayerProps) {
     const state = audio.audioState();
     return state === 'ready' || state === 'playing' || state === 'paused';
   };
+
+  // Don't render if TTS is not configured on the server
+  if (ttsAvailable.loading || !isTtsAvailable()) {
+    return null;
+  }
 
   return (
     <div

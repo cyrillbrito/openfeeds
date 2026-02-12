@@ -4,6 +4,14 @@ import { z } from 'zod';
 import { authMiddleware } from '~/server/middleware/auth';
 
 /**
+ * Check if TTS feature is available (properly configured on the server).
+ * Use this to conditionally show/hide TTS UI elements.
+ */
+export const $$isTtsAvailable = createServerFn({ method: 'GET' }).handler(() => {
+  return { available: ttsDomain.isTtsConfigured() };
+});
+
+/**
  * Check if audio exists for an article and get metadata.
  *
  * Returns metadata and a URL to the streaming endpoint.
