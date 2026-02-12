@@ -1,6 +1,7 @@
 import { ClientOnly, createFileRoute, Link, Outlet, useLocation } from '@tanstack/solid-router';
 import { BookmarkPlus, Inbox, Library, Plus, Search } from 'lucide-solid';
-import { createEffect, For, onMount, Suspense } from 'solid-js';
+import posthog from 'posthog-js';
+import { createEffect, For, on, onMount, Suspense } from 'solid-js';
 import { AddFeedModal } from '~/components/AddFeedModal';
 import { ColorIndicator } from '~/components/ColorIndicator';
 import { type ModalController } from '~/components/LazyModal';
@@ -9,6 +10,7 @@ import { SaveArticleModal } from '~/components/SaveArticleModal';
 import { TagModal } from '~/components/TagModal';
 import { UserMenu } from '~/components/UserMenu';
 import { useTags } from '~/entities/tags';
+import { authClient } from '~/lib/auth-client';
 import { authMiddleware } from '~/server/middleware/auth.ts';
 import { getTagDotColor } from '~/utils/tagColors';
 
@@ -23,6 +25,22 @@ function FrameLayout() {
   let addFeedModalController!: ModalController;
   let saveArticleModalController!: ModalController;
   const location = useLocation();
+  const session = authClient.useSession();
+
+  // Identify user for PostHog when session is available
+  createEffect(
+    on(
+      () => session().data?.user,
+      (user) => {
+        if (user) {
+          posthog.identify(user.id, {
+            email: user.email,
+            name: user.name,
+          });
+        }
+      },
+    ),
+  );
 
   // Close drawer on navigation (mobile only) - runs only on client
   onMount(() => {
