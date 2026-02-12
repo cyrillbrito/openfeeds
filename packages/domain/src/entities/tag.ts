@@ -65,7 +65,7 @@ export async function createTag(data: CreateTag & { id?: string }, userId: strin
   const newTag = dbResult[0];
   assert(newTag, 'Created tag must exist');
 
-  trackEvent(userId, 'tags:label_create', {
+  trackEvent(userId, 'tags:tag_create', {
     tag_id: newTag.id,
     color: newTag.color ?? 'default',
   });
@@ -120,5 +120,5 @@ export async function deleteTag(id: string, userId: string): Promise<void> {
 
   await db.delete(tags).where(and(eq(tags.id, id), eq(tags.userId, userId)));
 
-  trackEvent(userId, 'tags:label_delete', { tag_id: id });
+  trackEvent(userId, 'tags:tag_delete', { tag_id: id });
 }

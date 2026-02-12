@@ -79,7 +79,7 @@ export async function createFeed(
   await enqueueFeedSync(userId, feedId);
 
   // Track feed creation (server-side for reliability)
-  trackEvent(userId, 'feeds:subscription_create', {
+  trackEvent(userId, 'feeds:feed_create', {
     feed_id: feedId,
     feed_url: data.url,
     source: 'manual',
@@ -130,7 +130,7 @@ export async function deleteFeed(id: string, userId: string): Promise<void> {
 
   await db.delete(feeds).where(and(eq(feeds.id, id), eq(feeds.userId, userId)));
 
-  trackEvent(userId, 'feeds:subscription_delete', {
+  trackEvent(userId, 'feeds:feed_delete', {
     feed_id: id,
   });
 }

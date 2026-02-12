@@ -94,18 +94,18 @@ These events are tracked in `packages/domain` functions for reliability.
 
 #### Feed Management
 
-| Event                       | Properties                                | Location            |
-| --------------------------- | ----------------------------------------- | ------------------- |
-| `feeds:subscription_create` | `feed_id`, `feed_url`, `source`           | `createFeed()`      |
-| `feeds:subscription_delete` | `feed_id`                                 | `deleteFeed()`      |
-| `feeds:opml_import`         | `feed_count`, `tag_count`, `failed_count` | `importOpmlFeeds()` |
+| Event               | Properties                                | Location            |
+| ------------------- | ----------------------------------------- | ------------------- |
+| `feeds:feed_create` | `feed_id`, `feed_url`, `source`           | `createFeed()`      |
+| `feeds:feed_delete` | `feed_id`                                 | `deleteFeed()`      |
+| `feeds:opml_import` | `feed_count`, `tag_count`, `failed_count` | `importOpmlFeeds()` |
 
 #### Tag Management
 
-| Event               | Properties        | Location      |
-| ------------------- | ----------------- | ------------- |
-| `tags:label_create` | `tag_id`, `color` | `createTag()` |
-| `tags:label_delete` | `tag_id`          | `deleteTag()` |
+| Event             | Properties        | Location      |
+| ----------------- | ----------------- | ------------- |
+| `tags:tag_create` | `tag_id`, `color` | `createTag()` |
+| `tags:tag_delete` | `tag_id`          | `deleteTag()` |
 
 #### Filter Rules
 
@@ -209,18 +209,18 @@ Call `posthog.reset()` on logout.
 
 ### 1. Growth Dashboard
 
-| Metric                   | Query                                             |
-| ------------------------ | ------------------------------------------------- |
-| Daily Active Users (DAU) | Unique users with any event                       |
-| New signups              | `auth:account_create` count                       |
-| Feed subscriptions       | `feeds:subscription_create` count                 |
-| Net feed growth          | `subscription_create` - `subscription_delete`     |
+| Metric                   | Query                                 |
+| ------------------------ | ------------------------------------- |
+| Daily Active Users (DAU) | Unique users with any event           |
+| New signups              | `auth:account_create` count           |
+| Feed subscriptions       | `feeds:feed_create` count             |
+| Net feed growth          | `feed_create` - `feed_delete`         |
 
 ### 2. Engagement Funnel
 
 ```
 auth:account_create
-  -> feeds:subscription_create (within 1 day)
+  -> feeds:feed_create (within 1 day)
     -> articles:article_view (within 7 days)
       -> 5+ article_view events (within 7 days)
         -> Return Day 2+
@@ -228,12 +228,12 @@ auth:account_create
 
 ### 3. Feature Adoption
 
-| Feature      | Event                  | Target |
-| ------------ | ---------------------- | ------ |
-| Tags         | `tags:label_create`    | 30%    |
-| Filter Rules | `filters:rule_create`  | 10%    |
-| Audio/TTS    | `tts:audio_generate`   | 5%     |
-| OPML Import  | `feeds:opml_import`    | 20%    |
+| Feature      | Event                 | Target |
+| ------------ | --------------------- | ------ |
+| Tags         | `tags:tag_create`     | 30%    |
+| Filter Rules | `filters:rule_create` | 10%    |
+| Audio/TTS    | `tts:audio_generate`  | 5%     |
+| OPML Import  | `feeds:opml_import`   | 20%    |
 
 ### 4. Retention Cohorts
 

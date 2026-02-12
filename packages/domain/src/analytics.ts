@@ -23,12 +23,12 @@ export interface ServerAnalyticsEventMap {
   };
 
   // Feed Management
-  'feeds:subscription_create': {
+  'feeds:feed_create': {
     feed_id: string;
     feed_url: string;
     source: 'manual' | 'opml' | 'discovery';
   };
-  'feeds:subscription_delete': {
+  'feeds:feed_delete': {
     feed_id: string;
   };
   'feeds:opml_import': {
@@ -38,11 +38,11 @@ export interface ServerAnalyticsEventMap {
   };
 
   // Tag Management
-  'tags:label_create': {
+  'tags:tag_create': {
     tag_id: string;
     color: string;
   };
-  'tags:label_delete': {
+  'tags:tag_delete': {
     tag_id: string;
   };
 
