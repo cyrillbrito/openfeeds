@@ -35,6 +35,16 @@ export class UnauthorizedError extends Error {
   }
 }
 
+/**
+ * Thrown when TTS feature is requested but not configured.
+ * User-friendly message - safe to display to end users.
+ */
+export class TtsNotConfiguredError extends Error {
+  constructor() {
+    super('Text-to-speech is not available. Please contact the administrator.');
+  }
+}
+
 export function assert(condition: unknown, msg?: string): asserts condition {
   if (!condition) {
     throw new AssertionError(msg);
