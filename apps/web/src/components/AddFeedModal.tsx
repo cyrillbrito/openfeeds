@@ -2,6 +2,7 @@ import type { DiscoveredFeed } from '@repo/domain/client';
 import { createId } from '@repo/shared/utils';
 import { CircleAlert } from 'lucide-solid';
 import { createSignal, For, Show } from 'solid-js';
+import { feedTagsCollection } from '~/entities/feed-tags';
 import { feedsCollection } from '~/entities/feeds';
 import { $$discoverFeeds } from '~/entities/feeds.server';
 import { useTags } from '~/entities/tags';
@@ -78,9 +79,10 @@ function AddFeedForm(props: AddFeedFormProps) {
 
   const handleAddFeed = (feed: DiscoveredFeed) => {
     const tags = feedTagSelections()[feed.url] || selectedTags();
+    const feedId = createId();
 
     feedsCollection.insert({
-      id: createId(),
+      id: feedId,
       url: feed.url,
       feedUrl: feed.url,
       title: feed.title || feed.url,
@@ -88,8 +90,18 @@ function AddFeedForm(props: AddFeedFormProps) {
       icon: null,
       createdAt: new Date().toISOString(),
       lastSyncAt: null,
-      tags,
     });
+
+    if (tags.length > 0) {
+      feedTagsCollection.insert(
+        tags.map((tagId) => ({
+          id: createId(),
+          userId: '', // Will be set server-side
+          feedId,
+          tagId,
+        })),
+      );
+    }
 
     setAddedFeeds((prev) => new Set([...prev, feed.url]));
 
@@ -100,9 +112,10 @@ function AddFeedForm(props: AddFeedFormProps) {
 
   const handleAddManually = () => {
     const url = feedUrl().trim();
+    const feedId = createId();
 
     feedsCollection.insert({
-      id: createId(),
+      id: feedId,
       url,
       feedUrl: url,
       title: url,
@@ -110,8 +123,19 @@ function AddFeedForm(props: AddFeedFormProps) {
       icon: null,
       createdAt: new Date().toISOString(),
       lastSyncAt: null,
-      tags: selectedTags(),
     });
+
+    const tags = selectedTags();
+    if (tags.length > 0) {
+      feedTagsCollection.insert(
+        tags.map((tagId) => ({
+          id: createId(),
+          userId: '', // Will be set server-side
+          feedId,
+          tagId,
+        })),
+      );
+    }
 
     props.onClose();
   };

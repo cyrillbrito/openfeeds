@@ -9,7 +9,6 @@ export const FeedSchema = z.object({
   icon: z.string().nullable(),
   createdAt: z.iso.datetime(),
   lastSyncAt: z.iso.datetime().nullable(),
-  tags: z.array(z.string()),
 });
 export type Feed = z.infer<typeof FeedSchema>;
 
@@ -23,7 +22,6 @@ export const UpdateFeedSchema = z.object({
   description: z.string().nullable().optional(),
   url: z.url().optional(),
   icon: z.string().nullable().optional(),
-  tags: z.array(z.string()).optional(),
 });
 export type UpdateFeed = z.infer<typeof UpdateFeedSchema>;
 

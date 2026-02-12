@@ -1,8 +1,8 @@
-import { feeds, feedTags, getDb, type DbInsertFeed } from '@repo/db';
+import { feeds, getDb, type DbInsertFeed } from '@repo/db';
 import { discoverFeeds } from '@repo/discovery/server';
 import { attemptAsync, createId } from '@repo/shared/utils';
 import { and, eq } from 'drizzle-orm';
-import { feedDbToApi, type DbFeedWithTags } from '../db-utils';
+import { feedDbToApi } from '../db-utils';
 import { assert, BadRequestError, ConflictError, NotFoundError, UnexpectedError } from '../errors';
 import { enqueueFeedDetail, enqueueFeedSync } from '../queues';
 import type { CreateFeed, DiscoveredFeed, Feed, UpdateFeed } from './feed.schema';
@@ -12,31 +12,21 @@ export * from './feed.schema';
 
 export async function getAllFeeds(userId: string): Promise<Feed[]> {
   const db = getDb();
-  const feedsWithTags = await db.query.feeds.findMany({
+  const allFeeds = await db.query.feeds.findMany({
     where: eq(feeds.userId, userId),
-    with: {
-      feedTags: {
-        columns: { tagId: true },
-      },
-    },
   });
 
-  return feedsWithTags.map(feedDbToApi);
+  return allFeeds.map(feedDbToApi);
 }
 
 /**
- * Get feed by ID with tags
+ * Get feed by ID
  * Used for business logic that needs a single feed
  */
 export async function getFeedById(id: string, userId: string): Promise<Feed> {
   const db = getDb();
   const feed = await db.query.feeds.findFirst({
     where: and(eq(feeds.id, id), eq(feeds.userId, userId)),
-    with: {
-      feedTags: {
-        columns: { tagId: true },
-      },
-    },
   });
 
   if (!feed) {
@@ -87,12 +77,7 @@ export async function createFeed(
   await enqueueFeedDetail(userId, feedId);
   await enqueueFeedSync(userId, feedId);
 
-  const dbFeedWithTags: DbFeedWithTags = {
-    ...newFeed,
-    feedTags: [],
-  };
-
-  return feedDbToApi(dbFeedWithTags);
+  return feedDbToApi(newFeed);
 }
 
 export async function updateFeed(id: string, data: UpdateFeed, userId: string): Promise<Feed> {
@@ -118,20 +103,6 @@ export async function updateFeed(id: string, data: UpdateFeed, userId: string): 
       .update(feeds)
       .set(feedUpdateData)
       .where(and(eq(feeds.id, id), eq(feeds.userId, userId)));
-  }
-
-  if (data.tags !== undefined) {
-    await db.delete(feedTags).where(eq(feedTags.feedId, id));
-
-    if (data.tags.length > 0) {
-      const tagAssociations = data.tags.map((tagId: string) => ({
-        id: createId(),
-        userId,
-        feedId: id,
-        tagId,
-      }));
-      await db.insert(feedTags).values(tagAssociations);
-    }
   }
 
   // Fetch and return the updated feed with consistent query structure
