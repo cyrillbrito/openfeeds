@@ -1,8 +1,8 @@
 import { existsSync } from 'node:fs';
 import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
-import { getConfig } from './config';
-import { getConfig } from './config';
+import { trackEvent } from './analytics';
+import { getConfig, getConfig } from './config';
 import { getArticleWithContent } from './entities/article';
 import { type ArticleAudioMetadata, type WordTiming } from './entities/tts.schema';
 import { NotFoundError, TtsNotConfiguredError } from './errors';
