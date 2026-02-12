@@ -1,6 +1,7 @@
 import { articles, feeds, filterRules, getDb } from '@repo/db';
 import { attemptAsync, createId } from '@repo/shared/utils';
 import { and, eq } from 'drizzle-orm';
+import { trackEvent } from '../analytics';
 import { filterRuleDbToApi } from '../db-utils';
 import { assert, NotFoundError, UnexpectedError } from '../errors';
 import {
@@ -85,6 +86,11 @@ export async function createFilterRule(
 
   const newRule = createResult[0];
   assert(newRule, 'Created filter rule must exist');
+
+  trackEvent(userId, 'filters:rule_create', {
+    feed_id: feedId,
+    operator: newRule.operator,
+  });
 
   return filterRuleDbToApi(newRule);
 }

@@ -2,6 +2,7 @@ import { feeds, feedTags, getDb, tags } from '@repo/db';
 import { attemptAsync, createId } from '@repo/shared/utils';
 import { eq } from 'drizzle-orm';
 import { parseOpml } from 'feedsmith';
+import { trackEvent } from './analytics';
 import { assert } from './errors';
 import { logger } from './logger';
 import { enqueueFeedDetail, enqueueFeedSync } from './queues';
@@ -209,6 +210,15 @@ export async function importOpmlFeeds(opmlContent: string, userId: string): Prom
       });
       failed.push(feed.title);
     }
+  }
+
+  // Track OPML import (server-side for reliability)
+  if (imported > 0) {
+    trackEvent(userId, 'feeds:opml_import', {
+      feed_count: imported,
+      tag_count: Object.keys(tagLookup).length - existingTags.length, // New tags created
+      failed_count: failed.length,
+    });
   }
 
   return {

@@ -2,6 +2,7 @@ import { feeds, getDb, type DbInsertFeed } from '@repo/db';
 import { discoverFeeds } from '@repo/discovery/server';
 import { attemptAsync, createId } from '@repo/shared/utils';
 import { and, eq } from 'drizzle-orm';
+import { trackEvent } from '../analytics';
 import { feedDbToApi } from '../db-utils';
 import { assert, BadRequestError, ConflictError, NotFoundError, UnexpectedError } from '../errors';
 import { enqueueFeedDetail, enqueueFeedSync } from '../queues';
@@ -77,6 +78,13 @@ export async function createFeed(
   await enqueueFeedDetail(userId, feedId);
   await enqueueFeedSync(userId, feedId);
 
+  // Track feed creation (server-side for reliability)
+  trackEvent(userId, 'feeds:subscription_create', {
+    feed_id: feedId,
+    feed_url: data.url,
+    source: 'manual',
+  });
+
   return feedDbToApi(newFeed);
 }
 
@@ -121,6 +129,10 @@ export async function deleteFeed(id: string, userId: string): Promise<void> {
   }
 
   await db.delete(feeds).where(and(eq(feeds.id, id), eq(feeds.userId, userId)));
+
+  trackEvent(userId, 'feeds:subscription_delete', {
+    feed_id: id,
+  });
 }
 
 export async function discoverRssFeeds(url: string): Promise<DiscoveredFeed[]> {

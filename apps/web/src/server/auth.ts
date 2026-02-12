@@ -1,13 +1,26 @@
 import { getDb } from '@repo/db';
-import { createSettings, sendPasswordResetEmail, sendVerificationEmail } from '@repo/domain';
+import { createSettings, sendPasswordResetEmail, sendVerificationEmail, trackEvent } from '@repo/domain';
 import { betterAuth } from 'better-auth';
 import { drizzleAdapter } from 'better-auth/adapters/drizzle';
+import { createAuthMiddleware } from 'better-auth/api';
 import { tanstackStartCookies } from 'better-auth/tanstack-start';
 import { env } from '~/env';
 
 export const auth = betterAuth({
   database: drizzleAdapter(getDb(), { provider: 'pg' }),
   trustedOrigins: [env.CLIENT_DOMAIN],
+  hooks: {
+    after: createAuthMiddleware(async (ctx) => {
+      const newSession = ctx.context.newSession;
+      if (!newSession) return;
+
+      if (ctx.path === '/sign-up/email') {
+        trackEvent(newSession.user.id, 'auth:account_create', { method: 'email' });
+      } else if (ctx.path === '/sign-in/email') {
+        trackEvent(newSession.user.id, 'auth:session_create', { method: 'email' });
+      }
+    }),
+  },
   databaseHooks: {
     user: {
       create: {

@@ -246,5 +246,10 @@ export async function generateArticleAudio(
   const timestampsPath = getTimestampsPath(userId, articleId);
   await writeFile(timestampsPath, JSON.stringify(metadata, null, 2));
 
+  trackEvent(userId, 'tts:audio_generate', {
+    article_id: articleId,
+    duration_ms: Math.round(duration * 1000),
+  });
+
   return metadata;
 }
