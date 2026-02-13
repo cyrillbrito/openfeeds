@@ -3,10 +3,10 @@
   "main": "src/index.ts",
   "type": "module",
   "scripts": {
-    "dev": "bun run --hot src/index.ts",
-    "start": "bun run src/index.ts",
+    "dev": "bun --env-file=../../.env run --hot src/index.ts",
+    "start": "bun --env-file=../../.env run src/index.ts",
     "check-types": "tsc --noEmit",
-    "benchmark": "bun run src/benchmark/index.ts"
+    "benchmark": "bun --env-file=../../.env run src/benchmark/index.ts"
   },
   "dependencies": {
     "@repo/db": "workspace:*",

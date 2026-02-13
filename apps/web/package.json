@@ -3,11 +3,11 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "vite dev --port 3000",
-    "build": "vite build",
-    "preview": "vite preview",
+    "dev": "bun --env-file=../../.env vite dev --port 3000",
+    "build": "bun --env-file=../../.env vite build",
+    "preview": "bun --env-file=../../.env vite preview",
     "test": "vitest run",
-    "start": "bun .output/server/index.mjs",
+    "start": "bun --env-file=../../.env .output/server/index.mjs",
     "check-types": "tsc --noEmit"
   },
   "dependencies": {

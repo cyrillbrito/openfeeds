@@ -3,7 +3,7 @@
   "main": "src/index.ts",
   "type": "module",
   "scripts": {
-    "migrate": "bun src/index.ts"
+    "migrate": "bun --env-file=../../.env src/index.ts"
   },
   "dependencies": {
     "@repo/db": "workspace:*",
