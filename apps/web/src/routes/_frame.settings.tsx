@@ -52,9 +52,10 @@ export default function SettingsPage() {
     if (!currentSettings) return;
 
     const changes = formData();
-    if (changes.autoArchiveDays !== undefined) {
+    const { autoArchiveDays } = changes;
+    if (autoArchiveDays !== undefined) {
       settingsCollection.update(currentSettings.userId, (draft) => {
-        draft.autoArchiveDays = changes.autoArchiveDays!;
+        draft.autoArchiveDays = autoArchiveDays;
       });
     }
 
