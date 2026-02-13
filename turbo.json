@@ -9,7 +9,7 @@
       "env": [
         "VITE_*",
         "BETTER_AUTH_SECRET",
-        "CLIENT_DOMAIN",
+        "TRUSTED_ORIGINS",
         "DATABASE_URL",
         "DATA_PATH",
         "ELECTRIC_URL",

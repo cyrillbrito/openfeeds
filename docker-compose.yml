@@ -61,7 +61,7 @@ services:
     ports:
       - '3000:80'
     environment:
-      - CLIENT_DOMAIN=$CLIENT_DOMAIN
+      - TRUSTED_ORIGINS=$TRUSTED_ORIGINS
       - DATABASE_URL=postgresql://postgres:postgres@postgres:5432/openfeeds
       - ELECTRIC_URL=http://electric:3000
       - BETTER_AUTH_SECRET=$BETTER_AUTH_SECRET
