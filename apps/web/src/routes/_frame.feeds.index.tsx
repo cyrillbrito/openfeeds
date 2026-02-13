@@ -1,16 +1,7 @@
 import type { Feed } from '@repo/domain/client';
 import { debounce } from '@solid-primitives/scheduled';
 import { createFileRoute, Link } from '@tanstack/solid-router';
-import {
-  CircleAlert,
-  CloudDownload,
-  EllipsisVertical,
-  Plus,
-  RefreshCw,
-  Search,
-  Trash2,
-  TriangleAlert,
-} from 'lucide-solid';
+import { CircleAlert, CloudDownload, EllipsisVertical, Plus, Search } from 'lucide-solid';
 import { createMemo, createSignal, For, Match, Show, Switch } from 'solid-js';
 import { AddFeedModal } from '~/components/AddFeedModal';
 import { Card } from '~/components/Card';
@@ -210,7 +201,15 @@ function FeedsComponent() {
               <div class="grid gap-3">
                 <For each={filteredFeeds()}>
                   {(feed) => (
-                    <Card class="transition-shadow hover:shadow-md">
+                    <Card
+                      class={`transition-shadow hover:shadow-md ${
+                        feed.syncStatus === 'broken'
+                          ? 'border-error/40'
+                          : feed.syncStatus === 'failing'
+                            ? 'border-warning/40'
+                            : ''
+                      }`}
+                    >
                       <div class="relative">
                         {/* Actions Dropdown - Top Right */}
                         <div class="absolute top-0 right-0">
@@ -229,6 +228,24 @@ function FeedsComponent() {
                                 Edit Feed
                               </button>
                             </li>
+                            <Show
+                              when={feed.syncStatus === 'failing' || feed.syncStatus === 'broken'}
+                            >
+                              <li>
+                                <button
+                                  onClick={() => {
+                                    feedsCollection.update(feed.id, (draft) => {
+                                      draft.syncStatus = 'ok';
+                                      draft.syncFailCount = 0;
+                                      draft.syncError = null;
+                                    });
+                                    $$retryFeed({ data: { id: feed.id } });
+                                  }}
+                                >
+                                  Retry Sync
+                                </button>
+                              </li>
+                            </Show>
                             <div class="divider my-0"></div>
                             <li>
                               <button
@@ -263,7 +280,7 @@ function FeedsComponent() {
 
                           {/* Feed Content */}
                           <div class="min-w-0 flex-1">
-                            <div class="mb-1.5">
+                            <div class="mb-1.5 flex items-center gap-2">
                               <Link
                                 to="/feeds/$feedId"
                                 params={{ feedId: feed.id.toString() }}
@@ -273,53 +290,16 @@ function FeedsComponent() {
                                   {feed.title}
                                 </h3>
                               </Link>
-                            </div>
-
-                            <Show
-                              when={feed.syncStatus === 'failing' || feed.syncStatus === 'broken'}
-                            >
-                              <div class="mb-3 flex items-center gap-2">
-                                <TriangleAlert
-                                  size={14}
-                                  class={
-                                    feed.syncStatus === 'broken'
-                                      ? 'text-error shrink-0'
-                                      : 'text-warning shrink-0'
-                                  }
-                                />
-                                <span class="text-base-content/60 text-xs">
-                                  {feed.syncStatus === 'broken'
-                                    ? 'Sync broken — no longer syncing'
-                                    : `${feed.syncFailCount} sync failure${feed.syncFailCount !== 1 ? 's' : ''}`}
+                              <Show
+                                when={feed.syncStatus === 'failing' || feed.syncStatus === 'broken'}
+                              >
+                                <span
+                                  class={`badge badge-xs ${feed.syncStatus === 'broken' ? 'badge-error' : 'badge-warning'}`}
+                                >
+                                  {feed.syncStatus === 'broken' ? 'Broken' : 'Failing'}
                                 </span>
-                                <button
-                                  class="btn btn-ghost btn-xs"
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    feedsCollection.update(feed.id, (draft) => {
-                                      draft.syncStatus = 'ok';
-                                      draft.syncFailCount = 0;
-                                      draft.syncError = null;
-                                    });
-                                    $$retryFeed({ data: { id: feed.id } });
-                                  }}
-                                >
-                                  <RefreshCw size={12} />
-                                  Retry
-                                </button>
-                                <button
-                                  class="btn btn-ghost btn-xs text-error"
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    setFeedToDelete(feed);
-                                    deleteFeedModalController.open();
-                                  }}
-                                >
-                                  <Trash2 size={12} />
-                                  Delete
-                                </button>
-                              </div>
-                            </Show>
+                              </Show>
+                            </div>
 
                             {feed.description && (
                               <p class="text-base-content/70 mb-3 line-clamp-2 text-sm leading-relaxed">
