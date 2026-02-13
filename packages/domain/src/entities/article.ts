@@ -3,7 +3,8 @@ import { fetchArticleContent } from '@repo/readability/server';
 import { createId } from '@repo/shared/utils';
 import { and, count, desc, eq, inArray, isNull, like, lt, or, sql } from 'drizzle-orm';
 import { articleDbToApi } from '../db-utils';
-import { BadRequestError, NotFoundError } from '../errors';
+import { BadRequestError, LimitExceededError, NotFoundError } from '../errors';
+import { FREE_TIER_LIMITS } from '../limits';
 import type {
   Article,
   ArticleQuery,
@@ -126,6 +127,20 @@ function isYouTubeUrl(url: string | null): boolean {
   }
 }
 
+/**
+ * Check how many content extractions a user has performed in the last hour.
+ * Uses the `contentExtractedAt` column as a natural extraction timestamp.
+ */
+async function countRecentExtractions(userId: string): Promise<number> {
+  const db = getDb();
+  const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000);
+  const [result] = await db
+    .select({ count: count() })
+    .from(articles)
+    .where(and(eq(articles.userId, userId), sql`${articles.contentExtractedAt} >= ${oneHourAgo}`));
+  return result?.count ?? 0;
+}
+
 export async function getArticleWithContent(
   id: string,
   userId: string,
@@ -143,6 +158,14 @@ export async function getArticleWithContent(
   let description = article.description;
 
   if (!article.contentExtractedAt && article.url && !isYouTubeUrl(article.url)) {
+    // Check extraction rate limit
+    const recentExtractions = await countRecentExtractions(userId);
+    if (recentExtractions >= FREE_TIER_LIMITS.extractionsPerHour) {
+      // Don't throw - just skip extraction silently and return RSS content
+      const apiArticle = articleDbToApi(article);
+      return { ...apiArticle, cleanContent: null };
+    }
+
     try {
       const extracted = await fetchArticleContent(article.url);
       cleanContent = extracted.content ?? null;
@@ -198,6 +221,12 @@ export async function extractArticleContent(id: string, userId: string): Promise
   // Nothing to extract from
   if (!article.url || isYouTubeUrl(article.url)) {
     return;
+  }
+
+  // Check extraction rate limit
+  const recentExtractions = await countRecentExtractions(userId);
+  if (recentExtractions >= FREE_TIER_LIMITS.extractionsPerHour) {
+    return; // Silently skip - user can try again later
   }
 
   try {
@@ -302,6 +331,16 @@ export async function markManyArticlesArchived(
 
 export async function createArticle(data: CreateArticleFromUrl, userId: string): Promise<Article> {
   const db = getDb();
+
+  // Check free-tier saved article limit (only user-created articles, not feed-synced)
+  const [savedCount] = await db
+    .select({ count: count() })
+    .from(articles)
+    .where(and(eq(articles.userId, userId), isNull(articles.feedId)));
+  if (savedCount && savedCount.count >= FREE_TIER_LIMITS.savedArticles) {
+    throw new LimitExceededError('saved articles', FREE_TIER_LIMITS.savedArticles);
+  }
+
   const articleId = data.id ?? createId();
   const now = new Date();
 

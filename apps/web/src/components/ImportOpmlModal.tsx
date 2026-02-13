@@ -1,3 +1,4 @@
+import { getLimitErrorMessage, isLimitExceededError } from '@repo/domain/client';
 import { CircleAlert, CircleCheck, TriangleAlert } from 'lucide-solid';
 import { createSignal, Match, Show, Switch } from 'solid-js';
 import { $$importOpml } from '~/entities/feeds.server';
@@ -50,7 +51,11 @@ function ImportOpmlForm(props: ImportOpmlFormProps) {
       }
     } catch (err) {
       console.error('Failed to import OPML:', err);
-      setImportError(err instanceof Error ? err.message : 'Failed to import OPML');
+      if (isLimitExceededError(err)) {
+        setImportError(getLimitErrorMessage(err));
+      } else {
+        setImportError(err instanceof Error ? err.message : 'Failed to import OPML');
+      }
     } finally {
       setIsImporting(false);
     }

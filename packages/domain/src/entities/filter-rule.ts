@@ -1,9 +1,10 @@
 import { articles, feeds, filterRules, getDb } from '@repo/db';
 import { attemptAsync, createId } from '@repo/shared/utils';
-import { and, eq } from 'drizzle-orm';
+import { and, count, eq } from 'drizzle-orm';
 import { trackEvent } from '../analytics';
 import { filterRuleDbToApi } from '../db-utils';
-import { assert, NotFoundError, UnexpectedError } from '../errors';
+import { assert, LimitExceededError, NotFoundError, UnexpectedError } from '../errors';
+import { FREE_TIER_LIMITS } from '../limits';
 import {
   shouldMarkAsRead,
   type CreateFilterRuleApi,
@@ -62,6 +63,15 @@ export async function createFilterRule(
 
   if (!feed) {
     throw new NotFoundError();
+  }
+
+  // Check free-tier filter rule limit
+  const [ruleCount] = await db
+    .select({ count: count() })
+    .from(filterRules)
+    .where(eq(filterRules.userId, userId));
+  if (ruleCount && ruleCount.count >= FREE_TIER_LIMITS.filterRules) {
+    throw new LimitExceededError('filter rules', FREE_TIER_LIMITS.filterRules);
   }
 
   // Create the filter rule
