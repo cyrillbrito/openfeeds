@@ -1,16 +1,20 @@
 {
   "$schema": "https://turbo.build/schema.json",
   "ui": "tui",
+  "globalDependencies": [".env"],
   "tasks": {
     "build": {
       "dependsOn": ["^build"],
-      "inputs": ["$TURBO_DEFAULT$", ".env"],
       "outputs": ["dist/**"],
       "env": [
         "VITE_*",
         "BETTER_AUTH_SECRET",
-        "DB_PATH",
-        "ENABLE_CORS",
+        "CLIENT_DOMAIN",
+        "DATABASE_URL",
+        "DATA_PATH",
+        "ELECTRIC_URL",
+        "ELECTRIC_SOURCE_ID",
+        "ELECTRIC_SOURCE_SECRET",
         "POSTHOG_PUBLIC_KEY",
         "REDIS_HOST",
         "REDIS_PORT",
@@ -18,8 +22,8 @@
         "RESEND_API_KEY",
         "RESEND_AUDIENCE_ID",
         "SIMPLE_AUTH",
-        "ELECTRIC_SOURCE_ID",
-        "ELECTRIC_SOURCE_SECRET",
+        "UNREAL_SPEECH_API_KEY",
+        "TTS_DEFAULT_VOICE",
         "WORKER_CONCURRENCY_ORCHESTRATOR",
         "WORKER_CONCURRENCY_FEED_SYNC",
         "WORKER_CONCURRENCY_FEED_DETAILS",
@@ -35,27 +39,7 @@
     "dev": {
       "dependsOn": ["@repo/emails#build"],
       "cache": false,
-      "persistent": true,
-      "inputs": ["$TURBO_DEFAULT$", ".env"],
-      "env": [
-        "VITE_*",
-        "BETTER_AUTH_SECRET",
-        "DB_PATH",
-        "ENABLE_CORS",
-        "POSTHOG_PUBLIC_KEY",
-        "REDIS_HOST",
-        "REDIS_PORT",
-        "REDIS_PASSWORD",
-        "RESEND_API_KEY",
-        "RESEND_AUDIENCE_ID",
-        "SIMPLE_AUTH",
-        "ELECTRIC_SOURCE_ID",
-        "ELECTRIC_SOURCE_SECRET",
-        "WORKER_CONCURRENCY_ORCHESTRATOR",
-        "WORKER_CONCURRENCY_FEED_SYNC",
-        "WORKER_CONCURRENCY_FEED_DETAILS",
-        "WORKER_CONCURRENCY_AUTO_ARCHIVE"
-      ]
+      "persistent": true
     }
   }
 }

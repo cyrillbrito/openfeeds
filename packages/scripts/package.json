@@ -2,8 +2,8 @@
   "name": "@repo/scripts",
   "type": "module",
   "scripts": {
-    "create-user": "bun src/create-user.ts",
-    "queue-feed-details": "bun src/queue-feed-details.ts"
+    "create-user": "bun --env-file=../../.env src/create-user.ts",
+    "queue-feed-details": "bun --env-file=../../.env src/queue-feed-details.ts"
   },
   "dependencies": {
     "@repo/db": "workspace:*",
