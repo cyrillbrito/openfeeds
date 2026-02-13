@@ -50,6 +50,9 @@ export function feedDbToApi(dbFeed: DbFeed): Feed {
     description: dbFeed.description,
     createdAt: dbFeed.createdAt.toISOString(),
     lastSyncAt: dbFeed.lastSyncAt?.toISOString() ?? null,
+    syncStatus: dbFeed.syncStatus as Feed['syncStatus'],
+    syncError: dbFeed.syncError,
+    syncFailCount: dbFeed.syncFailCount,
   };
 }
 

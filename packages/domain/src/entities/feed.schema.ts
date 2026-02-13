@@ -1,5 +1,8 @@
 import { z } from 'zod';
 
+export const SyncStatusSchema = z.enum(['ok', 'failing', 'broken']);
+export type SyncStatus = z.infer<typeof SyncStatusSchema>;
+
 export const FeedSchema = z.object({
   id: z.string(),
   url: z.string(),
@@ -9,6 +12,9 @@ export const FeedSchema = z.object({
   icon: z.string().nullable(),
   createdAt: z.iso.datetime(),
   lastSyncAt: z.iso.datetime().nullable(),
+  syncStatus: SyncStatusSchema,
+  syncError: z.string().nullable(),
+  syncFailCount: z.number(),
 });
 export type Feed = z.infer<typeof FeedSchema>;
 
