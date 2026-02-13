@@ -1,7 +1,14 @@
 import type { Feed } from '@repo/domain/client';
 import { debounce } from '@solid-primitives/scheduled';
 import { createFileRoute, Link } from '@tanstack/solid-router';
-import { CircleAlert, CloudDownload, EllipsisVertical, Plus, Search } from 'lucide-solid';
+import {
+  CircleAlert,
+  CloudDownload,
+  EllipsisVertical,
+  Plus,
+  Search,
+  TriangleAlert,
+} from 'lucide-solid';
 import { createMemo, createSignal, For, Match, Show, Switch } from 'solid-js';
 import { AddFeedModal } from '~/components/AddFeedModal';
 import { Card } from '~/components/Card';
@@ -59,20 +66,25 @@ function FeedsComponent() {
     setSearchDebounced(newQ);
   }, SEARCH_DEBOUNCE_MS);
 
-  // Filtered feeds based on search query from URL
+  // Filtered feeds based on search query from URL, with broken/failing sorted to top
   const filteredFeeds = createMemo(() => {
     const feeds = feedsQuery.data;
     if (!feeds) return [];
 
+    let result = feeds;
     const query = searchDebounced();
-    if (!query) return feeds;
+    if (query) {
+      result = result.filter(
+        (feed) =>
+          feed.title.toLowerCase().includes(query) ||
+          feed.description?.toLowerCase().includes(query) ||
+          feed.url.toLowerCase().includes(query),
+      );
+    }
 
-    return feeds.filter(
-      (feed) =>
-        feed.title.toLowerCase().includes(query) ||
-        feed.description?.toLowerCase().includes(query) ||
-        feed.url.toLowerCase().includes(query),
-    );
+    // Sort: broken first, then failing, then ok
+    const statusOrder = { broken: 0, failing: 1, ok: 2 };
+    return [...result].sort((a, b) => statusOrder[a.syncStatus] - statusOrder[b.syncStatus]);
   });
 
   return (
@@ -257,6 +269,19 @@ function FeedsComponent() {
                                 </h3>
                               </Link>
                             </div>
+
+                            <Show when={feed.syncStatus !== 'ok'}>
+                              <div
+                                class={`alert alert-sm mb-3 ${feed.syncStatus === 'broken' ? 'alert-error' : 'alert-warning'}`}
+                              >
+                                <TriangleAlert size={16} />
+                                <span class="text-xs">
+                                  {feed.syncStatus === 'broken'
+                                    ? 'Sync broken — this feed is no longer being synced'
+                                    : `Sync issues (${feed.syncFailCount} consecutive failures)`}
+                                </span>
+                              </div>
+                            </Show>
 
                             {feed.description && (
                               <p class="text-base-content/70 mb-3 line-clamp-2 text-sm leading-relaxed">
