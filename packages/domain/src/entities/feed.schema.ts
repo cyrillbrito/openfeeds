@@ -12,9 +12,9 @@ export const FeedSchema = z.object({
   icon: z.string().nullable(),
   createdAt: z.iso.datetime(),
   lastSyncAt: z.iso.datetime().nullable(),
-  syncStatus: SyncStatusSchema,
-  syncError: z.string().nullable(),
-  syncFailCount: z.number(),
+  syncStatus: SyncStatusSchema.default('ok'),
+  syncError: z.string().nullable().default(null),
+  syncFailCount: z.number().default(0),
 });
 export type Feed = z.infer<typeof FeedSchema>;
 

@@ -179,7 +179,12 @@ function FeedArticles() {
 
       <div class="mx-auto w-full max-w-2xl px-2 py-3 sm:p-6 xl:max-w-3xl">
         {/* Sync error banner */}
-        <Show when={currentFeed()?.syncStatus !== 'ok' && currentFeed()}>
+        <Show
+          when={
+            (currentFeed()?.syncStatus === 'failing' || currentFeed()?.syncStatus === 'broken') &&
+            currentFeed()
+          }
+        >
           {(feed) => (
             <div
               class={`alert mb-4 ${feed().syncStatus === 'broken' ? 'alert-error' : 'alert-warning'}`}

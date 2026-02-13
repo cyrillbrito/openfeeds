@@ -84,7 +84,9 @@ function FeedsComponent() {
 
     // Sort: broken first, then failing, then ok
     const statusOrder = { broken: 0, failing: 1, ok: 2 };
-    return [...result].sort((a, b) => statusOrder[a.syncStatus] - statusOrder[b.syncStatus]);
+    return [...result].sort(
+      (a, b) => statusOrder[a.syncStatus ?? 'ok'] - statusOrder[b.syncStatus ?? 'ok'],
+    );
   });
 
   return (
@@ -270,7 +272,9 @@ function FeedsComponent() {
                               </Link>
                             </div>
 
-                            <Show when={feed.syncStatus !== 'ok'}>
+                            <Show
+                              when={feed.syncStatus === 'failing' || feed.syncStatus === 'broken'}
+                            >
                               <div
                                 class={`alert alert-sm mb-3 ${feed.syncStatus === 'broken' ? 'alert-error' : 'alert-warning'}`}
                               >
@@ -278,7 +282,7 @@ function FeedsComponent() {
                                 <span class="text-xs">
                                   {feed.syncStatus === 'broken'
                                     ? 'Sync broken — this feed is no longer being synced'
-                                    : `Sync issues (${feed.syncFailCount} consecutive failures)`}
+                                    : `Sync issues (${feed.syncFailCount} consecutive failure${feed.syncFailCount !== 1 ? 's' : ''})`}
                                 </span>
                               </div>
                             </Show>
