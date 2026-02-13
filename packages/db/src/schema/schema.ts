@@ -26,6 +26,12 @@ export const feeds = pgTable(
     feedUrl: text('feed_url').notNull(),
     icon: text('icon'),
     lastSyncAt: timestamp('last_sync_at'),
+    /** Sync health: 'ok' | 'failing' | 'broken' */
+    syncStatus: text('sync_status').notNull().default('ok'),
+    /** Last sync error message (null when healthy) */
+    syncError: text('sync_error'),
+    /** Consecutive sync failure count */
+    syncFailCount: integer('sync_fail_count').notNull().default(0),
     createdAt: timestamp('created_at').notNull().defaultNow(),
     updatedAt: timestamp('updated_at')
       .$onUpdate(() => new Date())
