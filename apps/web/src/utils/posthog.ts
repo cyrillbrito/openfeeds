@@ -2,7 +2,8 @@ import posthog from 'posthog-js';
 
 export function initPosthog(key: string) {
   posthog.init(key, {
-    api_host: 'https://eu.i.posthog.com',
+    api_host: 'https://ph.openfeeds.app',
+    ui_host: 'https://eu.posthog.com',
     person_profiles: 'identified_only',
   });
 

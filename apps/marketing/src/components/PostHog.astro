@@ -50,7 +50,8 @@ const posthogKey = import.meta.env.PUBLIC_POSTHOG_KEY;
   // posthogKey is injected via define:vars from the frontmatter
   if (posthogKey) {
     posthog.init(posthogKey, {
-      api_host: 'https://eu.i.posthog.com',
+      api_host: 'https://ph.openfeeds.app',
+      ui_host: 'https://eu.posthog.com',
       defaults: '2025-05-24',
       person_profiles: 'identified_only',
     });
