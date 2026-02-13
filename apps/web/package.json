@@ -12,6 +12,7 @@
   },
   "dependencies": {
     "@electric-sql/client": "^1.5.1",
+    "@floating-ui/dom": "^1.7.5",
     "@repo/db": "workspace:*",
     "@repo/discovery": "workspace:*",
     "@repo/domain": "workspace:*",

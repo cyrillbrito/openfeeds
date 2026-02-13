@@ -2,7 +2,7 @@ import type { Feed } from '@repo/domain/client';
 import { createId } from '@repo/shared/utils';
 import { eq, useLiveQuery } from '@tanstack/solid-db';
 import { Link } from '@tanstack/solid-router';
-import { createEffect, createMemo, createSignal, Match, Show, Suspense, Switch } from 'solid-js';
+import { createSignal, Match, Show, Suspense, Switch } from 'solid-js';
 import { feedTagsCollection } from '~/entities/feed-tags';
 import { useTags } from '~/entities/tags';
 import { LazyModal, type ModalController } from './LazyModal';
@@ -48,32 +48,22 @@ function EditFeedForm(props: EditFeedFormProps) {
   );
 
   const [activeTab, setActiveTab] = createSignal<'tags' | 'rules'>('tags');
-  const [selectedTagIds, setSelectedTagIds] = createSignal<string[]>([]);
 
-  // Initialize selected tags from the feed-tags collection
-  createEffect(() => {
+  const currentTagIds = () => (feedTagsQuery.data ?? []).map((ft) => ft.tagId);
+
+  const handleSelectionChange = (newIds: string[]) => {
+    const currentIds = new Set(currentTagIds());
+    const newIdSet = new Set(newIds);
     const feedTags = feedTagsQuery.data ?? [];
-    setSelectedTagIds(feedTags.map((ft) => ft.tagId));
-  });
-
-  const originalTagIds = createMemo(() => {
-    const feedTags = feedTagsQuery.data ?? [];
-    return feedTags.map((ft) => ft.tagId);
-  });
-
-  const handleUpdateTags = () => {
-    const currentIds = new Set(selectedTagIds());
-    const originalIds = new Set(originalTagIds());
-    const feedTags = feedTagsQuery() ?? [];
 
     // Delete removed tags
-    const toDelete = feedTags.filter((ft) => !currentIds.has(ft.tagId));
+    const toDelete = feedTags.filter((ft) => !newIdSet.has(ft.tagId));
     if (toDelete.length > 0) {
       feedTagsCollection.delete(toDelete.map((ft) => ft.id));
     }
 
     // Insert new tags
-    const toInsert = [...currentIds].filter((tagId) => !originalIds.has(tagId));
+    const toInsert = [...newIdSet].filter((tagId) => !currentIds.has(tagId));
     if (toInsert.length > 0) {
       feedTagsCollection.insert(
         toInsert.map((tagId) => ({
@@ -86,16 +76,8 @@ function EditFeedForm(props: EditFeedFormProps) {
     }
   };
 
-  const hasTagChanges = createMemo(() => {
-    const current = selectedTagIds().slice().sort();
-    const original = originalTagIds().slice().sort();
-
-    if (current.length !== original.length) return true;
-    return current.some((id, index) => id !== original[index]);
-  });
-
   return (
-    <div class="space-y-6">
+    <div class="space-y-4">
       {/* Feed Info */}
       <div class="bg-base-200 rounded-lg p-4">
         <div class="flex items-center gap-3">
@@ -141,58 +123,28 @@ function EditFeedForm(props: EditFeedFormProps) {
       </div>
 
       {/* Tab Content */}
-      <div class="min-h-[400px]">
+      <div>
         <Switch>
           <Match when={activeTab() === 'tags'}>
-            <div class="space-y-4">
-              <div>
-                <h3 class="mb-2 text-lg font-semibold">Manage Tags</h3>
-                <p class="text-base-content/70 text-sm">
-                  Assign tags to organize and categorize this feed
-                </p>
-              </div>
-
-              <Suspense fallback={<div class="loading loading-spinner"></div>}>
-                <Show
-                  when={tagsQuery.data && tagsQuery.data.length > 0}
-                  fallback={
-                    <div class="py-8 text-center">
-                      <p class="text-base-content/60 mb-4">No tags available.</p>
-                      <Link to="/tags" class="btn btn-primary btn-sm">
-                        Create Tags
-                      </Link>
-                    </div>
-                  }
-                >
-                  <MultiSelectTag
-                    tags={tagsQuery.data!}
-                    selectedIds={selectedTagIds()}
-                    onSelectionChange={setSelectedTagIds}
-                  />
-
-                  <Show when={hasTagChanges()}>
-                    <div class="border-base-300 flex justify-end border-t pt-4">
-                      <div class="flex gap-2">
-                        <button
-                          type="button"
-                          class="btn btn-ghost btn-sm"
-                          onClick={() => setSelectedTagIds([...originalTagIds()])}
-                        >
-                          Reset
-                        </button>
-                        <button
-                          type="button"
-                          class="btn btn-primary btn-sm"
-                          onClick={handleUpdateTags}
-                        >
-                          Save Tags
-                        </button>
-                      </div>
-                    </div>
-                  </Show>
-                </Show>
-              </Suspense>
-            </div>
+            <Suspense fallback={<div class="loading loading-spinner"></div>}>
+              <Show
+                when={tagsQuery.data && tagsQuery.data.length > 0}
+                fallback={
+                  <div class="py-8 text-center">
+                    <p class="text-base-content/60 mb-4">No tags available.</p>
+                    <Link to="/tags" class="btn btn-primary btn-sm">
+                      Create Tags
+                    </Link>
+                  </div>
+                }
+              >
+                <MultiSelectTag
+                  tags={tagsQuery.data!}
+                  selectedIds={currentTagIds()}
+                  onSelectionChange={handleSelectionChange}
+                />
+              </Show>
+            </Suspense>
           </Match>
           <Match when={activeTab() === 'rules'}>
             <RuleManager feedId={props.feed.id} />

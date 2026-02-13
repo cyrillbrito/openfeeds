@@ -1,9 +1,11 @@
+import { autoUpdate, computePosition, flip, offset, shift, size } from '@floating-ui/dom';
 import type { Tag } from '@repo/domain/client';
 import { autofocus } from '@solid-primitives/autofocus';
-import { Check, Search } from 'lucide-solid';
+import { Check, ChevronDown, Search, Tag as TagIcon } from 'lucide-solid';
 import { createEffect, createSignal, For, onCleanup, Show } from 'solid-js';
 import { getTagDotColor } from '~/utils/tagColors';
 import { ColorIndicator } from './ColorIndicator';
+import { TagBadge } from './TagBadge';
 
 // prevents from being tree-shaken by TS
 void autofocus;
@@ -18,31 +20,47 @@ interface MultiSelectTagProps {
 export function MultiSelectTag(props: MultiSelectTagProps) {
   let triggerRef: HTMLDivElement | undefined;
   let popoverRef: HTMLDivElement | undefined;
+  let cleanupAutoUpdate: (() => void) | undefined;
 
   const [isOpen, setIsOpen] = createSignal(false);
-  const [selectedIds, setSelectedIds] = createSignal(props.selectedIds);
 
-  const selectedTags = () => props.tags.filter((t) => selectedIds().includes(t.id));
+  const selectedTags = () => props.tags.filter((t) => props.selectedIds.includes(t.id));
 
   const updatePosition = () => {
     if (!triggerRef || !popoverRef) return;
-    const bounds = triggerRef.getBoundingClientRect();
-    popoverRef.style.top = `${bounds.bottom + 3}px`;
-    popoverRef.style.left = `${bounds.left}px`;
-    popoverRef.style.width = `${bounds.width}px`;
+    computePosition(triggerRef, popoverRef, {
+      strategy: 'fixed',
+      placement: 'bottom-start',
+      middleware: [
+        offset(3),
+        flip(),
+        shift({ padding: 8 }),
+        size({
+          apply({ rects, elements }) {
+            Object.assign(elements.floating.style, { width: `${rects.reference.width}px` });
+          },
+        }),
+      ],
+    }).then(({ x, y }) => {
+      if (!popoverRef) return;
+      Object.assign(popoverRef.style, { top: `${y}px`, left: `${x}px` });
+    });
   };
 
   const openPopover = () => {
-    if (!popoverRef) return;
+    if (!popoverRef || !triggerRef) return;
     popoverRef.showPopover();
-    updatePosition();
     setIsOpen(true);
+    // Keep position updated while open (handles scroll, resize, layout shifts)
+    cleanupAutoUpdate = autoUpdate(triggerRef, popoverRef, updatePosition);
   };
 
   const closePopover = () => {
     if (!popoverRef) return;
     popoverRef.hidePopover();
     setIsOpen(false);
+    cleanupAutoUpdate?.();
+    cleanupAutoUpdate = undefined;
   };
 
   const togglePopover = () => {
@@ -58,18 +76,28 @@ export function MultiSelectTag(props: MultiSelectTagProps) {
     if (!popoverRef) return;
 
     const handleToggle = (e: ToggleEvent) => {
-      setIsOpen(e.newState === 'open');
+      const nowOpen = e.newState === 'open';
+      setIsOpen(nowOpen);
+      if (!nowOpen) {
+        cleanupAutoUpdate?.();
+        cleanupAutoUpdate = undefined;
+      }
     };
 
     popoverRef.addEventListener('toggle', handleToggle);
-    onCleanup(() => popoverRef?.removeEventListener('toggle', handleToggle));
+    onCleanup(() => {
+      popoverRef?.removeEventListener('toggle', handleToggle);
+      cleanupAutoUpdate?.();
+    });
   });
 
   return (
     <div class="relative">
+      {/* Trigger */}
       <div
         ref={(el) => (triggerRef = el)}
-        class="select flex cursor-pointer items-center overflow-hidden"
+        class="border-base-300 bg-base-100 hover:bg-base-200 flex min-h-12 cursor-pointer items-center rounded-lg border px-3 py-2 transition-colors"
+        classList={{ 'ring-primary/50 ring-2': isOpen() }}
         tabIndex="0"
         role="combobox"
         aria-haspopup="listbox"
@@ -82,16 +110,26 @@ export function MultiSelectTag(props: MultiSelectTagProps) {
           }
         }}
       >
-        <Show when={selectedIds().length <= 3} fallback={<>{selectedIds().length} Selected Tags</>}>
-          <For each={selectedTags()} fallback={<>No tag selected</>}>
-            {(tag) => (
-              <div class="badge badge-sm min-w-2">
-                <ColorIndicator class={getTagDotColor(tag.color)} />
-                <span class="truncate">{tag.name}</span>
-              </div>
-            )}
-          </For>
+        <Show
+          when={selectedTags().length > 0}
+          fallback={
+            <div class="text-base-content/40 flex flex-1 items-center gap-2">
+              <TagIcon size={14} />
+              <span class="text-sm">Select tags...</span>
+            </div>
+          }
+        >
+          <div class="flex flex-1 flex-wrap gap-1.5">
+            <For each={selectedTags()}>
+              {(tag) => <TagBadge name={tag.name} color={tag.color} size="sm" />}
+            </For>
+          </div>
         </Show>
+        <ChevronDown
+          size={16}
+          class="text-base-content/40 ml-2 shrink-0 transition-transform"
+          classList={{ 'rotate-180': isOpen() }}
+        />
       </div>
 
       {/* Popover Dropdown - renders in top-layer */}
@@ -102,11 +140,8 @@ export function MultiSelectTag(props: MultiSelectTagProps) {
       >
         <MultiSelectTagDropdown
           tags={props.tags}
-          selectedIds={selectedIds()}
-          onSelectionChange={(ids) => {
-            setSelectedIds(ids);
-            props.onSelectionChange(ids);
-          }}
+          selectedIds={props.selectedIds}
+          onSelectionChange={props.onSelectionChange}
         />
       </div>
     </div>
@@ -145,7 +180,7 @@ function MultiSelectTagDropdown(props: MultiSelectTagDropdownProps) {
           <Search size={16} />
           <input
             type="text"
-            placeholder="Search..."
+            placeholder="Search tags..."
             autofocus
             value={searchQuery()}
             onInput={(e) => setSearchQuery(e.currentTarget.value)}
@@ -155,11 +190,7 @@ function MultiSelectTagDropdown(props: MultiSelectTagDropdownProps) {
       </Show>
 
       {/* Tag List */}
-      <div
-        role="listbox"
-        aria-multiselectable="true"
-        class="max-h-60 space-y-1 overflow-y-auto py-2"
-      >
+      <div role="listbox" aria-multiselectable="true" class="max-h-60 overflow-y-auto p-1">
         <For
           each={filteredTags()}
           fallback={<div class="text-base-content/60 py-4 text-center text-sm">No tags found</div>}
@@ -172,7 +203,7 @@ function MultiSelectTagDropdown(props: MultiSelectTagDropdownProps) {
                 role="option"
                 aria-selected={isSelected()}
                 tabIndex="0"
-                class="focus:ring-primary/50 m-1 flex cursor-pointer items-center gap-2 rounded p-2 outline-none focus:ring-2"
+                class="focus:ring-primary/50 flex cursor-pointer items-center gap-2.5 rounded-md px-2.5 py-2 outline-none focus:ring-2"
                 classList={{
                   'bg-primary/10': isSelected(),
                   'hover:bg-base-200 focus:bg-base-200': !isSelected(),
@@ -191,7 +222,7 @@ function MultiSelectTagDropdown(props: MultiSelectTagDropdownProps) {
                   </Show>
                 </div>
                 <ColorIndicator class={getTagDotColor(tag.color)} />
-                <div class="flex-1">{tag.name}</div>
+                <div class="flex-1 text-sm">{tag.name}</div>
               </div>
             );
           }}
