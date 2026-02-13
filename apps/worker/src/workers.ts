@@ -63,6 +63,8 @@ export function createSingleFeedSyncWorker() {
       );
       const { userId, feedId } = job.data;
 
+      // Feed sync errors are handled internally (tracked in DB as sync_status/sync_error).
+      // We don't re-throw because a broken feed is an expected scenario, not a worker failure.
       const [syncError] = await attemptAsync(syncSingleFeed(userId, feedId));
 
       if (syncError) {
@@ -73,7 +75,6 @@ export function createSingleFeedSyncWorker() {
           operation: 'single_feed_sync_worker',
           feedId,
         });
-        throw syncError;
       }
     },
     {

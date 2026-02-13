@@ -9,7 +9,7 @@ import {
 import { logger } from '@repo/domain/logger';
 import { sanitizeHtml } from '@repo/readability/sanitize';
 import { attemptAsync, createId } from '@repo/shared/utils';
-import { and, eq, isNull, lt, or } from 'drizzle-orm';
+import { and, eq, isNull, lt, ne, or } from 'drizzle-orm';
 
 // Normalized item structure for our database
 export interface NormalizedFeedItem {
@@ -154,6 +154,8 @@ export async function syncFeedArticles(
 
 const OUTDATED_MIN = 10;
 const LIMIT = 15;
+/** Number of consecutive failures before a feed is marked as broken */
+const BROKEN_THRESHOLD = 3;
 
 /**
  * Sync a single feed by ID.
@@ -195,14 +197,46 @@ export async function syncSingleFeed(userId: string, feedId: string): Promise<vo
       feedTitle: feed.title,
       feedUrl: feed.feedUrl,
     });
+
+    // Track the failure: increment count and update status
+    const newFailCount = feed.syncFailCount + 1;
+    const newStatus = newFailCount >= BROKEN_THRESHOLD ? 'broken' : 'failing';
+    const errorMessage = feedSyncErr instanceof Error ? feedSyncErr.message : String(feedSyncErr);
+
+    const [updateErr] = await attemptAsync(
+      db
+        .update(feeds)
+        .set({
+          lastSyncAt: new Date(),
+          syncStatus: newStatus,
+          syncFailCount: newFailCount,
+          syncError: errorMessage.slice(0, 1000),
+        })
+        .where(eq(feeds.id, feed.id)),
+    );
+    if (updateErr) {
+      logger.error(updateErr, {
+        operation: 'update_feed_sync_failure',
+        feedId: feed.id,
+        feedTitle: feed.title,
+      });
+    }
+    return;
   }
 
-  // Always update lastSyncAt regardless of sync success/failure
+  // Success: reset sync health and update lastSyncAt
   const [updateErr] = await attemptAsync(
-    db.update(feeds).set({ lastSyncAt: new Date() }).where(eq(feeds.id, feed.id)),
+    db
+      .update(feeds)
+      .set({
+        lastSyncAt: new Date(),
+        syncStatus: 'ok',
+        syncFailCount: 0,
+        syncError: null,
+      })
+      .where(eq(feeds.id, feed.id)),
   );
   if (updateErr) {
-    console.error(`Failed to update lastSyncAt for feed ${feed.title}:`, updateErr);
     logger.error(updateErr, {
       operation: 'update_feed_sync_time',
       feedId: feed.id,
@@ -220,6 +254,7 @@ export async function syncOldestFeeds(userId: string): Promise<void> {
   const outdatedDate = new Date(Date.now() - OUTDATED_MIN * 60 * 1000);
   const condition = and(
     eq(feeds.userId, userId),
+    ne(feeds.syncStatus, 'broken'),
     or(isNull(feeds.lastSyncAt), lt(feeds.lastSyncAt, outdatedDate)),
   );
 

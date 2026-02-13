@@ -65,3 +65,10 @@ export const $$deleteFeeds = createServerFn({ method: 'POST' })
   .handler(({ context, data: ids }) => {
     return Promise.all(ids.map((id) => feedsDomain.deleteFeed(id, context.user.id)));
   });
+
+export const $$retryFeed = createServerFn({ method: 'POST' })
+  .middleware([authMiddleware])
+  .inputValidator(z.object({ id: z.string() }))
+  .handler(({ context, data }) => {
+    return feedsDomain.retryFeed(data.id, context.user.id);
+  });

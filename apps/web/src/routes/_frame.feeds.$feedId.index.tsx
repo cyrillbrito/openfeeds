@@ -1,7 +1,7 @@
 import type { Feed } from '@repo/domain/client';
 import { eq, useLiveQuery } from '@tanstack/solid-db';
 import { createFileRoute, Link } from '@tanstack/solid-router';
-import { MoreVertical, Shuffle, Video } from 'lucide-solid';
+import { MoreVertical, Shuffle, TriangleAlert, Video } from 'lucide-solid';
 import { createMemo, createSignal, For, onMount, Show, Suspense } from 'solid-js';
 import { ArticleList, ARTICLES_PER_PAGE } from '~/components/ArticleList';
 import { ArticleListToolbar } from '~/components/ArticleListToolbar';
@@ -17,7 +17,8 @@ import { ReadStatusToggle, type ReadStatus } from '~/components/ReadStatusToggle
 import { ShuffleButton } from '~/components/ShuffleButton';
 import { articlesCollection } from '~/entities/articles';
 import { useFeedTags } from '~/entities/feed-tags';
-import { useFeeds } from '~/entities/feeds';
+import { feedsCollection, useFeeds } from '~/entities/feeds';
+import { $$retryFeed } from '~/entities/feeds.server';
 import { useTags } from '~/entities/tags';
 import { useSessionRead } from '~/providers/session-read';
 import { validateReadStatusSearch } from '~/utils/routing';
@@ -177,6 +178,63 @@ function FeedArticles() {
       </Header>
 
       <div class="mx-auto w-full max-w-2xl px-2 py-3 sm:p-6 xl:max-w-3xl">
+        {/* Sync error notice */}
+        <Show
+          when={
+            (currentFeed()?.syncStatus === 'failing' || currentFeed()?.syncStatus === 'broken') &&
+            currentFeed()
+          }
+        >
+          {(feed) => (
+            <div class="border-base-300 bg-base-200 mb-4 rounded-lg border p-4">
+              <div class="flex items-start gap-3">
+                <TriangleAlert
+                  size={18}
+                  class={`mt-0.5 shrink-0 ${feed().syncStatus === 'broken' ? 'text-error' : 'text-warning'}`}
+                />
+                <div class="min-w-0 flex-1">
+                  <p class="text-sm font-medium">
+                    {feed().syncStatus === 'broken'
+                      ? 'Feed sync is broken'
+                      : 'Feed is experiencing sync issues'}
+                  </p>
+                  <Show when={feed().syncError}>
+                    <p class="text-base-content/60 mt-1 text-xs">{feed().syncError}</p>
+                  </Show>
+                  <p class="text-base-content/40 mt-1 text-xs">
+                    {feed().syncFailCount} consecutive failure
+                    {feed().syncFailCount !== 1 ? 's' : ''}
+                  </p>
+                  <div class="mt-3 flex gap-2">
+                    <button
+                      class="btn btn-outline btn-sm"
+                      onClick={async () => {
+                        feedsCollection.update(feed().id, (draft) => {
+                          draft.syncStatus = 'ok';
+                          draft.syncFailCount = 0;
+                          draft.syncError = null;
+                        });
+                        await $$retryFeed({ data: { id: feed().id } });
+                      }}
+                    >
+                      Retry sync
+                    </button>
+                    <button
+                      class="btn btn-ghost btn-sm text-error"
+                      onClick={() => {
+                        setFeedToDelete(feed());
+                        deleteFeedModalController.open();
+                      }}
+                    >
+                      Delete feed
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+        </Show>
+
         <Show when={currentFeed()}>
           {(feed) => (
             <div class="mb-4 flex items-start gap-4 sm:gap-5">

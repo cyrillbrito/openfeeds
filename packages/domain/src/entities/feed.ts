@@ -135,6 +135,28 @@ export async function deleteFeed(id: string, userId: string): Promise<void> {
   });
 }
 
+/**
+ * Reset a feed's sync error state so the orchestrator picks it up again.
+ * Does NOT immediately sync — the next orchestrator run will handle it.
+ */
+export async function retryFeed(id: string, userId: string): Promise<Feed> {
+  const db = getDb();
+
+  // Verify feed exists and belongs to user
+  await getFeedById(id, userId);
+
+  await db
+    .update(feeds)
+    .set({
+      syncStatus: 'ok',
+      syncFailCount: 0,
+      syncError: null,
+    })
+    .where(and(eq(feeds.id, id), eq(feeds.userId, userId)));
+
+  return getFeedById(id, userId);
+}
+
 export async function discoverRssFeeds(url: string): Promise<DiscoveredFeed[]> {
   const [error, feeds] = await attemptAsync(discoverFeeds(url));
   if (error) {

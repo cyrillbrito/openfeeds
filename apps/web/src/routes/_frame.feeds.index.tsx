@@ -15,7 +15,8 @@ import { ImportOpmlModal } from '~/components/ImportOpmlModal';
 import { type ModalController } from '~/components/LazyModal';
 import { CenterLoader } from '~/components/Loader';
 import { useFeedTags } from '~/entities/feed-tags';
-import { useFeeds } from '~/entities/feeds';
+import { feedsCollection, useFeeds } from '~/entities/feeds';
+import { $$retryFeed } from '~/entities/feeds.server';
 import { useTags } from '~/entities/tags';
 import { getTagDotColor } from '~/utils/tagColors';
 
@@ -59,19 +60,26 @@ function FeedsComponent() {
     setSearchDebounced(newQ);
   }, SEARCH_DEBOUNCE_MS);
 
-  // Filtered feeds based on search query from URL
+  // Filtered feeds based on search query from URL, with broken/failing sorted to top
   const filteredFeeds = createMemo(() => {
     const feeds = feedsQuery.data;
     if (!feeds) return [];
 
+    let result = feeds;
     const query = searchDebounced();
-    if (!query) return feeds;
+    if (query) {
+      result = result.filter(
+        (feed) =>
+          feed.title.toLowerCase().includes(query) ||
+          feed.description?.toLowerCase().includes(query) ||
+          feed.url.toLowerCase().includes(query),
+      );
+    }
 
-    return feeds.filter(
-      (feed) =>
-        feed.title.toLowerCase().includes(query) ||
-        feed.description?.toLowerCase().includes(query) ||
-        feed.url.toLowerCase().includes(query),
+    // Sort: broken first, then failing, then ok
+    const statusOrder = { broken: 0, failing: 1, ok: 2 };
+    return [...result].sort(
+      (a, b) => statusOrder[a.syncStatus ?? 'ok'] - statusOrder[b.syncStatus ?? 'ok'],
     );
   });
 
@@ -193,7 +201,15 @@ function FeedsComponent() {
               <div class="grid gap-3">
                 <For each={filteredFeeds()}>
                   {(feed) => (
-                    <Card class="transition-shadow hover:shadow-md">
+                    <Card
+                      class={`transition-shadow hover:shadow-md ${
+                        feed.syncStatus === 'broken'
+                          ? 'border-error/40'
+                          : feed.syncStatus === 'failing'
+                            ? 'border-warning/40'
+                            : ''
+                      }`}
+                    >
                       <div class="relative">
                         {/* Actions Dropdown - Top Right */}
                         <div class="absolute top-0 right-0">
@@ -212,6 +228,24 @@ function FeedsComponent() {
                                 Edit Feed
                               </button>
                             </li>
+                            <Show
+                              when={feed.syncStatus === 'failing' || feed.syncStatus === 'broken'}
+                            >
+                              <li>
+                                <button
+                                  onClick={() => {
+                                    feedsCollection.update(feed.id, (draft) => {
+                                      draft.syncStatus = 'ok';
+                                      draft.syncFailCount = 0;
+                                      draft.syncError = null;
+                                    });
+                                    $$retryFeed({ data: { id: feed.id } });
+                                  }}
+                                >
+                                  Retry Sync
+                                </button>
+                              </li>
+                            </Show>
                             <div class="divider my-0"></div>
                             <li>
                               <button
@@ -246,7 +280,7 @@ function FeedsComponent() {
 
                           {/* Feed Content */}
                           <div class="min-w-0 flex-1">
-                            <div class="mb-1.5">
+                            <div class="mb-1.5 flex items-center gap-2">
                               <Link
                                 to="/feeds/$feedId"
                                 params={{ feedId: feed.id.toString() }}
@@ -256,6 +290,15 @@ function FeedsComponent() {
                                   {feed.title}
                                 </h3>
                               </Link>
+                              <Show
+                                when={feed.syncStatus === 'failing' || feed.syncStatus === 'broken'}
+                              >
+                                <span
+                                  class={`badge badge-xs ${feed.syncStatus === 'broken' ? 'badge-error' : 'badge-warning'}`}
+                                >
+                                  {feed.syncStatus === 'broken' ? 'Broken' : 'Failing'}
+                                </span>
+                              </Show>
                             </div>
 
                             {feed.description && (

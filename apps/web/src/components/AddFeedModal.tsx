@@ -90,6 +90,9 @@ function AddFeedForm(props: AddFeedFormProps) {
       icon: null,
       createdAt: new Date().toISOString(),
       lastSyncAt: null,
+      syncStatus: 'ok',
+      syncError: null,
+      syncFailCount: 0,
     });
 
     if (tags.length > 0) {
@@ -123,6 +126,9 @@ function AddFeedForm(props: AddFeedFormProps) {
       icon: null,
       createdAt: new Date().toISOString(),
       lastSyncAt: null,
+      syncStatus: 'ok',
+      syncError: null,
+      syncFailCount: 0,
     });
 
     const tags = selectedTags();
