@@ -6,7 +6,9 @@ import {
   CloudDownload,
   EllipsisVertical,
   Plus,
+  RefreshCw,
   Search,
+  Trash2,
   TriangleAlert,
 } from 'lucide-solid';
 import { createMemo, createSignal, For, Match, Show, Switch } from 'solid-js';
@@ -22,7 +24,8 @@ import { ImportOpmlModal } from '~/components/ImportOpmlModal';
 import { type ModalController } from '~/components/LazyModal';
 import { CenterLoader } from '~/components/Loader';
 import { useFeedTags } from '~/entities/feed-tags';
-import { useFeeds } from '~/entities/feeds';
+import { feedsCollection, useFeeds } from '~/entities/feeds';
+import { $$retryFeed } from '~/entities/feeds.server';
 import { useTags } from '~/entities/tags';
 import { getTagDotColor } from '~/utils/tagColors';
 
@@ -275,15 +278,46 @@ function FeedsComponent() {
                             <Show
                               when={feed.syncStatus === 'failing' || feed.syncStatus === 'broken'}
                             >
-                              <div
-                                class={`alert alert-sm mb-3 ${feed.syncStatus === 'broken' ? 'alert-error' : 'alert-warning'}`}
-                              >
-                                <TriangleAlert size={16} />
-                                <span class="text-xs">
+                              <div class="mb-3 flex items-center gap-2">
+                                <TriangleAlert
+                                  size={14}
+                                  class={
+                                    feed.syncStatus === 'broken'
+                                      ? 'text-error shrink-0'
+                                      : 'text-warning shrink-0'
+                                  }
+                                />
+                                <span class="text-base-content/60 text-xs">
                                   {feed.syncStatus === 'broken'
-                                    ? 'Sync broken — this feed is no longer being synced'
-                                    : `Sync issues (${feed.syncFailCount} consecutive failure${feed.syncFailCount !== 1 ? 's' : ''})`}
+                                    ? 'Sync broken — no longer syncing'
+                                    : `${feed.syncFailCount} sync failure${feed.syncFailCount !== 1 ? 's' : ''}`}
                                 </span>
+                                <button
+                                  class="btn btn-ghost btn-xs"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    feedsCollection.update(feed.id, (draft) => {
+                                      draft.syncStatus = 'ok';
+                                      draft.syncFailCount = 0;
+                                      draft.syncError = null;
+                                    });
+                                    $$retryFeed({ data: { id: feed.id } });
+                                  }}
+                                >
+                                  <RefreshCw size={12} />
+                                  Retry
+                                </button>
+                                <button
+                                  class="btn btn-ghost btn-xs text-error"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    setFeedToDelete(feed);
+                                    deleteFeedModalController.open();
+                                  }}
+                                >
+                                  <Trash2 size={12} />
+                                  Delete
+                                </button>
                               </div>
                             </Show>
 

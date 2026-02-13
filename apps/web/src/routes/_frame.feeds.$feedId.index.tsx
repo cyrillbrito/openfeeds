@@ -178,7 +178,7 @@ function FeedArticles() {
       </Header>
 
       <div class="mx-auto w-full max-w-2xl px-2 py-3 sm:p-6 xl:max-w-3xl">
-        {/* Sync error banner */}
+        {/* Sync error notice */}
         <Show
           when={
             (currentFeed()?.syncStatus === 'failing' || currentFeed()?.syncStatus === 'broken') &&
@@ -186,48 +186,50 @@ function FeedArticles() {
           }
         >
           {(feed) => (
-            <div
-              class={`alert mb-4 ${feed().syncStatus === 'broken' ? 'alert-error' : 'alert-warning'}`}
-            >
-              <TriangleAlert size={20} />
-              <div class="flex-1">
-                <p class="font-semibold">
-                  {feed().syncStatus === 'broken'
-                    ? 'Feed sync is broken'
-                    : 'Feed is experiencing sync issues'}
-                </p>
-                <Show when={feed().syncError}>
-                  <p class="mt-1 text-sm opacity-80">{feed().syncError}</p>
-                </Show>
-                <p class="mt-1 text-xs opacity-60">
-                  {feed().syncFailCount} consecutive failure
-                  {feed().syncFailCount !== 1 ? 's' : ''}
-                </p>
-              </div>
-              <div class="flex gap-2">
-                <button
-                  class="btn btn-sm"
-                  onClick={async () => {
-                    // Optimistically reset the local state
-                    feedsCollection.update(feed().id, (draft) => {
-                      draft.syncStatus = 'ok';
-                      draft.syncFailCount = 0;
-                      draft.syncError = null;
-                    });
-                    await $$retryFeed({ data: { id: feed().id } });
-                  }}
-                >
-                  Retry
-                </button>
-                <button
-                  class="btn btn-ghost btn-sm"
-                  onClick={() => {
-                    setFeedToDelete(feed());
-                    deleteFeedModalController.open();
-                  }}
-                >
-                  Delete
-                </button>
+            <div class="border-base-300 bg-base-200 mb-4 rounded-lg border p-4">
+              <div class="flex items-start gap-3">
+                <TriangleAlert
+                  size={18}
+                  class={`mt-0.5 shrink-0 ${feed().syncStatus === 'broken' ? 'text-error' : 'text-warning'}`}
+                />
+                <div class="min-w-0 flex-1">
+                  <p class="text-sm font-medium">
+                    {feed().syncStatus === 'broken'
+                      ? 'Feed sync is broken'
+                      : 'Feed is experiencing sync issues'}
+                  </p>
+                  <Show when={feed().syncError}>
+                    <p class="text-base-content/60 mt-1 text-xs">{feed().syncError}</p>
+                  </Show>
+                  <p class="text-base-content/40 mt-1 text-xs">
+                    {feed().syncFailCount} consecutive failure
+                    {feed().syncFailCount !== 1 ? 's' : ''}
+                  </p>
+                  <div class="mt-3 flex gap-2">
+                    <button
+                      class="btn btn-outline btn-sm"
+                      onClick={async () => {
+                        feedsCollection.update(feed().id, (draft) => {
+                          draft.syncStatus = 'ok';
+                          draft.syncFailCount = 0;
+                          draft.syncError = null;
+                        });
+                        await $$retryFeed({ data: { id: feed().id } });
+                      }}
+                    >
+                      Retry sync
+                    </button>
+                    <button
+                      class="btn btn-ghost btn-sm text-error"
+                      onClick={() => {
+                        setFeedToDelete(feed());
+                        deleteFeedModalController.open();
+                      }}
+                    >
+                      Delete feed
+                    </button>
+                  </div>
+                </div>
               </div>
             </div>
           )}
