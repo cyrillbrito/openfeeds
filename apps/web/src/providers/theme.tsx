@@ -2,6 +2,7 @@ import {
   createContext,
   createEffect,
   createSignal,
+  onCleanup,
   onMount,
   useContext,
   type ParentComponent,
@@ -13,7 +14,7 @@ type ThemeMode = 'light' | 'dark' | 'system';
 interface ThemeContextType {
   theme: () => ThemeMode;
   setTheme: (theme: ThemeMode) => void;
-  actualTheme: () => 'light' | 'dracula';
+  actualTheme: () => 'garden' | 'dracula';
 }
 
 const ThemeContext = createContext<ThemeContextType>();
@@ -21,16 +22,19 @@ const ThemeContext = createContext<ThemeContextType>();
 export const ThemeProvider: ParentComponent = (props) => {
   const [theme, setTheme] = createSignal<ThemeMode>('system');
 
+  // Track system preference reactively so "system" mode updates live
+  const [systemPrefersDark, setSystemPrefersDark] = createSignal(false);
+
   // Get actual theme based on mode and system preference
   const actualTheme = () => {
     const currentTheme = theme();
     if (currentTheme === 'system') {
-      if (isServer) return 'light'; // Default for SSR
-      return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dracula' : 'light';
+      if (isServer) return 'garden' as const; // Default for SSR
+      return systemPrefersDark() ? ('dracula' as const) : ('garden' as const);
     } else if (currentTheme === 'dark') {
-      return 'dracula';
+      return 'dracula' as const;
     } else {
-      return 'light';
+      return 'garden' as const;
     }
   };
 
@@ -40,6 +44,16 @@ export const ThemeProvider: ParentComponent = (props) => {
     if (saved && ['light', 'dark', 'system'].includes(saved)) {
       setTheme(saved);
     }
+
+    // Listen for system theme preference changes
+    const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
+    setSystemPrefersDark(mediaQuery.matches);
+
+    const handler = (e: MediaQueryListEvent) => {
+      setSystemPrefersDark(e.matches);
+    };
+    mediaQuery.addEventListener('change', handler);
+    onCleanup(() => mediaQuery.removeEventListener('change', handler));
   });
 
   // Apply theme to document

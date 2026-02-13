@@ -29,7 +29,10 @@ export function UserMenu() {
 
   const getThemeLabel = () => {
     const current = theme();
-    if (current === 'system') return `System (${actualTheme()})`;
+    if (current === 'system') {
+      const friendly = actualTheme() === 'dracula' ? 'Dark' : 'Light';
+      return `System (${friendly})`;
+    }
     return current.charAt(0).toUpperCase() + current.slice(1);
   };
 

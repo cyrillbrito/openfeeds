@@ -1,5 +1,5 @@
 import { TanStackDevtools } from '@tanstack/solid-devtools';
-import { createRootRoute, HeadContent, Outlet, Scripts } from '@tanstack/solid-router';
+import { createRootRoute, HeadContent, Outlet, ScriptOnce, Scripts } from '@tanstack/solid-router';
 import { TanStackRouterDevtoolsPanel } from '@tanstack/solid-router-devtools';
 import { onMount, Suspense } from 'solid-js';
 import { HydrationScript } from 'solid-js/web';
@@ -55,6 +55,9 @@ function RootComponent() {
   return (
     <html>
       <head>
+        <ScriptOnce>
+          {`(function(){try{var t=localStorage.getItem('theme')||'system';var r=t;if(t==='system'){r=window.matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light';}var d=r==='dark'?'dracula':'garden';document.documentElement.setAttribute('data-theme',d);}catch(e){document.documentElement.setAttribute('data-theme','garden');}})()`}
+        </ScriptOnce>
         <HeadContent />
         <HydrationScript />
       </head>
