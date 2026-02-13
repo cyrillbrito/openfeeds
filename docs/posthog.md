@@ -45,13 +45,13 @@ click, submit, create, view, add, invite, update, delete, remove, start, end, ca
 - Boolean prefix `is_/has_`: `is_bulk`, `has_content`
 - Date suffix `_date/_timestamp`: `created_at`, `sync_timestamp`
 
-### 3. Set Up a Reverse Proxy (Future)
+### 3. Reverse Proxy
 
 A reverse proxy routes events through your domain, bypassing ad-blockers. This typically increases event capture by 10-30%.
 
-**TODO:** Set up managed proxy at `e.openfeeds.com` pointing to PostHog.
+**Done:** Cloudflare Worker proxy at `ph.openfeeds.app` forwarding to PostHog EU.
 
-See: https://posthog.com/docs/advanced/proxy
+See: https://posthog.com/docs/advanced/proxy/cloudflare
 
 ### 4. Filter Out Internal Users
 
@@ -73,7 +73,7 @@ Add filtering for:
 
 ### Configuration
 
-- **Host**: `https://eu.i.posthog.com` (EU data residency)
+- **Host**: `https://ph.openfeeds.app` (Cloudflare Worker proxy → EU data residency)
 - **Person profiles**: `identified_only`
 - **App labels**: Each app registers its source (`web`, `server`, `worker`, `marketing`)
 
@@ -209,12 +209,12 @@ Call `posthog.reset()` on logout.
 
 ### 1. Growth Dashboard
 
-| Metric                   | Query                                 |
-| ------------------------ | ------------------------------------- |
-| Daily Active Users (DAU) | Unique users with any event           |
-| New signups              | `auth:account_create` count           |
-| Feed subscriptions       | `feeds:feed_create` count             |
-| Net feed growth          | `feed_create` - `feed_delete`         |
+| Metric                   | Query                         |
+| ------------------------ | ----------------------------- |
+| Daily Active Users (DAU) | Unique users with any event   |
+| New signups              | `auth:account_create` count   |
+| Feed subscriptions       | `feeds:feed_create` count     |
+| Net feed growth          | `feed_create` - `feed_delete` |
 
 ### 2. Engagement Funnel
 
@@ -316,7 +316,7 @@ The PostHog MCP server can be used to:
   - [x] `tags:tag_create`, `tags:tag_delete` in `tag.ts`
   - [x] `filters:rule_create` in `filter-rule.ts`
   - [x] `audio:audio_generate` in `tts.ts`
-- [ ] Set up reverse proxy
+- [x] Set up reverse proxy (`ph.openfeeds.app` via Cloudflare Worker)
 - [ ] Create Growth Dashboard in PostHog
 - [ ] Create Engagement Funnel in PostHog
 - [ ] Set up retention cohorts
