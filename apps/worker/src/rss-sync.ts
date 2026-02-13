@@ -155,7 +155,7 @@ export async function syncFeedArticles(
 const OUTDATED_MIN = 10;
 const LIMIT = 15;
 /** Number of consecutive failures before a feed is marked as broken */
-const BROKEN_THRESHOLD = 5;
+const BROKEN_THRESHOLD = 3;
 
 /**
  * Sync a single feed by ID.
