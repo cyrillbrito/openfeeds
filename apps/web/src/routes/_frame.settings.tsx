@@ -21,7 +21,6 @@ export default function SettingsPage() {
   const settings = () => settingsQuery.data;
   const [editMode, setEditMode] = createSignal(false);
   const [formData, setFormData] = createSignal<{
-    theme?: 'light' | 'dark' | 'system';
     autoArchiveDays?: number | null;
   }>({});
   let archiveResultModalController!: ModalController;
@@ -53,10 +52,13 @@ export default function SettingsPage() {
     if (!currentSettings) return;
 
     const changes = formData();
-    settingsCollection.update(currentSettings.userId, (draft) => {
-      if (changes.theme !== undefined) draft.theme = changes.theme;
-      if (changes.autoArchiveDays !== undefined) draft.autoArchiveDays = changes.autoArchiveDays;
-    });
+    const { autoArchiveDays } = changes;
+    if (autoArchiveDays !== undefined) {
+      settingsCollection.update(currentSettings.userId, (draft) => {
+        draft.autoArchiveDays = autoArchiveDays;
+      });
+    }
+
     setEditMode(false);
     setFormData({});
   };
@@ -110,7 +112,6 @@ export default function SettingsPage() {
                     class="btn btn-primary btn-sm"
                     onClick={() => {
                       setFormData({
-                        theme: settings()?.theme,
                         autoArchiveDays: settings()?.autoArchiveDays,
                       });
                       setEditMode(true);
@@ -121,10 +122,6 @@ export default function SettingsPage() {
                 </div>
 
                 <div class="space-y-3 text-sm">
-                  <div class="flex justify-between">
-                    <span class="text-base-content-gray">Theme</span>
-                    <span class="capitalize">{settings()!.theme}</span>
-                  </div>
                   <div class="flex justify-between">
                     <span class="text-base-content-gray">Auto-archive after</span>
                     <span>
@@ -157,27 +154,6 @@ export default function SettingsPage() {
                 </div>
 
                 <div class="space-y-4">
-                  <div class="form-control">
-                    <label class="label">
-                      <span class="label-text font-medium">Theme</span>
-                    </label>
-                    <select
-                      class="select select-bordered w-full"
-                      value={formData().theme ?? settings()!.theme}
-                      onChange={(e) => {
-                        const value = e.target.value as 'light' | 'dark' | 'system';
-                        setFormData({
-                          ...formData(),
-                          theme: value,
-                        });
-                      }}
-                    >
-                      <option value="system">System</option>
-                      <option value="light">Light</option>
-                      <option value="dark">Dark</option>
-                    </select>
-                  </div>
-
                   <div class="form-control">
                     <label class="label">
                       <span class="label-text font-medium">Auto-archive after (days)</span>

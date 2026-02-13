@@ -4,6 +4,7 @@ import { TanStackRouterDevtoolsPanel } from '@tanstack/solid-router-devtools';
 import { onMount, Suspense } from 'solid-js';
 import { HydrationScript } from 'solid-js/web';
 import interCss from '~/assets/inter/inter.css?url';
+import { ThemeScript } from '~/components/ThemeScript';
 import { SessionReadProvider } from '~/providers/session-read';
 import { ThemeProvider } from '~/providers/theme';
 import { ToastProvider } from '~/providers/toast';
@@ -55,6 +56,7 @@ function RootComponent() {
   return (
     <html>
       <head>
+        <ThemeScript />
         <HeadContent />
         <HydrationScript />
       </head>
