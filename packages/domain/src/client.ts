@@ -10,3 +10,9 @@ export * from './entities/filter-rule.schema';
 export * from './entities/settings.schema';
 export * from './entities/tag.schema';
 export * from './entities/tts.schema';
+
+// Client-safe error utilities (no DB imports)
+export { isLimitExceededError, getLimitErrorMessage } from './errors';
+
+// Limits config (pure constants)
+export { FREE_TIER_LIMITS, type LimitKey } from './limits';

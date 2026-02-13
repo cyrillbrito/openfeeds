@@ -1,8 +1,9 @@
 import { articles, db } from '@repo/db';
 import { fetchArticleContent } from '@repo/readability/server';
 import { createId } from '@repo/shared/utils';
-import { and, eq } from 'drizzle-orm';
-import { assert, NotFoundError } from '../errors';
+import { and, count, eq, isNull, sql } from 'drizzle-orm';
+import { assert, LimitExceededError, NotFoundError } from '../errors';
+import { FREE_TIER_LIMITS } from '../limits';
 import type { Article, CreateArticleFromUrl, UpdateArticle } from './article.schema';
 
 // Re-export schemas and types from schema file
@@ -46,6 +47,19 @@ function isYouTubeUrl(url: string | null): boolean {
 }
 
 /**
+ * Check how many content extractions a user has performed in the last hour.
+ * Uses the `contentExtractedAt` column as a natural extraction timestamp.
+ */
+async function countRecentExtractions(userId: string): Promise<number> {
+  const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000);
+  const [result] = await db
+    .select({ count: count() })
+    .from(articles)
+    .where(and(eq(articles.userId, userId), sql`${articles.contentExtractedAt} >= ${oneHourAgo}`));
+  return result?.count ?? 0;
+}
+
+/**
  * Extract readable content for an article on-demand.
  * Fetches the article URL, runs Readability, and stores the result.
  * Skips if content was already extracted (contentExtractedAt is set).
@@ -68,6 +82,12 @@ export async function extractArticleContent(id: string, userId: string): Promise
   // Nothing to extract from
   if (!article.url || isYouTubeUrl(article.url)) {
     return null;
+  }
+
+  // Check extraction rate limit
+  const recentExtractions = await countRecentExtractions(userId);
+  if (recentExtractions >= FREE_TIER_LIMITS.extractionsPerHour) {
+    return null; // Silently skip - user can try again later
   }
 
   try {
@@ -114,6 +134,15 @@ export async function updateArticles(data: UpdateArticle[], userId: string): Pro
 }
 
 export async function createArticle(data: CreateArticleFromUrl, userId: string): Promise<Article> {
+  // Check free-tier saved article limit (only user-created articles, not feed-synced)
+  const [savedCount] = await db
+    .select({ count: count() })
+    .from(articles)
+    .where(and(eq(articles.userId, userId), isNull(articles.feedId)));
+  if (savedCount && savedCount.count >= FREE_TIER_LIMITS.savedArticles) {
+    throw new LimitExceededError('saved articles', FREE_TIER_LIMITS.savedArticles);
+  }
+
   const articleId = data.id ?? createId();
   const now = new Date();
 
