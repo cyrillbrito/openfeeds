@@ -37,10 +37,7 @@ export async function getFeedById(id: string, userId: string): Promise<Feed> {
   return feedDbToApi(feed);
 }
 
-export async function createFeed(
-  data: CreateFeed & { id?: string },
-  userId: string,
-): Promise<Feed> {
+export async function createFeed(data: CreateFeed, userId: string): Promise<Feed> {
   const db = getDb();
   // Check if feed with this URL already exists for this user
   const existingFeed = await db.query.feeds.findFirst({

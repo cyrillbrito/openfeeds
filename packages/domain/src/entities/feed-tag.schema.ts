@@ -8,9 +8,10 @@ export const FeedTagSchema = z.object({
 });
 export type FeedTag = z.infer<typeof FeedTagSchema>;
 
-/** Schema for creating feed tags (id and userId are server-generated) */
+/** Schema for creating feed tags (userId is server-generated, id is optional) */
 export const CreateFeedTagSchema = FeedTagSchema.omit({
-  id: true,
   userId: true,
+}).extend({
+  id: z.string().optional(),
 });
 export type CreateFeedTag = z.infer<typeof CreateFeedTagSchema>;
