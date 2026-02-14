@@ -404,6 +404,67 @@ This document outlines a comprehensive end-to-end testing plan for OpenFeeds. Th
 
 ---
 
+### 15. Free-Tier Usage Limits
+
+**Scope:** Enforcement of usage limits during beta to prevent abuse
+
+**Background:**
+The application implements free-tier limits in the domain layer (`packages/domain/src/limits.ts`):
+
+- 100 feeds per user
+- 10 filter rules per user
+- 100 saved articles per user (manually created, not synced)
+- 60 content extractions per hour (rate-limited sliding window)
+
+Limit errors use a `LimitExceededError` with `[LIMIT]` prefix for client-side detection after TanStack Start serialization.
+
+**Test Areas:**
+
+- **Feed Limit Tests:**
+  - Show error toast when adding feed at limit (100 feeds)
+  - Error message clearly indicates feed limit reached
+  - User can still edit/delete existing feeds at limit
+  - After deleting a feed, can add new feed again
+
+- **OPML Import Limit Tests:**
+  - Import all feeds when under limit
+  - Cap import at remaining slots (e.g., 95 feeds + 10 feed OPML = import only 5)
+  - Show informative message about capped import count
+  - Import 0 feeds gracefully when already at limit
+
+- **Filter Rule Limit Tests:**
+  - Show error toast when creating rule at limit (10 rules)
+  - Error message mentions filter rules specifically
+  - Can still edit/delete existing rules at limit
+
+- **Saved Article Limit Tests:**
+  - Show error toast when saving article at limit (100 saved)
+  - Synced articles from feeds don't count toward limit
+  - Error clearly indicates saved article limit
+
+- **Content Extraction Rate Limit Tests:**
+  - Show error toast when extraction rate exceeded (60/hour)
+  - Error indicates rate limit (not total limit)
+  - Can extract again after sufficient time passes
+
+- **Error UX Tests:**
+  - Toast appears with error variant styling (not success)
+  - Error message is user-friendly (not technical)
+  - Toast auto-dismisses after appropriate duration
+  - Multiple rapid limit errors don't spam toasts
+
+**Test Setup Requirements:**
+
+- Helper to bulk-create feeds/rules/articles to reach limits
+- Ability to manipulate `contentExtractedAt` timestamps for rate limit testing
+- Clean up all test data after each test (zero-trace)
+
+**Priority:** Medium - Important for beta abuse prevention, but limits are high enough that normal users won't hit them
+
+**Current Status:** ⏳ Not implemented
+
+---
+
 ## Test Organization
 
 ### Test File Structure
@@ -446,9 +507,11 @@ apps/e2e/tests/
 │   └── article-search.spec.ts ⏳
 ├── settings/
 │   └── settings.spec.ts ⏳
-└── error-handling/
-    ├── network-errors.spec.ts ⏳
-    └── validation-errors.spec.ts ⏳
+├── error-handling/
+│   ├── network-errors.spec.ts ⏳
+│   └── validation-errors.spec.ts ⏳
+└── limits/
+    └── free-tier-limits.spec.ts ⏳
 ```
 
 ---
@@ -499,6 +562,7 @@ apps/e2e/tests/
 3. Shorts View
 4. Search Functionality
 5. Error Handling
+6. Free-Tier Usage Limits
 
 ### Low Priority (Nice to Have)
 
