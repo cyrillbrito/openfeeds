@@ -110,13 +110,13 @@ function SaveArticleForm(props: SaveArticleFormProps) {
         />
       </div>
 
-      <Show when={tagsQuery.data && tagsQuery.data.length > 0}>
+      <Show when={tagsQuery() && tagsQuery()!.length > 0}>
         <div class="mb-4">
           <label class="label">
             <span class="label-text">Tags (optional)</span>
           </label>
           <MultiSelectTag
-            tags={tagsQuery.data || []}
+            tags={tagsQuery() || []}
             selectedIds={selectedTags()}
             onSelectionChange={setSelectedTags}
           />

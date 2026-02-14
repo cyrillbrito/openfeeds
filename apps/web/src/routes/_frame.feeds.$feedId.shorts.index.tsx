@@ -41,7 +41,7 @@ function FocusedShorts() {
   const feedsQuery = useFeeds();
 
   const shorts = () => {
-    const allShorts = shortsQuery.data || [];
+    const allShorts = shortsQuery() || [];
     if (readStatus() !== 'unread') return allShorts;
 
     // Show unread + session-read shorts
@@ -69,7 +69,7 @@ function FocusedShorts() {
       readStatus={readStatus()}
       seed={undefined}
       shortsAccessor={shorts}
-      feedsAccessor={() => feedsQuery.data || []}
+      feedsAccessor={() => feedsQuery() || []}
       backLink={{
         to: '/feeds/$feedId',
         text: 'Back to Feed',

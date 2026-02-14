@@ -254,9 +254,9 @@ function AddFeedForm(props: AddFeedFormProps) {
                         </div>
 
                         {/* Per-feed tag selector */}
-                        <Show when={tagsQuery.data && tagsQuery.data.length > 0 && !isAdded()}>
+                        <Show when={tagsQuery() && tagsQuery()!.length > 0 && !isAdded()}>
                           <MultiSelectTag
-                            tags={tagsQuery.data || []}
+                            tags={tagsQuery() || []}
                             selectedIds={feedTagSelections()[feed.url] || []}
                             onSelectionChange={(ids) =>
                               setFeedTagSelections((prev) => ({
@@ -282,11 +282,9 @@ function AddFeedForm(props: AddFeedFormProps) {
           </Show>
 
           {/* Tag Selection - only show for single feed */}
-          <Show
-            when={tagsQuery.data && tagsQuery.data.length > 0 && discoveredFeeds().length === 1}
-          >
+          <Show when={tagsQuery() && tagsQuery()!.length > 0 && discoveredFeeds().length === 1}>
             <MultiSelectTag
-              tags={tagsQuery.data || []}
+              tags={tagsQuery() || []}
               selectedIds={selectedTags()}
               onSelectionChange={setSelectedTags}
             />

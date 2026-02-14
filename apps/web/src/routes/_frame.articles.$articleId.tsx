@@ -82,8 +82,8 @@ function ArticleView() {
 
   const feed = () => {
     const art = article();
-    if (!art || !art.feedId || !feedsQuery.data) return null;
-    return feedsQuery.data.find((f) => f.id === art.feedId);
+    if (!art || !art.feedId || !feedsQuery()) return null;
+    return feedsQuery()!.find((f) => f.id === art.feedId);
   };
 
   const isVideo = () => {
@@ -220,9 +220,9 @@ function ArticleView() {
                   </div>
 
                   {/* Article Tags */}
-                  <Show when={tagsQuery.data}>
+                  <Show when={tagsQuery()}>
                     <div class="mt-4">
-                      <ArticleTagManager articleId={art().id} tags={tagsQuery()} />
+                      <ArticleTagManager articleId={art().id} tags={tagsQuery()!} />
                     </div>
                   </Show>
                 </header>

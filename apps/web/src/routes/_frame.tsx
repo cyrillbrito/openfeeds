@@ -173,7 +173,7 @@ function DrawerTags() {
       >
         <ul class="menu rounded-box w-full">
           <For
-            each={tags$.data}
+            each={tags$()}
             fallback={
               <div class="py-4 text-center">
                 <p class="text-base-content/50 mb-3 text-sm">No tags yet</p>

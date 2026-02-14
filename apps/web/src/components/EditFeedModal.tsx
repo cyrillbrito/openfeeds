@@ -49,12 +49,12 @@ function EditFeedForm(props: EditFeedFormProps) {
 
   const [activeTab, setActiveTab] = createSignal<'tags' | 'rules'>('tags');
 
-  const currentTagIds = () => (feedTagsQuery.data ?? []).map((ft) => ft.tagId);
+  const currentTagIds = () => (feedTagsQuery() ?? []).map((ft) => ft.tagId);
 
   const handleSelectionChange = (newIds: string[]) => {
     const currentIds = new Set(currentTagIds());
     const newIdSet = new Set(newIds);
-    const feedTags = feedTagsQuery.data ?? [];
+    const feedTags = feedTagsQuery() ?? [];
 
     // Delete removed tags
     const toDelete = feedTags.filter((ft) => !newIdSet.has(ft.tagId));
@@ -128,7 +128,7 @@ function EditFeedForm(props: EditFeedFormProps) {
           <Match when={activeTab() === 'tags'}>
             <Suspense fallback={<div class="loading loading-spinner"></div>}>
               <Show
-                when={tagsQuery.data && tagsQuery.data.length > 0}
+                when={tagsQuery() && tagsQuery()!.length > 0}
                 fallback={
                   <div class="py-8 text-center">
                     <p class="text-base-content/60 mb-4">No tags available.</p>
@@ -139,7 +139,7 @@ function EditFeedForm(props: EditFeedFormProps) {
                 }
               >
                 <MultiSelectTag
-                  tags={tagsQuery.data!}
+                  tags={tagsQuery()!}
                   selectedIds={currentTagIds()}
                   onSelectionChange={handleSelectionChange}
                 />

@@ -16,7 +16,7 @@ export function RuleManager(props: RuleManagerProps) {
   const [applyError, setApplyError] = createSignal<string | null>(null);
   const [isApplying, setIsApplying] = createSignal(false);
 
-  const rules = () => filterRulesQuery.data || [];
+  const rules = () => filterRulesQuery() || [];
   const activeRulesCount = () => rules().filter((rule) => rule.isActive).length;
 
   const handleAddSuccess = () => {
