@@ -17,8 +17,7 @@ export const Route = createFileRoute('/_frame/settings')({
 });
 
 export default function SettingsPage() {
-  const settingsQuery = useSettings();
-  const settings = () => settingsQuery.data;
+  const settings = useSettings();
   const [editMode, setEditMode] = createSignal(false);
   const [formData, setFormData] = createSignal<{
     autoArchiveDays?: number | null;
@@ -89,20 +88,20 @@ export default function SettingsPage() {
           </p>
         </div>
 
-        <Show when={settingsQuery.isLoading}>
+        <Show when={settings.isLoading}>
           <div class="flex items-center justify-center py-8">
             <span class="loading loading-spinner loading-lg mr-3"></span>
             <span class="text-lg">Loading settings...</span>
           </div>
         </Show>
 
-        <Show when={settingsQuery.isError}>
+        <Show when={settings.isError}>
           <div class="alert alert-error">
             <span>Error loading settings</span>
           </div>
         </Show>
 
-        <Show when={settings() && !settingsQuery.isLoading}>
+        <Show when={settings() && !settings.isLoading}>
           <div class="space-y-6">
             <Card>
               <Show when={!editMode()}>
@@ -238,7 +237,7 @@ export default function SettingsPage() {
               <h3 class="mb-2 font-semibold">Debug Information</h3>
               <div class="bg-neutral overflow-auto rounded p-3">
                 <pre class="text-neutral-content text-xs whitespace-pre-wrap">
-                  {JSON.stringify(settingsQuery.data, null, 2)}
+                  {JSON.stringify(settings(), null, 2)}
                 </pre>
               </div>
             </Card>

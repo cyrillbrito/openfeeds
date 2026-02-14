@@ -37,22 +37,22 @@ export const settingsCollection = createCollection(
 
 /**
  * Hook to get the current user settings.
- * Returns the first (and only) settings row for the user.
+ * Returns a callable that provides the first (and only) settings row for the user.
+ * Also exposes `.isLoading` and `.isError` properties.
  */
 export function useSettings() {
   const query = useLiveQuery((q) => q.from({ settings: settingsCollection }));
 
-  return {
-    get data() {
-      return query()?.[0];
-    },
-    get isLoading() {
-      return query.isLoading;
-    },
-    get isError() {
-      return query.isError;
-    },
-  };
+  const accessor = () => query()?.[0];
+
+  Object.defineProperty(accessor, 'isLoading', {
+    get: () => query.isLoading,
+  });
+  Object.defineProperty(accessor, 'isError', {
+    get: () => query.isError,
+  });
+
+  return accessor as typeof accessor & { isLoading: boolean; isError: boolean };
 }
 
 /**
