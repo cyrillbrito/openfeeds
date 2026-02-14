@@ -20,7 +20,7 @@ export const tagsCollection = createCollection(
     onInsert: async ({ transaction }) => {
       const tags = transaction.mutations.map((mutation) => {
         const tag = mutation.modified;
-        return { name: tag.name, color: tag.color };
+        return { id: mutation.key as string, name: tag.name, color: tag.color };
       });
       await $$createTags({ data: tags });
     },
