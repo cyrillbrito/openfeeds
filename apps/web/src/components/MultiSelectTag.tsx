@@ -1,12 +1,15 @@
 import type { Tag } from '@repo/domain/client';
 import { autofocus } from '@solid-primitives/autofocus';
-import { Check, Search } from 'lucide-solid';
-import { createEffect, createSignal, For, onCleanup, Show } from 'solid-js';
+import { Check, ChevronDown, Search, Tag as TagIcon } from 'lucide-solid';
+import { createSignal, createUniqueId, For, Show } from 'solid-js';
 import { getTagDotColor } from '~/utils/tagColors';
 import { ColorIndicator } from './ColorIndicator';
+import { TagBadge } from './TagBadge';
 
 // prevents from being tree-shaken by TS
 void autofocus;
+
+let counter = 0;
 
 interface MultiSelectTagProps {
   tags: Tag[];
@@ -16,97 +19,65 @@ interface MultiSelectTagProps {
 }
 
 export function MultiSelectTag(props: MultiSelectTagProps) {
-  let triggerRef: HTMLDivElement | undefined;
-  let popoverRef: HTMLDivElement | undefined;
+  const id = `multi-select-tag-${createUniqueId()}`;
+  const anchor = `--anchor-${++counter}`;
 
   const [isOpen, setIsOpen] = createSignal(false);
-  const [selectedIds, setSelectedIds] = createSignal(props.selectedIds);
 
-  const selectedTags = () => props.tags.filter((t) => selectedIds().includes(t.id));
-
-  const updatePosition = () => {
-    if (!triggerRef || !popoverRef) return;
-    const bounds = triggerRef.getBoundingClientRect();
-    popoverRef.style.top = `${bounds.bottom + 3}px`;
-    popoverRef.style.left = `${bounds.left}px`;
-    popoverRef.style.width = `${bounds.width}px`;
-  };
-
-  const openPopover = () => {
-    if (!popoverRef) return;
-    popoverRef.showPopover();
-    updatePosition();
-    setIsOpen(true);
-  };
-
-  const closePopover = () => {
-    if (!popoverRef) return;
-    popoverRef.hidePopover();
-    setIsOpen(false);
-  };
-
-  const togglePopover = () => {
-    if (isOpen()) {
-      closePopover();
-    } else {
-      openPopover();
-    }
-  };
-
-  // Handle popover toggle event (fires on light dismiss)
-  createEffect(() => {
-    if (!popoverRef) return;
-
-    const handleToggle = (e: ToggleEvent) => {
-      setIsOpen(e.newState === 'open');
-    };
-
-    popoverRef.addEventListener('toggle', handleToggle);
-    onCleanup(() => popoverRef?.removeEventListener('toggle', handleToggle));
-  });
+  const selectedTags = () => props.tags.filter((t) => props.selectedIds.includes(t.id));
 
   return (
     <div class="relative">
-      <div
-        ref={(el) => (triggerRef = el)}
-        class="select flex cursor-pointer items-center overflow-hidden"
-        tabIndex="0"
+      {/* Trigger */}
+      <button
+        type="button"
+        class="border-base-300 bg-base-100 hover:bg-base-200 flex min-h-12 w-full cursor-pointer items-center rounded-lg border px-3 py-2 text-left transition-colors"
+        classList={{ 'ring-primary/50 ring-2': isOpen() }}
         role="combobox"
         aria-haspopup="listbox"
         aria-expanded={isOpen()}
-        onClick={togglePopover}
-        onKeyDown={(e) => {
-          if (e.key === 'Enter' || e.key === ' ') {
-            e.preventDefault();
-            togglePopover();
-          }
-        }}
+        aria-controls={id}
+        popovertarget={id}
+        style={{ 'anchor-name': anchor }}
       >
-        <Show when={selectedIds().length <= 3} fallback={<>{selectedIds().length} Selected Tags</>}>
-          <For each={selectedTags()} fallback={<>No tag selected</>}>
-            {(tag) => (
-              <div class="badge badge-sm min-w-2">
-                <ColorIndicator class={getTagDotColor(tag.color)} />
-                <span class="truncate">{tag.name}</span>
-              </div>
-            )}
-          </For>
+        <Show
+          when={selectedTags().length > 0}
+          fallback={
+            <div class="text-base-content/40 flex flex-1 items-center gap-2">
+              <TagIcon size={14} />
+              <span class="text-sm">Select tags...</span>
+            </div>
+          }
+        >
+          <div class="flex flex-1 flex-wrap gap-1.5">
+            <For each={selectedTags()}>
+              {(tag) => <TagBadge name={tag.name} color={tag.color} size="sm" />}
+            </For>
+          </div>
         </Show>
-      </div>
+        <ChevronDown
+          size={16}
+          class="text-base-content/40 ml-2 shrink-0 transition-transform"
+          classList={{ 'rotate-180': isOpen() }}
+        />
+      </button>
 
-      {/* Popover Dropdown - renders in top-layer */}
+      {/* Popover Dropdown - renders in top-layer, positioned via CSS anchor */}
       <div
-        ref={(el) => (popoverRef = el)}
+        id={id}
         popover="auto"
-        class="dropdown-content border-base-300 bg-base-100 m-0 rounded-lg border p-0 shadow-lg"
+        class="border-base-300 bg-base-100 m-0 rounded-lg border p-0 shadow-lg"
+        style={{
+          'position-anchor': anchor,
+          'position-area': 'bottom span-right',
+          width: `anchor-size(width)`,
+        }}
+        onToggle={(e) => setIsOpen(e.newState === 'open')}
       >
         <MultiSelectTagDropdown
           tags={props.tags}
-          selectedIds={selectedIds()}
-          onSelectionChange={(ids) => {
-            setSelectedIds(ids);
-            props.onSelectionChange(ids);
-          }}
+          selectedIds={props.selectedIds}
+          onSelectionChange={props.onSelectionChange}
         />
       </div>
     </div>
@@ -145,7 +116,7 @@ function MultiSelectTagDropdown(props: MultiSelectTagDropdownProps) {
           <Search size={16} />
           <input
             type="text"
-            placeholder="Search..."
+            placeholder="Search tags..."
             autofocus
             value={searchQuery()}
             onInput={(e) => setSearchQuery(e.currentTarget.value)}
@@ -155,11 +126,7 @@ function MultiSelectTagDropdown(props: MultiSelectTagDropdownProps) {
       </Show>
 
       {/* Tag List */}
-      <div
-        role="listbox"
-        aria-multiselectable="true"
-        class="max-h-60 space-y-1 overflow-y-auto py-2"
-      >
+      <div role="listbox" aria-multiselectable="true" class="max-h-60 overflow-y-auto p-1">
         <For
           each={filteredTags()}
           fallback={<div class="text-base-content/60 py-4 text-center text-sm">No tags found</div>}
@@ -172,9 +139,9 @@ function MultiSelectTagDropdown(props: MultiSelectTagDropdownProps) {
                 role="option"
                 aria-selected={isSelected()}
                 tabIndex="0"
-                class="focus:ring-primary/50 m-1 flex cursor-pointer items-center gap-2 rounded p-2 outline-none focus:ring-2"
+                class="focus:ring-primary/50 flex cursor-pointer items-center gap-2.5 rounded-md px-2.5 py-2 outline-none focus:ring-2"
                 classList={{
-                  'bg-primary/10': isSelected(),
+                  'bg-primary/10 hover:bg-primary/15': isSelected(),
                   'hover:bg-base-200 focus:bg-base-200': !isSelected(),
                 }}
                 onClick={() => toggle(tag.id)}
@@ -191,7 +158,7 @@ function MultiSelectTagDropdown(props: MultiSelectTagDropdownProps) {
                   </Show>
                 </div>
                 <ColorIndicator class={getTagDotColor(tag.color)} />
-                <div class="flex-1">{tag.name}</div>
+                <div class="flex-1 text-sm">{tag.name}</div>
               </div>
             );
           }}
