@@ -25,6 +25,7 @@ export const filterRulesCollection = createCollection(
       const rules = transaction.mutations.map((mutation) => {
         const rule = mutation.modified as FilterRule & CreateFilterRuleApi;
         return {
+          id: mutation.key as string,
           feedId: rule.feedId,
           pattern: rule.pattern,
           operator: rule.operator,
