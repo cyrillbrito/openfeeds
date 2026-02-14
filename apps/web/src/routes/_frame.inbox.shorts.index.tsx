@@ -39,7 +39,7 @@ function InboxShorts() {
   const feedsQuery = useFeeds();
 
   const allShorts = () => {
-    const shorts = shortsQuery.data || [];
+    const shorts = shortsQuery() || [];
     if (readStatus() !== 'unread') return shorts;
 
     // Show unread + session-read shorts
@@ -67,7 +67,7 @@ function InboxShorts() {
       readStatus={readStatus()}
       seed={undefined}
       shortsAccessor={allShorts}
-      feedsAccessor={() => feedsQuery.data || []}
+      feedsAccessor={() => feedsQuery() || []}
       backLink={{
         to: '/inbox',
         text: 'Back to Inbox',

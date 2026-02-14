@@ -69,7 +69,7 @@ function TagsComponent() {
         />
         <Suspense fallback={<CenterLoader />}>
           <Show
-            when={tagsQuery.data && tagsQuery.data.length > 0}
+            when={tagsQuery() && tagsQuery()!.length > 0}
             fallback={
               <div class="py-16 text-center">
                 <div class="mb-8 flex justify-center">
@@ -90,7 +90,7 @@ function TagsComponent() {
             }
           >
             <div class="grid grid-cols-2 gap-3">
-              <For each={tagsQuery.data!}>
+              <For each={tagsQuery()!}>
                 {(tag) => (
                   <div class="border-base-300 bg-base-100 flex items-center justify-between gap-2 rounded-lg border px-3 py-3 shadow-sm">
                     <div class="min-w-0">

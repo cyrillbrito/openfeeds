@@ -76,7 +76,7 @@ function Inbox() {
     try {
       setIsMarkingAllArchived(true);
       // Use totalCountQuery to get ALL article IDs (not just visible)
-      const articleIds = (totalCountQuery.data || []).map((a) => a.id);
+      const articleIds = (totalCountQuery() || []).map((a) => a.id);
       if (articleIds.length > 0) {
         articlesCollection.update(articleIds, (drafts) => {
           drafts.forEach((d) => (d.isArchived = true));
@@ -92,14 +92,14 @@ function Inbox() {
 
   // Filter for session-read articles (client-side)
   const filteredArticles = createMemo(() => {
-    const articles = articlesQuery.data || [];
+    const articles = articlesQuery() || [];
     if (readStatus() !== 'unread') return articles;
 
     return articles.filter((a) => !a.isRead || sessionReadIds().has(a.id));
   });
 
   const totalCount = () => {
-    const allArticles = totalCountQuery.data || [];
+    const allArticles = totalCountQuery() || [];
     if (readStatus() !== 'unread') return allArticles.length;
 
     // For unread, apply same filter to get accurate count
@@ -195,11 +195,11 @@ function Inbox() {
       <div class="mx-auto w-full max-w-2xl px-2 pb-3 sm:px-6 sm:pb-6 xl:max-w-3xl">
         <CommonErrorBoundary>
           <Suspense fallback={<CenterLoader />}>
-            <Show when={feedsQuery.data && tagsQuery.data}>
+            <Show when={feedsQuery() && tagsQuery()}>
               <ArticleList
                 articles={filteredArticles()}
-                feeds={feedsQuery.data!}
-                tags={tagsQuery.data!}
+                feeds={feedsQuery()!}
+                tags={tagsQuery()!}
                 totalCount={totalCount()}
                 onLoadMore={handleLoadMore}
                 onUpdateArticle={handleUpdateArticle}

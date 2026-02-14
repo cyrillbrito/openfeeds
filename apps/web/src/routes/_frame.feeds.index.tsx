@@ -62,7 +62,7 @@ function FeedsComponent() {
 
   // Filtered feeds based on search query from URL, with broken/failing sorted to top
   const filteredFeeds = createMemo(() => {
-    const feeds = feedsQuery.data;
+    const feeds = feedsQuery();
     if (!feeds) return [];
 
     let result = feeds;
@@ -132,12 +132,12 @@ function FeedsComponent() {
 
         <Switch>
           {/* Loading state */}
-          <Match when={feedsQuery.data === undefined}>
+          <Match when={feedsQuery() === undefined}>
             <CenterLoader />
           </Match>
 
           {/* Empty state - no feeds */}
-          <Match when={feedsQuery.data?.length === 0}>
+          <Match when={feedsQuery()?.length === 0}>
             <div class="py-16 text-center">
               {/* RSS Feeds SVG Illustration */}
               <div class="mb-8 flex justify-center">
@@ -180,7 +180,7 @@ function FeedsComponent() {
           </Match>
 
           {/* Has feeds */}
-          <Match when={feedsQuery.data && feedsQuery.data.length > 0}>
+          <Match when={feedsQuery() && feedsQuery()!.length > 0}>
             <Show
               when={filteredFeeds().length > 0}
               fallback={
@@ -310,7 +310,7 @@ function FeedsComponent() {
                             {/* Tags */}
                             {(() => {
                               const feedTagIds = () =>
-                                (feedTagsQuery.data ?? [])
+                                (feedTagsQuery() ?? [])
                                   .filter((ft) => ft.feedId === feed.id)
                                   .map((ft) => ft.tagId);
                               return (
@@ -318,7 +318,7 @@ function FeedsComponent() {
                                   <div class="mb-3 flex flex-wrap gap-1.5">
                                     <For each={feedTagIds()}>
                                       {(tagId) => {
-                                        const tag = tagsQuery.data?.find((t) => t.id === tagId);
+                                        const tag = tagsQuery()?.find((t) => t.id === tagId);
                                         if (tag) {
                                           return (
                                             <Link

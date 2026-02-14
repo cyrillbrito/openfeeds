@@ -85,7 +85,7 @@ function FeedArticles() {
   const handleMarkAllArchived = async () => {
     try {
       setIsMarkingAllArchived(true);
-      const articleIds = (totalCountQuery.data || []).map((a) => a.id);
+      const articleIds = (totalCountQuery() || []).map((a) => a.id);
       if (articleIds.length > 0) {
         articlesCollection.update(articleIds, (drafts) => {
           drafts.forEach((d) => (d.isArchived = true));
@@ -116,14 +116,14 @@ function FeedArticles() {
 
   // Filter for session-read articles (client-side)
   const filteredArticles = createMemo(() => {
-    const articles = articlesQuery.data || [];
+    const articles = articlesQuery() || [];
     if (readStatus() !== 'unread') return articles;
 
     return articles.filter((a) => !a.isRead || sessionReadIds().has(a.id));
   });
 
   const totalCount = () => {
-    const allArticles = totalCountQuery.data || [];
+    const allArticles = totalCountQuery() || [];
     if (readStatus() !== 'unread') return allArticles.length;
 
     return allArticles.filter((a) => !a.isRead || sessionReadIds().has(a.id)).length;
@@ -138,7 +138,7 @@ function FeedArticles() {
   };
 
   const currentFeed = () => {
-    const feeds = feedsQuery.data || [];
+    const feeds = feedsQuery() || [];
     return feeds.find((feed) => feed.id === feedId()) || null;
   };
 
@@ -260,7 +260,7 @@ function FeedArticles() {
                 {/* Tags */}
                 {(() => {
                   const feedTagIds = () =>
-                    (feedTagsQuery.data ?? [])
+                    (feedTagsQuery() ?? [])
                       .filter((ft) => ft.feedId === feed().id)
                       .map((ft) => ft.tagId);
                   return (
@@ -268,7 +268,7 @@ function FeedArticles() {
                       <div class="mb-3 flex flex-wrap gap-1.5">
                         <For each={feedTagIds()}>
                           {(tagId) => {
-                            const tag = tagsQuery.data?.find((t) => t.id === tagId);
+                            const tag = tagsQuery()?.find((t) => t.id === tagId);
                             if (tag) {
                               return (
                                 <Link to="/tags/$tagId" params={{ tagId: tag.id.toString() }}>
@@ -357,11 +357,11 @@ function FeedArticles() {
 
       <div class="mx-auto w-full max-w-2xl px-2 pb-3 sm:px-6 sm:pb-6 xl:max-w-3xl">
         <Suspense fallback={<CenterLoader />}>
-          <Show when={feedsQuery.data && tagsQuery.data}>
+          <Show when={feedsQuery() && tagsQuery()}>
             <ArticleList
               articles={filteredArticles()}
-              feeds={feedsQuery.data!}
-              tags={tagsQuery.data!}
+              feeds={feedsQuery()!}
+              tags={tagsQuery()!}
               totalCount={totalCount()}
               onLoadMore={handleLoadMore}
               onUpdateArticle={handleUpdateArticle}

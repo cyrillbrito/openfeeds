@@ -24,7 +24,7 @@ export function ArticleTagManager(props: ArticleTagManagerProps) {
       .where(({ articleTag }) => eq(articleTag.articleId, props.articleId)),
   );
 
-  const articleTags = () => articleTagsQuery.data ?? [];
+  const articleTags = () => articleTagsQuery() ?? [];
   const selectedTagIds = () => articleTags().map((at) => at.tagId);
   const selectedTags = () => props.tags.filter((t) => selectedTagIds().includes(t.id));
   const availableTags = () => props.tags.filter((tag) => !selectedTagIds().includes(tag.id));
