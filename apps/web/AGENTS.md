@@ -266,6 +266,51 @@ export const Route = createAPIFileRoute('/api/feeds')({
 - **Server functions**: Internal app use, called from components
 - **API routes**: External consumers (extension, webhooks, third-party)
 
+## Browser Debugging with Playwright CLI
+
+When the user asks to check something in the browser, or when visual verification is needed, use the `playwright-cli` skill to interact with the running dev server.
+
+**Load the skill first:** The `playwright-cli` skill must be loaded before use. It provides the full command reference.
+
+**Authentication:** Auth state is saved at `.playwright-cli/auth.json`. Load it before navigating to authenticated pages:
+
+```bash
+playwright-cli open http://localhost:3000    # Start session (lands on /signin)
+playwright-cli state-load .playwright-cli/auth.json  # Restore auth cookies
+playwright-cli open http://localhost:3000    # Navigate again, now authenticated
+```
+
+If the saved state has expired (redirects to `/signin` after loading), log in again and re-save:
+
+```bash
+playwright-cli open http://localhost:3000/signin
+playwright-cli snapshot                      # Get element refs
+playwright-cli fill <email-ref> "asd@asd.pt"
+playwright-cli fill <password-ref> "asd123"
+playwright-cli click <signin-button-ref>
+playwright-cli state-save .playwright-cli/auth.json  # Save for next time
+```
+
+**Common tasks:**
+
+```bash
+playwright-cli snapshot                      # Get page structure + element refs
+playwright-cli screenshot                    # Take screenshot of current page
+playwright-cli screenshot <ref>              # Screenshot specific element
+playwright-cli console                       # Check console logs/errors
+playwright-cli network                       # Check network requests
+playwright-cli eval "document.title"         # Evaluate JS in page
+```
+
+**Session lifecycle:**
+
+```bash
+playwright-cli session-stop                  # Stop session (preserves profile)
+playwright-cli session-delete                # Delete profile data (will need to re-auth)
+```
+
+Always stop sessions when done. Never use `session-delete` unless you want to clear auth state.
+
 ## Notes
 
 - Path mapping: `~/*` → `./src/*`

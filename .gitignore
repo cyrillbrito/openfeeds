@@ -55,6 +55,9 @@ dbs/
 # Benchmark
 benchmark-results/
 
+# Playwright CLI
+.playwright-cli/
+
 # AI
 .claude/settings.local.json
 .mcp.json

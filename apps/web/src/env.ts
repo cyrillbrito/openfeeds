@@ -24,7 +24,10 @@ export const env = createEnv({
     // Auth
     BETTER_AUTH_SECRET: z.string(),
     SIMPLE_AUTH: z.stringbool().default(false),
-    CLIENT_DOMAIN: z.url(),
+    TRUSTED_ORIGINS: z
+      .string()
+      .transform((val) => val.split(',').map((s) => s.trim()))
+      .pipe(z.array(z.url())),
   },
   runtimeEnv: process.env,
   emptyStringAsUndefined: true,

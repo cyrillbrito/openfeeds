@@ -1,5 +1,10 @@
 import { getDb } from '@repo/db';
-import { createSettings, sendPasswordResetEmail, sendVerificationEmail, trackEvent } from '@repo/domain';
+import {
+  createSettings,
+  sendPasswordResetEmail,
+  sendVerificationEmail,
+  trackEvent,
+} from '@repo/domain';
 import { betterAuth } from 'better-auth';
 import { drizzleAdapter } from 'better-auth/adapters/drizzle';
 import { createAuthMiddleware } from 'better-auth/api';
@@ -8,7 +13,7 @@ import { env } from '~/env';
 
 export const auth = betterAuth({
   database: drizzleAdapter(getDb(), { provider: 'pg' }),
-  trustedOrigins: [env.CLIENT_DOMAIN],
+  trustedOrigins: env.TRUSTED_ORIGINS,
   hooks: {
     after: createAuthMiddleware(async (ctx) => {
       const newSession = ctx.context.newSession;
