@@ -1,9 +1,10 @@
 import { feeds, feedTags, getDb, tags } from '@repo/db';
 import { attemptAsync, createId } from '@repo/shared/utils';
-import { eq } from 'drizzle-orm';
+import { count, eq } from 'drizzle-orm';
 import { parseOpml } from 'feedsmith';
 import { trackEvent } from './analytics';
-import { assert } from './errors';
+import { assert, LimitExceededError } from './errors';
+import { FREE_TIER_LIMITS } from './limits';
 import { logger } from './logger';
 import { enqueueFeedDetail, enqueueFeedSync } from './queues';
 
@@ -59,6 +60,18 @@ function getFeedsFromOutlines(outlines: OPMLOutlines): Array<{
 // Core business logic for importing OPML feeds
 export async function importOpmlFeeds(opmlContent: string, userId: string): Promise<ImportResult> {
   const db = getDb();
+
+  // Check free-tier feed limit before importing
+  const [feedCount] = await db
+    .select({ count: count() })
+    .from(feeds)
+    .where(eq(feeds.userId, userId));
+  const currentFeedCount = feedCount?.count ?? 0;
+  if (currentFeedCount >= FREE_TIER_LIMITS.feeds) {
+    throw new LimitExceededError('feeds', FREE_TIER_LIMITS.feeds);
+  }
+  const remainingSlots = FREE_TIER_LIMITS.feeds - currentFeedCount;
+
   const parsedOpml = parseOpml(opmlContent);
 
   // Extract all feeds from the OPML structure
@@ -79,6 +92,11 @@ export async function importOpmlFeeds(opmlContent: string, userId: string): Prom
   }, {});
 
   for (const feed of feedsToImport) {
+    // Stop importing if we've reached the feed limit
+    if (imported >= remainingSlots) {
+      break;
+    }
+
     try {
       // Parse comma-separated categories per OPML 2.0 spec
       const tagIds: string[] = [];

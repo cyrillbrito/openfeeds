@@ -1,10 +1,18 @@
 import { feeds, getDb, type DbInsertFeed } from '@repo/db';
 import { discoverFeeds } from '@repo/discovery/server';
 import { attemptAsync, createId } from '@repo/shared/utils';
-import { and, eq } from 'drizzle-orm';
+import { and, count, eq } from 'drizzle-orm';
 import { trackEvent } from '../analytics';
 import { feedDbToApi } from '../db-utils';
-import { assert, BadRequestError, ConflictError, NotFoundError, UnexpectedError } from '../errors';
+import {
+  assert,
+  BadRequestError,
+  ConflictError,
+  LimitExceededError,
+  NotFoundError,
+  UnexpectedError,
+} from '../errors';
+import { FREE_TIER_LIMITS } from '../limits';
 import { enqueueFeedDetail, enqueueFeedSync } from '../queues';
 import type { CreateFeed, DiscoveredFeed, Feed, UpdateFeed } from './feed.schema';
 
@@ -42,6 +50,16 @@ export async function createFeed(
   userId: string,
 ): Promise<Feed> {
   const db = getDb();
+
+  // Check free-tier feed limit
+  const [feedCount] = await db
+    .select({ count: count() })
+    .from(feeds)
+    .where(eq(feeds.userId, userId));
+  if (feedCount && feedCount.count >= FREE_TIER_LIMITS.feeds) {
+    throw new LimitExceededError('feeds', FREE_TIER_LIMITS.feeds);
+  }
+
   // Check if feed with this URL already exists for this user
   const existingFeed = await db.query.feeds.findFirst({
     where: and(eq(feeds.feedUrl, data.url), eq(feeds.userId, userId)),
