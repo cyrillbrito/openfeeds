@@ -20,7 +20,7 @@ export const feedTagsCollection = createCollection(
     onInsert: async ({ transaction }) => {
       const tags = transaction.mutations.map((mutation) => {
         const tag = mutation.modified;
-        return { feedId: tag.feedId, tagId: tag.tagId };
+        return { id: mutation.key as string, feedId: tag.feedId, tagId: tag.tagId };
       });
       await $$createFeedTags({ data: tags });
     },
