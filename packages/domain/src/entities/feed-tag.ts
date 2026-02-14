@@ -23,7 +23,7 @@ export async function createFeedTags(data: CreateFeedTag[], userId: string): Pro
   if (data.length === 0) return [];
 
   const newTags = data.map((item) => ({
-    id: createId(),
+    id: item.id ?? createId(),
     userId,
     feedId: item.feedId,
     tagId: item.tagId,

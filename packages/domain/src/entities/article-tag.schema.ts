@@ -8,9 +8,10 @@ export const ArticleTagSchema = z.object({
 });
 export type ArticleTag = z.infer<typeof ArticleTagSchema>;
 
-/** Schema for creating article tags (id and userId are server-generated) */
+/** Schema for creating article tags (userId is server-generated, id is optional) */
 export const CreateArticleTagSchema = ArticleTagSchema.omit({
-  id: true,
   userId: true,
+}).extend({
+  id: z.string().optional(),
 });
 export type CreateArticleTag = z.infer<typeof CreateArticleTagSchema>;

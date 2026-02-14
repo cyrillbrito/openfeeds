@@ -48,7 +48,7 @@ export async function getFilterRulesByFeedId(
 
 export async function createFilterRule(
   feedId: string,
-  data: CreateFilterRuleApi & { id?: string },
+  data: CreateFilterRuleApi,
   userId: string,
 ): Promise<FilterRule> {
   // Check if feed exists and belongs to user
