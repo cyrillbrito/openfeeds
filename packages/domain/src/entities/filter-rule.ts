@@ -3,7 +3,7 @@ import { createId } from '@repo/shared/utils';
 import { and, eq } from 'drizzle-orm';
 import { trackEvent } from '../analytics';
 import { filterRuleDbToApi } from '../db-utils';
-import { assert, NotFoundError, UnexpectedError } from '../errors';
+import { assert, NotFoundError } from '../errors';
 import {
   shouldMarkAsRead,
   type CreateFilterRuleApi,
@@ -61,23 +61,17 @@ export async function createFilterRule(
   }
 
   // Create the filter rule
-  let createResult: (typeof filterRules.$inferSelect)[];
-  try {
-    createResult = await db
-      .insert(filterRules)
-      .values({
-        id: data.id ?? createId(),
-        userId,
-        feedId,
-        pattern: data.pattern,
-        operator: data.operator,
-        isActive: data.isActive,
-      })
-      .returning();
-  } catch (err) {
-    console.error('Database error creating filter rule:', err);
-    throw new UnexpectedError();
-  }
+  const createResult = await db
+    .insert(filterRules)
+    .values({
+      id: data.id ?? createId(),
+      userId,
+      feedId,
+      pattern: data.pattern,
+      operator: data.operator,
+      isActive: data.isActive,
+    })
+    .returning();
 
   const newRule = createResult[0];
   assert(newRule, 'Created filter rule must exist');
@@ -128,17 +122,11 @@ export async function updateFilterRule(
   }
 
   // Update the rule
-  let updateResult: (typeof filterRules.$inferSelect)[];
-  try {
-    updateResult = await db
-      .update(filterRules)
-      .set(ruleUpdateData)
-      .where(eq(filterRules.id, ruleId))
-      .returning();
-  } catch (err) {
-    console.error('Database error updating filter rule:', err);
-    throw new UnexpectedError();
-  }
+  const updateResult = await db
+    .update(filterRules)
+    .set(ruleUpdateData)
+    .where(eq(filterRules.id, ruleId))
+    .returning();
 
   const updatedRule = updateResult[0];
   assert(updatedRule, 'Updated filter rule must exist');

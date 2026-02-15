@@ -4,7 +4,7 @@ import { createId } from '@repo/shared/utils';
 import { and, eq } from 'drizzle-orm';
 import { trackEvent } from '../analytics';
 import { feedDbToApi } from '../db-utils';
-import { assert, BadRequestError, ConflictError, NotFoundError, UnexpectedError } from '../errors';
+import { assert, BadRequestError, ConflictError, NotFoundError } from '../errors';
 import { enqueueFeedDetail, enqueueFeedSync } from '../queues';
 import type { CreateFeed, DiscoveredFeed, Feed, UpdateFeed } from './feed.schema';
 
@@ -57,14 +57,7 @@ export async function createFeed(data: CreateFeed, userId: string): Promise<Feed
     createdAt: undefined,
   };
 
-  let dbResult: (typeof feeds.$inferSelect)[];
-  try {
-    dbResult = await db.insert(feeds).values(feed).returning();
-  } catch (err) {
-    // TODO Better drizzle error handling
-    console.error('Database error creating feed:', err);
-    throw new UnexpectedError();
-  }
+  const dbResult = await db.insert(feeds).values(feed).returning();
 
   const newFeed = dbResult[0];
   assert(newFeed, 'Created feed must exist');

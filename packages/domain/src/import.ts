@@ -111,53 +111,30 @@ export async function importOpmlFeeds(opmlContent: string, userId: string): Prom
         }
       }
 
-      // Check if feed already exists (by feedUrl)
-      let existingFeed: { id: string } | undefined;
-      try {
-        existingFeed = await db.query.feeds.findFirst({
-          where: eq(feeds.feedUrl, feed.xmlUrl),
-          columns: { id: true },
-        });
-      } catch (existingFeedErr) {
-        logger.error(existingFeedErr as Error, {
-          operation: 'import_check_existing_feed',
-          feedTitle: feed.title,
-          feedUrl: feed.xmlUrl,
-        });
-        failed.push(feed.title);
-        continue;
-      }
+      // Check if feed already exists (by feedUrl) — skip if so
+      const existingFeed = await db.query.feeds.findFirst({
+        where: eq(feeds.feedUrl, feed.xmlUrl),
+        columns: { id: true },
+      });
 
       if (existingFeed) {
         _skipped++;
         continue;
       }
 
-      let feedId: string;
-      try {
-        const insertResult = await db
-          .insert(feeds)
-          .values({
-            id: createId(),
-            userId,
-            title: feed.title,
-            url: feed.htmlUrl,
-            feedUrl: feed.xmlUrl,
-          })
-          .returning();
-
-        const insertedFeedId = insertResult[0]?.id;
-        assert(insertedFeedId);
-        feedId = insertedFeedId;
-      } catch (insertErr) {
-        logger.error(insertErr as Error, {
-          operation: 'import_insert_feed',
-          feedTitle: feed.title,
+      const insertResult = await db
+        .insert(feeds)
+        .values({
+          id: createId(),
+          userId,
+          title: feed.title,
+          url: feed.htmlUrl,
           feedUrl: feed.xmlUrl,
-        });
-        failed.push(feed.title);
-        continue;
-      }
+        })
+        .returning();
+
+      const feedId = insertResult[0]?.id;
+      assert(feedId);
 
       if (tagIds.length > 0) {
         try {
@@ -165,16 +142,16 @@ export async function importOpmlFeeds(opmlContent: string, userId: string): Prom
             tagIds.map((tagId) => ({
               id: createId(),
               userId,
-              feedId: feedId,
-              tagId: tagId,
+              feedId,
+              tagId,
             })),
           );
         } catch (feedTagErr) {
           logger.error(feedTagErr as Error, {
             operation: 'import_feed_tag_association',
             feedTitle: feed.title,
-            feedId: feedId,
-            tagIds: tagIds,
+            feedId,
+            tagIds,
           });
         }
       }
