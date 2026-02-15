@@ -1,10 +1,9 @@
 import { expect } from '@playwright/test';
 import { test } from '../../fixtures/auth-fixture';
 import {
-  BASE_URL,
   buildAuthorizeUrl,
+  consentAndGetCode,
   exchangeCodeForTokens,
-  extractCodeFromUrl,
   generatePKCE,
   generateState,
   getMcpResource,
@@ -16,7 +15,6 @@ test.describe('OAuth Security', () => {
   test.setTimeout(30_000);
 
   test('authorization code cannot be reused (single-use)', async ({ page, request, user }) => {
-    // Complete the full OAuth flow to get a valid authorization code
     const { data: client } = await registerPublicClient(request, {
       redirectUri: TEST_REDIRECT_URI,
     });
@@ -33,18 +31,7 @@ test.describe('OAuth Security', () => {
       resource: mcpResource,
     });
 
-    let callbackUrl: string | undefined;
-    await page.route('**/oauth/callback**', async (route) => {
-      callbackUrl = route.request().url();
-      await route.fulfill({ status: 200, body: 'Callback intercepted' });
-    });
-
-    await page.goto(authorizeUrl);
-    await expect(page.getByRole('heading', { name: 'Authorize Application' })).toBeVisible();
-    await page.getByRole('button', { name: 'Allow' }).click();
-    await page.waitForURL('**/oauth/callback**');
-
-    const { code } = extractCodeFromUrl(callbackUrl ?? page.url());
+    const { code } = await consentAndGetCode(page, authorizeUrl);
     expect(code).toBeDefined();
 
     // First exchange — should succeed
@@ -85,18 +72,7 @@ test.describe('OAuth Security', () => {
       resource: mcpResource,
     });
 
-    let callbackUrl: string | undefined;
-    await page.route('**/oauth/callback**', async (route) => {
-      callbackUrl = route.request().url();
-      await route.fulfill({ status: 200, body: 'Callback intercepted' });
-    });
-
-    await page.goto(authorizeUrl);
-    await expect(page.getByRole('heading', { name: 'Authorize Application' })).toBeVisible();
-    await page.getByRole('button', { name: 'Allow' }).click();
-    await page.waitForURL('**/oauth/callback**');
-
-    const { code } = extractCodeFromUrl(callbackUrl ?? page.url());
+    const { code } = await consentAndGetCode(page, authorizeUrl);
     expect(code).toBeDefined();
 
     // Send a wrong code_verifier — server must reject

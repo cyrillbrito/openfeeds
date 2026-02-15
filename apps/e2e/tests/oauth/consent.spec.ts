@@ -2,6 +2,7 @@ import { expect } from '@playwright/test';
 import { test } from '../../fixtures/auth-fixture';
 import {
   buildAuthorizeUrl,
+  consentAndGetCode,
   exchangeCodeForTokens,
   extractCodeFromUrl,
   generatePKCE,
@@ -105,20 +106,10 @@ test.describe('Consent Page', () => {
       resource: mcpResource,
     });
 
-    let callbackUrl: string | undefined;
-    await page.route('**/oauth/callback**', async (route) => {
-      callbackUrl = route.request().url();
-      await route.fulfill({ status: 200, body: 'Callback intercepted' });
-    });
-
-    await page.goto(authorizeUrl);
-    await expect(page.getByRole('heading', { name: 'Authorize Application' })).toBeVisible();
-    await page.getByRole('button', { name: 'Allow' }).click();
-    await page.waitForURL('**/oauth/callback**');
+    const { code } = await consentAndGetCode(page, authorizeUrl);
+    expect(code).toBeDefined();
 
     // Exchange the code to complete the flow
-    const { code } = extractCodeFromUrl(callbackUrl ?? page.url());
-    expect(code).toBeDefined();
     await exchangeCodeForTokens(request, {
       code: code!,
       clientId: client.client_id,
@@ -130,7 +121,6 @@ test.describe('Consent Page', () => {
     const { codeChallenge: codeChallenge2 } = await generatePKCE();
     const state2 = generateState();
 
-    callbackUrl = undefined;
     const authorizeUrl2 = buildAuthorizeUrl({
       clientId: client.client_id,
       redirectUri: TEST_REDIRECT_URI,
@@ -140,11 +130,11 @@ test.describe('Consent Page', () => {
       resource: mcpResource,
     });
 
+    // The route intercept is still active from consentAndGetCode,
+    // so we just navigate and expect a direct redirect (no consent page).
     await page.goto(authorizeUrl2);
-
-    // Should redirect directly to callback without showing consent
     await page.waitForURL('**/oauth/callback**');
-    const result = extractCodeFromUrl(callbackUrl ?? page.url());
+    const result = extractCodeFromUrl(page.url());
     expect(result.error).toBeNull();
     expect(result.code).toBeDefined();
   });

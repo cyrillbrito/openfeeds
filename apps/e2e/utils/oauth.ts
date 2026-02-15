@@ -1,4 +1,4 @@
-import type { APIRequestContext } from '@playwright/test';
+import { expect, type APIRequestContext, type Page } from '@playwright/test';
 
 export const BASE_URL = process.env.BASE_URL ?? 'http://localhost:3000';
 const AUTH_BASE = `${BASE_URL}/api/auth`;
@@ -148,6 +148,11 @@ export async function refreshAccessToken(
 
 /**
  * Send a raw MCP JSON-RPC message to the MCP endpoint.
+ *
+ * The Streamable HTTP transport may respond with SSE (`text/event-stream`)
+ * even when we prefer JSON. This helper returns both the raw response and,
+ * when the response is SSE, the parsed JSON-RPC message(s) extracted from
+ * the `event: message` / `data: …` lines.
  */
 export async function sendMcpMessage(
   request: APIRequestContext,
@@ -166,39 +171,26 @@ export async function sendMcpMessage(
 }
 
 /**
- * Initialize an MCP session and call a tool.
- * Sends a JSON-RPC batch: initialize + initialized notification + tools/call.
+ * Parse a JSON-RPC result from an MCP response that may be either plain JSON
+ * or SSE (`text/event-stream`).  Returns the first `event: message` data
+ * payload when SSE, or the full JSON body otherwise.
  */
-export async function mcpInitializeAndCallTool(
-  request: APIRequestContext,
-  accessToken: string,
-  toolName: string,
-  args: Record<string, unknown> = {},
-) {
-  const batch = [
-    {
-      jsonrpc: '2.0',
-      id: 1,
-      method: 'initialize',
-      params: {
-        protocolVersion: '2025-03-26',
-        capabilities: {},
-        clientInfo: { name: 'e2e-test', version: '1.0.0' },
-      },
-    },
-    {
-      jsonrpc: '2.0',
-      method: 'notifications/initialized',
-    },
-    {
-      jsonrpc: '2.0',
-      id: 2,
-      method: 'tools/call',
-      params: { name: toolName, arguments: args },
-    },
-  ];
-
-  return sendMcpMessage(request, accessToken, batch);
+export async function parseMcpResponse(response: Awaited<ReturnType<APIRequestContext['post']>>) {
+  const contentType = response.headers()['content-type'] ?? '';
+  if (contentType.includes('text/event-stream')) {
+    const text = await response.text();
+    // SSE format: "event: message\ndata: {…}\n\n"
+    const messages: unknown[] = [];
+    for (const block of text.split('\n\n')) {
+      const dataLine = block.split('\n').find((l) => l.startsWith('data: '));
+      if (dataLine) {
+        messages.push(JSON.parse(dataLine.slice('data: '.length)));
+      }
+    }
+    // Return the first (and usually only) message for convenience.
+    return messages[0] as Record<string, unknown>;
+  }
+  return (await response.json()) as Record<string, unknown>;
 }
 
 /**
@@ -285,3 +277,94 @@ export async function fetchUserInfo(request: APIRequestContext, accessToken: str
  * we intercept the navigation before it loads.
  */
 export const TEST_REDIRECT_URI = `${BASE_URL}/oauth/callback`;
+
+/** Standard MCP initialize message for test assertions. */
+export const MCP_INITIALIZE_MESSAGE = {
+  jsonrpc: '2.0',
+  id: 1,
+  method: 'initialize',
+  params: {
+    protocolVersion: '2025-03-26',
+    capabilities: {},
+    clientInfo: { name: 'e2e-test', version: '1.0.0' },
+  },
+};
+
+/**
+ * Navigate to the authorize URL, grant consent, and return the authorization code.
+ *
+ * Intercepts the callback redirect so Playwright never loads the (non-existent)
+ * callback page. Use this for any test that needs the standard "click Allow" flow.
+ */
+export async function consentAndGetCode(page: Page, authorizeUrl: string) {
+  let callbackUrl: string | undefined;
+  await page.route('**/oauth/callback**', async (route) => {
+    callbackUrl = route.request().url();
+    await route.fulfill({ status: 200, body: 'Callback intercepted' });
+  });
+
+  await page.goto(authorizeUrl);
+  await expect(page.getByRole('heading', { name: 'Authorize Application' })).toBeVisible();
+  await page.getByRole('button', { name: 'Allow' }).click();
+  await page.waitForURL('**/oauth/callback**');
+
+  const result = extractCodeFromUrl(callbackUrl ?? page.url());
+  return result;
+}
+
+/**
+ * Run the full OAuth flow (register → PKCE → authorize → consent → token exchange)
+ * and return the resulting tokens + client ID.
+ *
+ * Covers the most common test preamble. Tests that need to deviate from the
+ * happy path (wrong verifier, deny consent, missing resource, etc.) should
+ * still inline the individual steps so the deviation is visible.
+ */
+export async function getTokensViaConsent(
+  page: Page,
+  request: APIRequestContext,
+  options: {
+    scope?: string;
+    includeResource?: boolean;
+    clientName?: string;
+    clientUri?: string;
+  } = {},
+) {
+  const {
+    scope = 'openid profile email offline_access mcp:tools',
+    includeResource = true,
+    clientName,
+    clientUri,
+  } = options;
+
+  const { data: client } = await registerPublicClient(request, {
+    redirectUri: TEST_REDIRECT_URI,
+    clientName,
+    clientUri,
+  });
+  const { codeVerifier, codeChallenge } = await generatePKCE();
+  const state = generateState();
+  const mcpResource = includeResource ? await getMcpResource(request) : undefined;
+
+  const authorizeUrl = buildAuthorizeUrl({
+    clientId: client.client_id,
+    redirectUri: TEST_REDIRECT_URI,
+    scope,
+    codeChallenge,
+    state,
+    resource: mcpResource,
+  });
+
+  const { code } = await consentAndGetCode(page, authorizeUrl);
+  expect(code).toBeDefined();
+
+  const { data: tokens } = await exchangeCodeForTokens(request, {
+    code: code!,
+    clientId: client.client_id,
+    redirectUri: TEST_REDIRECT_URI,
+    codeVerifier,
+    resource: mcpResource,
+  });
+
+  return { tokens, clientId: client.client_id };
+}
