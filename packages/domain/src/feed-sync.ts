@@ -162,7 +162,8 @@ export async function syncFeedArticles(
 }
 
 const OUTDATED_MIN = 10;
-const LIMIT = 15;
+const GLOBAL_LIMIT = 50;
+const PER_USER_LIMIT = 15;
 /** Number of consecutive failures before a feed is marked as broken */
 const BROKEN_THRESHOLD = 3;
 
@@ -240,7 +241,7 @@ export async function syncSingleFeed(userId: string, feedId: string): Promise<vo
 /**
  * Finds stale feeds across all users and enqueues them for sync.
  * Single global query replaces the old per-user iteration pattern.
- * Broken feeds are excluded.
+ * Broken feeds are excluded. Per-user cap prevents one user from starving others.
  */
 export async function syncOldestFeeds(): Promise<void> {
   const outdatedDate = new Date(Date.now() - OUTDATED_MIN * 60 * 1000);
@@ -249,12 +250,25 @@ export async function syncOldestFeeds(): Promise<void> {
     or(isNull(feeds.lastSyncAt), lt(feeds.lastSyncAt, outdatedDate)),
   );
 
-  const feedsToSync = await db
+  const candidates = await db
     .select({ id: feeds.id, userId: feeds.userId })
     .from(feeds)
     .where(condition)
     .orderBy(asc(feeds.lastSyncAt))
-    .limit(LIMIT);
+    .limit(GLOBAL_LIMIT);
+
+  if (candidates.length === 0) {
+    return;
+  }
+
+  // Apply per-user cap so one user can't consume all slots
+  const perUserCount = new Map<string, number>();
+  const feedsToSync = candidates.filter((feed) => {
+    const count = perUserCount.get(feed.userId) ?? 0;
+    if (count >= PER_USER_LIMIT) return false;
+    perUserCount.set(feed.userId, count + 1);
+    return true;
+  });
 
   if (feedsToSync.length === 0) {
     return;
