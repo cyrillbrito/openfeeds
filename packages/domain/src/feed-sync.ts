@@ -83,24 +83,30 @@ export async function syncFeedArticles(
   // Get items based on feed format and normalize them
   const normalizedItems = getNormalizedItems(feedResult);
 
-  // Filter out items without GUIDs
-  const itemsWithGuids = normalizedItems.filter(
-    (item): item is NormalizedFeedItem & { guid: string } => item.guid !== null,
-  );
-
-  if (itemsWithGuids.length === 0) {
+  if (normalizedItems.length === 0) {
     return counts;
   }
 
   // Batch dedup: query all existing GUIDs at once instead of per-article
-  const guids = itemsWithGuids.map((item) => item.guid);
-  const existingArticles = await db.query.articles.findMany({
-    columns: { guid: true },
-    where: inArray(articles.guid, guids),
-  });
-  const existingGuids = new Set(existingArticles.map((a) => a.guid));
+  const guidsToCheck = normalizedItems
+    .map((item) => item.guid)
+    .filter((guid): guid is string => guid !== null);
 
-  const newItems = itemsWithGuids.filter((item) => !existingGuids.has(item.guid));
+  const existingGuids = new Set<string>();
+  if (guidsToCheck.length > 0) {
+    const existingArticles = await db.query.articles.findMany({
+      columns: { guid: true },
+      where: inArray(articles.guid, guidsToCheck),
+    });
+    for (const a of existingArticles) {
+      if (a.guid) existingGuids.add(a.guid);
+    }
+  }
+
+  // Items without GUIDs are always new; items with GUIDs are deduped
+  const newItems = normalizedItems.filter(
+    (item) => item.guid === null || !existingGuids.has(item.guid),
+  );
 
   if (newItems.length === 0) {
     return counts;
