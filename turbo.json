@@ -8,6 +8,7 @@
       "outputs": ["dist/**"],
       "env": [
         "VITE_*",
+        "BASE_URL",
         "BETTER_AUTH_SECRET",
         "TRUSTED_ORIGINS",
         "DATABASE_URL",
