@@ -1,18 +1,10 @@
 import { expect } from '@playwright/test';
 import { test } from '../../fixtures/auth-fixture';
 import {
-  buildAuthorizeUrl,
-  consentAndGetCode,
-  exchangeCodeForTokens,
-  generatePKCE,
-  generateState,
-  getMcpResource,
   getTokensViaConsent,
   MCP_INITIALIZE_MESSAGE,
   parseMcpResponse,
-  registerPublicClient,
   sendMcpMessage,
-  TEST_REDIRECT_URI,
 } from '../../utils/oauth';
 
 test.describe('MCP Endpoint Access Control', () => {
