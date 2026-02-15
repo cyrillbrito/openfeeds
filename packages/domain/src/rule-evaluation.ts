@@ -4,44 +4,6 @@ import { filterRuleDbToApi } from './db-utils';
 import { shouldMarkAsRead } from './entities/filter-rule';
 
 /**
- * Evaluates filter rules for a given feed and article title.
- * Returns true if the article should be marked as read based on the rules.
- * Verifies feed ownership via userId.
- */
-export async function evaluateFilterRules(
-  feedId: string,
-  articleTitle: string,
-  userId: string,
-): Promise<boolean> {
-  try {
-    // Verify the feed belongs to this user
-    const feed = await db.query.feeds.findFirst({
-      where: and(eq(feeds.id, feedId), eq(feeds.userId, userId)),
-    });
-
-    if (!feed) {
-      return false; // Feed doesn't exist or doesn't belong to user
-    }
-
-    // Get all active filter rules for this feed
-    const rules = await db.query.filterRules.findMany({
-      where: and(eq(filterRules.feedId, feedId), eq(filterRules.isActive, true)),
-    });
-
-    if (rules.length === 0) {
-      return false;
-    }
-
-    // Convert to API format and evaluate
-    const apiRules = rules.map(filterRuleDbToApi);
-    return shouldMarkAsRead(apiRules, articleTitle);
-  } catch (error) {
-    console.error('Error evaluating filter rules:', error);
-    return false; // Fail safe - don't mark as read if there's an error
-  }
-}
-
-/**
  * Applies all active filter rules to existing articles for a specific feed.
  * Returns the number of articles that were marked as read.
  * Verifies feed ownership via userId.
@@ -95,16 +57,4 @@ export async function applyFilterRulesToExistingArticles(
     articlesProcessed: feedArticles.length,
     articlesMarkedAsRead,
   };
-}
-
-/**
- * Applies filter rules to a single article during sync.
- * This is used when new articles are being added to avoid processing all articles every time.
- */
-export async function applyFilterRulesToArticle(
-  feedId: string,
-  articleTitle: string,
-  userId: string,
-): Promise<boolean> {
-  return evaluateFilterRules(feedId, articleTitle, userId);
 }

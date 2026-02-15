@@ -33,7 +33,7 @@ bun benchmark    # Run performance benchmark
 
 ## Workers
 
-- `Feed Sync Orchestrator` - Calls `syncOldestFeedsForAllUsers()`, runs every minute
+- `Feed Sync Orchestrator` - Calls `enqueueStaleFeeds()`, runs every minute
 - `Single Feed Sync` - Calls `syncSingleFeed()` for individual feeds
 - `Feed Details` - Calls `updateFeedMetadata()` for feed metadata
 - `Auto Archive` - Calls `autoArchiveForAllUsers()`, runs daily at midnight
