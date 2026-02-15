@@ -50,6 +50,9 @@ export const Route = createFileRoute('/api/feeds')({
           const [feed] = await feedsDomain.createFeeds([{ url: body.url }], session.user.id);
           return Response.json(feed, { status: 201, headers });
         } catch (error) {
+          if (error instanceof feedsDomain.LimitExceededError) {
+            return Response.json({ message: error.message }, { status: 429, headers });
+          }
           if (error instanceof feedsDomain.ConflictError) {
             return Response.json({ message: error.message }, { status: 409, headers });
           }
