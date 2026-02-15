@@ -1,2 +1,2 @@
 // Re-export schemas and types from schema file
-export * from './common.schema';
+export { type PaginatedResponse, CursorQuerySchema } from './common.schema';
