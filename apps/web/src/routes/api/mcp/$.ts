@@ -33,6 +33,7 @@ const handler = mcpHandler(
       audience: `${env.BASE_URL}/api/mcp`,
       issuer: env.BASE_URL,
     },
+    scopes: ['mcp:tools'],
   },
   async (req, jwt) => {
     const server = new McpServer({ name: 'OpenFeeds', version: '0.0.1' });

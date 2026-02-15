@@ -59,7 +59,7 @@ export const auth = betterAuth({
     storeSessionInDatabase: true,
   },
   plugins: [
-    jwt(),
+    jwt({ disableSettingJwtHeader: true }),
     oauthProvider({
       loginPage: '/signin',
       consentPage: '/oauth/consent',

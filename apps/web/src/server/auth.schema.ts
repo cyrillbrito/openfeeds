@@ -2,7 +2,7 @@ import { oauthProvider } from '@better-auth/oauth-provider';
 import { betterAuth } from 'better-auth';
 import { drizzleAdapter } from 'better-auth/adapters/drizzle';
 import { jwt } from 'better-auth/plugins';
-import { tanstackStartCookies } from 'better-auth/tanstack-start';
+import { tanstackStartCookies } from 'better-auth/tanstack-start/solid';
 import { SQL } from 'bun';
 
 // This file is used only for schema generation (generate:auth-schema script).
@@ -23,7 +23,7 @@ export const auth = betterAuth({
     storeSessionInDatabase: true,
   },
   plugins: [
-    jwt(),
+    jwt({ disableSettingJwtHeader: true }),
     oauthProvider({
       loginPage: '/signin',
       consentPage: '/oauth/consent',
