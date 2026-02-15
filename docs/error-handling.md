@@ -16,6 +16,7 @@ Custom error classes extending `Error`. Server-side code uses `instanceof` to di
 | `UnexpectedError`       | An unexpected error occurred       | DB failures, unrecoverable states      |
 | `UnauthorizedError`     | Unauthorized                       | Permission denied                      |
 | `TtsNotConfiguredError` | Text-to-speech is not available... | Feature not enabled                    |
+| `LimitExceededError`    | You've reached the maximum of...   | Free-tier usage limits                 |
 
 **Rules:**
 

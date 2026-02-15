@@ -1,4 +1,3 @@
-import { getLimitErrorMessage, isLimitExceededError } from '@repo/domain/client';
 import { Check, CircleAlert, CircleMinus, FileWarning, Plus, TriangleAlert, X } from 'lucide-solid';
 import { createSignal, For, Match, Show, Switch } from 'solid-js';
 import { $$importOpml } from '~/entities/feeds.server';
@@ -50,11 +49,7 @@ function ImportOpmlForm(props: ImportOpmlFormProps) {
       setImportResult(data);
     } catch (err) {
       console.error('Failed to import OPML:', err);
-      if (isLimitExceededError(err)) {
-        setImportError(getLimitErrorMessage(err));
-      } else {
-        setImportError(err instanceof Error ? err.message : 'Failed to import OPML');
-      }
+      setImportError(err instanceof Error ? err.message : 'Failed to import OPML');
     } finally {
       setIsImporting(false);
     }
