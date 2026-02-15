@@ -161,6 +161,9 @@ export function ArticleCard(props: ArticleCardProps) {
                 if (img.srcset) {
                   img.srcset = '';
                   img.src = `https://img.youtube.com/vi/${videoId()}/sddefault.jpg`;
+                } else {
+                  // Prevent infinite error loop if sddefault also fails
+                  img.onerror = null;
                 }
               }}
             />
