@@ -11,7 +11,16 @@ export default defineConfig({
   plugins: [
     lucidePreprocess(),
     devtools(),
-    nitro(),
+    nitro({
+      rollupConfig: {
+        // Externalize @modelcontextprotocol/sdk and its CJS-only transitive
+        // deps (ajv, ajv-formats). Bundling them triggers a Rollup crash
+        // ("null is not an object — target.getVariableForExportName") during
+        // the Nitro build because Rollup can't reconcile their module graphs.
+        // These packages are available at runtime via node_modules.
+        external: [/^@modelcontextprotocol\/sdk/, /^ajv/, /^ajv-formats/, /^zod-to-json-schema/],
+      },
+    }),
     viteTsConfigPaths({ projects: ['./tsconfig.json'] }),
     tailwindcss(),
     tanstackStart(),
