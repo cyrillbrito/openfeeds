@@ -147,6 +147,14 @@ export async function getFeed(userId: string, id: string): Promise<Feed | null> 
 2. Worker creates Worker instances, calls domain business logic
 3. Both connect to same Redis queues
 
+## Error Handling
+
+Domain errors are transport-agnostic. Server-side code uses `instanceof` to discriminate. See [docs/error-handling.md](../../docs/error-handling.md) for full architecture.
+
+- Throw domain errors directly — don't catch/wrap at the domain level
+- Error messages must be user-safe (they reach the client as-is via server functions)
+- Never add HTTP concepts (status codes) to domain errors
+
 ## Guidelines
 
 - Pure business logic only (no HTTP, no Workers)

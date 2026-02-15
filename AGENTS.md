@@ -65,6 +65,11 @@ Each app/package has its own `AGENTS.md` with specific patterns and guidelines.
 - Auth middleware provides user context
 - Calls `@repo/domain` for business logic
 
+**Error Handling:**
+
+- Domain errors are transport-agnostic; server-side code uses `instanceof` to discriminate
+- See [docs/error-handling.md](docs/error-handling.md) for full architecture
+
 **Background Processing:**
 
 - Worker app processes BullMQ jobs
