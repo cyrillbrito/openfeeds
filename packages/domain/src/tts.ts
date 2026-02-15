@@ -2,9 +2,9 @@ import { existsSync } from 'node:fs';
 import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import { trackEvent } from './analytics';
-import { getConfig } from './config';
 import { getArticleWithContent } from './entities/article';
 import { type ArticleAudioMetadata, type WordTiming } from './entities/tts.schema';
+import { env } from './env';
 import { NotFoundError, TtsNotConfiguredError } from './errors';
 
 // Re-export client-safe types
@@ -29,8 +29,7 @@ interface UnrealSpeechTimestamp {
  * Returns true if both dataPath and API key are set.
  */
 export function isTtsConfigured(): boolean {
-  const config = getConfig();
-  return Boolean(config.dataPath && config.unrealSpeechApiKey);
+  return Boolean(env.DATA_PATH && env.UNREAL_SPEECH_API_KEY);
 }
 
 /**
@@ -38,11 +37,10 @@ export function isTtsConfigured(): boolean {
  * Throws TtsNotConfiguredError if dataPath is not set.
  */
 function getAudioDir(userId: string): string {
-  const dataPath = getConfig().dataPath;
-  if (!dataPath) {
+  if (!env.DATA_PATH) {
     throw new TtsNotConfiguredError();
   }
-  return join(dataPath, 'audio', userId);
+  return join(env.DATA_PATH, 'audio', userId);
 }
 
 /**
@@ -144,11 +142,10 @@ export async function generateArticleAudio(
   userId: string,
   options?: { voice?: string },
 ): Promise<ArticleAudioMetadata> {
-  const config = getConfig();
-  if (!config.dataPath || !config.unrealSpeechApiKey) {
+  if (!env.DATA_PATH || !env.UNREAL_SPEECH_API_KEY) {
     throw new TtsNotConfiguredError();
   }
-  const apiKey = config.unrealSpeechApiKey;
+  const apiKey = env.UNREAL_SPEECH_API_KEY;
 
   // Check if audio already exists
   if (articleAudioExists(userId, articleId)) {
@@ -176,7 +173,7 @@ export async function generateArticleAudio(
   // For longer content, we'd need to use /synthesisTasks or chunk it
   const truncatedContent = textContent.slice(0, 3000);
 
-  const voice = options?.voice || getConfig().ttsDefaultVoice;
+  const voice = options?.voice || env.TTS_DEFAULT_VOICE;
 
   // Call Unreal Speech API
   const response = await fetch('https://api.v8.unrealspeech.com/speech', {

@@ -1,4 +1,4 @@
-import { feeds, getDb, type DbInsertFeed } from '@repo/db';
+import { db, feeds, type DbInsertFeed } from '@repo/db';
 import { discoverFeeds } from '@repo/discovery/server';
 import { attemptAsync, createId } from '@repo/shared/utils';
 import { and, eq } from 'drizzle-orm';
@@ -12,7 +12,6 @@ import type { CreateFeed, DiscoveredFeed, Feed, UpdateFeed } from './feed.schema
 export * from './feed.schema';
 
 export async function getAllFeeds(userId: string): Promise<Feed[]> {
-  const db = getDb();
   const allFeeds = await db.query.feeds.findMany({
     where: eq(feeds.userId, userId),
   });
@@ -25,7 +24,6 @@ export async function getAllFeeds(userId: string): Promise<Feed[]> {
  * Used for business logic that needs a single feed
  */
 export async function getFeedById(id: string, userId: string): Promise<Feed> {
-  const db = getDb();
   const feed = await db.query.feeds.findFirst({
     where: and(eq(feeds.id, id), eq(feeds.userId, userId)),
   });
@@ -41,7 +39,6 @@ export async function createFeed(
   data: CreateFeed & { id?: string },
   userId: string,
 ): Promise<Feed> {
-  const db = getDb();
   // Check if feed with this URL already exists for this user
   const existingFeed = await db.query.feeds.findFirst({
     where: and(eq(feeds.feedUrl, data.url), eq(feeds.userId, userId)),
@@ -89,7 +86,6 @@ export async function createFeed(
 }
 
 export async function updateFeed(id: string, data: UpdateFeed, userId: string): Promise<Feed> {
-  const db = getDb();
   // Verify feed exists and belongs to user
   await getFeedById(id, userId);
 
@@ -118,7 +114,6 @@ export async function updateFeed(id: string, data: UpdateFeed, userId: string): 
 }
 
 export async function deleteFeed(id: string, userId: string): Promise<void> {
-  const db = getDb();
   const existingFeed = await db.query.feeds.findFirst({
     columns: { id: true },
     where: and(eq(feeds.id, id), eq(feeds.userId, userId)),
@@ -140,8 +135,6 @@ export async function deleteFeed(id: string, userId: string): Promise<void> {
  * Does NOT immediately sync — the next orchestrator run will handle it.
  */
 export async function retryFeed(id: string, userId: string): Promise<Feed> {
-  const db = getDb();
-
   // Verify feed exists and belongs to user
   await getFeedById(id, userId);
 

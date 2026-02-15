@@ -1,4 +1,4 @@
-import { articles, getDb } from '@repo/db';
+import { articles, db } from '@repo/db';
 import { attemptAsyncFn, startTimer } from '@repo/shared/utils';
 import { and, eq, lt } from 'drizzle-orm';
 import { getAutoArchiveCutoffDate, type ArchiveResult } from './entities/settings';
@@ -19,7 +19,6 @@ export async function autoArchiveArticles(userId: string): Promise<void> {
 }
 
 export async function performArchiveArticles(userId: string): Promise<ArchiveResult> {
-  const db = getDb();
   // Get the cutoff date for auto-archiving articles
   const cutoffDate = await getAutoArchiveCutoffDate(userId);
 

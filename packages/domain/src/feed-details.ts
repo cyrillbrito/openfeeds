@@ -1,4 +1,4 @@
-import { feeds, getDb } from '@repo/db';
+import { db, feeds } from '@repo/db';
 import { attemptAsync } from '@repo/shared/utils';
 import { and, eq } from 'drizzle-orm';
 import { type Feed } from './entities/feed';
@@ -142,8 +142,6 @@ export async function fetchFeedMetadata(feed: ParseFeedResult): Promise<Partial<
 }
 
 export async function updateFeedMetadata(userId: string, feedId: string) {
-  const db = getDb();
-
   const [feedErr, feed] = await attemptAsync(
     db.query.feeds.findFirst({
       columns: { feedUrl: true },

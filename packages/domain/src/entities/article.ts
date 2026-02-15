@@ -1,4 +1,4 @@
-import { articles, articleTags, feedTags, getDb } from '@repo/db';
+import { articles, articleTags, db, feedTags } from '@repo/db';
 import { fetchArticleContent } from '@repo/readability/server';
 import { createId } from '@repo/shared/utils';
 import { and, count, desc, eq, inArray, isNull, like, lt, or, sql } from 'drizzle-orm';
@@ -21,7 +21,6 @@ export async function getArticles(
   filters: ArticleQuery,
   userId: string,
 ): Promise<PaginatedResponse<Article>> {
-  const db = getDb();
   const { cursor, limit, feedId, tagId, isRead, isArchived, type, search, ids, urlLike } = filters;
 
   const queryLimit = limit ? limit + 1 : undefined;
@@ -104,7 +103,6 @@ export async function getArticles(
 }
 
 export async function getArticleById(id: string, userId: string): Promise<Article> {
-  const db = getDb();
   const article = await db.query.articles.findFirst({
     where: and(eq(articles.id, id), eq(articles.userId, userId)),
   });
@@ -130,7 +128,6 @@ export async function getArticleWithContent(
   id: string,
   userId: string,
 ): Promise<Article & { cleanContent: string | null }> {
-  const db = getDb();
   const article = await db.query.articles.findFirst({
     where: and(eq(articles.id, id), eq(articles.userId, userId)),
   });
@@ -181,7 +178,6 @@ export async function getArticleWithContent(
  * Skips if content was already extracted (contentExtractedAt is set).
  */
 export async function extractArticleContent(id: string, userId: string): Promise<void> {
-  const db = getDb();
   const article = await db.query.articles.findFirst({
     where: and(eq(articles.id, id), eq(articles.userId, userId)),
   });
@@ -229,8 +225,6 @@ export async function updateArticle(
   data: UpdateArticle,
   userId: string,
 ): Promise<Article> {
-  const db = getDb();
-
   if (Object.keys(data).length > 0) {
     const [updatedArticle] = await db
       .update(articles)
@@ -250,7 +244,6 @@ export async function markManyArticlesArchived(
   request: MarkManyArchivedRequest,
   userId: string,
 ): Promise<MarkManyArchivedResponse> {
-  const db = getDb();
   const { context, feedId, tagId } = request;
 
   if (context === 'feed' && !feedId) {
@@ -301,7 +294,6 @@ export async function markManyArticlesArchived(
 }
 
 export async function createArticle(data: CreateArticleFromUrl, userId: string): Promise<Article> {
-  const db = getDb();
   const articleId = data.id ?? createId();
   const now = new Date();
 

@@ -1,4 +1,4 @@
-import { getDb, tags } from '@repo/db';
+import { db, tags } from '@repo/db';
 import { attemptAsync, createId } from '@repo/shared/utils';
 import { and, eq, sql } from 'drizzle-orm';
 import { trackEvent } from '../analytics';
@@ -10,7 +10,6 @@ import type { CreateTag, Tag, UpdateTag } from './tag.schema';
 export * from './tag.schema';
 
 export async function getAllTags(userId: string): Promise<Tag[]> {
-  const db = getDb();
   const allTags = await db.query.tags.findMany({
     where: eq(tags.userId, userId),
   });
@@ -22,7 +21,6 @@ export async function getAllTags(userId: string): Promise<Tag[]> {
  * Used for business logic that needs a single tag
  */
 export async function getTagById(id: string, userId: string): Promise<Tag> {
-  const db = getDb();
   const tag = await db.query.tags.findFirst({
     where: and(eq(tags.id, id), eq(tags.userId, userId)),
   });
@@ -35,7 +33,6 @@ export async function getTagById(id: string, userId: string): Promise<Tag> {
 }
 
 export async function createTag(data: CreateTag & { id?: string }, userId: string): Promise<Tag> {
-  const db = getDb();
   // Check if tag name already exists for this user (case-insensitive)
   const existingTag = await db.query.tags.findFirst({
     where: and(eq(tags.userId, userId), sql`lower(${tags.name}) = lower(${data.name})`),
@@ -74,7 +71,6 @@ export async function createTag(data: CreateTag & { id?: string }, userId: strin
 }
 
 export async function updateTag(id: string, data: UpdateTag, userId: string): Promise<Tag> {
-  const db = getDb();
   // Verify tag exists and belongs to user
   await getTagById(id, userId);
 
@@ -114,7 +110,6 @@ export async function updateTag(id: string, data: UpdateTag, userId: string): Pr
 }
 
 export async function deleteTag(id: string, userId: string): Promise<void> {
-  const db = getDb();
   // Verify tag exists and belongs to user
   await getTagById(id, userId);
 

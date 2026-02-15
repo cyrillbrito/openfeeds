@@ -1,4 +1,4 @@
-import { feeds, feedTags, getDb, tags } from '@repo/db';
+import { db, feeds, feedTags, tags } from '@repo/db';
 import { attemptAsync, createId } from '@repo/shared/utils';
 import { eq } from 'drizzle-orm';
 import { parseOpml } from 'feedsmith';
@@ -58,7 +58,6 @@ function getFeedsFromOutlines(outlines: OPMLOutlines): Array<{
 
 // Core business logic for importing OPML feeds
 export async function importOpmlFeeds(opmlContent: string, userId: string): Promise<ImportResult> {
-  const db = getDb();
   const parsedOpml = parseOpml(opmlContent);
 
   // Extract all feeds from the OPML structure

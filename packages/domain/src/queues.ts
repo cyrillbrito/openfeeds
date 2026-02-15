@@ -1,5 +1,5 @@
 import { Queue } from 'bullmq';
-import { getRedisConnection, QUEUE_NAMES } from './config';
+import { QUEUE_NAMES, redisConnection } from './config';
 
 export interface UserFeedJobData {
   userId: string;
@@ -9,28 +9,28 @@ export interface UserFeedJobData {
 let _feedSyncOrchestratorQueue: Queue | null = null;
 export function getFeedSyncOrchestratorQueue(): Queue {
   return (_feedSyncOrchestratorQueue ??= new Queue(QUEUE_NAMES.FEED_SYNC_ORCHESTRATOR, {
-    connection: getRedisConnection(),
+    connection: redisConnection,
   }));
 }
 
 let _singleFeedSyncQueue: Queue<UserFeedJobData> | null = null;
 export function getSingleFeedSyncQueue(): Queue<UserFeedJobData> {
   return (_singleFeedSyncQueue ??= new Queue<UserFeedJobData>(QUEUE_NAMES.SINGLE_FEED_SYNC, {
-    connection: getRedisConnection(),
+    connection: redisConnection,
   }));
 }
 
 let _feedDetailQueue: Queue<UserFeedJobData> | null = null;
 export function getFeedDetailQueue(): Queue<UserFeedJobData> {
   return (_feedDetailQueue ??= new Queue<UserFeedJobData>(QUEUE_NAMES.FEED_DETAIL, {
-    connection: getRedisConnection(),
+    connection: redisConnection,
   }));
 }
 
 let _autoArchiveQueue: Queue | null = null;
 export function getAutoArchiveQueue(): Queue {
   return (_autoArchiveQueue ??= new Queue(QUEUE_NAMES.AUTO_ARCHIVE, {
-    connection: getRedisConnection(),
+    connection: redisConnection,
   }));
 }
 

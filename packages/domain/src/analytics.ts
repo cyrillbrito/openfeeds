@@ -1,4 +1,4 @@
-import { getPosthog } from './config';
+import { posthog } from './config';
 
 /**
  * Server-side analytics event definitions.
@@ -87,7 +87,6 @@ export function trackEvent<T extends keyof ServerAnalyticsEventMap>(
   event: T,
   properties: ServerAnalyticsEventMap[T],
 ): void {
-  const posthog = getPosthog();
   if (posthog) {
     posthog.capture({
       distinctId: userId,
@@ -105,7 +104,6 @@ export function trackEvent<T extends keyof ServerAnalyticsEventMap>(
  * @param properties - Event properties
  */
 export function trackSystemEvent(event: string, properties?: Record<string, unknown>): void {
-  const posthog = getPosthog();
   if (posthog) {
     posthog.capture({
       distinctId: 'system',

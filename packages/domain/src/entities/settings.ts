@@ -1,4 +1,4 @@
-import { getDb, settings as settingsTable } from '@repo/db';
+import { db, settings as settingsTable } from '@repo/db';
 import { eq } from 'drizzle-orm';
 import type { Settings } from './settings.schema';
 
@@ -10,7 +10,6 @@ export * from './settings.schema';
  * Called when a user signs up.
  */
 export async function createSettings(userId: string): Promise<void> {
-  const db = getDb();
   await db.insert(settingsTable).values({ userId });
 }
 
@@ -19,7 +18,6 @@ export async function createSettings(userId: string): Promise<void> {
  * Returns default values if no row exists.
  */
 export async function getSettings(userId: string): Promise<Settings> {
-  const db = getDb();
   const settings = await db.query.settings.findFirst({
     where: eq(settingsTable.userId, userId),
   });
@@ -47,7 +45,6 @@ export async function updateSettings(
   userId: string,
   updates: Partial<Omit<Settings, 'userId'>>,
 ): Promise<Settings> {
-  const db = getDb();
   const currentSettings = await getSettings(userId);
 
   // Merge updates - undefined means "don't change"

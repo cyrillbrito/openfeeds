@@ -1,4 +1,4 @@
-import { feedTags, getDb } from '@repo/db';
+import { db, feedTags } from '@repo/db';
 import { createId } from '@repo/shared/utils';
 import { and, eq, inArray } from 'drizzle-orm';
 import type { CreateFeedTag, FeedTag } from './feed-tag.schema';
@@ -7,8 +7,6 @@ import type { CreateFeedTag, FeedTag } from './feed-tag.schema';
 export * from './feed-tag.schema';
 
 export async function getAllFeedTags(userId: string): Promise<FeedTag[]> {
-  const db = getDb();
-
   // feed_tags has denormalized user_id for efficient filtering
   return db
     .select({
@@ -22,8 +20,6 @@ export async function getAllFeedTags(userId: string): Promise<FeedTag[]> {
 }
 
 export async function createFeedTags(data: CreateFeedTag[], userId: string): Promise<FeedTag[]> {
-  const db = getDb();
-
   if (data.length === 0) return [];
 
   const newTags = data.map((item) => ({
@@ -39,8 +35,6 @@ export async function createFeedTags(data: CreateFeedTag[], userId: string): Pro
 }
 
 export async function deleteFeedTags(ids: string[], userId: string): Promise<void> {
-  const db = getDb();
-
   if (ids.length === 0) return;
 
   await db.delete(feedTags).where(and(inArray(feedTags.id, ids), eq(feedTags.userId, userId)));

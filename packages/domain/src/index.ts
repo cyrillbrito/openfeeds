@@ -22,15 +22,8 @@ export * from './tts';
 // Utilities
 export * from './db-utils';
 
-// Infrastructure - config-based pattern
-export {
-  initDomain,
-  shutdownDomain,
-  getConfig,
-  getRedisConnection,
-  QUEUE_NAMES,
-  type DomainConfig,
-} from './config';
+// Infrastructure
+export { shutdownDomain, redisConnection, QUEUE_NAMES } from './config';
 export { logger, type LogMetadata } from './logger';
 export {
   enqueueFeedDetail,

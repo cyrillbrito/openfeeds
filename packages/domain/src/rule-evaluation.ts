@@ -1,4 +1,4 @@
-import { articles, feeds, filterRules, getDb } from '@repo/db';
+import { articles, db, feeds, filterRules } from '@repo/db';
 import { attemptAsyncFn } from '@repo/shared/utils';
 import { and, eq } from 'drizzle-orm';
 import { filterRuleDbToApi } from './db-utils';
@@ -14,7 +14,6 @@ export async function evaluateFilterRules(
   articleTitle: string,
   userId: string,
 ): Promise<boolean> {
-  const db = getDb();
   const [error, result] = await attemptAsyncFn(async () => {
     // Verify the feed belongs to this user
     const feed = await db.query.feeds.findFirst({
@@ -56,7 +55,6 @@ export async function applyFilterRulesToExistingArticles(
   feedId: string,
   userId: string,
 ): Promise<{ articlesProcessed: number; articlesMarkedAsRead: number }> {
-  const db = getDb();
   const [error, result] = await attemptAsyncFn(async () => {
     // Verify the feed belongs to this user
     const feed = await db.query.feeds.findFirst({
