@@ -1,4 +1,4 @@
-import { feeds, getDb } from '@repo/db';
+import { db, feeds } from '@repo/db';
 import { createAuthClient } from 'better-auth/client';
 import { eq } from 'drizzle-orm';
 
@@ -57,7 +57,6 @@ export async function setup(config: BenchmarkConfig): Promise<BenchmarkContext> 
   console.log(`User created: ${userId}`);
 
   console.log(`Seeding ${feedCount} feeds with varying article counts...`);
-  const db = getDb();
   const feedIds: string[] = [];
   const now = new Date();
   const articleCounts: number[] = [];
@@ -94,7 +93,6 @@ export async function setup(config: BenchmarkConfig): Promise<BenchmarkContext> 
 export async function teardown(userId: string): Promise<void> {
   console.log(`Cleaning up benchmark user ${userId}...`);
 
-  const db = getDb();
   const user = db._.fullSchema.user;
 
   // Delete user (cascades to feeds, articles, etc via FK)
