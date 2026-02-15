@@ -1,4 +1,4 @@
-import { feeds, getDb } from '@repo/db';
+import { db, feeds } from '@repo/db';
 import * as feedsDomain from '@repo/domain';
 import { CreateFeedSchema, UpdateFeedSchema } from '@repo/domain';
 import { createServerFn } from '@tanstack/solid-start';
@@ -35,7 +35,6 @@ export const $$getAllFeeds = createServerFn()
 export const $$hasAnyFeeds = createServerFn()
   .middleware([authMiddleware])
   .handler(async ({ context }) => {
-    const db = getDb();
     const feed = await db.query.feeds.findFirst({
       columns: { id: true },
       where: eq(feeds.userId, context.user.id),
