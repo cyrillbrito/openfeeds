@@ -270,6 +270,16 @@ export function decodeJwtPayload(jwt: string) {
 }
 
 /**
+ * Fetch the OpenID Connect UserInfo endpoint with a Bearer token.
+ */
+export async function fetchUserInfo(request: APIRequestContext, accessToken: string) {
+  const response = await request.get(`${AUTH_BASE}/oauth2/userinfo`, {
+    headers: { Authorization: `Bearer ${accessToken}` },
+  });
+  return { response, data: await response.json() };
+}
+
+/**
  * Redirect URI for test OAuth clients.
  * Points to a path on the app that doesn't exist —
  * we intercept the navigation before it loads.
