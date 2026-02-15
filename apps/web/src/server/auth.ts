@@ -14,6 +14,7 @@ import { tanstackStartCookies } from 'better-auth/tanstack-start/solid';
 import { env } from '~/env';
 
 export const auth = betterAuth({
+  baseURL: env.BASE_URL,
   database: drizzleAdapter(db, { provider: 'pg' }),
   trustedOrigins: env.TRUSTED_ORIGINS,
   // Required by oauthProvider — the plugin provides its own /token endpoint
