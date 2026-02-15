@@ -4,7 +4,7 @@ import { createAuthClient } from 'better-auth/client';
  * Better Auth client for E2E tests
  * Uses the official Better Auth client to interact with auth endpoints
  */
-export function createTestAuthClient(baseUrl = 'http://localhost:3001') {
+export function createTestAuthClient(baseUrl = process.env.BASE_URL ?? 'http://localhost:3000') {
   return createAuthClient({
     baseURL: baseUrl,
   });
