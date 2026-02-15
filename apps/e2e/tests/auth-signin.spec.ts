@@ -161,7 +161,7 @@ test('redirect if user already authenticated', async ({ page }) => {
   // are automatically handled and available when the page refreshes.
   await page.evaluate(
     async ({ email, password }) => {
-      await fetch('http://localhost:3001/api/auth/sign-in/email', {
+      await fetch('/api/auth/sign-in/email', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',

@@ -28,7 +28,7 @@ const handler = mcpHandler(
     jwksUrl: `http://localhost:${env.PORT}/api/auth/jwks`,
     verifyOptions: {
       audience: `${env.BASE_URL}/api/mcp`,
-      issuer: env.BASE_URL,
+      issuer: `${env.BASE_URL}/api/auth`,
     },
     scopes: ['mcp:tools'],
   },
