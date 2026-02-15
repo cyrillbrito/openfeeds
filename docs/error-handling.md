@@ -2,21 +2,11 @@
 
 ## Principle
 
-Domain errors are **transport-agnostic**. The domain layer doesn't know whether it's called from a web server function, API route, worker, CLI, or MCP tool. Each transport layer is responsible for interpreting domain errors into its own format (HTTP status codes, exit codes, job failure states, etc.).
+Domain errors are **transport-agnostic**. The domain layer throws errors without knowing the caller. Each transport layer maps them to its own format (HTTP status codes, job failure states, etc.).
 
 ## Domain Errors (`packages/domain/src/errors.ts`)
 
-Custom error classes that extend `Error`. Server-side code uses `instanceof` to discriminate.
-
-```typescript
-export class NotFoundError extends Error {
-  constructor(message?: string) {
-    super(message ?? 'Resource not found');
-  }
-}
-```
-
-**Available errors:**
+Custom error classes extending `Error`. Server-side code uses `instanceof` to discriminate.
 
 | Class                   | Default Message                    | Typical Use                            |
 | ----------------------- | ---------------------------------- | -------------------------------------- |
@@ -29,9 +19,28 @@ export class NotFoundError extends Error {
 
 **Rules:**
 
-- Domain functions throw these errors directly — no wrapping, no catching at the domain level
-- Error messages must be user-safe (they reach the client as-is)
-- `assert()` helper throws `AssertionError` for invariant violations (programmer errors, not user errors)
+- Throw directly from domain functions — no wrapping, no catching at the domain level
+- Messages must be user-safe (they reach the client as-is)
+
+## Assertions (`assert()`)
+
+TypeScript assertion helper for **programmer invariants** — conditions that must always hold. Failure in production means a bug, not a user error.
+
+```typescript
+export function assert(condition: unknown, msg?: string): asserts condition {
+  if (!condition) throw new AssertionError(msg);
+}
+```
+
+The `asserts condition` return type narrows the type after the call — eliminates `null | undefined` without a manual `if` check.
+
+```typescript
+const newFeed = dbResult[0];
+assert(newFeed, 'Created feed must exist');
+// TypeScript now knows newFeed is defined
+```
+
+Use for values that should always exist but TypeScript can't prove (e.g., `array[0]` after INSERT with `.returning()`). Do **not** use for user input validation — use domain errors instead. `AssertionError` is never caught or mapped to HTTP status codes; it always propagates as a 500.
 
 ## Error Flow
 
@@ -43,35 +52,14 @@ throw NotFoundError()    →    Server function (seroval)     →    catch (err)
 
 throw ConflictError()    →    API route catch block         →    HTTP 409 response
                               instanceof works (same process)
-                              maps to HTTP status
 
 throw NotFoundError()    →    Worker try-catch              →    Log + retry/skip
                               instanceof works (same process)
-                              decides retry vs skip
 ```
 
 ## Web App: Server Functions
 
-### How TanStack Start serializes errors (verified by testing)
-
-TanStack Start uses seroval's `ShallowErrorPlugin` to serialize errors thrown in server functions. This plugin:
-
-1. **Only serializes `message`** — all other properties (`name`, `stack`, custom props) are stripped
-2. Reconstructs a plain `new Error(message)` on the client
-3. Returns it as a 500 JSON response
-
-**What the client receives:**
-
-- `instanceof Error` → `true` (base `Error`, not the subclass)
-- `err.message` → preserved (the domain error message)
-- `err.constructor.name` → `Error` (subclass identity lost)
-- `err.stack` → client-side deserialization stack, **not** the server stack
-
-**Security:** Server stack traces and file paths are **never sent** to the client. No sanitization middleware needed — `ShallowErrorPlugin` handles this by design.
-
-### Client-side error handling
-
-The client only needs the message. Since domain errors have user-safe messages, the pattern is simple:
+TanStack Start uses seroval's `ShallowErrorPlugin` to serialize errors. Only `message` survives — `instanceof`, `name`, `stack`, and custom properties are stripped. The client receives a plain `Error(message)`. Server stack traces are never sent.
 
 ```typescript
 try {
@@ -81,78 +69,76 @@ try {
 }
 ```
 
-No error type discrimination is needed or possible on the client. If the UI ever needs to branch based on error type, the server function should return a structured result instead of throwing.
+No error type discrimination is needed or possible on the client.
 
-### Global fallback
+## Web App: Error Boundaries
 
-`DefaultCatchBoundary` is registered as `defaultErrorComponent` on the router. It catches any unhandled error during route rendering and displays the error message.
+Error boundaries catch errors during **rendering** — as opposed to try-catch in imperative handlers.
+
+**Router-level defaults** (`apps/web/src/router.tsx`): `defaultErrorComponent: DefaultCatchBoundary`, `defaultNotFoundComponent: NotFound`. No route overrides these.
+
+| Component              | Type                    | Scope                            | File                                      |
+| ---------------------- | ----------------------- | -------------------------------- | ----------------------------------------- |
+| `DefaultCatchBoundary` | TanStack Router         | Full-page, unhandled route error | `src/components/DefaultCatchBoundary.tsx` |
+| `NotFound`             | TanStack Router         | Full-page, unmatched routes      | `src/components/NotFound.tsx`             |
+| `CommonErrorBoundary`  | SolidJS `ErrorBoundary` | Section-level, reusable          | `src/components/CommonErrorBoundary.tsx`  |
+| `LazyModal`            | SolidJS `ErrorBoundary` | Per-modal content                | `src/components/LazyModal.tsx`            |
+| `ShortsViewer`         | SolidJS `ErrorBoundary` | Shorts player area               | `src/components/ShortsViewer.tsx`         |
+
+```
+Component tree error       →  Nearest SolidJS ErrorBoundary  →  Inline error + retry
+Route rendering error      →  DefaultCatchBoundary           →  Full-page error + "Try Again"
+Unmatched route            →  NotFound                       →  Full-page 404
+Server function throw      →  try-catch in handler           →  setError(err.message)
+Uncaught server fn throw   →  DefaultCatchBoundary           →  Full-page error
+```
 
 ## Web App: API Routes
 
-API routes run **server-side** where `instanceof` works. They map domain errors to HTTP status codes:
+API routes run server-side where `instanceof` works. Map domain errors to HTTP status codes:
 
 ```typescript
-// apps/web/src/routes/api/feeds.ts
-import { BadRequestError, ConflictError } from '@repo/domain';
-
 try {
   const result = await createFeed(userId, data);
   return Response.json(result, { status: 201 });
 } catch (error) {
-  if (error instanceof ConflictError) {
+  if (error instanceof ConflictError)
     return Response.json({ message: error.message }, { status: 409 });
-  }
-  if (error instanceof BadRequestError) {
+  if (error instanceof BadRequestError)
     return Response.json({ message: error.message }, { status: 400 });
-  }
   return Response.json({ message: 'Internal server error' }, { status: 500 });
 }
 ```
 
 ## Worker
 
-Workers run **server-side** where `instanceof` works. Two strategies:
+Workers run server-side where `instanceof` works. Two strategies:
 
-- **Let it throw:** Job fails in BullMQ, triggers retry. Used when the error is transient or represents a system failure.
-- **Catch + log + continue:** Per-item errors are logged but the job succeeds. Used when individual item failure is expected (e.g., a broken feed in a loop).
+- **Let it throw** — job fails in BullMQ, triggers retry (transient/system errors)
+- **Catch + log + continue** — per-item errors logged, job succeeds (expected per-item failures)
 
 ```typescript
-// Per-item failure in a loop — log and continue
+// Per-item failure — log and continue
 for (const user of users) {
   try {
     await syncOldestFeeds(user.id);
   } catch (err) {
-    logger.error(err instanceof Error ? err : new Error(String(err)), {
-      source: 'worker',
-      jobName: job.queueName,
-      userId: user.id,
-    });
+    logger.error(err instanceof Error ? err : new Error(String(err)), { userId: user.id });
     continue;
   }
 }
 ```
 
-```typescript
-// Entire job failure — let it propagate to BullMQ for retry
-async (job) => {
-  await updateFeedMetadata(job.data.userId, job.data.feedId);
-  // If this throws, the job fails and BullMQ handles retry
-};
-```
-
 ## Production Error Monitoring
 
-**PostHog** captures exceptions in production across all layers:
+**PostHog** captures exceptions across all layers:
 
-- **Server-side:** `logger.error(error, metadata)` sends to PostHog via the domain logger (`packages/domain/src/logger.ts`). All worker and domain errors flow through this.
-- **Client-side:** `posthog.captureException(err)` for unexpected errors in UI handlers. Known errors (e.g., `BetterFetchError` for auth forms) are shown to the user instead.
-
-Errors appear in PostHog's error tracking dashboard with metadata (operation, feedId, userId, etc.) for debugging.
+- **Server-side:** `logger.error(error, metadata)` → PostHog via domain logger
+- **Client-side:** `posthog.captureException(err)` for unexpected UI errors; known errors shown to user instead
 
 ## Adding New Domain Errors
 
-1. Define the class in `packages/domain/src/errors.ts`
-2. Use a user-safe default message (it reaches the client as-is)
-3. Export from `packages/domain/src/index.ts`
-4. Throw it from domain functions — don't catch/wrap at the domain level
-5. Update API route error mapping if the error should map to a specific HTTP status
+1. Define in `packages/domain/src/errors.ts` with user-safe default message
+2. Export from `packages/domain/src/index.ts`
+3. Throw from domain functions — don't catch/wrap at domain level
+4. Update API route error mapping if needed for specific HTTP status
