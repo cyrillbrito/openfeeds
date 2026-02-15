@@ -180,7 +180,7 @@ export function ArticleAudioPlayer(props: ArticleAudioPlayerProps) {
       {/* Hidden audio element */}
       <Show when={audioUrl()}>
         <audio
-          ref={audioRef}
+          ref={(el) => (audioRef = el)}
           src={audioUrl()!}
           onEnded={handleEnded}
           onLoadedMetadata={handleLoadedMetadata}
