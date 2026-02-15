@@ -9,18 +9,7 @@ import { enqueueFeedDetail, enqueueFeedSync } from '../queues';
 import type { CreateFeed, DiscoveredFeed, Feed, UpdateFeed } from './feed.schema';
 
 // Re-export schemas and types from schema file
-export {
-  SyncStatusSchema,
-  type SyncStatus,
-  FeedSchema,
-  type Feed,
-  CreateFeedSchema,
-  type CreateFeed,
-  UpdateFeedSchema,
-  type UpdateFeed,
-  DiscoveredFeedSchema,
-  type DiscoveredFeed,
-} from './feed.schema';
+export * from './feed.schema';
 
 export async function getAllFeeds(userId: string): Promise<Feed[]> {
   const allFeeds = await db.query.feeds.findMany({

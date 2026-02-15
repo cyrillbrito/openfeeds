@@ -3,15 +3,7 @@ import { eq } from 'drizzle-orm';
 import { getEffectiveAutoArchiveDays, type Settings } from './settings.schema';
 
 // Re-export schemas and types from schema file
-export {
-  SettingsSchema,
-  type Settings,
-  UpdateSettingsSchema,
-  type ArchiveResult,
-  DEFAULT_AUTO_ARCHIVE_DAYS,
-  getEffectiveAutoArchiveDays,
-  isAutoArchiveDaysDefault,
-} from './settings.schema';
+export * from './settings.schema';
 
 /**
  * Creates settings row for a new user.

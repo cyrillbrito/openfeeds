@@ -7,15 +7,7 @@ import { assert, ConflictError, NotFoundError } from '../errors';
 import type { CreateTag, Tag, UpdateTag } from './tag.schema';
 
 // Re-export schemas and types from schema file
-export {
-  type TagColor,
-  TagSchema,
-  type Tag,
-  CreateTagSchema,
-  type CreateTag,
-  UpdateTagSchema,
-  type UpdateTag,
-} from './tag.schema';
+export * from './tag.schema';
 
 export async function getAllTags(userId: string): Promise<Tag[]> {
   const allTags = await db.query.tags.findMany({

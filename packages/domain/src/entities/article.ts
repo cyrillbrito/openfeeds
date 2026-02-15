@@ -15,20 +15,7 @@ import type {
 import type { PaginatedResponse } from './common.schema';
 
 // Re-export schemas and types from schema file
-export {
-  ArticleQuerySchema,
-  type ArticleQuery,
-  ArticleQueryInputSchema,
-  ArticleSchema,
-  type Article,
-  CreateArticleFromUrlSchema,
-  type CreateArticleFromUrl,
-  UpdateArticleSchema,
-  type UpdateArticle,
-  type MarkManyArchivedRequest,
-  type MarkManyArchivedResponse,
-  ElectricArticleSchema,
-} from './article.schema';
+export * from './article.schema';
 
 export async function getArticles(
   filters: ArticleQuery,
