@@ -119,13 +119,13 @@ Workers run server-side where `instanceof` works. Two strategies:
 
 ```typescript
 // Per-item failure — log and continue
-for (const user of users) {
-  try {
-    await syncOldestFeeds(user.id);
-  } catch (err) {
-    logger.error(err instanceof Error ? err : new Error(String(err)), { userId: user.id });
-    continue;
-  }
+try {
+  await syncSingleFeed(userId, feedId);
+} catch (err) {
+  logger.error(err instanceof Error ? err : new Error(String(err)), {
+    operation: 'single_feed_sync_worker',
+    feedId,
+  });
 }
 ```
 

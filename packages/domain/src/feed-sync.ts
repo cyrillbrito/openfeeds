@@ -271,14 +271,9 @@ export async function syncOldestFeeds(): Promise<void> {
 }
 
 /**
- * @deprecated Use syncOldestFeeds() instead. Kept for backward compatibility.
- */
-export async function syncOldestFeedsForAllUsers(): Promise<void> {
-  return syncOldestFeeds();
-}
-
-/**
  * Runs auto-archive for all users.
+ * NOTE: This still iterates per-user because archive cutoff dates are per-user settings.
+ * Acceptable since it runs once daily (not per-minute like sync).
  */
 export async function autoArchiveForAllUsers(): Promise<void> {
   const { autoArchiveArticles } = await import('./archive');
