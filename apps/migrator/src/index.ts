@@ -1,8 +1,6 @@
-import { initDb, runMigrations } from '@repo/db';
-import { env } from './environment';
+import { runMigrations } from '@repo/db';
 
 try {
-  initDb({ databaseUrl: env.DATABASE_URL });
   await runMigrations();
   process.exit(0);
 } catch (error) {
