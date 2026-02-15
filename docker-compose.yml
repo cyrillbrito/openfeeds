@@ -61,16 +61,19 @@ services:
     ports:
       - '3000:80'
     environment:
-      - TRUSTED_ORIGINS=$TRUSTED_ORIGINS
+      - BASE_URL=$BASE_URL
       - DATABASE_URL=postgresql://postgres:postgres@postgres:5432/openfeeds
-      - ELECTRIC_URL=http://electric:3000
-      - BETTER_AUTH_SECRET=$BETTER_AUTH_SECRET
-      - SIMPLE_AUTH=$SIMPLE_AUTH
-      - POSTHOG_PUBLIC_KEY=$POSTHOG_PUBLIC_KEY
       - REDIS_HOST=redis
-      # TTS Configuration (optional)
+      - BETTER_AUTH_SECRET=$BETTER_AUTH_SECRET
+      - TRUSTED_ORIGINS=$TRUSTED_ORIGINS
+      - SIMPLE_AUTH=$SIMPLE_AUTH
+      - ELECTRIC_URL=http://electric:3000
+      - POSTHOG_PUBLIC_KEY=$POSTHOG_PUBLIC_KEY
       - UNREAL_SPEECH_API_KEY=$UNREAL_SPEECH_API_KEY
       - TTS_DEFAULT_VOICE=$TTS_DEFAULT_VOICE
+      - DATA_PATH=${DATA_PATH:-/data}
+    volumes:
+      - web_data:${DATA_PATH:-/data}
     depends_on:
       redis:
         condition: service_started
@@ -89,6 +92,10 @@ services:
       - REDIS_HOST=redis
       - POSTHOG_PUBLIC_KEY=$POSTHOG_PUBLIC_KEY
       - RESEND_API_KEY=$RESEND_API_KEY
+      - WORKER_CONCURRENCY_ORCHESTRATOR=$WORKER_CONCURRENCY_ORCHESTRATOR
+      - WORKER_CONCURRENCY_FEED_SYNC=$WORKER_CONCURRENCY_FEED_SYNC
+      - WORKER_CONCURRENCY_FEED_DETAILS=$WORKER_CONCURRENCY_FEED_DETAILS
+      - WORKER_CONCURRENCY_AUTO_ARCHIVE=$WORKER_CONCURRENCY_AUTO_ARCHIVE
     depends_on:
       redis:
         condition: service_started
@@ -117,6 +124,8 @@ volumes:
   postgres_data:
     driver: local
   redis_data:
+    driver: local
+  web_data:
     driver: local
 
 networks:

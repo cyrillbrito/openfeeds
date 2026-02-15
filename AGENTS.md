@@ -147,10 +147,14 @@ Apps validate env vars they use directly. An env var (e.g., `POSTHOG_PUBLIC_KEY`
 export const env = createEnv({
   server: {
     ELECTRIC_URL: z.string().default('http://localhost:3060'),
+    ELECTRIC_SOURCE_ID: z.string().optional(),
+    ELECTRIC_SOURCE_SECRET: z.string().optional(),
+    POSTHOG_PUBLIC_KEY: z.string().optional(), // also in @repo/domain, but used here to expose to client
     BETTER_AUTH_SECRET: z.string(),
     SIMPLE_AUTH: z.stringbool().default(false),
     TRUSTED_ORIGINS: z.string().transform(...),
-    POSTHOG_PUBLIC_KEY: z.string().optional(), // also in @repo/domain, but used here to expose to client
+    BASE_URL: z.url(),
+    PORT: z.coerce.number().default(3000),
   },
   ...
 });
