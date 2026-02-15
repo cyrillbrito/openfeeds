@@ -8,7 +8,7 @@ import {
 } from '@repo/domain';
 import { logger } from '@repo/domain/logger';
 import { sanitizeHtml } from '@repo/readability/sanitize';
-import { attemptAsync, createId } from '@repo/shared/utils';
+import { createId } from '@repo/shared/utils';
 import { and, eq, isNull, lt, ne, or } from 'drizzle-orm';
 
 // Normalized item structure for our database
@@ -161,34 +161,21 @@ const BROKEN_THRESHOLD = 3;
  * This is the core worker function for individual feed sync jobs.
  */
 export async function syncSingleFeed(userId: string, feedId: string): Promise<void> {
-  const [feedErr, feed] = await attemptAsync(
-    db.query.feeds.findFirst({
-      where: and(eq(feeds.id, feedId), eq(feeds.userId, userId)),
-    }),
-  );
-
-  if (feedErr) {
-    logger.error(feedErr, {
-      operation: 'sync_single_feed_fetch',
-      feedId,
-    });
-    throw feedErr;
-  }
+  const feed = await db.query.feeds.findFirst({
+    where: and(eq(feeds.id, feedId), eq(feeds.userId, userId)),
+  });
 
   if (!feed) {
     console.warn(`Feed ${feedId} not found for sync`);
     return;
   }
 
-  const [feedSyncErr] = await attemptAsync(
-    (async () => {
-      const feedResult = await fetchRss(feed.feedUrl);
-      const autoArchiveCutoffDate = await getAutoArchiveCutoffDate(userId);
-      await syncFeedArticles(feedResult, feed.id, userId, autoArchiveCutoffDate);
-    })(),
-  );
-
-  if (feedSyncErr) {
+  try {
+    const feedResult = await fetchRss(feed.feedUrl);
+    const autoArchiveCutoffDate = await getAutoArchiveCutoffDate(userId);
+    await syncFeedArticles(feedResult, feed.id, userId, autoArchiveCutoffDate);
+  } catch (err) {
+    const feedSyncErr = err instanceof Error ? err : new Error(String(err));
     logger.error(feedSyncErr, {
       operation: 'sync_feed',
       feedId: feed.id,
@@ -199,21 +186,19 @@ export async function syncSingleFeed(userId: string, feedId: string): Promise<vo
     // Track the failure: increment count and update status
     const newFailCount = feed.syncFailCount + 1;
     const newStatus = newFailCount >= BROKEN_THRESHOLD ? 'broken' : 'failing';
-    const errorMessage = feedSyncErr instanceof Error ? feedSyncErr.message : String(feedSyncErr);
 
-    const [updateErr] = await attemptAsync(
-      db
+    try {
+      await db
         .update(feeds)
         .set({
           lastSyncAt: new Date(),
           syncStatus: newStatus,
           syncFailCount: newFailCount,
-          syncError: errorMessage.slice(0, 1000),
+          syncError: feedSyncErr.message.slice(0, 1000),
         })
-        .where(eq(feeds.id, feed.id)),
-    );
-    if (updateErr) {
-      logger.error(updateErr, {
+        .where(eq(feeds.id, feed.id));
+    } catch (updateErr) {
+      logger.error(updateErr instanceof Error ? updateErr : new Error(String(updateErr)), {
         operation: 'update_feed_sync_failure',
         feedId: feed.id,
         feedTitle: feed.title,
@@ -223,8 +208,8 @@ export async function syncSingleFeed(userId: string, feedId: string): Promise<vo
   }
 
   // Success: reset sync health and update lastSyncAt
-  const [updateErr] = await attemptAsync(
-    db
+  try {
+    await db
       .update(feeds)
       .set({
         lastSyncAt: new Date(),
@@ -232,10 +217,9 @@ export async function syncSingleFeed(userId: string, feedId: string): Promise<vo
         syncFailCount: 0,
         syncError: null,
       })
-      .where(eq(feeds.id, feed.id)),
-  );
-  if (updateErr) {
-    logger.error(updateErr, {
+      .where(eq(feeds.id, feed.id));
+  } catch (updateErr) {
+    logger.error(updateErr instanceof Error ? updateErr : new Error(String(updateErr)), {
       operation: 'update_feed_sync_time',
       feedId: feed.id,
       feedTitle: feed.title,

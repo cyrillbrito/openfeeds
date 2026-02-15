@@ -1,5 +1,4 @@
 import { BetterFetchError } from '@better-fetch/fetch';
-import { attemptAsync } from '@repo/shared/utils';
 import { createFileRoute, Link } from '@tanstack/solid-router';
 import { CircleCheck, CircleX } from 'lucide-solid';
 import posthog from 'posthog-js';
@@ -33,29 +32,26 @@ function ForgotPasswordPage() {
     setError(null);
     setIsLoading(true);
 
-    const [err] = await attemptAsync(
-      authClient.requestPasswordReset(
+    try {
+      await authClient.requestPasswordReset(
         {
           email: email(),
           redirectTo: '/reset-password',
         },
         { throw: true },
-      ),
-    );
+      );
 
-    setIsLoading(false);
-
-    if (err) {
+      setIsLoading(false);
+      setSuccess(true);
+    } catch (err) {
+      setIsLoading(false);
       if (err instanceof BetterFetchError) {
         setError(err.error?.message || err.message);
       } else {
         posthog.captureException(err);
         setError('Unexpected network error');
       }
-      return;
     }
-
-    setSuccess(true);
   };
 
   return (

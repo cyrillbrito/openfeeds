@@ -1,5 +1,4 @@
 import { db, feeds } from '@repo/db';
-import { attemptAsync } from '@repo/shared/utils';
 import { and, eq } from 'drizzle-orm';
 import { type Feed } from './entities/feed';
 import { assert } from './errors';
@@ -142,16 +141,10 @@ export async function fetchFeedMetadata(feed: ParseFeedResult): Promise<Partial<
 }
 
 export async function updateFeedMetadata(userId: string, feedId: string) {
-  const [feedErr, feed] = await attemptAsync(
-    db.query.feeds.findFirst({
-      columns: { feedUrl: true },
-      where: and(eq(feeds.id, feedId), eq(feeds.userId, userId)),
-    }),
-  );
-  if (feedErr) {
-    // logger.error(feedErr);
-    throw feedErr;
-  }
+  const feed = await db.query.feeds.findFirst({
+    columns: { feedUrl: true },
+    where: and(eq(feeds.id, feedId), eq(feeds.userId, userId)),
+  });
 
   assert(feed);
 
@@ -172,13 +165,8 @@ export async function updateFeedMetadata(userId: string, feedId: string) {
   if (partialFeedWithMetadata.description !== undefined)
     updateData.description = partialFeedWithMetadata.description;
 
-  const [updateErr] = await attemptAsync(
-    db
-      .update(feeds)
-      .set(updateData)
-      .where(and(eq(feeds.id, feedId), eq(feeds.userId, userId))),
-  );
-  if (updateErr) {
-    throw updateErr;
-  }
+  await db
+    .update(feeds)
+    .set(updateData)
+    .where(and(eq(feeds.id, feedId), eq(feeds.userId, userId)));
 }

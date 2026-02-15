@@ -1,5 +1,4 @@
 import { BetterFetchError } from '@better-fetch/fetch';
-import { attemptAsync } from '@repo/shared/utils';
 import { createFileRoute, Link, useNavigate } from '@tanstack/solid-router';
 import posthog from 'posthog-js';
 import { createSignal, Show } from 'solid-js';
@@ -34,40 +33,38 @@ function SignInPage() {
     setError(null);
     setIsLoading(true);
 
-    const [err] = await attemptAsync(
-      authClient.signIn.email(
+    try {
+      await authClient.signIn.email(
         {
           email: email(),
           password: password(),
         },
         { throw: true },
-      ),
-    );
+      );
 
-    setIsLoading(false);
+      setIsLoading(false);
 
-    if (err) {
+      // Identify user for PostHog (signin event tracked server-side)
+      const session = await authClient.getSession();
+      if (session.data?.user) {
+        posthog.identify(session.data.user.id, {
+          email: session.data.user.email,
+          name: session.data.user.name,
+        });
+      }
+
+      // Redirect to original page or default to root (which will smart-redirect)
+      const redirectTo = search()?.redirect || '/';
+      void navigate({ to: redirectTo, replace: true });
+    } catch (err) {
+      setIsLoading(false);
       if (err instanceof BetterFetchError) {
         setError(err.error?.message || err.message);
       } else {
         posthog.captureException(err);
         setError('Unexpected network error');
       }
-      return;
     }
-
-    // Identify user for PostHog (signin event tracked server-side)
-    const session = await authClient.getSession();
-    if (session.data?.user) {
-      posthog.identify(session.data.user.id, {
-        email: session.data.user.email,
-        name: session.data.user.name,
-      });
-    }
-
-    // Redirect to original page or default to root (which will smart-redirect)
-    const redirectTo = search()?.redirect || '/';
-    void navigate({ to: redirectTo, replace: true });
   };
 
   return (

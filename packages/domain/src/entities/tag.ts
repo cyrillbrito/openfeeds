@@ -1,9 +1,9 @@
 import { db, tags } from '@repo/db';
-import { attemptAsync, createId } from '@repo/shared/utils';
+import { createId } from '@repo/shared/utils';
 import { and, eq, sql } from 'drizzle-orm';
 import { trackEvent } from '../analytics';
 import { tagDbToApi } from '../db-utils';
-import { assert, ConflictError, NotFoundError, UnexpectedError } from '../errors';
+import { assert, ConflictError, NotFoundError } from '../errors';
 import type { CreateTag, Tag, UpdateTag } from './tag.schema';
 
 // Re-export schemas and types from schema file
@@ -42,22 +42,15 @@ export async function createTag(data: CreateTag, userId: string): Promise<Tag> {
     throw new ConflictError('Tag name already exists');
   }
 
-  const [err, dbResult] = await attemptAsync(
-    db
-      .insert(tags)
-      .values({
-        id: data.id ?? createId(),
-        userId,
-        name: data.name,
-        color: data.color,
-      })
-      .returning(),
-  );
-
-  if (err) {
-    console.error('Database error creating tag:', err);
-    throw new UnexpectedError();
-  }
+  const dbResult = await db
+    .insert(tags)
+    .values({
+      id: data.id ?? createId(),
+      userId,
+      name: data.name,
+      color: data.color,
+    })
+    .returning();
 
   const newTag = dbResult[0];
   assert(newTag, 'Created tag must exist');
@@ -90,18 +83,11 @@ export async function updateTag(id: string, data: UpdateTag, userId: string): Pr
   if (data.name !== undefined) updateData.name = data.name;
   if (data.color !== undefined) updateData.color = data.color;
 
-  const [err, dbResult] = await attemptAsync(
-    db
-      .update(tags)
-      .set(updateData)
-      .where(and(eq(tags.id, id), eq(tags.userId, userId)))
-      .returning(),
-  );
-
-  if (err) {
-    console.error('Database error updating tag:', err);
-    throw new UnexpectedError();
-  }
+  const dbResult = await db
+    .update(tags)
+    .set(updateData)
+    .where(and(eq(tags.id, id), eq(tags.userId, userId)))
+    .returning();
 
   const updatedTag = dbResult[0];
   assert(updatedTag, 'Updated tag must exist');

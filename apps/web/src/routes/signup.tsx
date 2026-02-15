@@ -1,5 +1,4 @@
 import { BetterFetchError } from '@better-fetch/fetch';
-import { attemptAsync } from '@repo/shared/utils';
 import { createFileRoute, Link, useNavigate } from '@tanstack/solid-router';
 import { Mail } from 'lucide-solid';
 import posthog from 'posthog-js';
@@ -44,8 +43,8 @@ function SignUpPage() {
 
     setIsLoading(true);
 
-    const [err, result] = await attemptAsync(
-      authClient.signUp.email(
+    try {
+      const result = await authClient.signUp.email(
         {
           email: email(),
           password: password(),
@@ -53,39 +52,37 @@ function SignUpPage() {
           callbackURL: '/signin',
         },
         { throw: true },
-      ),
-    );
+      );
 
-    setIsLoading(false);
+      setIsLoading(false);
 
-    if (err) {
+      if (result?.token) {
+        // Identify user for PostHog (signup event tracked server-side)
+        const session = await authClient.getSession();
+        if (session.data?.user) {
+          posthog.identify(session.data.user.id, {
+            email: session.data.user.email,
+            name: session.data.user.name,
+            created_at: session.data.user.createdAt,
+          });
+        }
+
+        // Redirect to original page or default to root (which will smart-redirect)
+        const redirectTo = search()?.redirect || '/';
+        void navigate({ to: redirectTo, replace: true });
+      } else {
+        // When email verification is required, Better Auth returns token: null
+        // and does not create a session. Show a "check your email" message.
+        setVerificationSent(true);
+      }
+    } catch (err) {
+      setIsLoading(false);
       if (err instanceof BetterFetchError) {
         setError(err.error?.message || err.message);
       } else {
         posthog.captureException(err);
         setError('Unexpected network error');
       }
-      return;
-    }
-
-    if (result?.token) {
-      // Identify user for PostHog (signup event tracked server-side)
-      const session = await authClient.getSession();
-      if (session.data?.user) {
-        posthog.identify(session.data.user.id, {
-          email: session.data.user.email,
-          name: session.data.user.name,
-          created_at: session.data.user.createdAt,
-        });
-      }
-
-      // Redirect to original page or default to root (which will smart-redirect)
-      const redirectTo = search()?.redirect || '/';
-      void navigate({ to: redirectTo, replace: true });
-    } else {
-      // When email verification is required, Better Auth returns token: null
-      // and does not create a session. Show a "check your email" message.
-      setVerificationSent(true);
     }
   };
 

@@ -149,6 +149,10 @@ import { FeedSchema, type Feed } from '@repo/domain/client';
 - `useLiveQuery` provides reactive data access
 - Auth via `authMiddleware` in `src/server/middleware/auth.ts`
 
+## Error Handling
+
+Domain errors thrown in server functions are serialized by TanStack Start's `ShallowErrorPlugin` — only `message` survives. The client receives a plain `Error` with the domain error's message. `instanceof`, `code`, and all custom properties are stripped. Client code only needs `err.message`. See [docs/error-handling.md](../../docs/error-handling.md) for full architecture.
+
 ## Server Functions
 
 Server functions replace direct API calls. They run on the server with full access to domain logic.
