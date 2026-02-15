@@ -1,4 +1,5 @@
-import { getConfig, getPosthog } from './config';
+import { posthog } from './config';
+import { env } from './env';
 
 export interface LogMetadata {
   // Known metadata fields
@@ -19,13 +20,12 @@ export const logger = {
   error(error: Error, metadata?: LogMetadata) {
     console.error(error);
 
-    const posthog = getPosthog();
     if (posthog) {
       const { sessionId, userId, ...rest } = metadata || {};
       posthog.captureException(error, userId || 'unknown', {
         ...rest,
         $session_id: sessionId,
-        app: getConfig().posthogApp,
+        app: env.POSTHOG_APP,
       });
     }
   },

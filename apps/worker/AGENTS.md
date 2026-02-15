@@ -54,8 +54,8 @@ Defaults are conservative for small VMs. Increase for higher throughput on large
 ## Worker Pattern
 
 ```typescript
-import { getUserDb } from '@repo/db';
-import { getRedisConnection, QUEUE_NAMES, syncSingleFeed } from '@repo/domain';
+import { db } from '@repo/db';
+import { QUEUE_NAMES, redisConnection, syncSingleFeed } from '@repo/domain';
 import { Worker } from 'bullmq';
 import { env } from './env';
 
@@ -63,10 +63,9 @@ export function createSingleFeedSyncWorker() {
   return new Worker(
     QUEUE_NAMES.SINGLE_FEED_SYNC,
     async (job) => {
-      const db = getUserDb(job.data.userId);
-      await syncSingleFeed(db, job.data.feedId);
+      await syncSingleFeed(job.data.userId, job.data.feedId);
     },
-    { connection: getRedisConnection(), concurrency: env.WORKER_CONCURRENCY_FEED_SYNC },
+    { connection: redisConnection, concurrency: env.WORKER_CONCURRENCY_FEED_SYNC },
   );
 }
 ```

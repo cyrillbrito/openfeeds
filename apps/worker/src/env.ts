@@ -3,15 +3,6 @@ import { z } from 'zod';
 
 export const env = createEnv({
   server: {
-    DATABASE_URL: z.url(),
-    REDIS_HOST: z.string().default('localhost'),
-    REDIS_PORT: z.coerce.number().default(6379),
-    REDIS_PASSWORD: z.string().optional(),
-    POSTHOG_PUBLIC_KEY: z
-      .string()
-      .optional()
-      .default('phc_V6I0xn1Ptmx3QVqXzLNAK22H6D58kR3SJTYg1JdVEx'),
-    RESEND_API_KEY: z.string().optional(),
     // Worker concurrency settings (conservative defaults for small VMs)
     WORKER_CONCURRENCY_ORCHESTRATOR: z.coerce.number().default(1),
     WORKER_CONCURRENCY_FEED_SYNC: z.coerce.number().default(2),

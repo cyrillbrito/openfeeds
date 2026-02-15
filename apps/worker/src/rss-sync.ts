@@ -1,4 +1,4 @@
-import { articles, articleTags, feeds, feedTags, getDb } from '@repo/db';
+import { articles, articleTags, db, feeds, feedTags } from '@repo/db';
 import {
   enqueueFeedSync,
   evaluateFilterRules,
@@ -73,7 +73,6 @@ export async function syncFeedArticles(
   created: number;
   updated: number;
 }> {
-  const db = getDb();
   // optional, so when doing many this avoids repeated fetches
   autoArchiveCutoffDate ??= await getAutoArchiveCutoffDate(userId);
 
@@ -162,7 +161,6 @@ const BROKEN_THRESHOLD = 3;
  * This is the core worker function for individual feed sync jobs.
  */
 export async function syncSingleFeed(userId: string, feedId: string): Promise<void> {
-  const db = getDb();
   const [feedErr, feed] = await attemptAsync(
     db.query.feeds.findFirst({
       where: and(eq(feeds.id, feedId), eq(feeds.userId, userId)),
@@ -250,7 +248,6 @@ export async function syncSingleFeed(userId: string, feedId: string): Promise<vo
  * This is the orchestrator job that runs on a schedule.
  */
 export async function syncOldestFeeds(userId: string): Promise<void> {
-  const db = getDb();
   const outdatedDate = new Date(Date.now() - OUTDATED_MIN * 60 * 1000);
   const condition = and(
     eq(feeds.userId, userId),

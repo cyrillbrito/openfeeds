@@ -1,9 +1,9 @@
-import { getDb } from '@repo/db';
+import { db } from '@repo/db';
 import {
   autoArchiveArticles,
-  getRedisConnection,
   logger,
   QUEUE_NAMES,
+  redisConnection,
   updateFeedMetadata,
 } from '@repo/domain';
 import { attemptAsync } from '@repo/shared/utils';
@@ -21,7 +21,6 @@ export function createFeedSyncOrchestratorWorker() {
     QUEUE_NAMES.FEED_SYNC_ORCHESTRATOR,
     async (job) => {
       console.log(`Starting feed sync orchestrator job ${job.id}`);
-      const db = getDb();
       const [usersError, users] = await attemptAsync(
         db.query.user.findMany({ columns: { id: true } }),
       );
@@ -48,7 +47,7 @@ export function createFeedSyncOrchestratorWorker() {
       }
     },
     {
-      connection: getRedisConnection(),
+      connection: redisConnection,
       concurrency: env.WORKER_CONCURRENCY_ORCHESTRATOR,
     },
   );
@@ -78,7 +77,7 @@ export function createSingleFeedSyncWorker() {
       }
     },
     {
-      connection: getRedisConnection(),
+      connection: redisConnection,
       concurrency: env.WORKER_CONCURRENCY_FEED_SYNC,
     },
   );
@@ -106,7 +105,7 @@ export function createFeedDetailsWorker() {
       }
     },
     {
-      connection: getRedisConnection(),
+      connection: redisConnection,
       concurrency: env.WORKER_CONCURRENCY_FEED_DETAILS,
     },
   );
@@ -117,7 +116,6 @@ export function createAutoArchiveWorker() {
     QUEUE_NAMES.AUTO_ARCHIVE,
     async (job: Job) => {
       console.log(`Starting auto archive job ${job.id}`);
-      const db = getDb();
       const [usersError, users] = await attemptAsync(
         db.query.user.findMany({ columns: { id: true } }),
       );
@@ -144,7 +142,7 @@ export function createAutoArchiveWorker() {
       }
     },
     {
-      connection: getRedisConnection(),
+      connection: redisConnection,
       concurrency: env.WORKER_CONCURRENCY_AUTO_ARCHIVE,
     },
   );

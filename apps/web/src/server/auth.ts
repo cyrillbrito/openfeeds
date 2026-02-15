@@ -1,4 +1,4 @@
-import { getDb } from '@repo/db';
+import { db } from '@repo/db';
 import {
   createSettings,
   sendPasswordResetEmail,
@@ -12,7 +12,7 @@ import { tanstackStartCookies } from 'better-auth/tanstack-start';
 import { env } from '~/env';
 
 export const auth = betterAuth({
-  database: drizzleAdapter(getDb(), { provider: 'pg' }),
+  database: drizzleAdapter(db, { provider: 'pg' }),
   trustedOrigins: env.TRUSTED_ORIGINS,
   hooks: {
     after: createAuthMiddleware(async (ctx) => {

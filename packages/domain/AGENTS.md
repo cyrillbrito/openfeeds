@@ -44,7 +44,7 @@ src/
 │   ├── tag.ts
 │   └── tts.schema.ts       # WordTiming, ArticleAudioMetadata types
 ├── archive.ts          # Cross-entity archive operations
-├── config.ts           # initDomain() and getDomainConfig()
+├── config.ts           # Direct exports: redisConnection, posthog, shutdownDomain()
 ├── db-utils.ts         # Database utilities
 ├── email.ts            # Email sending
 ├── errors.ts           # Domain error classes
@@ -102,7 +102,7 @@ export function someUtility(feed: Feed): boolean { ... }
 **Server file (`.ts`):**
 
 ```typescript
-import { getDb } from '@repo/db';
+import { db } from '@repo/db';
 import type { CreateFeed, Feed } from './feed.schema';
 
 // Re-export schema for server barrel

@@ -1,4 +1,4 @@
-import { articles, feeds, filterRules, getDb } from '@repo/db';
+import { articles, db, feeds, filterRules } from '@repo/db';
 import { attemptAsync, createId } from '@repo/shared/utils';
 import { and, eq } from 'drizzle-orm';
 import { trackEvent } from '../analytics';
@@ -15,8 +15,6 @@ import {
 export * from './filter-rule.schema';
 
 export async function getAllFilterRules(userId: string): Promise<FilterRule[]> {
-  const db = getDb();
-
   // Now that filter_rules has user_id, we can filter directly
   const rules = await db.query.filterRules.findMany({
     where: eq(filterRules.userId, userId),
@@ -30,7 +28,6 @@ export async function getFilterRulesByFeedId(
   feedId: string,
   userId: string,
 ): Promise<FilterRule[]> {
-  const db = getDb();
   // Check if feed exists and belongs to user
   const feed = await db.query.feeds.findFirst({
     where: and(eq(feeds.id, feedId), eq(feeds.userId, userId)),
@@ -54,7 +51,6 @@ export async function createFilterRule(
   data: CreateFilterRuleApi & { id?: string },
   userId: string,
 ): Promise<FilterRule> {
-  const db = getDb();
   // Check if feed exists and belongs to user
   const feed = await db.query.feeds.findFirst({
     where: and(eq(feeds.id, feedId), eq(feeds.userId, userId)),
@@ -101,8 +97,6 @@ export async function updateFilterRule(
   data: UpdateFilterRule,
   userId: string,
 ): Promise<FilterRule> {
-  const db = getDb();
-
   // First verify the feed belongs to this user
   const feed = await db.query.feeds.findFirst({
     where: and(eq(feeds.id, feedId), eq(feeds.userId, userId)),
@@ -155,8 +149,6 @@ export async function deleteFilterRule(
   ruleId: string,
   userId: string,
 ): Promise<void> {
-  const db = getDb();
-
   // First verify the feed belongs to this user
   const feed = await db.query.feeds.findFirst({
     where: and(eq(feeds.id, feedId), eq(feeds.userId, userId)),
@@ -183,7 +175,6 @@ export async function applyFilterRulesToFeed(
   feedId: string,
   userId: string,
 ): Promise<{ articlesProcessed: number; articlesMarkedAsRead: number }> {
-  const db = getDb();
   // Check if feed exists and belongs to user
   const feed = await db.query.feeds.findFirst({
     where: and(eq(feeds.id, feedId), eq(feeds.userId, userId)),

@@ -4,9 +4,9 @@
  * Script to queue feed detail updates for a specific user
  * Usage: bun queue-feed-details <userId>
  */
-import { getDb, initDb } from '@repo/db';
+import { db } from '@repo/db';
+import { redisConnection } from '@repo/domain';
 import { Queue } from 'bullmq';
-import { env } from './env';
 
 interface UserFeedJobData {
   userId: string;
@@ -20,21 +20,13 @@ const QUEUE_NAMES = {
 async function queueFeedDetailsForUser(userId: string) {
   console.log(`Queuing feed detail updates for user: ${userId}`);
 
-  // Initialize database
-  initDb({ databaseUrl: env.DATABASE_URL });
-
   // Create queue connection
   const feedDetailQueue = new Queue<UserFeedJobData>(QUEUE_NAMES.FEED_DETAIL, {
-    connection: {
-      host: env.REDIS_HOST,
-      port: env.REDIS_PORT,
-      ...(env.REDIS_PASSWORD && { password: env.REDIS_PASSWORD }),
-    },
+    connection: redisConnection,
   });
 
   try {
     // Get user's feeds from database
-    const db = getDb();
     const userFeeds = await db.query.feeds.findMany({
       columns: { id: true, title: true },
     });
@@ -64,10 +56,10 @@ async function queueFeedDetailsForUser(userId: string) {
       jobs.push(job);
     }
 
-    console.log(`✅ Successfully queued ${jobs.length} feed detail update jobs`);
+    console.log(`Successfully queued ${jobs.length} feed detail update jobs`);
     console.log('Job IDs:', jobs.map((j) => j.id).join(', '));
   } catch (error) {
-    console.error('❌ Error queuing feed details:', error);
+    console.error('Error queuing feed details:', error);
     throw error;
   } finally {
     await feedDetailQueue.close();

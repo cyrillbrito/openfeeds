@@ -1,4 +1,4 @@
-import { articleTags, getDb } from '@repo/db';
+import { articleTags, db } from '@repo/db';
 import { createId } from '@repo/shared/utils';
 import { and, eq, inArray } from 'drizzle-orm';
 import type { ArticleTag, CreateArticleTag } from './article-tag.schema';
@@ -7,8 +7,6 @@ import type { ArticleTag, CreateArticleTag } from './article-tag.schema';
 export * from './article-tag.schema';
 
 export async function getAllArticleTags(userId: string): Promise<ArticleTag[]> {
-  const db = getDb();
-
   // article_tags has denormalized user_id for efficient filtering
   return db
     .select({
@@ -25,8 +23,6 @@ export async function createArticleTags(
   data: CreateArticleTag[],
   userId: string,
 ): Promise<ArticleTag[]> {
-  const db = getDb();
-
   if (data.length === 0) return [];
 
   const newTags = data.map((item) => ({
@@ -42,8 +38,6 @@ export async function createArticleTags(
 }
 
 export async function deleteArticleTags(ids: string[], userId: string): Promise<void> {
-  const db = getDb();
-
   if (ids.length === 0) return;
 
   await db

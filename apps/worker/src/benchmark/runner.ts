@@ -1,4 +1,4 @@
-import { enqueueFeedSync, getRedisConnection, QUEUE_NAMES } from '@repo/domain';
+import { enqueueFeedSync, QUEUE_NAMES, redisConnection } from '@repo/domain';
 import { QueueEvents } from 'bullmq';
 import type { BenchmarkContext } from './harness';
 import { formatMs, formatRate, mean, percentile, stddev } from './stats';
@@ -119,7 +119,7 @@ export function printResults(result: BenchmarkResult): void {
 export async function runBenchmark(ctx: BenchmarkContext): Promise<BenchmarkResult> {
   const jobTimings = new Map<string, JobTiming>();
   const queueEvents = new QueueEvents(QUEUE_NAMES.SINGLE_FEED_SYNC, {
-    connection: getRedisConnection(),
+    connection: redisConnection,
   });
 
   queueEvents.on('completed', ({ jobId }) => {
