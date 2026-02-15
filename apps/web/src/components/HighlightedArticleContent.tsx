@@ -97,7 +97,7 @@ export function HighlightedArticleContent(props: HighlightedArticleContentProps)
       {/* Floating highlight bubble */}
       <Show when={audio.isHighlightingEnabled()}>
         <div
-          ref={highlightRef}
+          ref={(el) => (highlightRef = el)}
           class="bg-primary/20 pointer-events-none absolute rounded-md opacity-0 transition-all duration-150 ease-out"
           style={{ 'z-index': 0 }}
         />
@@ -105,7 +105,7 @@ export function HighlightedArticleContent(props: HighlightedArticleContentProps)
 
       {/* Article content */}
       <div
-        ref={containerRef}
+        ref={(el) => (containerRef = el)}
         class={props.class}
         classList={{
           'seekable-content': canSeek(),
