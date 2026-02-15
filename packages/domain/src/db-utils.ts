@@ -1,8 +1,8 @@
 import type { DbArticle, DbFeed, DbFilterRule, DbTag } from '@repo/db';
-import type { Article } from './entities/article';
-import type { Feed } from './entities/feed';
-import type { FilterRule } from './entities/filter-rule';
-import type { Tag, TagColor } from './entities/tag';
+import type { Article } from './entities/article.schema';
+import type { Feed } from './entities/feed.schema';
+import type { FilterRule } from './entities/filter-rule.schema';
+import type { Tag, TagColor } from './entities/tag.schema';
 
 /**
  * Utility functions for timestamp conversion between DB (unix seconds) and API (ISO string) formats
