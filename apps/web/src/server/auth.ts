@@ -1,4 +1,3 @@
-import { oauthProvider } from '@better-auth/oauth-provider';
 import { db } from '@repo/db';
 import {
   createSettings,
@@ -9,15 +8,12 @@ import {
 import { betterAuth } from 'better-auth';
 import { drizzleAdapter } from 'better-auth/adapters/drizzle';
 import { createAuthMiddleware } from 'better-auth/api';
-import { jwt } from 'better-auth/plugins';
 import { tanstackStartCookies } from 'better-auth/tanstack-start';
 import { env } from '~/env';
 
 export const auth = betterAuth({
   database: drizzleAdapter(db, { provider: 'pg' }),
   trustedOrigins: env.TRUSTED_ORIGINS,
-  // Required by oauthProvider — the plugin provides its own /token endpoint
-  disabledPaths: ['/token'],
   hooks: {
     after: createAuthMiddleware(async (ctx) => {
       const newSession = ctx.context.newSession;
@@ -56,18 +52,6 @@ export const auth = betterAuth({
   },
   session: {
     cookieCache: { enabled: true, maxAge: 5 * 60 },
-    storeSessionInDatabase: true,
   },
-  plugins: [
-    jwt({ disableSettingJwtHeader: true }),
-    oauthProvider({
-      loginPage: '/signin',
-      consentPage: '/oauth/consent',
-      allowDynamicClientRegistration: true,
-      allowUnauthenticatedClientRegistration: true, // Required for MCP clients (public clients)
-      scopes: ['openid', 'profile', 'email', 'offline_access', 'mcp:tools'],
-      validAudiences: [`${env.BASE_URL}/api/mcp`],
-    }),
-    tanstackStartCookies(),
-  ],
+  plugins: [tanstackStartCookies()],
 });

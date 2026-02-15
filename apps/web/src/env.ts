@@ -8,8 +8,6 @@ import { z } from 'zod';
 
 export const env = createEnv({
   server: {
-    // Base URL for OAuth/MCP metadata endpoints
-    BASE_URL: z.url(),
     // Electric SQL sync service
     ELECTRIC_URL: z.string().default('http://localhost:3060'),
     ELECTRIC_SOURCE_ID: z.string().optional(),
