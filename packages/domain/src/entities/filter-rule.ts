@@ -12,7 +12,17 @@ import {
 } from './filter-rule.schema';
 
 // Re-export schemas and types from schema file
-export * from './filter-rule.schema';
+export {
+  FilterOperator,
+  filterRuleSchema,
+  type FilterRule,
+  createFilterRuleApiSchema,
+  type CreateFilterRuleApi,
+  updateFilterRuleSchema,
+  type UpdateFilterRule,
+  evaluateRule,
+  shouldMarkAsRead,
+} from './filter-rule.schema';
 
 export async function getAllFilterRules(userId: string): Promise<FilterRule[]> {
   // Now that filter_rules has user_id, we can filter directly

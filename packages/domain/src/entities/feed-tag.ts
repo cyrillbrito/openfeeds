@@ -4,7 +4,12 @@ import { and, eq, inArray } from 'drizzle-orm';
 import type { CreateFeedTag, FeedTag } from './feed-tag.schema';
 
 // Re-export schemas and types from schema file
-export * from './feed-tag.schema';
+export {
+  FeedTagSchema,
+  type FeedTag,
+  CreateFeedTagSchema,
+  type CreateFeedTag,
+} from './feed-tag.schema';
 
 export async function getAllFeedTags(userId: string): Promise<FeedTag[]> {
   // feed_tags has denormalized user_id for efficient filtering
