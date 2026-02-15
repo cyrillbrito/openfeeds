@@ -82,7 +82,9 @@ services:
       - POSTHOG_PUBLIC_KEY=$POSTHOG_PUBLIC_KEY
       - UNREAL_SPEECH_API_KEY=$UNREAL_SPEECH_API_KEY
       - TTS_DEFAULT_VOICE=$TTS_DEFAULT_VOICE
-      - DATA_PATH=$DATA_PATH
+      - DATA_PATH=${DATA_PATH:-/data}
+    volumes:
+      - web_data:${DATA_PATH:-/data}
     depends_on:
       redis:
         condition: service_started
@@ -137,6 +139,8 @@ volumes:
   postgres_data:
     driver: local
   redis_data:
+    driver: local
+  web_data:
     driver: local
 
 networks:
