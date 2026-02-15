@@ -183,9 +183,9 @@ export async function applyFilterRulesToFeed(
     return { articlesProcessed: 0, articlesMarkedAsRead: 0 };
   }
 
-  // Get all articles for this feed
+  // Get all articles for this feed (scoped to user)
   const feedArticles = await db.query.articles.findMany({
-    where: eq(articles.feedId, feedId),
+    where: and(eq(articles.feedId, feedId), eq(articles.userId, userId)),
   });
 
   let articlesMarkedAsRead = 0;
