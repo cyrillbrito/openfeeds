@@ -1,4 +1,3 @@
-import { attempt, attemptAsync } from '@repo/shared/utils';
 import { parseFeed } from 'feedsmith';
 
 export type ParseFeedResult = ReturnType<typeof parseFeed>;
@@ -10,26 +9,29 @@ export async function fetchRss(url: string): Promise<ParseFeedResult> {
   const timeoutId = setTimeout(() => controller.abort(), FETCH_TIMEOUT_MS);
 
   try {
-    const [fetchErr, response] = await attemptAsync(fetch(url, { signal: controller.signal }));
-    if (fetchErr) {
-      throw new Error(`Failed to fetch RSS: ${String(fetchErr)}`);
+    let response: Response;
+    try {
+      response = await fetch(url, { signal: controller.signal });
+    } catch (error) {
+      throw new Error(`Failed to fetch RSS: ${String(error)}`);
     }
 
     if (!response.ok) {
       throw new Error(`HTTP ${response.status}: ${response.statusText}`);
     }
 
-    const [textErr, xmlText] = await attemptAsync(response.text());
-    if (textErr) {
-      throw new Error(`Failed to read RSS response: ${String(textErr)}`);
+    let xmlText: string;
+    try {
+      xmlText = await response.text();
+    } catch (error) {
+      throw new Error(`Failed to read RSS response: ${String(error)}`);
     }
 
-    const [parseErr, parsedFeed] = attempt(() => parseFeed(xmlText));
-    if (parseErr) {
-      throw new Error(`Failed to parse RSS feed: ${String(parseErr)}`);
+    try {
+      return parseFeed(xmlText);
+    } catch (error) {
+      throw new Error(`Failed to parse RSS feed: ${String(error)}`);
     }
-
-    return parsedFeed;
   } finally {
     clearTimeout(timeoutId);
   }

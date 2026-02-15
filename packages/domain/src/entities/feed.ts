@@ -1,6 +1,6 @@
 import { db, feeds, type DbInsertFeed } from '@repo/db';
 import { discoverFeeds } from '@repo/discovery/server';
-import { attemptAsync, createId } from '@repo/shared/utils';
+import { createId } from '@repo/shared/utils';
 import { and, eq } from 'drizzle-orm';
 import { trackEvent } from '../analytics';
 import { feedDbToApi } from '../db-utils';
@@ -57,9 +57,10 @@ export async function createFeed(data: CreateFeed, userId: string): Promise<Feed
     createdAt: undefined,
   };
 
-  const [err, dbResult] = await attemptAsync(db.insert(feeds).values(feed).returning());
-
-  if (err) {
+  let dbResult: (typeof feeds.$inferSelect)[];
+  try {
+    dbResult = await db.insert(feeds).values(feed).returning();
+  } catch (err) {
     // TODO Better drizzle error handling
     console.error('Database error creating feed:', err);
     throw new UnexpectedError();
@@ -148,10 +149,10 @@ export async function retryFeed(id: string, userId: string): Promise<Feed> {
 }
 
 export async function discoverRssFeeds(url: string): Promise<DiscoveredFeed[]> {
-  const [error, feeds] = await attemptAsync(discoverFeeds(url));
-  if (error) {
+  try {
+    return await discoverFeeds(url);
+  } catch (error) {
     console.error('Discovery failed:', error);
     throw new BadRequestError(`Failed to discover feeds: ${String(error)}`);
   }
-  return feeds;
 }

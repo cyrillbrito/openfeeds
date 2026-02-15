@@ -1,5 +1,5 @@
 import { db, feeds, feedTags, tags } from '@repo/db';
-import { attemptAsync, createId } from '@repo/shared/utils';
+import { createId } from '@repo/shared/utils';
 import { eq } from 'drizzle-orm';
 import { parseOpml } from 'feedsmith';
 import { trackEvent } from './analytics';
@@ -90,35 +90,36 @@ export async function importOpmlFeeds(opmlContent: string, userId: string): Prom
           let tagId = tagLookup[category];
 
           if (!tagId) {
-            const [tagErr, tagResult] = await attemptAsync(
-              db.insert(tags).values({ id: createId(), userId, name: category }).returning(),
-            );
-            if (tagErr) {
-              logger.error(tagErr, {
+            try {
+              const tagResult = await db
+                .insert(tags)
+                .values({ id: createId(), userId, name: category })
+                .returning();
+              tagId = tagResult[0]?.id;
+              assert(tagId);
+              tagLookup[category] = tagId;
+            } catch (tagErr) {
+              logger.error(tagErr as Error, {
                 operation: 'import_tag_creation',
                 tagName: category,
               });
               // Continue with other categories, don't fail the whole feed
               continue;
             }
-            tagId = tagResult[0]?.id;
-            assert(tagId);
-            tagLookup[category] = tagId;
           }
           tagIds.push(tagId);
         }
       }
 
       // Check if feed already exists (by feedUrl)
-      const [existingFeedErr, existingFeed] = await attemptAsync(
-        db.query.feeds.findFirst({
+      let existingFeed: { id: string } | undefined;
+      try {
+        existingFeed = await db.query.feeds.findFirst({
           where: eq(feeds.feedUrl, feed.xmlUrl),
           columns: { id: true },
-        }),
-      );
-
-      if (existingFeedErr) {
-        logger.error(existingFeedErr, {
+        });
+      } catch (existingFeedErr) {
+        logger.error(existingFeedErr as Error, {
           operation: 'import_check_existing_feed',
           feedTitle: feed.title,
           feedUrl: feed.xmlUrl,
@@ -132,8 +133,9 @@ export async function importOpmlFeeds(opmlContent: string, userId: string): Prom
         continue;
       }
 
-      const [insertErr, insertResult] = await attemptAsync(
-        db
+      let feedId: string;
+      try {
+        const insertResult = await db
           .insert(feeds)
           .values({
             id: createId(),
@@ -142,11 +144,13 @@ export async function importOpmlFeeds(opmlContent: string, userId: string): Prom
             url: feed.htmlUrl,
             feedUrl: feed.xmlUrl,
           })
-          .returning(),
-      );
+          .returning();
 
-      if (insertErr) {
-        logger.error(insertErr, {
+        const insertedFeedId = insertResult[0]?.id;
+        assert(insertedFeedId);
+        feedId = insertedFeedId;
+      } catch (insertErr) {
+        logger.error(insertErr as Error, {
           operation: 'import_insert_feed',
           feedTitle: feed.title,
           feedUrl: feed.xmlUrl,
@@ -155,23 +159,18 @@ export async function importOpmlFeeds(opmlContent: string, userId: string): Prom
         continue;
       }
 
-      const feedId = insertResult[0]?.id;
-      assert(feedId);
-
       if (tagIds.length > 0) {
-        const [feedTagErr] = await attemptAsync(
-          db.insert(feedTags).values(
+        try {
+          await db.insert(feedTags).values(
             tagIds.map((tagId) => ({
               id: createId(),
               userId,
               feedId: feedId,
               tagId: tagId,
             })),
-          ),
-        );
-
-        if (feedTagErr) {
-          logger.error(feedTagErr, {
+          );
+        } catch (feedTagErr) {
+          logger.error(feedTagErr as Error, {
             operation: 'import_feed_tag_association',
             feedTitle: feed.title,
             feedId: feedId,
@@ -180,20 +179,20 @@ export async function importOpmlFeeds(opmlContent: string, userId: string): Prom
         }
       }
 
-      const [enqueueError] = await attemptAsync(enqueueFeedSync(userId, feedId));
-
-      if (enqueueError) {
-        logger.error(enqueueError, {
+      try {
+        await enqueueFeedSync(userId, feedId);
+      } catch (enqueueError) {
+        logger.error(enqueueError as Error, {
           operation: 'import_feed_enqueue_sync',
           feedTitle: feed.title,
           feedUrl: feed.xmlUrl,
         });
       }
 
-      const [enqueueError2] = await attemptAsync(enqueueFeedDetail(userId, feedId));
-
-      if (enqueueError2) {
-        logger.error(enqueueError2, {
+      try {
+        await enqueueFeedDetail(userId, feedId);
+      } catch (enqueueError) {
+        logger.error(enqueueError as Error, {
           operation: 'import_feed_detail_enqueue',
           feedTitle: feed.title,
           feedUrl: feed.xmlUrl,

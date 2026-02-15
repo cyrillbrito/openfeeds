@@ -1,5 +1,5 @@
 import { db, tags } from '@repo/db';
-import { attemptAsync, createId } from '@repo/shared/utils';
+import { createId } from '@repo/shared/utils';
 import { and, eq, sql } from 'drizzle-orm';
 import { trackEvent } from '../analytics';
 import { tagDbToApi } from '../db-utils';
@@ -42,8 +42,9 @@ export async function createTag(data: CreateTag, userId: string): Promise<Tag> {
     throw new ConflictError('Tag name already exists');
   }
 
-  const [err, dbResult] = await attemptAsync(
-    db
+  let dbResult: (typeof tags.$inferSelect)[];
+  try {
+    dbResult = await db
       .insert(tags)
       .values({
         id: data.id ?? createId(),
@@ -51,10 +52,8 @@ export async function createTag(data: CreateTag, userId: string): Promise<Tag> {
         name: data.name,
         color: data.color,
       })
-      .returning(),
-  );
-
-  if (err) {
+      .returning();
+  } catch (err) {
     console.error('Database error creating tag:', err);
     throw new UnexpectedError();
   }
@@ -90,15 +89,14 @@ export async function updateTag(id: string, data: UpdateTag, userId: string): Pr
   if (data.name !== undefined) updateData.name = data.name;
   if (data.color !== undefined) updateData.color = data.color;
 
-  const [err, dbResult] = await attemptAsync(
-    db
+  let dbResult: (typeof tags.$inferSelect)[];
+  try {
+    dbResult = await db
       .update(tags)
       .set(updateData)
       .where(and(eq(tags.id, id), eq(tags.userId, userId)))
-      .returning(),
-  );
-
-  if (err) {
+      .returning();
+  } catch (err) {
     console.error('Database error updating tag:', err);
     throw new UnexpectedError();
   }

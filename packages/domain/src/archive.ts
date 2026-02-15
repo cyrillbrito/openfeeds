@@ -1,19 +1,17 @@
 import { articles, db } from '@repo/db';
-import { attemptAsyncFn, startTimer } from '@repo/shared/utils';
+import { startTimer } from '@repo/shared/utils';
 import { and, eq, lt } from 'drizzle-orm';
 import { getAutoArchiveCutoffDate, type ArchiveResult } from './entities/settings';
 
 export async function autoArchiveArticles(userId: string): Promise<void> {
-  const [error] = await attemptAsyncFn(async () => {
+  try {
     const timer = startTimer();
     const result = await performArchiveArticles(userId);
 
     console.log(
       `Auto-archived ${result.markedCount} articles in ${timer.elapsed().toFixed(2)} seconds`,
     );
-  });
-
-  if (error) {
+  } catch (error) {
     console.error('Error in autoArchiveArticles:', error);
   }
 }
