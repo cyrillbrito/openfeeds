@@ -17,12 +17,15 @@ export const filterRuleSchema = z.object({
 });
 export type FilterRule = z.infer<typeof filterRuleSchema>;
 
-const createFilterRuleSchema = filterRuleSchema.omit({
-  id: true,
-  userId: true,
-  createdAt: true,
-  updatedAt: true,
-});
+const createFilterRuleSchema = filterRuleSchema
+  .omit({
+    userId: true,
+    createdAt: true,
+    updatedAt: true,
+  })
+  .extend({
+    id: z.string().optional(),
+  });
 
 export const createFilterRuleApiSchema = createFilterRuleSchema.omit({
   feedId: true,

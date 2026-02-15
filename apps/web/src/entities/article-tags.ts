@@ -20,7 +20,7 @@ export const articleTagsCollection = createCollection(
     onInsert: async ({ transaction }) => {
       const tags = transaction.mutations.map((mutation) => {
         const tag = mutation.modified;
-        return { articleId: tag.articleId, tagId: tag.tagId };
+        return { id: mutation.key as string, articleId: tag.articleId, tagId: tag.tagId };
       });
       await $$createArticleTags({ data: tags });
     },

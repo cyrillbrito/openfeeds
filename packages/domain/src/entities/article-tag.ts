@@ -26,7 +26,7 @@ export async function createArticleTags(
   if (data.length === 0) return [];
 
   const newTags = data.map((item) => ({
-    id: createId(),
+    id: item.id ?? createId(),
     userId,
     articleId: item.articleId,
     tagId: item.tagId,

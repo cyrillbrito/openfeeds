@@ -32,7 +32,7 @@ export async function getTagById(id: string, userId: string): Promise<Tag> {
   return tagDbToApi(tag);
 }
 
-export async function createTag(data: CreateTag & { id?: string }, userId: string): Promise<Tag> {
+export async function createTag(data: CreateTag, userId: string): Promise<Tag> {
   // Check if tag name already exists for this user (case-insensitive)
   const existingTag = await db.query.tags.findFirst({
     where: and(eq(tags.userId, userId), sql`lower(${tags.name}) = lower(${data.name})`),
