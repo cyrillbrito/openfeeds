@@ -2,7 +2,7 @@ import { readdirSync, readFileSync } from 'fs';
 import { dirname, join } from 'path';
 import { fileURLToPath } from 'url';
 import { migrate } from 'drizzle-orm/bun-sql/migrator';
-import { getDb } from './config';
+import { db } from './config';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const migrationsFolder = join(__dirname, '../drizzle');
@@ -10,7 +10,6 @@ const migrationsFolder = join(__dirname, '../drizzle');
 /**
  * Runs database migrations.
  * Safe to call on startup - only applies pending migrations.
- * Requires initDb() to be called first.
  */
 export async function runMigrations() {
   console.log('Running migrations...');
@@ -24,8 +23,6 @@ export async function runMigrations() {
     const lines = content.split('\n').filter((l) => l.trim()).length;
     console.log(`  - ${file} (${lines} statements)`);
   }
-
-  const db = getDb();
 
   try {
     await migrate(db, { migrationsFolder });

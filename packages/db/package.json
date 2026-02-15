@@ -9,7 +9,9 @@
     "generate:migrations": "bun --bun drizzle-kit generate"
   },
   "dependencies": {
-    "drizzle-orm": "catalog:"
+    "@t3-oss/env-core": "^0.13.10",
+    "drizzle-orm": "catalog:",
+    "zod": "catalog:"
   },
   "devDependencies": {
     "@types/bun": "^1.3.8",
