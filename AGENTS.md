@@ -131,18 +131,19 @@ import { env } from './env';
 export const db = drizzle(env.DATABASE_URL, { schema });
 ```
 
-### Apps: Only Define App-Specific Env Vars
+### Apps: Define Their Own Env Vars
 
-Apps only validate env vars they use directly (not ones owned by packages):
+Apps validate env vars they use directly. An env var (e.g., `POSTHOG_PUBLIC_KEY`) may appear in multiple `env.ts` files if each consumer uses it independently — this is fine and preferred over creating cross-package imports just to share a value.
 
 ```typescript
-// apps/web/src/env.ts - only web-specific vars
+// apps/web/src/env.ts - web-specific vars
 export const env = createEnv({
   server: {
     ELECTRIC_URL: z.string().default('http://localhost:3060'),
     BETTER_AUTH_SECRET: z.string(),
     SIMPLE_AUTH: z.stringbool().default(false),
     TRUSTED_ORIGINS: z.string().transform(...),
+    POSTHOG_PUBLIC_KEY: z.string().optional(), // also in @repo/domain, but used here to expose to client
   },
   ...
 });
@@ -158,8 +159,8 @@ import { QUEUE_NAMES, redisConnection } from '@repo/domain';
 
 ### Key Rules
 
-1. **Packages own their env vars** - Each package validates what it needs via its own `env.ts`
-2. **Apps only define app-specific vars** - Don't duplicate package-owned vars
+1. **Each consumer validates what it needs** - Packages and apps define env vars in their own `env.ts`
+2. **Duplication is okay** - The same env var can appear in multiple `env.ts` files when each consumer uses it independently
 3. **Direct exports** - `db`, `redisConnection`, `posthog` are module-level exports, no getters
 4. **No init functions** - Packages initialize on import via t3-env
 5. **Fail fast** - Invalid env vars throw at import time

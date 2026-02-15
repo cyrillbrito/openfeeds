@@ -68,8 +68,7 @@ Using **query-based collections** (`queryCollectionOptions`) with TanStack Start
 const $$getAllFeeds = createServerFn({ method: 'GET' })
   .middleware([authMiddleware])
   .handler(({ context }) => {
-    const db = getUserDb(context.user.id);
-    return feedsDomain.getAllFeeds(db);
+    return feedsDomain.getAllFeeds(context.user.id);
   });
 
 // Collection (client-side with sync)

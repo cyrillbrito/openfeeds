@@ -140,14 +140,13 @@ These events are tracked in `apps/web` for UI-specific interactions.
 Location: `packages/domain/src/analytics.ts`
 
 ```typescript
-import { getPosthog } from './config';
+import { posthog } from './config';
 
 export function trackEvent(
   userId: string,
   event: string,
   properties?: Record<string, unknown>,
 ): void {
-  const posthog = getPosthog();
   if (posthog) {
     posthog.capture({ distinctId: userId, event, properties });
   }
