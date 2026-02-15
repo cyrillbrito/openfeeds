@@ -2,6 +2,7 @@ import { articles, articleTags, db, feeds, feedTags, filterRules } from '@repo/d
 import { sanitizeHtml } from '@repo/readability/sanitize';
 import { createId } from '@repo/shared/utils';
 import { and, asc, eq, inArray, isNull, lt, ne, or } from 'drizzle-orm';
+import { autoArchiveArticles } from './archive';
 import { filterRuleDbToApi } from './db-utils';
 import { shouldMarkAsRead } from './entities/filter-rule';
 import { getAutoArchiveCutoffDate } from './entities/settings';
@@ -161,10 +162,13 @@ export async function syncFeedArticles(
   return counts;
 }
 
+/** Feeds not synced in this many minutes are considered stale */
 const OUTDATED_MIN = 10;
+/** Max stale feeds fetched per orchestrator run (across all users) */
 const GLOBAL_LIMIT = 50;
+/** Max stale feeds enqueued per user per orchestrator run */
 const PER_USER_LIMIT = 15;
-/** Number of consecutive failures before a feed is marked as broken */
+/** Consecutive sync failures before a feed is marked as broken and excluded from sync */
 const BROKEN_THRESHOLD = 3;
 
 /**
@@ -290,7 +294,6 @@ export async function syncOldestFeeds(): Promise<void> {
  * Acceptable since it runs once daily (not per-minute like sync).
  */
 export async function autoArchiveForAllUsers(): Promise<void> {
-  const { autoArchiveArticles } = await import('./archive');
   const users = await db.query.user.findMany({ columns: { id: true } });
 
   for (const u of users) {
