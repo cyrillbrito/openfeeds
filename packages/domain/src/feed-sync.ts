@@ -245,17 +245,18 @@ export async function syncSingleFeed(userId: string, feedId: string): Promise<vo
  * Single global query replaces the old per-user iteration pattern.
  * Broken feeds are excluded. Oldest feeds are prioritized.
  */
-export async function syncOldestFeeds(): Promise<void> {
+export async function enqueueStaleFeeds(): Promise<void> {
   const outdatedDate = new Date(Date.now() - OUTDATED_MIN * 60 * 1000);
-  const condition = and(
-    ne(feeds.syncStatus, 'broken'),
-    or(isNull(feeds.lastSyncAt), lt(feeds.lastSyncAt, outdatedDate)),
-  );
 
   const feedsToSync = await db
     .select({ id: feeds.id, userId: feeds.userId })
     .from(feeds)
-    .where(condition)
+    .where(
+      and(
+        ne(feeds.syncStatus, 'broken'),
+        or(isNull(feeds.lastSyncAt), lt(feeds.lastSyncAt, outdatedDate)),
+      ),
+    )
     .orderBy(asc(feeds.lastSyncAt))
     .limit(SYNC_LIMIT);
 

@@ -1,9 +1,9 @@
 import {
   autoArchiveForAllUsers,
+  enqueueStaleFeeds,
   logger,
   QUEUE_NAMES,
   redisConnection,
-  syncOldestFeeds,
   syncSingleFeed,
   updateFeedMetadata,
   type UserFeedJobData,
@@ -16,7 +16,7 @@ export function createFeedSyncOrchestratorWorker() {
     QUEUE_NAMES.FEED_SYNC_ORCHESTRATOR,
     async (job) => {
       console.log(`Starting feed sync orchestrator job ${job.id}`);
-      await syncOldestFeeds();
+      await enqueueStaleFeeds();
     },
     {
       connection: redisConnection,
