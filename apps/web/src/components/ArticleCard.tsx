@@ -148,13 +148,23 @@ export function ArticleCard(props: ArticleCardProps) {
         <div class="mb-2 w-full overflow-hidden rounded-lg md:max-w-2xl">
           <div class="aspect-video w-full">
             <img
-              src={`https://img.youtube.com/vi/${videoId()}/mqdefault.jpg`}
+              src={`https://img.youtube.com/vi/${videoId()}/sddefault.jpg`}
+              srcset={`https://img.youtube.com/vi/${videoId()}/mqdefault.jpg 320w, https://img.youtube.com/vi/${videoId()}/sddefault.jpg 640w, https://img.youtube.com/vi/${videoId()}/maxresdefault.jpg 1280w`}
+              sizes="(min-width: 768px) 672px, 100vw"
               alt={props.article.title}
               class="h-full w-full object-cover"
               loading="lazy"
               onError={(e) => {
-                (e.currentTarget as HTMLImageElement).src =
-                  `https://img.youtube.com/vi/${videoId()}/hqdefault.jpg`;
+                const img = e.currentTarget as HTMLImageElement;
+                // maxresdefault may not exist for some videos — clear srcset so
+                // the browser falls back to the reliable src
+                if (img.srcset) {
+                  img.srcset = '';
+                  img.src = `https://img.youtube.com/vi/${videoId()}/sddefault.jpg`;
+                } else {
+                  // Prevent infinite error loop if sddefault also fails
+                  img.onerror = null;
+                }
               }}
             />
           </div>
