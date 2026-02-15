@@ -39,7 +39,10 @@ src/
     toast.tsx       # Toast notifications
     session-read.tsx
   server/           # Server-only code
-    auth.ts         # Better Auth server config
+    auth.ts         # Better Auth server config (OAuth provider)
+    auth.schema.ts  # Schema-generation copy of auth config
+    well-known.ts   # .well-known endpoint handlers
+    dev-cors.ts     # Dev-only CORS for MCP Inspector
     middleware/     # Request middleware
   utils/            # Pure utility functions
     html.ts         # HTML sanitization
@@ -48,6 +51,8 @@ src/
     tagColors.ts    # Tag color helpers
   routes/           # File-based routing
     api/            # API routes for external consumers
+    api/mcp/        # MCP server endpoint
+    oauth/          # OAuth consent page
   styles/           # Global CSS
   env.ts            # Environment variables (t3-env)
 ```
@@ -242,9 +247,28 @@ Uses `<Show>` internally - destroys content when closed, fresh state on reopen.
 
 Uses native Popover API (`popover="auto"`) — renders in browser top-layer, immune to `overflow: hidden` and z-index issues. See `UI_DESIGN.md` "Overlays & Layering" for full rules.
 
+## OAuth Provider & MCP
+
+OpenFeeds acts as an OAuth 2.1 Authorization Server for MCP (Model Context Protocol) clients. See [docs/oauth-mcp.md](../../docs/oauth-mcp.md) for the full architecture doc.
+
+**Key files:**
+
+- `src/server/auth.ts` — `oauthProvider()` + `jwt()` plugins configure the OAuth server
+- `src/server/well-known.ts` — `.well-known` discovery endpoints (intercepted in `src/server.ts` because file-based routing can't handle dotfile paths)
+- `src/server/dev-cors.ts` — Dev-only CORS middleware for MCP Inspector (no-op in production, tree-shaken)
+- `src/routes/oauth/consent.tsx` — Consent page where users approve/deny MCP client access
+- `src/routes/api/mcp/$.ts` — MCP server endpoint (stateless, JWT-verified via `mcpHandler`)
+- `src/lib/auth-client.ts` — Includes `oauthProviderClient()` plugin for client-side OAuth methods
+
+**Scopes:** `openid`, `profile`, `email`, `offline_access`, `mcp:tools`
+
+**Database:** 5 new tables (`jwks`, `oauth_client`, `oauth_access_token`, `oauth_refresh_token`, `oauth_consent`) — managed by Better Auth, migration in `packages/db/drizzle/0002_add-oauth.sql`.
+
+**When modifying the auth config:** `src/server/auth.schema.ts` mirrors the plugin setup for schema generation. Keep it in sync with `auth.ts` (but it intentionally avoids importing `~/env`).
+
 ## API Routes
 
-TanStack Start can expose traditional API routes in `src/routes/api/`. Use for external integrations (e.g., browser extension).
+TanStack Start can expose traditional API routes in `src/routes/api/`. Use for external integrations (e.g., browser extension, MCP clients).
 
 ```tsx
 // src/routes/api/feeds.ts

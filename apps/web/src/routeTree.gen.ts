@@ -15,6 +15,7 @@ import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as ForgotPasswordRouteImport } from './routes/forgot-password'
 import { Route as FrameRouteImport } from './routes/_frame'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as OauthConsentRouteImport } from './routes/oauth/consent'
 import { Route as ApiFeedsRouteImport } from './routes/api/feeds'
 import { Route as FrameSettingsRouteImport } from './routes/_frame.settings'
 import { Route as FrameTagsIndexRouteImport } from './routes/_frame.tags.index'
@@ -27,6 +28,7 @@ import { Route as ApiShapesFeedsRouteImport } from './routes/api/shapes/feeds'
 import { Route as ApiShapesFeedTagsRouteImport } from './routes/api/shapes/feed-tags'
 import { Route as ApiShapesArticlesRouteImport } from './routes/api/shapes/articles'
 import { Route as ApiShapesArticleTagsRouteImport } from './routes/api/shapes/article-tags'
+import { Route as ApiMcpSplatRouteImport } from './routes/api/mcp/$'
 import { Route as ApiAuthSplatRouteImport } from './routes/api/auth/$'
 import { Route as FrameTagsTagIdRouteImport } from './routes/_frame.tags.$tagId'
 import { Route as FrameArticlesArticleIdRouteImport } from './routes/_frame.articles.$articleId'
@@ -62,6 +64,11 @@ const FrameRoute = FrameRouteImport.update({
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const OauthConsentRoute = OauthConsentRouteImport.update({
+  id: '/oauth/consent',
+  path: '/oauth/consent',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ApiFeedsRoute = ApiFeedsRouteImport.update({
@@ -124,6 +131,11 @@ const ApiShapesArticleTagsRoute = ApiShapesArticleTagsRouteImport.update({
   path: '/api/shapes/article-tags',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiMcpSplatRoute = ApiMcpSplatRouteImport.update({
+  id: '/api/mcp/$',
+  path: '/api/mcp/$',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiAuthSplatRoute = ApiAuthSplatRouteImport.update({
   id: '/api/auth/$',
   path: '/api/auth/$',
@@ -170,9 +182,11 @@ export interface FileRoutesByFullPath {
   '/signup': typeof SignupRoute
   '/settings': typeof FrameSettingsRoute
   '/api/feeds': typeof ApiFeedsRoute
+  '/oauth/consent': typeof OauthConsentRoute
   '/articles/$articleId': typeof FrameArticlesArticleIdRoute
   '/tags/$tagId': typeof FrameTagsTagIdRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
+  '/api/mcp/$': typeof ApiMcpSplatRoute
   '/api/shapes/article-tags': typeof ApiShapesArticleTagsRoute
   '/api/shapes/articles': typeof ApiShapesArticlesRoute
   '/api/shapes/feed-tags': typeof ApiShapesFeedTagsRoute
@@ -196,9 +210,11 @@ export interface FileRoutesByTo {
   '/signup': typeof SignupRoute
   '/settings': typeof FrameSettingsRoute
   '/api/feeds': typeof ApiFeedsRoute
+  '/oauth/consent': typeof OauthConsentRoute
   '/articles/$articleId': typeof FrameArticlesArticleIdRoute
   '/tags/$tagId': typeof FrameTagsTagIdRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
+  '/api/mcp/$': typeof ApiMcpSplatRoute
   '/api/shapes/article-tags': typeof ApiShapesArticleTagsRoute
   '/api/shapes/articles': typeof ApiShapesArticlesRoute
   '/api/shapes/feed-tags': typeof ApiShapesFeedTagsRoute
@@ -224,9 +240,11 @@ export interface FileRoutesById {
   '/signup': typeof SignupRoute
   '/_frame/settings': typeof FrameSettingsRoute
   '/api/feeds': typeof ApiFeedsRoute
+  '/oauth/consent': typeof OauthConsentRoute
   '/_frame/articles/$articleId': typeof FrameArticlesArticleIdRoute
   '/_frame/tags/$tagId': typeof FrameTagsTagIdRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
+  '/api/mcp/$': typeof ApiMcpSplatRoute
   '/api/shapes/article-tags': typeof ApiShapesArticleTagsRoute
   '/api/shapes/articles': typeof ApiShapesArticlesRoute
   '/api/shapes/feed-tags': typeof ApiShapesFeedTagsRoute
@@ -252,9 +270,11 @@ export interface FileRouteTypes {
     | '/signup'
     | '/settings'
     | '/api/feeds'
+    | '/oauth/consent'
     | '/articles/$articleId'
     | '/tags/$tagId'
     | '/api/auth/$'
+    | '/api/mcp/$'
     | '/api/shapes/article-tags'
     | '/api/shapes/articles'
     | '/api/shapes/feed-tags'
@@ -278,9 +298,11 @@ export interface FileRouteTypes {
     | '/signup'
     | '/settings'
     | '/api/feeds'
+    | '/oauth/consent'
     | '/articles/$articleId'
     | '/tags/$tagId'
     | '/api/auth/$'
+    | '/api/mcp/$'
     | '/api/shapes/article-tags'
     | '/api/shapes/articles'
     | '/api/shapes/feed-tags'
@@ -305,9 +327,11 @@ export interface FileRouteTypes {
     | '/signup'
     | '/_frame/settings'
     | '/api/feeds'
+    | '/oauth/consent'
     | '/_frame/articles/$articleId'
     | '/_frame/tags/$tagId'
     | '/api/auth/$'
+    | '/api/mcp/$'
     | '/api/shapes/article-tags'
     | '/api/shapes/articles'
     | '/api/shapes/feed-tags'
@@ -332,7 +356,9 @@ export interface RootRouteChildren {
   SigninRoute: typeof SigninRoute
   SignupRoute: typeof SignupRoute
   ApiFeedsRoute: typeof ApiFeedsRoute
+  OauthConsentRoute: typeof OauthConsentRoute
   ApiAuthSplatRoute: typeof ApiAuthSplatRoute
+  ApiMcpSplatRoute: typeof ApiMcpSplatRoute
   ApiShapesArticleTagsRoute: typeof ApiShapesArticleTagsRoute
   ApiShapesArticlesRoute: typeof ApiShapesArticlesRoute
   ApiShapesFeedTagsRoute: typeof ApiShapesFeedTagsRoute
@@ -385,6 +411,13 @@ declare module '@tanstack/solid-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/oauth/consent': {
+      id: '/oauth/consent'
+      path: '/oauth/consent'
+      fullPath: '/oauth/consent'
+      preLoaderRoute: typeof OauthConsentRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/feeds': {
@@ -469,6 +502,13 @@ declare module '@tanstack/solid-router' {
       path: '/api/shapes/article-tags'
       fullPath: '/api/shapes/article-tags'
       preLoaderRoute: typeof ApiShapesArticleTagsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/mcp/$': {
+      id: '/api/mcp/$'
+      path: '/api/mcp/$'
+      fullPath: '/api/mcp/$'
+      preLoaderRoute: typeof ApiMcpSplatRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/auth/$': {
@@ -557,7 +597,9 @@ const rootRouteChildren: RootRouteChildren = {
   SigninRoute: SigninRoute,
   SignupRoute: SignupRoute,
   ApiFeedsRoute: ApiFeedsRoute,
+  OauthConsentRoute: OauthConsentRoute,
   ApiAuthSplatRoute: ApiAuthSplatRoute,
+  ApiMcpSplatRoute: ApiMcpSplatRoute,
   ApiShapesArticleTagsRoute: ApiShapesArticleTagsRoute,
   ApiShapesArticlesRoute: ApiShapesArticlesRoute,
   ApiShapesFeedTagsRoute: ApiShapesFeedTagsRoute,

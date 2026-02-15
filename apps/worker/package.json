@@ -14,12 +14,12 @@
     "@repo/readability": "workspace:*",
     "@repo/shared": "workspace:*",
     "@t3-oss/env-core": "^0.13.10",
-    "bullmq": "^5.67.3",
+    "bullmq": "^5.69.2",
     "drizzle-orm": "catalog:",
     "zod": "catalog:"
   },
   "devDependencies": {
-    "@types/bun": "^1.3.8",
+    "@types/bun": "^1.3.9",
     "better-auth": "catalog:",
     "typescript": "catalog:"
   }

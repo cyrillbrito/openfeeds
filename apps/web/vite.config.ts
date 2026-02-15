@@ -17,4 +17,7 @@ export default defineConfig({
     tanstackStart(),
     solidPlugin({ ssr: true }),
   ],
+  server: {
+    allowedHosts: true,
+  },
 });
