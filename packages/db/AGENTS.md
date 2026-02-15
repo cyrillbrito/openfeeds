@@ -75,17 +75,17 @@ export const articlesTable = sqliteTable('articles', {
 
 ## Database Connection
 
-**Connection Patterns:**
+**Direct import pattern — no init functions:**
 
 ```typescript
-import { articlesTable, db, feedsTable } from '@repo/db';
+import { articles, db, feeds } from '@repo/db';
 
 // Query with proper typing
-const userFeeds = await db.select().from(feedsTable).where(eq(feedsTable.userId, userId));
+const userFeeds = await db.select().from(feeds).where(eq(feeds.userId, userId));
 
 // Insert with validation
 const newFeed = await db
-  .insert(feedsTable)
+  .insert(feeds)
   .values({
     userId,
     url: feedUrl,
@@ -93,6 +93,8 @@ const newFeed = await db
   })
   .returning();
 ```
+
+The `db` instance is created at module level using `DATABASE_URL` from the package's own `env.ts` (validated via t3-env). No init ceremony needed — just import and use.
 
 ## Important Guidelines
 

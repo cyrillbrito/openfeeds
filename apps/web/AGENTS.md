@@ -154,8 +154,7 @@ export const $$doSomething = createServerFn({ method: 'POST' })
   .middleware([authMiddleware])
   .inputValidator(z.object({ id: z.string() }))
   .handler(({ context, data }) => {
-    const db = getUserDb(context.user.id);
-    return domain.doSomething(data.id, db);
+    return domain.doSomething(data.id, context.user.id);
   });
 
 // Use in component

@@ -11,31 +11,10 @@ bun check-types  # TypeScript check
 
 ## Architecture
 
-Self-contained app with its own environment config. Does not depend on `@repo/domain`.
+Imports `runMigrations` from `@repo/db` which uses the `db` instance directly. Does not depend on `@repo/domain`.
 
-Creates its own `DbProvider` instance and runs:
-
-1. Auth database migrations
-2. User-template database migrations
-3. All existing user database migrations
-
-Exits 0 on success, 1 on failure.
-
-## Docker Compose
-
-```yaml
-services:
-  migrator:
-    build:
-      dockerfile: Dockerfile.migrations
-    restart: 'no'
-
-  web:
-    depends_on:
-      migrator:
-        condition: service_completed_successfully
-```
+Runs all database migrations and exits 0 on success, 1 on failure.
 
 ## Environment Variables
 
-- `DB_PATH` - SQLite database directory path
+Database connection is configured via `DATABASE_URL` (owned by `@repo/db`).

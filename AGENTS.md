@@ -83,108 +83,86 @@ Each app/package has its own `AGENTS.md` with specific patterns and guidelines.
 
 ## Environment & Configuration
 
-**Apps own environment variables, packages receive configuration via init functions.**
+**Each package owns and validates its own environment variables using t3-env.** Apps only define env vars they use directly; shared infrastructure config (database, Redis, PostHog, etc.) is owned by the packages that use it.
 
 ### Pattern Overview
 
 ```
 ┌─────────────────────────────────────────────────────────────────┐
-│ App (web, worker)                                               │
-│ ┌─────────────────────────────────────────────────────────────┐ │
-│ │ src/env.ts - t3-env defines & validates env vars            │ │
-│ └─────────────────────────────────────────────────────────────┘ │
-│                              │                                  │
-│                              ▼                                  │
-│ ┌─────────────────────────────────────────────────────────────┐ │
-│ │ Entry point (server.ts, index.ts)                           │ │
-│ │   initDb({ dbPath: env.DB_PATH })                           │ │
-│ │   initDomain({ dbPath, redis, ... })                        │ │
-│ └─────────────────────────────────────────────────────────────┘ │
-└─────────────────────────────────────────────────────────────────┘
-                               │
-                               ▼
-┌─────────────────────────────────────────────────────────────────┐
 │ Package (@repo/db, @repo/domain)                                │
 │ ┌─────────────────────────────────────────────────────────────┐ │
-│ │ config.ts - initX() stores config, getX() retrieves it      │ │
-│ │ No process.env access - config injected at runtime          │ │
+│ │ src/env.ts - t3-env validates package's own env vars        │ │
+│ │ src/config.ts - exports db, redisConnection, etc. directly  │ │
+│ └─────────────────────────────────────────────────────────────┘ │
+└─────────────────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────────────┐
+│ App (web, worker)                                               │
+│ ┌─────────────────────────────────────────────────────────────┐ │
+│ │ src/env.ts - t3-env for app-specific env vars only          │ │
+│ │ Imports db, redisConnection, etc. directly from packages    │ │
 │ └─────────────────────────────────────────────────────────────┘ │
 └─────────────────────────────────────────────────────────────────┘
 ```
 
-### Apps: Define Environment Variables
+### Packages: Own Their Environment Variables
 
-Each app defines its own env vars using `@t3-oss/env-core` with Zod validation:
+Each package defines and validates the env vars it needs:
 
 ```typescript
-// apps/web/src/env.ts
+// packages/db/src/env.ts
 import { createEnv } from '@t3-oss/env-core';
 import { z } from 'zod';
 
 export const env = createEnv({
   server: {
-    DB_PATH: z.string().default('./dbs'),
-    REDIS_HOST: z.string().default('localhost'),
-    REDIS_PORT: z.coerce.number().default(6379),
-    RESEND_API_KEY: z.string().optional(),
+    DATABASE_URL: z.url(),
   },
   runtimeEnv: process.env,
   emptyStringAsUndefined: true,
 });
 ```
 
-### Apps: Initialize Packages at Startup
-
-App entry points call `initDb()` and `initDomain()` before any other code:
-
 ```typescript
-// apps/web/src/server.ts
-import { initDb } from '@repo/db';
-import { initDomain } from '@repo/domain';
+// packages/db/src/config.ts - exports db directly
+import { drizzle } from 'drizzle-orm/postgres-js';
 import { env } from './env';
 
-// Initialize packages - initDb() must be called before initDomain()
-initDb({ dbPath: env.DB_PATH });
-
-initDomain({
-  dbPath: env.DB_PATH,
-  redis: { host: env.REDIS_HOST, port: env.REDIS_PORT },
-  resendApiKey: env.RESEND_API_KEY,
-});
-
-// ... rest of app setup
+export const db = drizzle(env.DATABASE_URL, { schema });
 ```
 
-### Packages: Export Init Functions
+### Apps: Only Define App-Specific Env Vars
 
-Packages expose `initX()` to receive config and `getX()` to access it:
+Apps only validate env vars they use directly (not ones owned by packages):
 
 ```typescript
-// packages/db/src/config.ts
-export interface DbConfig {
-  dbPath: string;
-}
+// apps/web/src/env.ts - only web-specific vars
+export const env = createEnv({
+  server: {
+    ELECTRIC_URL: z.string().default('http://localhost:3060'),
+    BETTER_AUTH_SECRET: z.string(),
+    SIMPLE_AUTH: z.stringbool().default(false),
+    TRUSTED_ORIGINS: z.string().transform(...),
+  },
+  ...
+});
+```
 
-let _config: DbConfig | null = null;
+### Usage in Apps
 
-export function initDb(config: DbConfig): void {
-  if (_config) throw new Error('Db already initialized');
-  _config = config;
-}
-
-export function getDbConfig(): DbConfig {
-  if (!_config) throw new Error('Db not initialized. Call initDb() first.');
-  return _config;
-}
+```typescript
+// Import directly from packages - no init ceremony needed
+import { db } from '@repo/db';
+import { QUEUE_NAMES, redisConnection } from '@repo/domain';
 ```
 
 ### Key Rules
 
-1. **Packages never read `process.env`** - They receive config via init functions
-2. **Apps own all env var definitions** - Using t3-env for validation
-3. **Init order matters** - `initDb()` before `initDomain()`
-4. **Init once at startup** - Before any imports that use the config
-5. **Fail fast** - Accessing config before init throws immediately
+1. **Packages own their env vars** - Each package validates what it needs via its own `env.ts`
+2. **Apps only define app-specific vars** - Don't duplicate package-owned vars
+3. **Direct exports** - `db`, `redisConnection`, `posthog` are module-level exports, no getters
+4. **No init functions** - Packages initialize on import via t3-env
+5. **Fail fast** - Invalid env vars throw at import time
 
 ## Version Control (GitButler)
 
