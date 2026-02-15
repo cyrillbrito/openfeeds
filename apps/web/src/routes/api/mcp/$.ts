@@ -17,18 +17,15 @@ import { env } from '~/env';
 
 /**
  * The JWKS URL uses localhost to avoid the server fetching itself through
- * the public URL (DNS, TLS, potential deadlocks). Nitro reads PORT from
- * the environment at runtime, defaulting to 3000.
+ * the public URL (DNS, TLS, potential deadlocks).
  *
  * TODO: If mcpHandler ever supports in-process JWKS resolution (e.g. a
  * `jwksFetch` callback instead of `jwksUrl`), switch to that to eliminate
  * the self-fetch entirely.
  */
-const port = process.env.PORT ?? 3000;
-
 const handler = mcpHandler(
   {
-    jwksUrl: `http://localhost:${port}/api/auth/jwks`,
+    jwksUrl: `http://localhost:${env.PORT}/api/auth/jwks`,
     verifyOptions: {
       audience: `${env.BASE_URL}/api/mcp`,
       issuer: env.BASE_URL,
