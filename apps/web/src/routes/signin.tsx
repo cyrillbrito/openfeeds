@@ -41,6 +41,21 @@ function SignInPage() {
         },
         { throw: true },
       );
+
+      setIsLoading(false);
+
+      // Identify user for PostHog (signin event tracked server-side)
+      const session = await authClient.getSession();
+      if (session.data?.user) {
+        posthog.identify(session.data.user.id, {
+          email: session.data.user.email,
+          name: session.data.user.name,
+        });
+      }
+
+      // Redirect to original page or default to root (which will smart-redirect)
+      const redirectTo = search()?.redirect || '/';
+      void navigate({ to: redirectTo, replace: true });
     } catch (err) {
       setIsLoading(false);
       if (err instanceof BetterFetchError) {
@@ -49,23 +64,7 @@ function SignInPage() {
         posthog.captureException(err);
         setError('Unexpected network error');
       }
-      return;
     }
-
-    setIsLoading(false);
-
-    // Identify user for PostHog (signin event tracked server-side)
-    const session = await authClient.getSession();
-    if (session.data?.user) {
-      posthog.identify(session.data.user.id, {
-        email: session.data.user.email,
-        name: session.data.user.name,
-      });
-    }
-
-    // Redirect to original page or default to root (which will smart-redirect)
-    const redirectTo = search()?.redirect || '/';
-    void navigate({ to: redirectTo, replace: true });
   };
 
   return (

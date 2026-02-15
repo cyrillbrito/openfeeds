@@ -40,6 +40,9 @@ function ForgotPasswordPage() {
         },
         { throw: true },
       );
+
+      setIsLoading(false);
+      setSuccess(true);
     } catch (err) {
       setIsLoading(false);
       if (err instanceof BetterFetchError) {
@@ -48,12 +51,7 @@ function ForgotPasswordPage() {
         posthog.captureException(err);
         setError('Unexpected network error');
       }
-      return;
     }
-
-    setIsLoading(false);
-
-    setSuccess(true);
   };
 
   return (

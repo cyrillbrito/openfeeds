@@ -57,6 +57,11 @@ function ResetPasswordPage() {
         },
         { throw: true },
       );
+
+      setIsLoading(false);
+
+      // Redirect to sign in after successful password reset
+      void navigate({ to: '/signin', replace: true });
     } catch (err) {
       setIsLoading(false);
       if (err instanceof BetterFetchError) {
@@ -65,13 +70,7 @@ function ResetPasswordPage() {
         posthog.captureException(err);
         setError('Unexpected network error');
       }
-      return;
     }
-
-    setIsLoading(false);
-
-    // Redirect to sign in after successful password reset
-    void navigate({ to: '/signin', replace: true });
   };
 
   return (

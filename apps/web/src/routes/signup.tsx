@@ -43,9 +43,8 @@ function SignUpPage() {
 
     setIsLoading(true);
 
-    let result: Awaited<ReturnType<typeof authClient.signUp.email>> | undefined;
     try {
-      result = await authClient.signUp.email(
+      const result = await authClient.signUp.email(
         {
           email: email(),
           password: password(),
@@ -54,6 +53,28 @@ function SignUpPage() {
         },
         { throw: true },
       );
+
+      setIsLoading(false);
+
+      if (result?.token) {
+        // Identify user for PostHog (signup event tracked server-side)
+        const session = await authClient.getSession();
+        if (session.data?.user) {
+          posthog.identify(session.data.user.id, {
+            email: session.data.user.email,
+            name: session.data.user.name,
+            created_at: session.data.user.createdAt,
+          });
+        }
+
+        // Redirect to original page or default to root (which will smart-redirect)
+        const redirectTo = search()?.redirect || '/';
+        void navigate({ to: redirectTo, replace: true });
+      } else {
+        // When email verification is required, Better Auth returns token: null
+        // and does not create a session. Show a "check your email" message.
+        setVerificationSent(true);
+      }
     } catch (err) {
       setIsLoading(false);
       if (err instanceof BetterFetchError) {
@@ -62,29 +83,6 @@ function SignUpPage() {
         posthog.captureException(err);
         setError('Unexpected network error');
       }
-      return;
-    }
-
-    setIsLoading(false);
-
-    if (result?.token) {
-      // Identify user for PostHog (signup event tracked server-side)
-      const session = await authClient.getSession();
-      if (session.data?.user) {
-        posthog.identify(session.data.user.id, {
-          email: session.data.user.email,
-          name: session.data.user.name,
-          created_at: session.data.user.createdAt,
-        });
-      }
-
-      // Redirect to original page or default to root (which will smart-redirect)
-      const redirectTo = search()?.redirect || '/';
-      void navigate({ to: redirectTo, replace: true });
-    } else {
-      // When email verification is required, Better Auth returns token: null
-      // and does not create a session. Show a "check your email" message.
-      setVerificationSent(true);
     }
   };
 
