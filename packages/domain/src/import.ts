@@ -1,6 +1,6 @@
 import { db, feeds, feedTags, tags } from '@repo/db';
 import { createId } from '@repo/shared/utils';
-import { eq } from 'drizzle-orm';
+import { and, eq } from 'drizzle-orm';
 import { parseOpml } from 'feedsmith';
 import { trackEvent } from './analytics';
 import { assert } from './errors';
@@ -67,8 +67,9 @@ export async function importOpmlFeeds(opmlContent: string, userId: string): Prom
   let _skipped = 0;
   const failed: string[] = [];
 
-  // Prefetch all tags
+  // Prefetch all tags for this user
   const existingTags = await db.query.tags.findMany({
+    where: eq(tags.userId, userId),
     columns: { id: true, name: true },
   });
 
@@ -111,9 +112,9 @@ export async function importOpmlFeeds(opmlContent: string, userId: string): Prom
         }
       }
 
-      // Check if feed already exists (by feedUrl) — skip if so
+      // Check if feed already exists (by feedUrl for this user) — skip if so
       const existingFeed = await db.query.feeds.findFirst({
-        where: eq(feeds.feedUrl, feed.xmlUrl),
+        where: and(eq(feeds.feedUrl, feed.xmlUrl), eq(feeds.userId, userId)),
         columns: { id: true },
       });
 
