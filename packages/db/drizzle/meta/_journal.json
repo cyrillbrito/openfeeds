@@ -15,6 +15,13 @@
       "when": 1771009482438,
       "tag": "0001_add_feed_sync_health_tracking",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1771099640990,
+      "tag": "0002_add-oauth",
+      "breakpoints": true
     }
   ]
 }

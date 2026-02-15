@@ -21,6 +21,8 @@ export const env = createEnv({
       .string()
       .transform((val) => val.split(',').map((s) => s.trim()))
       .pipe(z.array(z.url())),
+    BASE_URL: z.url(),
+    PORT: z.coerce.number().default(3000),
   },
   runtimeEnv: process.env,
   emptyStringAsUndefined: true,

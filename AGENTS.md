@@ -71,6 +71,13 @@ Each app/package has its own `AGENTS.md` with specific patterns and guidelines.
 - Redis for queue persistence
 - Enqueue jobs via `@repo/domain` functions
 
+**OAuth Provider & MCP:**
+
+- OpenFeeds acts as an OAuth 2.1 Authorization Server for MCP clients (Claude, Cursor, etc.)
+- Uses Better Auth `oauthProvider` plugin with dynamic client registration (RFC 7591)
+- MCP endpoint at `/api/mcp` with JWT-verified access
+- See [docs/oauth-mcp.md](docs/oauth-mcp.md) for full architecture
+
 ## Tech Stack
 
 - **Frontend:** SolidJS, TanStack Start, TanStack Solid DB, Tailwind v4, DaisyUI
