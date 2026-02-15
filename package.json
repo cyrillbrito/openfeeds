@@ -20,7 +20,7 @@
     "build": "turbo build",
     "lint": "oxlint",
     "check-types": "turbo check-types",
-    "checks": "turbo check-types && oxlint",
+    "checks": "turbo run check-types lint",
     "generate:auth-schema": "turbo -F @repo/db generate:auth-schema",
     "generate:migrations": "turbo -F @repo/db generate:migrations",
     "migrate": "bun --cwd=apps/migrator migrate",

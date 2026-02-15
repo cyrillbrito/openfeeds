@@ -1,5 +1,5 @@
 {
-  "$schema": "https://turbo.build/schema.json",
+  "$schema": "https://turborepo.dev/schema.json",
   "ui": "tui",
   "globalDependencies": [".env"],
   "tasks": {
@@ -31,9 +31,7 @@
         "WORKER_CONCURRENCY_ORCHESTRATOR"
       ]
     },
-    "lint": {
-      "dependsOn": ["^lint"]
-    },
+    "//#lint": {},
     "check-types": {
       "dependsOn": ["^check-types"]
     },
