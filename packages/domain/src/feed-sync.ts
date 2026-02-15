@@ -88,6 +88,7 @@ export async function syncFeedArticles(
   }
 
   // Batch dedup: query all existing GUIDs at once instead of per-article
+  // Scoped to userId so two users subscribing to the same feed each get their own articles
   const guidsToCheck = normalizedItems
     .map((item) => item.guid)
     .filter((guid): guid is string => guid !== null);
@@ -96,7 +97,7 @@ export async function syncFeedArticles(
   if (guidsToCheck.length > 0) {
     const existingArticles = await db.query.articles.findMany({
       columns: { guid: true },
-      where: inArray(articles.guid, guidsToCheck),
+      where: and(eq(articles.userId, userId), inArray(articles.guid, guidsToCheck)),
     });
     for (const a of existingArticles) {
       if (a.guid) existingGuids.add(a.guid);
@@ -114,13 +115,17 @@ export async function syncFeedArticles(
 
   // Batch filter rules: load once for the entire feed instead of per-article
   const activeRules = await db.query.filterRules.findMany({
-    where: and(eq(filterRules.feedId, feedId), eq(filterRules.isActive, true)),
+    where: and(
+      eq(filterRules.userId, userId),
+      eq(filterRules.feedId, feedId),
+      eq(filterRules.isActive, true),
+    ),
   });
   const apiRules = activeRules.map(filterRuleDbToApi);
 
   // Batch feed tags: load once instead of per-article
   const feedTagsList = await db.query.feedTags.findMany({
-    where: eq(feedTags.feedId, feedId),
+    where: and(eq(feedTags.userId, userId), eq(feedTags.feedId, feedId)),
     columns: { tagId: true },
   });
 
