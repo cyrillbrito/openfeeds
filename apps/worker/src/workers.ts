@@ -1,39 +1,22 @@
-import { db } from '@repo/db';
 import {
-  autoArchiveArticles,
+  autoArchiveForAllUsers,
   logger,
   QUEUE_NAMES,
   redisConnection,
+  syncOldestFeedsForAllUsers,
+  syncSingleFeed,
   updateFeedMetadata,
+  type UserFeedJobData,
 } from '@repo/domain';
 import { Worker, type Job } from 'bullmq';
 import { env } from './env';
-import { syncOldestFeeds, syncSingleFeed } from './rss-sync';
-
-export interface UserFeedJobData {
-  userId: string;
-  feedId: string;
-}
 
 export function createFeedSyncOrchestratorWorker() {
   return new Worker(
     QUEUE_NAMES.FEED_SYNC_ORCHESTRATOR,
     async (job) => {
       console.log(`Starting feed sync orchestrator job ${job.id}`);
-      const users = await db.query.user.findMany({ columns: { id: true } });
-
-      for (const user of users) {
-        try {
-          await syncOldestFeeds(user.id);
-        } catch (err) {
-          logger.error(err instanceof Error ? err : new Error(String(err)), {
-            source: 'worker',
-            jobName: job.queueName,
-            userId: user.id,
-          });
-          continue;
-        }
-      }
+      await syncOldestFeedsForAllUsers();
     },
     {
       connection: redisConnection,
@@ -94,20 +77,7 @@ export function createAutoArchiveWorker() {
     QUEUE_NAMES.AUTO_ARCHIVE,
     async (job: Job) => {
       console.log(`Starting auto archive job ${job.id}`);
-      const users = await db.query.user.findMany({ columns: { id: true } });
-
-      for (const user of users) {
-        try {
-          await autoArchiveArticles(user.id);
-        } catch (err) {
-          logger.error(err instanceof Error ? err : new Error(String(err)), {
-            source: 'worker',
-            jobName: job.queueName,
-            userId: user.id,
-          });
-          continue;
-        }
-      }
+      await autoArchiveForAllUsers();
     },
     {
       connection: redisConnection,

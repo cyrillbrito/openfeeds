@@ -1,18 +1,15 @@
 import { articles, articleTags, db, feeds, feedTags } from '@repo/db';
-import {
-  enqueueFeedSync,
-  evaluateFilterRules,
-  fetchRss,
-  getAutoArchiveCutoffDate,
-  type ParseFeedResult,
-} from '@repo/domain';
-import { logger } from '@repo/domain/logger';
 import { sanitizeHtml } from '@repo/readability/sanitize';
 import { createId } from '@repo/shared/utils';
 import { and, eq, isNull, lt, ne, or } from 'drizzle-orm';
+import { getAutoArchiveCutoffDate } from './entities/settings';
+import { logger } from './logger';
+import { enqueueFeedSync } from './queues';
+import { fetchRss, type ParseFeedResult } from './rss-fetch';
+import { evaluateFilterRules } from './rule-evaluation';
 
 // Normalized item structure for our database
-export interface NormalizedFeedItem {
+interface NormalizedFeedItem {
   guid: string | null;
   title: string;
   content: string | null | undefined;
@@ -158,7 +155,7 @@ const BROKEN_THRESHOLD = 3;
 
 /**
  * Sync a single feed by ID.
- * This is the core worker function for individual feed sync jobs.
+ * Fetches RSS, inserts new articles, tracks sync health (ok/failing/broken).
  */
 export async function syncSingleFeed(userId: string, feedId: string): Promise<void> {
   const feed = await db.query.feeds.findFirst({
@@ -228,8 +225,7 @@ export async function syncSingleFeed(userId: string, feedId: string): Promise<vo
 }
 
 /**
- * Finds feeds that need syncing and enqueues them as individual jobs.
- * This is the orchestrator job that runs on a schedule.
+ * Finds feeds that need syncing for a user and enqueues them as individual jobs.
  */
 export async function syncOldestFeeds(userId: string): Promise<void> {
   const outdatedDate = new Date(Date.now() - OUTDATED_MIN * 60 * 1000);
@@ -254,4 +250,28 @@ export async function syncOldestFeeds(userId: string): Promise<void> {
   }
 
   console.log(`[SYNC] Successfully enqueued ${feedsToSync.length} feed sync jobs`);
+}
+
+/**
+ * Orchestrates feed sync for all users.
+ * Finds stale feeds per user and enqueues them.
+ */
+export async function syncOldestFeedsForAllUsers(): Promise<void> {
+  const users = await db.query.user.findMany({ columns: { id: true } });
+
+  for (const u of users) {
+    await syncOldestFeeds(u.id);
+  }
+}
+
+/**
+ * Runs auto-archive for all users.
+ */
+export async function autoArchiveForAllUsers(): Promise<void> {
+  const { autoArchiveArticles } = await import('./archive');
+  const users = await db.query.user.findMany({ columns: { id: true } });
+
+  for (const u of users) {
+    await autoArchiveArticles(u.id);
+  }
 }
