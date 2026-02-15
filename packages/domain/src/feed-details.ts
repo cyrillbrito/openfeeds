@@ -1,6 +1,6 @@
 import { db, feeds } from '@repo/db';
 import { and, eq } from 'drizzle-orm';
-import { type Feed } from './entities/feed';
+import type { Feed } from './entities/feed';
 import { assert } from './errors';
 import { fetchRss, type ParseFeedResult } from './rss-fetch';
 

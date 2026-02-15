@@ -4,7 +4,7 @@ import posthog from 'posthog-js';
 import { createEffect, For, on, onMount, Suspense } from 'solid-js';
 import { AddFeedModal } from '~/components/AddFeedModal';
 import { ColorIndicator } from '~/components/ColorIndicator';
-import { type ModalController } from '~/components/LazyModal';
+import type { ModalController } from '~/components/LazyModal';
 import { CenterLoader, Loader } from '~/components/Loader';
 import { SaveArticleModal } from '~/components/SaveArticleModal';
 import { TagModal } from '~/components/TagModal';

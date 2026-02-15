@@ -3,7 +3,7 @@ import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import { trackEvent } from './analytics';
 import { getArticleWithContent } from './entities/article';
-import { type ArticleAudioMetadata, type WordTiming } from './entities/tts.schema';
+import type { ArticleAudioMetadata, WordTiming } from './entities/tts.schema';
 import { env } from './env';
 import { NotFoundError, TtsNotConfiguredError } from './errors';
 

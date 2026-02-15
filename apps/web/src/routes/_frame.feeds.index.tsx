@@ -12,7 +12,7 @@ import { EditFeedModal } from '~/components/EditFeedModal';
 import { Header } from '~/components/Header';
 import { FeedIllustration } from '~/components/Icons';
 import { ImportOpmlModal } from '~/components/ImportOpmlModal';
-import { type ModalController } from '~/components/LazyModal';
+import type { ModalController } from '~/components/LazyModal';
 import { CenterLoader } from '~/components/Loader';
 import { useFeedTags } from '~/entities/feed-tags';
 import { feedsCollection, useFeeds } from '~/entities/feeds';
