@@ -1,7 +1,7 @@
 import { eq, ilike, useLiveQuery } from '@tanstack/solid-db';
 import { createFileRoute } from '@tanstack/solid-router';
 import { onMount } from 'solid-js';
-import { type ReadStatus } from '~/components/ReadStatusToggle';
+import type { ReadStatus } from '~/components/ReadStatusToggle';
 import { ShortsViewer } from '~/components/ShortsViewer';
 import { articlesCollection } from '~/entities/articles';
 import { useFeeds } from '~/entities/feeds';

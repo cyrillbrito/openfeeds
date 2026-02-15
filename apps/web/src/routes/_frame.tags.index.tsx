@@ -7,7 +7,7 @@ import { DeleteTagModal } from '~/components/DeleteTagModal';
 import { Dropdown } from '~/components/Dropdown';
 import { Header } from '~/components/Header';
 import { TagsIllustration } from '~/components/Icons';
-import { type ModalController } from '~/components/LazyModal';
+import type { ModalController } from '~/components/LazyModal';
 import { CenterLoader } from '~/components/Loader';
 import { TagModal } from '~/components/TagModal';
 import { TimeAgo } from '~/components/TimeAgo';
