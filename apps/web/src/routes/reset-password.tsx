@@ -1,5 +1,4 @@
 import { BetterFetchError } from '@better-fetch/fetch';
-import { attemptAsync } from '@repo/shared/utils';
 import { createFileRoute, Link, useNavigate } from '@tanstack/solid-router';
 import { CircleX } from 'lucide-solid';
 import posthog from 'posthog-js';
@@ -50,19 +49,16 @@ function ResetPasswordPage() {
 
     setIsLoading(true);
 
-    const [err] = await attemptAsync(
-      authClient.resetPassword(
+    try {
+      await authClient.resetPassword(
         {
           newPassword: password(),
           token,
         },
         { throw: true },
-      ),
-    );
-
-    setIsLoading(false);
-
-    if (err) {
+      );
+    } catch (err) {
+      setIsLoading(false);
       if (err instanceof BetterFetchError) {
         setError(err.error?.message || err.message);
       } else {
@@ -71,6 +67,8 @@ function ResetPasswordPage() {
       }
       return;
     }
+
+    setIsLoading(false);
 
     // Redirect to sign in after successful password reset
     void navigate({ to: '/signin', replace: true });

@@ -1,5 +1,4 @@
 import { BetterFetchError } from '@better-fetch/fetch';
-import { attemptAsync } from '@repo/shared/utils';
 import { createFileRoute, Link, useNavigate } from '@tanstack/solid-router';
 import posthog from 'posthog-js';
 import { createSignal, Show } from 'solid-js';
@@ -34,19 +33,16 @@ function SignInPage() {
     setError(null);
     setIsLoading(true);
 
-    const [err] = await attemptAsync(
-      authClient.signIn.email(
+    try {
+      await authClient.signIn.email(
         {
           email: email(),
           password: password(),
         },
         { throw: true },
-      ),
-    );
-
-    setIsLoading(false);
-
-    if (err) {
+      );
+    } catch (err) {
+      setIsLoading(false);
       if (err instanceof BetterFetchError) {
         setError(err.error?.message || err.message);
       } else {
@@ -55,6 +51,8 @@ function SignInPage() {
       }
       return;
     }
+
+    setIsLoading(false);
 
     // Identify user for PostHog (signin event tracked server-side)
     const session = await authClient.getSession();
