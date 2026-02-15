@@ -1,5 +1,6 @@
 import {
   getSettings as domainGetSettings,
+  getUserUsage as domainGetUserUsage,
   performArchiveArticles as domainPerformArchiveArticles,
   updateSettings as domainUpdateSettings,
   UpdateSettingsSchema,
@@ -27,4 +28,10 @@ export const $$triggerAutoArchive = createServerFn({ method: 'POST' })
   .middleware([authMiddleware])
   .handler(({ context }) => {
     return domainPerformArchiveArticles(context.user.id);
+  });
+
+export const $$getUserUsage = createServerFn({ method: 'GET' })
+  .middleware([authMiddleware])
+  .handler(({ context }) => {
+    return domainGetUserUsage(context.user.id);
   });

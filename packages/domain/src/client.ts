@@ -14,5 +14,5 @@ export * from './entities/tts.schema';
 // Client-safe error utilities (no DB imports)
 export { isLimitExceededError, getLimitErrorMessage } from './errors';
 
-// Limits config (pure constants)
-export { FREE_TIER_LIMITS, type LimitKey } from './limits';
+// Limits config (pure constants + types)
+export { FREE_TIER_LIMITS, type LimitKey, type UserUsage } from './limits.schema';

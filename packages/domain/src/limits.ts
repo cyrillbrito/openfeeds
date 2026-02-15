@@ -1,22 +1,33 @@
-/**
- * Free-tier usage limits.
- *
- * These constants define the maximum resources a user can create
- * on the free plan. When paid plans are introduced, these will
- * be replaced by per-user limits based on their subscription tier.
- */
-export const FREE_TIER_LIMITS = {
-  /** Maximum number of feed subscriptions per user */
-  feeds: 100,
+import { articles, db, feeds, filterRules } from '@repo/db';
+import { and, count, eq, isNull } from 'drizzle-orm';
+// Import for use in this file
+import { FREE_TIER_LIMITS, type UserUsage } from './limits.schema';
 
-  /** Maximum number of filter rules per user */
-  filterRules: 10,
+// Re-export schema for server barrel
+export * from './limits.schema';
 
-  /** Maximum number of saved articles (user-created from URL, not from feed sync) per user */
-  savedArticles: 100,
+export async function getUserUsage(userId: string): Promise<UserUsage> {
+  const [feedCount, ruleCount, savedCount] = await Promise.all([
+    db
+      .select({ count: count() })
+      .from(feeds)
+      .where(eq(feeds.userId, userId))
+      .then((r) => r[0]?.count ?? 0),
+    db
+      .select({ count: count() })
+      .from(filterRules)
+      .where(eq(filterRules.userId, userId))
+      .then((r) => r[0]?.count ?? 0),
+    db
+      .select({ count: count() })
+      .from(articles)
+      .where(and(eq(articles.userId, userId), isNull(articles.feedId)))
+      .then((r) => r[0]?.count ?? 0),
+  ]);
 
-  /** Maximum content extractions per user per hour */
-  extractionsPerHour: 60,
-} as const;
-
-export type LimitKey = keyof typeof FREE_TIER_LIMITS;
+  return {
+    feeds: { used: feedCount, limit: FREE_TIER_LIMITS.feeds },
+    filterRules: { used: ruleCount, limit: FREE_TIER_LIMITS.filterRules },
+    savedArticles: { used: savedCount, limit: FREE_TIER_LIMITS.savedArticles },
+  };
+}
