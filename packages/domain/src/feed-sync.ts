@@ -1,12 +1,13 @@
-import { articles, articleTags, db, feeds, feedTags } from '@repo/db';
+import { articles, articleTags, db, feeds, feedTags, filterRules } from '@repo/db';
 import { sanitizeHtml } from '@repo/readability/sanitize';
 import { createId } from '@repo/shared/utils';
-import { and, eq, isNull, lt, ne, or } from 'drizzle-orm';
+import { and, asc, eq, inArray, isNull, lt, ne, or } from 'drizzle-orm';
+import { filterRuleDbToApi } from './db-utils';
+import { shouldMarkAsRead } from './entities/filter-rule';
 import { getAutoArchiveCutoffDate } from './entities/settings';
 import { logger } from './logger';
 import { enqueueFeedSync } from './queues';
 import { fetchRss, type ParseFeedResult } from './rss-fetch';
-import { evaluateFilterRules } from './rule-evaluation';
 
 // Normalized item structure for our database
 interface NormalizedFeedItem {
@@ -81,25 +82,46 @@ export async function syncFeedArticles(
   // Get items based on feed format and normalize them
   const normalizedItems = getNormalizedItems(feedResult);
 
-  // Note: Content extraction is now done on-demand when user views the article
-  // This significantly reduces memory/CPU usage during feed sync
+  // Filter out items without GUIDs
+  const itemsWithGuids = normalizedItems.filter(
+    (item): item is NormalizedFeedItem & { guid: string } => item.guid !== null,
+  );
 
-  for (const item of normalizedItems) {
-    if (!item.guid) continue;
+  if (itemsWithGuids.length === 0) {
+    return counts;
+  }
 
-    const existing = await db.query.articles.findFirst({
-      columns: { id: true },
-      where: eq(articles.guid, item.guid),
-    });
+  // Batch dedup: query all existing GUIDs at once instead of per-article
+  const guids = itemsWithGuids.map((item) => item.guid);
+  const existingArticles = await db.query.articles.findMany({
+    columns: { guid: true },
+    where: inArray(articles.guid, guids),
+  });
+  const existingGuids = new Set(existingArticles.map((a) => a.guid));
 
-    if (existing) {
-      continue;
-    }
+  const newItems = itemsWithGuids.filter((item) => !existingGuids.has(item.guid));
 
+  if (newItems.length === 0) {
+    return counts;
+  }
+
+  // Batch filter rules: load once for the entire feed instead of per-article
+  const activeRules = await db.query.filterRules.findMany({
+    where: and(eq(filterRules.feedId, feedId), eq(filterRules.isActive, true)),
+  });
+  const apiRules = activeRules.map(filterRuleDbToApi);
+
+  // Batch feed tags: load once instead of per-article
+  const feedTagsList = await db.query.feedTags.findMany({
+    where: eq(feedTags.feedId, feedId),
+    columns: { tagId: true },
+  });
+
+  for (const item of newItems) {
     const shouldAutoArchive = item.pubDate < autoArchiveCutoffDate;
 
-    // Apply filter rules to determine if article should be marked as read
-    const shouldMarkAsReadByRules = await evaluateFilterRules(feedId, item.title, userId);
+    // Evaluate filter rules using pre-loaded rules (pure function, no DB queries)
+    const shouldMarkAsReadByRules = shouldMarkAsRead(apiRules, item.title);
 
     const [newArticle] = await db
       .insert(articles)
@@ -121,25 +143,16 @@ export async function syncFeedArticles(
       })
       .returning({ id: articles.id });
 
-    // Auto-assign feed tags to the new article
-    if (newArticle) {
-      const feedTagsList = await db.query.feedTags.findMany({
-        where: eq(feedTags.feedId, feedId),
-        columns: {
-          tagId: true,
-        },
-      });
-
-      if (feedTagsList.length > 0) {
-        await db.insert(articleTags).values(
-          feedTagsList.map((ft) => ({
-            id: createId(),
-            userId,
-            articleId: newArticle.id,
-            tagId: ft.tagId,
-          })),
-        );
-      }
+    // Auto-assign feed tags to the new article using pre-loaded tags
+    if (newArticle && feedTagsList.length > 0) {
+      await db.insert(articleTags).values(
+        feedTagsList.map((ft) => ({
+          id: createId(),
+          userId,
+          articleId: newArticle.id,
+          tagId: ft.tagId,
+        })),
+      );
     }
 
     counts.created++;
@@ -225,43 +238,43 @@ export async function syncSingleFeed(userId: string, feedId: string): Promise<vo
 }
 
 /**
- * Finds feeds that need syncing for a user and enqueues them as individual jobs.
+ * Finds stale feeds across all users and enqueues them for sync.
+ * Single global query replaces the old per-user iteration pattern.
+ * Broken feeds are excluded.
  */
-export async function syncOldestFeeds(userId: string): Promise<void> {
+export async function syncOldestFeeds(): Promise<void> {
   const outdatedDate = new Date(Date.now() - OUTDATED_MIN * 60 * 1000);
   const condition = and(
-    eq(feeds.userId, userId),
     ne(feeds.syncStatus, 'broken'),
     or(isNull(feeds.lastSyncAt), lt(feeds.lastSyncAt, outdatedDate)),
   );
 
-  // TODO Include fields
-  const feedsToSync = await db.select().from(feeds).where(condition).limit(LIMIT);
+  const feedsToSync = await db
+    .select({ id: feeds.id, userId: feeds.userId })
+    .from(feeds)
+    .where(condition)
+    .orderBy(asc(feeds.lastSyncAt))
+    .limit(LIMIT);
 
   if (feedsToSync.length === 0) {
     return;
   }
 
-  console.log(`[SYNC] Enqueueing ${feedsToSync.length} feeds for user ${userId}`);
+  console.log(`[SYNC] Enqueueing ${feedsToSync.length} feeds for sync`);
 
   // Enqueue each feed as a separate job
   for (const feed of feedsToSync) {
-    await enqueueFeedSync(userId, feed.id);
+    await enqueueFeedSync(feed.userId, feed.id);
   }
 
   console.log(`[SYNC] Successfully enqueued ${feedsToSync.length} feed sync jobs`);
 }
 
 /**
- * Orchestrates feed sync for all users.
- * Finds stale feeds per user and enqueues them.
+ * @deprecated Use syncOldestFeeds() instead. Kept for backward compatibility.
  */
 export async function syncOldestFeedsForAllUsers(): Promise<void> {
-  const users = await db.query.user.findMany({ columns: { id: true } });
-
-  for (const u of users) {
-    await syncOldestFeeds(u.id);
-  }
+  return syncOldestFeeds();
 }
 
 /**

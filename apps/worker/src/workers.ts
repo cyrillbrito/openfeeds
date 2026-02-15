@@ -3,7 +3,7 @@ import {
   logger,
   QUEUE_NAMES,
   redisConnection,
-  syncOldestFeedsForAllUsers,
+  syncOldestFeeds,
   syncSingleFeed,
   updateFeedMetadata,
   type UserFeedJobData,
@@ -16,7 +16,7 @@ export function createFeedSyncOrchestratorWorker() {
     QUEUE_NAMES.FEED_SYNC_ORCHESTRATOR,
     async (job) => {
       console.log(`Starting feed sync orchestrator job ${job.id}`);
-      await syncOldestFeedsForAllUsers();
+      await syncOldestFeeds();
     },
     {
       connection: redisConnection,
