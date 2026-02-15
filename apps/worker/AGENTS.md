@@ -33,10 +33,10 @@ bun benchmark    # Run performance benchmark
 
 ## Workers
 
-- `Feed Sync Orchestrator` - Calls `syncOldestFeeds()`, runs every minute
+- `Feed Sync Orchestrator` - Calls `syncOldestFeedsForAllUsers()`, runs every minute
 - `Single Feed Sync` - Calls `syncSingleFeed()` for individual feeds
 - `Feed Details` - Calls `updateFeedMetadata()` for feed metadata
-- `Auto Archive` - Calls `autoArchiveArticles()`, runs daily at midnight
+- `Auto Archive` - Calls `autoArchiveForAllUsers()`, runs daily at midnight
 
 ## Environment Variables
 
@@ -54,7 +54,6 @@ Defaults are conservative for small VMs. Increase for higher throughput on large
 ## Worker Pattern
 
 ```typescript
-import { db } from '@repo/db';
 import { QUEUE_NAMES, redisConnection, syncSingleFeed } from '@repo/domain';
 import { Worker } from 'bullmq';
 import { env } from './env';
