@@ -164,10 +164,8 @@ export async function syncFeedArticles(
 
 /** Feeds not synced in this many minutes are considered stale */
 const OUTDATED_MIN = 10;
-/** Max stale feeds fetched per orchestrator run (across all users) */
-const GLOBAL_LIMIT = 50;
-/** Max stale feeds enqueued per user per orchestrator run */
-const PER_USER_LIMIT = 15;
+/** Max stale feeds enqueued per orchestrator run */
+const SYNC_LIMIT = 50;
 /** Consecutive sync failures before a feed is marked as broken and excluded from sync */
 const BROKEN_THRESHOLD = 3;
 
@@ -245,7 +243,7 @@ export async function syncSingleFeed(userId: string, feedId: string): Promise<vo
 /**
  * Finds stale feeds across all users and enqueues them for sync.
  * Single global query replaces the old per-user iteration pattern.
- * Broken feeds are excluded. Per-user cap prevents one user from starving others.
+ * Broken feeds are excluded. Oldest feeds are prioritized.
  */
 export async function syncOldestFeeds(): Promise<void> {
   const outdatedDate = new Date(Date.now() - OUTDATED_MIN * 60 * 1000);
@@ -254,25 +252,12 @@ export async function syncOldestFeeds(): Promise<void> {
     or(isNull(feeds.lastSyncAt), lt(feeds.lastSyncAt, outdatedDate)),
   );
 
-  const candidates = await db
+  const feedsToSync = await db
     .select({ id: feeds.id, userId: feeds.userId })
     .from(feeds)
     .where(condition)
     .orderBy(asc(feeds.lastSyncAt))
-    .limit(GLOBAL_LIMIT);
-
-  if (candidates.length === 0) {
-    return;
-  }
-
-  // Apply per-user cap so one user can't consume all slots
-  const perUserCount = new Map<string, number>();
-  const feedsToSync = candidates.filter((feed) => {
-    const count = perUserCount.get(feed.userId) ?? 0;
-    if (count >= PER_USER_LIMIT) return false;
-    perUserCount.set(feed.userId, count + 1);
-    return true;
-  });
+    .limit(SYNC_LIMIT);
 
   if (feedsToSync.length === 0) {
     return;
@@ -280,7 +265,6 @@ export async function syncOldestFeeds(): Promise<void> {
 
   console.log(`[SYNC] Enqueueing ${feedsToSync.length} feeds for sync`);
 
-  // Enqueue each feed as a separate job
   for (const feed of feedsToSync) {
     await enqueueFeedSync(feed.userId, feed.id);
   }
