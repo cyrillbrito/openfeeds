@@ -8,7 +8,9 @@ import { logger } from './logger';
 import { enqueueFeedDetail, enqueueFeedSync } from './queues';
 
 export interface ImportResult {
+  found: number;
   imported: number;
+  skipped: number;
   failed: string[];
 }
 
@@ -64,7 +66,7 @@ export async function importOpmlFeeds(opmlContent: string, userId: string): Prom
   const feedsToImport = getFeedsFromOutlines(parsedOpml.body?.outlines || []);
 
   let imported = 0;
-  let _skipped = 0;
+  let skipped = 0;
   const failed: string[] = [];
 
   // Prefetch all tags for this user
@@ -119,7 +121,7 @@ export async function importOpmlFeeds(opmlContent: string, userId: string): Prom
       });
 
       if (existingFeed) {
-        _skipped++;
+        skipped++;
         continue;
       }
 
@@ -198,7 +200,9 @@ export async function importOpmlFeeds(opmlContent: string, userId: string): Prom
   }
 
   return {
+    found: feedsToImport.length,
     imported,
+    skipped,
     failed,
   };
 }

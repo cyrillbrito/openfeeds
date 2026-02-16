@@ -1,5 +1,5 @@
-import { CircleAlert, CircleCheck, TriangleAlert } from 'lucide-solid';
-import { createSignal, Match, Show, Switch } from 'solid-js';
+import { Check, CircleAlert, CircleMinus, FileWarning, Plus, TriangleAlert, X } from 'lucide-solid';
+import { createSignal, For, Match, Show, Switch } from 'solid-js';
 import { $$importOpml } from '~/entities/feeds.server';
 import { LazyModal, type ModalController } from './LazyModal';
 
@@ -23,6 +23,13 @@ export function ImportOpmlModal(props: ImportOpmlModalProps) {
   );
 }
 
+interface ImportResult {
+  found: number;
+  imported: number;
+  skipped: number;
+  failed: string[];
+}
+
 interface ImportOpmlFormProps {
   onClose: () => void;
 }
@@ -30,10 +37,7 @@ interface ImportOpmlFormProps {
 function ImportOpmlForm(props: ImportOpmlFormProps) {
   const [isImporting, setIsImporting] = createSignal(false);
   const [importError, setImportError] = createSignal<string | null>(null);
-  const [importResult, setImportResult] = createSignal<{
-    imported: number;
-    failed: string[];
-  } | null>(null);
+  const [importResult, setImportResult] = createSignal<ImportResult | null>(null);
 
   const handleImportOpml = async (content: string) => {
     try {
@@ -42,12 +46,7 @@ function ImportOpmlForm(props: ImportOpmlFormProps) {
       setImportResult(null);
 
       const data = await $$importOpml({ data: { opmlContent: content } });
-
       setImportResult(data);
-
-      if (data.failed.length === 0) {
-        props.onClose();
-      }
     } catch (err) {
       console.error('Failed to import OPML:', err);
       setImportError(err instanceof Error ? err.message : 'Failed to import OPML');
@@ -73,39 +72,17 @@ function ImportOpmlForm(props: ImportOpmlFormProps) {
           </div>
         </Match>
 
-        <Match when={importResult() || importError()}>
-          <div class="mb-4">
-            <Show when={importError()}>
-              <div class="alert alert-error">
-                <CircleAlert size={20} />
-                <span>{importError()}</span>
-              </div>
-            </Show>
-
-            <Show when={importResult()}>
-              <div class="alert alert-success mb-3">
-                <CircleCheck size={20} />
-                <span>Successfully imported {importResult()!.imported} feeds</span>
-              </div>
-
-              <Show when={importResult()!.failed.length > 0}>
-                <div class="alert alert-warning">
-                  <TriangleAlert size={20} />
-                  <div>
-                    <div class="font-bold">
-                      Failed to import {importResult()!.failed.length} feeds:
-                    </div>
-                    <ul class="mt-2 list-inside list-disc text-sm">
-                      {importResult()!.failed.map((feed) => (
-                        <li>{feed}</li>
-                      ))}
-                    </ul>
-                  </div>
-                </div>
-              </Show>
-            </Show>
+        <Match when={importError()}>
+          <div class="flex flex-col items-center py-8">
+            <div class="bg-error/10 flex size-12 items-center justify-center rounded-full">
+              <CircleAlert size={24} class="text-error" />
+            </div>
+            <p class="mt-3 text-lg font-medium">Import failed</p>
+            <p class="text-base-content/60 mt-1 text-center text-sm">{importError()}</p>
           </div>
         </Match>
+
+        <Match when={importResult()}>{(result) => <ImportResultView result={result()} />}</Match>
 
         <Match when={!isImporting() && !importResult() && !importError()}>
           <div class="form-control w-full">
@@ -140,9 +117,94 @@ function ImportOpmlForm(props: ImportOpmlFormProps) {
 
       <div class="modal-action">
         <button type="button" class="btn" onClick={handleClose} disabled={isImporting()}>
-          {importResult() ? 'Done' : 'Cancel'}
+          {importResult() || importError() ? 'Done' : 'Cancel'}
         </button>
       </div>
     </>
+  );
+}
+
+function ImportResultView(props: { result: ImportResult }) {
+  const noFeedsFound = () => props.result.found === 0;
+  const allFailed = () =>
+    props.result.found > 0 && props.result.imported === 0 && props.result.failed.length > 0;
+  const hasSuccesses = () => props.result.imported > 0;
+
+  // Pick the hero state
+  const heroIcon = () => {
+    if (noFeedsFound())
+      return <FileWarning size={32} class="text-base-content/70" strokeWidth={1.5} />;
+    if (allFailed()) return <X size={32} class="text-error-content" strokeWidth={2.5} />;
+    return <Check size={32} class="text-success" strokeWidth={2.5} />;
+  };
+
+  const heroLabel = () => {
+    if (noFeedsFound()) return 'No feeds found';
+    if (allFailed()) return 'Import failed';
+    return 'Import complete';
+  };
+
+  const heroDescription = () => {
+    if (noFeedsFound()) return 'The file may be empty or only contain folders without feeds.';
+    if (allFailed())
+      return `All ${props.result.found} ${props.result.found === 1 ? 'feed' : 'feeds'} failed to import.`;
+    return null;
+  };
+
+  const heroBgClass = () => {
+    if (noFeedsFound()) return 'bg-base-300';
+    if (allFailed()) return 'bg-error';
+    return 'bg-success/15';
+  };
+
+  return (
+    <div class="flex flex-col items-center py-4">
+      {/* Hero icon + label */}
+      <div class={`flex size-16 items-center justify-center rounded-full ${heroBgClass()}`}>
+        {heroIcon()}
+      </div>
+      <p class="mt-3 text-lg font-medium">{heroLabel()}</p>
+      <Show when={heroDescription()}>
+        <p class="text-base-content/60 mt-1 text-center text-sm">{heroDescription()}</p>
+      </Show>
+
+      {/* Stats row */}
+      <Show when={!noFeedsFound()}>
+        <div class="text-base-content/60 mt-5 flex w-full flex-col items-center gap-3 text-sm">
+          <div class="flex justify-center gap-6">
+            <Show when={hasSuccesses()}>
+              <div class="flex items-center gap-1.5">
+                <Plus size={14} class="text-success" />
+                <span>{props.result.imported} imported</span>
+              </div>
+            </Show>
+            <Show when={props.result.skipped > 0}>
+              <div class="flex items-center gap-1.5">
+                <CircleMinus size={14} class="text-base-content/30" />
+                <span>{props.result.skipped} already subscribed</span>
+              </div>
+            </Show>
+            <Show when={props.result.failed.length > 0}>
+              <div class="flex items-center gap-1.5">
+                <TriangleAlert size={14} class="text-warning" />
+                <span>{props.result.failed.length} failed</span>
+              </div>
+            </Show>
+          </div>
+        </div>
+      </Show>
+
+      {/* Failed feeds detail */}
+      <Show when={props.result.failed.length > 0}>
+        <div class="bg-base-200 mt-4 w-full rounded-lg px-4 py-3">
+          <p class="text-base-content/60 text-xs font-medium tracking-wide uppercase">
+            Failed feeds
+          </p>
+          <ul class="text-base-content/80 mt-2 space-y-1 text-sm">
+            <For each={props.result.failed}>{(feed) => <li>{feed}</li>}</For>
+          </ul>
+        </div>
+      </Show>
+    </div>
   );
 }
