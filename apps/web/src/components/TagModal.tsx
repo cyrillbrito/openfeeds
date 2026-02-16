@@ -81,11 +81,13 @@ function TagForm(props: TagFormProps) {
       });
       props.onEditComplete?.();
     } else {
+      const now = new Date().toISOString();
       tagsCollection.insert({
         id: createId(),
         name,
         color: tagColor(),
-        createdAt: new Date().toISOString(),
+        createdAt: now,
+        updatedAt: now,
       });
     }
 
