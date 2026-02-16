@@ -2,7 +2,7 @@ import { snakeCamelMapper } from '@electric-sql/client';
 import { FeedSchema } from '@repo/domain/client';
 import { electricCollectionOptions } from '@tanstack/electric-db-collection';
 import { createCollection, useLiveQuery } from '@tanstack/solid-db';
-import { handleCollectionError, handleShapeError } from '~/lib/collection-errors';
+import { collectionErrorHandler, handleShapeError } from '~/lib/collection-errors';
 import { getShapeUrl, timestampParser } from '~/lib/electric-client';
 import { $$createFeeds, $$deleteFeeds, $$updateFeeds } from './feeds.server';
 
@@ -20,41 +20,29 @@ export const feedsCollection = createCollection(
       onError: (error) => handleShapeError(error, 'feeds.shape'),
     },
 
-    onInsert: async ({ transaction }) => {
-      try {
-        // TODO: REMOVE — fake error to test rollback + toast
-        throw new Error('[TEST] Fake insert error — feed should rollback from UI');
+    onInsert: collectionErrorHandler('feeds.onInsert', async ({ transaction }) => {
+      // TODO: REMOVE — fake error to test rollback + toast
+      throw new Error('[TEST] Fake insert error — feed should rollback from UI');
 
-        const feeds = transaction.mutations.map((mutation) => {
-          const feed = mutation.modified;
-          return { id: mutation.key as string, url: feed.url };
-        });
-        await $$createFeeds({ data: feeds });
-      } catch (error) {
-        handleCollectionError(error, 'feeds.onInsert');
-      }
-    },
+      const feeds = transaction.mutations.map((mutation) => {
+        const feed = mutation.modified;
+        return { id: mutation.key as string, url: feed.url };
+      });
+      await $$createFeeds({ data: feeds });
+    }),
 
-    onUpdate: async ({ transaction }) => {
-      try {
-        const updates = transaction.mutations.map((mutation) => ({
-          id: mutation.key as string,
-          ...mutation.changes,
-        }));
-        await $$updateFeeds({ data: updates });
-      } catch (error) {
-        handleCollectionError(error, 'feeds.onUpdate');
-      }
-    },
+    onUpdate: collectionErrorHandler('feeds.onUpdate', async ({ transaction }) => {
+      const updates = transaction.mutations.map((mutation) => ({
+        id: mutation.key as string,
+        ...mutation.changes,
+      }));
+      await $$updateFeeds({ data: updates });
+    }),
 
-    onDelete: async ({ transaction }) => {
-      try {
-        const ids = transaction.mutations.map((mutation) => mutation.key as string);
-        await $$deleteFeeds({ data: ids });
-      } catch (error) {
-        handleCollectionError(error, 'feeds.onDelete');
-      }
-    },
+    onDelete: collectionErrorHandler('feeds.onDelete', async ({ transaction }) => {
+      const ids = transaction.mutations.map((mutation) => mutation.key as string);
+      await $$deleteFeeds({ data: ids });
+    }),
   }),
 );
 

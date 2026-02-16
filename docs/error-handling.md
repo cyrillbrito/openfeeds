@@ -99,20 +99,19 @@ Collections are module-scope singletons created with `createCollection()` in `sr
 
 ### Mutation Errors (optimistic rollback)
 
-TanStack DB rolls back optimistic state **only if the mutation handler throws**. Every `onInsert`/`onUpdate`/`onDelete` handler catches errors through `handleCollectionError()`, which shows a toast then **re-throws** so the transaction transitions to `failed` and optimistic state is reverted.
+TanStack DB rolls back optimistic state **only if the mutation handler throws**. Every `onInsert`/`onUpdate`/`onDelete` handler is wrapped with `collectionErrorHandler()`, which catches errors, shows a toast, then **re-throws** so the transaction transitions to `failed` and optimistic state is reverted.
 
 ```typescript
-onInsert: async (tx, item) => {
-  try {
-    await $$createFeed({ data: { url: item.url } });
-  } catch (error) {
-    handleCollectionError(error, 'feeds');
-    // handleCollectionError always throws (return type: never)
-  }
-},
+onInsert: collectionErrorHandler('feeds.onInsert', async ({ transaction }) => {
+  const feeds = transaction.mutations.map((mutation) => {
+    const feed = mutation.modified;
+    return { id: mutation.key as string, url: feed.url };
+  });
+  await $$createFeeds({ data: feeds });
+}),
 ```
 
-**Critical rule:** Never swallow errors in mutation handlers. If the handler doesn't throw, TanStack DB considers the mutation successful and the optimistic state becomes permanent — even if the server rejected it.
+**Critical rule:** Never swallow errors in mutation handlers. If the handler doesn't throw, TanStack DB considers the mutation successful and the optimistic state becomes permanent — even if the server rejected it. The `collectionErrorHandler` wrapper guarantees re-throwing structurally.
 
 ### Shape Stream Errors (Electric SQL sync)
 
@@ -133,18 +132,18 @@ Collections exist at module scope, outside the SolidJS component tree, so they c
 
 1. `toastService` is a module-scope singleton with a `showToast` ref (initially `null`)
 2. `ToastProvider` sets `toastService.showToast = showToast` on mount
-3. `handleCollectionError` / `handleShapeError` call `toastService.error()`, which delegates to `showToast` if available, else falls back to `console.error`
+3. `collectionErrorHandler` / `handleShapeError` call `toastService.error()`, which delegates to `showToast` if available, else falls back to `console.error`
 
 This is safe because mutation handlers only fire from user interactions (post-mount), never during SSR.
 
 ### Key files
 
-| File                           | Role                                                                  |
-| ------------------------------ | --------------------------------------------------------------------- |
-| `src/lib/toast-service.ts`     | Module-scope toast singleton                                          |
-| `src/lib/collection-errors.ts` | `handleCollectionError` (throws) + `handleShapeError` (doesn't throw) |
-| `src/providers/toast.tsx`      | Wires `toastService.showToast` on mount                               |
-| `src/entities/*.ts`            | All collections use both handlers                                     |
+| File                           | Role                                                                              |
+| ------------------------------ | --------------------------------------------------------------------------------- |
+| `src/lib/toast-service.ts`     | Module-scope toast singleton                                                      |
+| `src/lib/collection-errors.ts` | `collectionErrorHandler` (wraps + re-throws) + `handleShapeError` (doesn't throw) |
+| `src/providers/toast.tsx`      | Wires `toastService.showToast` on mount                                           |
+| `src/entities/*.ts`            | All collections use both handlers                                                 |
 
 ## Web App: API Routes
 
