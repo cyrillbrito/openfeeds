@@ -30,8 +30,8 @@ function ResetPasswordPage() {
   const [isLoading, setIsLoading] = createSignal(false);
 
   // Check for token error from Better Auth redirect
-  const tokenError = search()?.error;
-  const token = search()?.token;
+  const tokenError = () => search()?.error;
+  const token = () => search()?.token;
 
   const handleSubmit = async (e: Event) => {
     e.preventDefault();
@@ -42,7 +42,7 @@ function ResetPasswordPage() {
       return;
     }
 
-    if (!token) {
+    if (!token()) {
       setError('Invalid or missing reset token');
       return;
     }
@@ -53,7 +53,7 @@ function ResetPasswordPage() {
       await authClient.resetPassword(
         {
           newPassword: password(),
-          token,
+          token: token()!,
         },
         { throw: true },
       );
@@ -82,13 +82,13 @@ function ResetPasswordPage() {
         </div>
 
         <Show
-          when={!tokenError && token}
+          when={!tokenError() && token()}
           fallback={
             <div class="space-y-4">
               <div class="alert alert-error">
                 <CircleX class="h-6 w-6 shrink-0" />
                 <span>
-                  {tokenError === 'INVALID_TOKEN'
+                  {tokenError() === 'INVALID_TOKEN'
                     ? 'This reset link is invalid or has expired'
                     : 'Missing or invalid reset link'}
                 </span>
