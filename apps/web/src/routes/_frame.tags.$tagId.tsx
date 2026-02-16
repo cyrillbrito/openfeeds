@@ -16,6 +16,7 @@ import { articlesCollection } from '~/entities/articles';
 import { useFeeds } from '~/entities/feeds';
 import { useTags } from '~/entities/tags';
 import { useSessionRead } from '~/providers/session-read';
+import { readStatusFilter } from '~/utils/article-queries';
 import { validateReadStatusSearch } from '~/utils/routing';
 import { getTagDotColor } from '~/utils/tagColors';
 
@@ -37,9 +38,6 @@ function TagArticles() {
   // Pagination state - lifted from ArticleList
   const [visibleCount, setVisibleCount] = createSignal(ARTICLES_PER_PAGE);
 
-  // Only filter by isRead on server when showing 'read' status
-  const isRead = () => (readStatus() === 'read' ? true : null);
-
   const tagsQuery = useTags();
   const feedsQuery = useFeeds();
 
@@ -53,8 +51,9 @@ function TagArticles() {
       .where(({ articleTag }) => eq(articleTag.tagId, tagId()))
       .select(({ article }) => ({ ...article }));
 
-    if (isRead() !== null) {
-      query = query.where(({ article }) => eq(article.isRead, isRead()));
+    const filter = readStatusFilter(readStatus(), sessionReadIds());
+    if (filter) {
+      query = query.where(({ article }) => filter(article));
     }
 
     return query.orderBy(({ article }) => article.pubDate, 'desc').limit(visibleCount());
@@ -70,8 +69,9 @@ function TagArticles() {
       .where(({ articleTag }) => eq(articleTag.tagId, tagId()))
       .select(({ article }) => ({ ...article }));
 
-    if (isRead() !== null) {
-      query = query.where(({ article }) => eq(article.isRead, isRead()));
+    const filter = readStatusFilter(readStatus(), sessionReadIds());
+    if (filter) {
+      query = query.where(({ article }) => filter(article));
     }
 
     return query;
@@ -114,20 +114,10 @@ function TagArticles() {
     });
   };
 
-  // Filter for session-read articles (client-side)
-  const filteredArticles = createMemo(() => {
-    const articles = articlesQuery() || [];
-    if (readStatus() !== 'unread') return articles;
+  // Articles are already filtered by the live query (including session-read handling)
+  const filteredArticles = () => articlesQuery() || [];
 
-    return articles.filter((a) => !a.isRead || sessionReadIds().has(a.id));
-  });
-
-  const totalCount = () => {
-    const allArticles = totalCountQuery() || [];
-    if (readStatus() !== 'unread') return allArticles.length;
-
-    return allArticles.filter((a) => !a.isRead || sessionReadIds().has(a.id)).length;
-  };
+  const totalCount = () => (totalCountQuery() || []).length;
 
   const unreadCount = () => {
     return filteredArticles().filter((article) => !article.isRead).length;
