@@ -2,6 +2,7 @@ import { articles, db } from '@repo/db';
 import { fetchArticleContent } from '@repo/readability/server';
 import { createId } from '@repo/shared/utils';
 import { and, count, eq, isNull, sql } from 'drizzle-orm';
+import { trackEvent } from '../analytics';
 import { assert, LimitExceededError, NotFoundError } from '../errors';
 import { FREE_TIER_LIMITS } from '../limits';
 import type { Article, CreateArticleFromUrl, UpdateArticle } from './article.schema';
@@ -47,16 +48,43 @@ function isYouTubeUrl(url: string | null): boolean {
 }
 
 /**
- * Check how many content extractions a user has performed in the last hour.
+ * Check whether a user has exceeded their content extraction rate limits.
  * Uses the `contentExtractedAt` column as a natural extraction timestamp.
+ * Returns the window that was hit ('daily' | 'monthly') or null if within limits.
  */
-async function countRecentExtractions(userId: string): Promise<number> {
-  const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000);
-  const [result] = await db
-    .select({ count: count() })
-    .from(articles)
-    .where(and(eq(articles.userId, userId), sql`${articles.contentExtractedAt} >= ${oneHourAgo}`));
-  return result?.count ?? 0;
+async function getExtractionLimitWindow(
+  userId: string,
+): Promise<{ window: 'daily' | 'monthly'; current_usage: number; limit: number } | null> {
+  const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
+  const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
+
+  const [daily, monthly] = await Promise.all([
+    db
+      .select({ count: count() })
+      .from(articles)
+      .where(and(eq(articles.userId, userId), sql`${articles.contentExtractedAt} >= ${oneDayAgo}`))
+      .then((r) => r[0]?.count ?? 0),
+    db
+      .select({ count: count() })
+      .from(articles)
+      .where(
+        and(eq(articles.userId, userId), sql`${articles.contentExtractedAt} >= ${thirtyDaysAgo}`),
+      )
+      .then((r) => r[0]?.count ?? 0),
+  ]);
+
+  // Check daily first (more likely to be hit in normal use)
+  if (daily >= FREE_TIER_LIMITS.extractionsPerDay) {
+    return { window: 'daily', current_usage: daily, limit: FREE_TIER_LIMITS.extractionsPerDay };
+  }
+  if (monthly >= FREE_TIER_LIMITS.extractionsPerMonth) {
+    return {
+      window: 'monthly',
+      current_usage: monthly,
+      limit: FREE_TIER_LIMITS.extractionsPerMonth,
+    };
+  }
+  return null;
 }
 
 /**
@@ -84,10 +112,12 @@ export async function extractArticleContent(id: string, userId: string): Promise
     return null;
   }
 
-  // Check extraction rate limit
-  const recentExtractions = await countRecentExtractions(userId);
-  if (recentExtractions >= FREE_TIER_LIMITS.extractionsPerHour) {
-    return null; // Silently skip - user can try again later
+  // Check extraction rate limit (daily + monthly)
+  const extractionLimit = await getExtractionLimitWindow(userId);
+  if (extractionLimit) {
+    trackEvent(userId, 'limits:extractions_limit_hit', extractionLimit);
+    const windowLabel = extractionLimit.window === 'daily' ? 'daily' : 'monthly';
+    throw new LimitExceededError(`${windowLabel} content extractions`, extractionLimit.limit);
   }
 
   try {
@@ -140,6 +170,10 @@ export async function createArticle(data: CreateArticleFromUrl, userId: string):
     .from(articles)
     .where(and(eq(articles.userId, userId), isNull(articles.feedId)));
   if (savedCount && savedCount.count >= FREE_TIER_LIMITS.savedArticles) {
+    trackEvent(userId, 'limits:saved_articles_limit_hit', {
+      current_usage: savedCount.count,
+      limit: FREE_TIER_LIMITS.savedArticles,
+    });
     throw new LimitExceededError('saved articles', FREE_TIER_LIMITS.savedArticles);
   }
 

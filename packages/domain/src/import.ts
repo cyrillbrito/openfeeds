@@ -68,6 +68,11 @@ export async function importOpmlFeeds(opmlContent: string, userId: string): Prom
     .where(eq(feeds.userId, userId));
   const currentFeedCount = feedCount?.count ?? 0;
   if (currentFeedCount >= FREE_TIER_LIMITS.feeds) {
+    trackEvent(userId, 'limits:feeds_limit_hit', {
+      source: 'opml_import',
+      current_usage: currentFeedCount,
+      limit: FREE_TIER_LIMITS.feeds,
+    });
     throw new LimitExceededError('feeds', FREE_TIER_LIMITS.feeds);
   }
 
@@ -81,7 +86,7 @@ export async function importOpmlFeeds(opmlContent: string, userId: string): Prom
   const existingFeedUrls = new Set(
     (
       await db.query.feeds.findMany({
-        where: inArray(feeds.feedUrl, opmlUrls),
+        where: and(inArray(feeds.feedUrl, opmlUrls), eq(feeds.userId, userId)),
         columns: { feedUrl: true },
       })
     ).map((f) => f.feedUrl),
@@ -90,6 +95,11 @@ export async function importOpmlFeeds(opmlContent: string, userId: string): Prom
   const remainingSlots = FREE_TIER_LIMITS.feeds - currentFeedCount;
 
   if (newFeedCount > remainingSlots) {
+    trackEvent(userId, 'limits:feeds_limit_hit', {
+      source: 'opml_import',
+      current_usage: currentFeedCount,
+      limit: FREE_TIER_LIMITS.feeds,
+    });
     throw new LimitExceededError('feeds', FREE_TIER_LIMITS.feeds);
   }
 

@@ -18,6 +18,10 @@ export async function createFilterRules(data: CreateFilterRule[], userId: string
     .from(filterRules)
     .where(eq(filterRules.userId, userId));
   if (ruleCount && ruleCount.count + data.length > FREE_TIER_LIMITS.filterRules) {
+    trackEvent(userId, 'limits:filter_rules_limit_hit', {
+      current_usage: ruleCount.count,
+      limit: FREE_TIER_LIMITS.filterRules,
+    });
     throw new LimitExceededError('filter rules', FREE_TIER_LIMITS.filterRules);
   }
 

@@ -49,6 +49,11 @@ export async function createFeeds(data: CreateFeed[], userId: string): Promise<F
     .from(feeds)
     .where(eq(feeds.userId, userId));
   if (feedCount && feedCount.count + data.length > FREE_TIER_LIMITS.feeds) {
+    trackEvent(userId, 'limits:feeds_limit_hit', {
+      source: 'manual',
+      current_usage: feedCount.count,
+      limit: FREE_TIER_LIMITS.feeds,
+    });
     throw new LimitExceededError('feeds', FREE_TIER_LIMITS.feeds);
   }
 
