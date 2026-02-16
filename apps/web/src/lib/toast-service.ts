@@ -14,7 +14,6 @@ export const toastService = {
   showToast: null as ShowToastFn | null,
 
   error(message: string) {
-    console.log('[toast-service.error]', message, 'showToast registered:', !!this.showToast); // TODO: REMOVE
     if (this.showToast) {
       this.showToast(message, { variant: 'error', duration: 8000 });
     } else {

@@ -29,9 +29,6 @@ export const tagsCollection = createCollection(
     }),
 
     onUpdate: collectionErrorHandler('tags.onUpdate', async ({ transaction }) => {
-      // TODO: REMOVE — fake error to test rollback + toast
-      throw new Error('[TEST] Fake update error — tag edit should rollback');
-
       const updates = transaction.mutations.map((mutation) => ({
         id: mutation.key,
         ...mutation.changes,

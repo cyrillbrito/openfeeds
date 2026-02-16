@@ -21,9 +21,6 @@ export const feedsCollection = createCollection(
     },
 
     onInsert: collectionErrorHandler('feeds.onInsert', async ({ transaction }) => {
-      // TODO: REMOVE — fake error to test rollback + toast
-      throw new Error('[TEST] Fake insert error — feed should rollback from UI');
-
       const feeds = transaction.mutations.map((mutation) => {
         const feed = mutation.modified;
         return { id: mutation.key as string, url: feed.url };
