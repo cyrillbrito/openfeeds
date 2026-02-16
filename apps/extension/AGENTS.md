@@ -1,140 +1,73 @@
 # Browser Extension - WXT + SolidJS
 
-## Overview
+Chrome/Firefox extension that detects RSS/Atom feeds on any webpage and subscribes via OpenFeeds.
 
-Chrome/Firefox extension that detects RSS/Atom feeds on any webpage and allows users to subscribe via OpenFeeds.
-
-## Tech Stack
-
-- **Framework:** WXT (Web Extension Tools)
-- **UI:** SolidJS + Tailwind v4 + DaisyUI
-- **Build:** Vite
+**Stack:** WXT, SolidJS, Tailwind v4 + DaisyUI, Vite
 
 ## Commands
 
 ```bash
-bun dev          # Start dev mode (port 3003)
-bun dev:firefox  # Dev mode for Firefox
-bun build        # Production build for Chrome
+bun dev          # Dev mode (port 3003)
+bun dev:firefox  # Firefox dev mode
+bun build        # Production build (Chrome)
 bun build:firefox
-bun zip          # Create distributable ZIP
+bun zip          # Distributable ZIP
 ```
 
-## Architecture
+## Entrypoints
 
-### Entrypoints
+| File                        | Type           | Purpose                                        |
+| --------------------------- | -------------- | ---------------------------------------------- |
+| `entrypoints/popup/`        | Popup UI       | SolidJS app, sends GET_FEEDS to content script |
+| `entrypoints/options/`      | Options Page   | Settings UI for configuring server URL         |
+| `entrypoints/content.ts`    | Content Script | Injected on all pages, detects feeds from DOM  |
+| `entrypoints/background.ts` | Service Worker | Handles API calls to OpenFeeds server          |
 
-| File                        | Type           | Purpose                                         |
-| --------------------------- | -------------- | ----------------------------------------------- |
-| `entrypoints/popup/`        | Popup UI       | SolidJS app shown when clicking extension icon  |
-| `entrypoints/options/`      | Options Page   | Settings UI for configuring server URL          |
-| `entrypoints/content.ts`    | Content Script | Injected into all pages, detects feeds from DOM |
-| `entrypoints/background.ts` | Service Worker | Handles API calls to OpenFeeds server           |
+## Message Flow
 
-### Message Flow
+1. Popup sends `GET_FEEDS` to content script
+2. Content script runs `detectFeedsFromPage()` → returns `FEEDS_RESULT`
+3. User clicks "Follow" → popup sends `FOLLOW_FEED` to background
+4. Background POSTs to OpenFeeds API → returns `FOLLOW_RESULT`
 
-```
-User clicks extension icon
-           │
-           ▼
-┌──────────────────────────────────────────────────────────────┐
-│  POPUP (App.tsx)                                             │
-│  - Queries active tab                                        │
-│  - Sends GET_FEEDS to content script                         │
-└──────────────────────┬───────────────────────────────────────┘
-                       │
-                       │ browser.tabs.sendMessage(tabId, { type: "GET_FEEDS" })
-                       ▼
-┌──────────────────────────────────────────────────────────────┐
-│  CONTENT SCRIPT (content.ts)                                 │
-│  - Already injected at document_idle on ALL pages            │
-│  - Listens for GET_FEEDS message                             │
-│  - Runs detectFeedsFromPage() to scan DOM                    │
-│  - Returns FEEDS_RESULT with discovered feeds                │
-└──────────────────────┬───────────────────────────────────────┘
-                       │
-                       │ { type: "FEEDS_RESULT", feeds: [...] }
-                       ▼
-┌──────────────────────────────────────────────────────────────┐
-│  POPUP displays feeds                                        │
-│  User clicks "Follow" button                                 │
-└──────────────────────┬───────────────────────────────────────┘
-                       │
-                       │ browser.runtime.sendMessage({ type: "FOLLOW_FEED", feed })
-                       ▼
-┌──────────────────────────────────────────────────────────────┐
-│  BACKGROUND (background.ts)                                  │
-│  - Receives FOLLOW_FEED message                              │
-│  - POSTs to OpenFeeds API: /api/feeds                        │
-│  - Returns FOLLOW_RESULT (success/error)                     │
-└──────────────────────────────────────────────────────────────┘
-```
+All message types defined in `utils/types.ts`:
 
-## Message Types
-
-Defined in `utils/types.ts`:
-
-| Message         | Direction          | Purpose                 |
-| --------------- | ------------------ | ----------------------- |
-| `GET_FEEDS`     | Popup → Content    | Request feed detection  |
-| `FEEDS_RESULT`  | Content → Popup    | Return discovered feeds |
-| `FOLLOW_FEED`   | Popup → Background | Subscribe to a feed     |
-| `FOLLOW_RESULT` | Background → Popup | Subscription result     |
+| Message         | Direction           | Purpose                 |
+| --------------- | ------------------- | ----------------------- |
+| `GET_FEEDS`     | Popup -> Content    | Request feed detection  |
+| `FEEDS_RESULT`  | Content -> Popup    | Return discovered feeds |
+| `FOLLOW_FEED`   | Popup -> Background | Subscribe to a feed     |
+| `FOLLOW_RESULT` | Background -> Popup | Subscription result     |
 
 ## Feed Detection
 
-`utils/feed-detector.ts` scans the page using two methods:
+`utils/feed-detector.ts` scans pages using:
 
-1. **`<link rel="alternate">`** - Standard RSS/Atom autodiscovery
-   - Checks for feed MIME types: `application/rss+xml`, `application/atom+xml`, etc.
-
-2. **`<a>` tags heuristics** - Fallback for pages without proper autodiscovery
-   - Looks for URLs containing `/feed`, `/rss`, `/atom`
-   - Looks for link text containing "rss", "feed", "subscribe"
-   - Marked as `type: "potential"` (less certain)
+1. **`<link rel="alternate">`** — standard RSS/Atom autodiscovery (feed MIME types)
+2. **`<a>` tag heuristics** — fallback, checks URLs/text for feed-related patterns. Marked as `type: "potential"`
 
 ## Configuration
 
-### Storage
-
-- `apiUrl` - OpenFeeds API URL (default: `https://openfeeds.app`)
-
-### Manifest Permissions
-
-- `activeTab` - Access current tab to inject content script
-- `storage` - Store API URL preference
-- `host_permissions` - Allow API calls to localhost and openfeeds.app
+- `apiUrl` stored in extension storage (default: `https://openfeeds.app`)
+- Permissions: `activeTab`, `storage`, host permissions for localhost + openfeeds.app
+- Content script runs on ALL URLs at `document_idle`
+- Background uses `fetch()` with `credentials: 'include'` for auth cookies
+- Dev port 3003 (avoids conflict with web 3000)
 
 ## Directory Structure
 
 ```
 apps/extension/
 ├── entrypoints/
-│   ├── popup/           # SolidJS popup UI
-│   │   ├── App.tsx      # Main component
-│   │   ├── App.css      # Tailwind entry
-│   │   ├── main.tsx     # Mount point
-│   │   └── index.html
-│   ├── options/         # Settings page
-│   │   ├── App.tsx      # Settings form
-│   │   ├── App.css      # Tailwind entry
-│   │   ├── main.tsx     # Mount point
-│   │   └── index.html
+│   ├── popup/           # SolidJS popup UI (App.tsx, main.tsx, index.html)
+│   ├── options/         # Settings page (App.tsx, main.tsx, index.html)
 │   ├── content.ts       # Content script (feed detection)
 │   └── background.ts    # Service worker (API calls)
 ├── utils/
 │   ├── types.ts         # Message types, interfaces
 │   └── feed-detector.ts # DOM scanning logic
-├── wxt.config.ts        # WXT configuration
-└── tsconfig.json
+└── wxt.config.ts
 ```
-
-## Development Notes
-
-- Content script runs on ALL URLs (`<all_urls>`) at `document_idle`
-- Popup communicates with content script via `browser.tabs.sendMessage()`
-- Background script uses `fetch()` with `credentials: 'include'` for auth cookies
-- Dev server runs on port 3003 to avoid conflicts with web app (3000) and API (3001)
 
 ## Future Ideas
 
