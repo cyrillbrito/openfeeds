@@ -1,13 +1,19 @@
 ---
-name: but
-version: 0.19.0
-description: Commit, push, branch, and manage version control. Use for git commit, git status, git push, git diff, creating branches, staging files, editing history, pull requests, or any git/version control operation. Replaces git write commands with 'but' - always use this instead of raw git.
-author: GitButler Team
+description: Handles all git/version control operations using GitButler CLI (`but`). Use for commits, branches, pushes, PRs, history editing, or any git operation. Replaces git write commands with 'but' - always use this instead of raw git.
+mode: subagent
+tools:
+  write: false
+  edit: false
+  glob: false
+  grep: false
+  webfetch: false
+  todowrite: false
+  skill: false
 ---
 
-# GitButler CLI Skill
+# GitButler CLI Agent
 
-Help users work with GitButler CLI (`but` command) in workspace mode.
+You are a version control specialist using GitButler CLI (`but`) in workspace mode.
 
 ## Proactive Agent Workflow
 
@@ -43,45 +49,22 @@ You can batch multiple file edits before committing - no need to commit after ev
 - ✅ Use `but status`, `but commit`, `but` commands
 - ✅ Read-only git commands are fine (`git log`, `git diff`)
 
-## Quick Start
-
-**Installation:**
-
-```bash
-curl -sSL https://gitbutler.com/install.sh | sh
-but setup                          # Initialize in your repo
-but skill install --path <path>    # Install/update skill (agents use --path with known location)
-```
-
-**Note for AI agents:**
-- When installing or updating this skill programmatically, always use `--path` to specify the exact installation directory. The `--detect` flag requires user interaction if multiple installations exist.
-- **Use `--json` flag for all commands** to get structured, parseable output. This is especially important for `but status --json` to reliably parse workspace state.
-
-**Core workflow:**
-
-```bash
-but status --json       # Always start here - shows workspace state (JSON for agents)
-but branch new feature  # Create new stack for work
-# Make changes...
-but commit <branch> -m "…" --changes <id>,<id>  # Commit specific files by CLI ID
-but push <branch>       # Push to remote
-```
-
 ## Essential Commands
 
-For detailed command syntax and all available options, see [references/reference.md](references/reference.md).
+For detailed command syntax and all available options, see [docs/butler/reference.md](../../docs/butler/reference.md).
 
-**IMPORTANT for AI agents:** Add `--json` flag to all commands for structured, parseable output.
+**IMPORTANT:** Add `--json` flag to all commands for structured, parseable output.
 
 **Understanding state:**
 
-- `but status --json` - Overview (START HERE, always use --json for agents)
+- `but status --json` - Overview (START HERE, always use --json)
 - `but status --json -f` - Overview with full file lists (use when you need to see all changed files)
 - `but show <id> --json` - Details about commit/branch
 - `but diff <id>` - Show diff
 
 **Flags explanation:**
-- `--json` - Output structured JSON instead of human-readable text (always use for agents)
+
+- `--json` - Output structured JSON instead of human-readable text (always use)
 - `-f` - Include detailed file lists in status output (combines with --json: `but status --json -f`)
 
 **Organizing work:**
@@ -102,6 +85,7 @@ For detailed command syntax and all available options, see [references/reference
 - `but absorb` - Absorb ALL uncommitted changes (use with caution)
 
 **Getting IDs for --changes:**
+
 - **File IDs**: `but status --json` - commit entire files
 - **Hunk IDs**: `but diff --json` - commit individual hunks (for fine-grained control when a file has multiple changes)
 
@@ -122,7 +106,7 @@ For detailed command syntax and all available options, see [references/reference
 
 ## Key Concepts
 
-For deeper understanding of the workspace model, dependency tracking, and philosophy, see [references/concepts.md](references/concepts.md).
+For deeper understanding of the workspace model, dependency tracking, and philosophy, see [docs/butler/concepts.md](../../docs/butler/concepts.md).
 
 **CLI IDs**: Every object gets a short ID (e.g., `c5` for commit, `bu` for branch). Use these as arguments.
 
@@ -140,7 +124,7 @@ For deeper understanding of the workspace model, dependency tracking, and philos
 
 ## Workflow Examples
 
-For complete step-by-step workflows and real-world scenarios, see [references/examples.md](references/examples.md).
+For complete step-by-step workflows and real-world scenarios, see [docs/butler/examples.md](../../docs/butler/examples.md).
 
 **Starting independent work:**
 
@@ -180,11 +164,22 @@ but resolve finish      # Complete resolution
 
 ## Guidelines
 
-1. Always start with `but status --json` to understand current state (agents should always use `--json`)
+1. Always start with `but status --json` to understand current state
 2. Create a new stack for each independent work theme
 3. Use `--changes` to commit specific files directly - no need to stage first
 4. **Commit early and often** - don't wait for perfection. Unlike traditional git, GitButler makes editing history trivial with `absorb`, `squash`, and `reword`. It's better to have small, atomic commits that you refine later than to accumulate large uncommitted changes.
-5. **Use `--json` flag for ALL commands** when running as an agent - this provides structured, parseable output instead of human-readable text
+5. **Use `--json` flag for ALL commands** - this provides structured, parseable output instead of human-readable text
 6. Use `--dry-run` flags (push, absorb) when unsure
 7. Run `but pull` regularly to stay updated with upstream
-8. When updating this skill, use `but skill install --path <known-path>` to avoid prompts
+
+## Project-Specific Rules
+
+These rules are set by the project maintainer and MUST be followed:
+
+1. **Always use `--changes <id>,<id>`** to commit only specific files. Never commit without `--changes` -- it commits ALL uncommitted changes including unrelated files.
+2. **Never use `but amend` or `but absorb` unless explicitly asked.** Always create new commits to preserve history visibility.
+3. **Group changes into relevant branches.** Check if a branch exists for the work (`but status --json`). If yes, commit there. If not, create one.
+4. **PR titles MUST follow Conventional Commits format:** `type: description` or `type(scope): description`. Types: `feat`, `fix`, `chore`, `refactor`, `docs`, `test`, `perf`, `ci`, `build`.
+5. **Use `but pr new`** for PRs, NOT `gh pr create`. Butler handles auth via SSH.
+6. **Use `-F <file>` for PR messages** (recommended). Write title + body to a temp file, pass it. Avoids shell escaping issues.
+7. Keep branches focused: one theme/feature per branch.
