@@ -33,7 +33,7 @@
     "better-auth": "catalog:",
     "daisyui": "^5.5.18",
     "lucide-solid": "^0.564.0",
-    "nitro": "npm:nitro-nightly@latest",
+    "nitro": "npm:nitro-nightly@3.0.1-20260205-202041-6c80c116",
     "posthog-js": "^1.347.2",
     "solid-js": "^1.9.11",
     "tailwind-merge": "^3.4.1",

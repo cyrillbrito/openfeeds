@@ -4,12 +4,7 @@ import { and, eq, inArray } from 'drizzle-orm';
 import type { ArticleTag, CreateArticleTag } from './article-tag.schema';
 
 // Re-export schemas and types from schema file
-export {
-  ArticleTagSchema,
-  type ArticleTag,
-  CreateArticleTagSchema,
-  type CreateArticleTag,
-} from './article-tag.schema';
+export * from './article-tag.schema';
 
 export async function getAllArticleTags(userId: string): Promise<ArticleTag[]> {
   // article_tags has denormalized user_id for efficient filtering

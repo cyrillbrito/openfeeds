@@ -8,12 +8,7 @@ import { env } from './env';
 import { NotFoundError, TtsNotConfiguredError } from './errors';
 
 // Re-export client-safe types
-export {
-  WordTimingSchema,
-  type WordTiming,
-  ArticleAudioMetadataSchema,
-  type ArticleAudioMetadata,
-} from './entities/tts.schema';
+export * from './entities/tts.schema';
 
 /** Unreal Speech API response */
 interface UnrealSpeechResponse {
