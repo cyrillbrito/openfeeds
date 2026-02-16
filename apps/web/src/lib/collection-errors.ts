@@ -1,12 +1,9 @@
-import { getLimitErrorMessage, isLimitExceededError } from '@repo/domain/client';
 import posthog from 'posthog-js';
 import { toastService } from '~/lib/toast-service';
 
 /**
  * Wraps a collection mutation handler with error handling.
  * Catches errors, shows a toast, reports to PostHog, then re-throws so TanStack DB rolls back optimistic state.
- *
- * For LimitExceededErrors, displays a user-friendly limit message instead of the raw error.
  */
 export function collectionErrorHandler<TArgs extends unknown[]>(
   context: string,
@@ -16,11 +13,7 @@ export function collectionErrorHandler<TArgs extends unknown[]>(
     try {
       await fn(...args);
     } catch (error) {
-      const message = isLimitExceededError(error)
-        ? getLimitErrorMessage(error)
-        : error instanceof Error
-          ? error.message
-          : 'Something went wrong';
+      const message = error instanceof Error ? error.message : 'Something went wrong';
       toastService.error(message);
       posthog.captureException(error, { context });
       throw error;

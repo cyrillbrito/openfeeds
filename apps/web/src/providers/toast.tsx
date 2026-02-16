@@ -19,43 +19,28 @@ interface ToastAction {
 interface Toast {
   id: string;
   message: string;
-  variant: ToastVariant;
   action?: ToastAction;
   duration?: number;
 }
 
 interface ToastContextValue {
   toasts: () => Toast[];
-  showToast: (
-    message: string,
-    options?: { variant?: ToastVariant; action?: ToastAction; duration?: number },
-  ) => void;
+  showToast: (message: string, options?: { action?: ToastAction; duration?: number }) => void;
   removeToast: (id: string) => void;
 }
-
-const VARIANT_CLASSES: Record<ToastVariant, string> = {
-  success: 'alert-success',
-  error: 'alert-error',
-  warning: 'alert-warning',
-  info: 'alert-info',
-};
 
 const ToastContext = createContext<ToastContextValue>();
 
 export const ToastProvider: ParentComponent = (props) => {
   const [toasts, setToasts] = createSignal<Toast[]>([]);
 
-  const showToast = (
-    message: string,
-    options?: { variant?: ToastVariant; action?: ToastAction; duration?: number },
-  ) => {
+  const showToast = (message: string, options?: { action?: ToastAction; duration?: number }) => {
     const id = Date.now().toString() + Math.random().toString(36).substring(7);
     const duration = options?.duration ?? 6000; // Default 6 seconds
 
     const toast: Toast = {
       id,
       message,
-      variant: options?.variant ?? 'success',
       action: options?.action,
       duration,
     };
@@ -90,9 +75,7 @@ export const ToastProvider: ParentComponent = (props) => {
       <div class="toast toast-end toast-bottom">
         <For each={toasts()}>
           {(toast) => (
-            <div
-              class={`alert ${VARIANT_CLASSES[toast.variant]} flex items-center justify-between shadow-lg`}
-            >
+            <div class="alert alert-success flex items-center justify-between shadow-lg">
               <span>{toast.message}</span>
               <Show when={toast.action}>
                 {(action) => (
