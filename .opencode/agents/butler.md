@@ -51,7 +51,7 @@ You can batch multiple file edits before committing - no need to commit after ev
 
 ## Essential Commands
 
-For detailed command syntax and all available options, see [butler-references/reference.md](butler-references/reference.md).
+For detailed command syntax and all available options, see [docs/butler/reference.md](../../docs/butler/reference.md).
 
 **IMPORTANT:** Add `--json` flag to all commands for structured, parseable output.
 
@@ -106,7 +106,7 @@ For detailed command syntax and all available options, see [butler-references/re
 
 ## Key Concepts
 
-For deeper understanding of the workspace model, dependency tracking, and philosophy, see [butler-references/concepts.md](butler-references/concepts.md).
+For deeper understanding of the workspace model, dependency tracking, and philosophy, see [docs/butler/concepts.md](../../docs/butler/concepts.md).
 
 **CLI IDs**: Every object gets a short ID (e.g., `c5` for commit, `bu` for branch). Use these as arguments.
 
@@ -124,7 +124,7 @@ For deeper understanding of the workspace model, dependency tracking, and philos
 
 ## Workflow Examples
 
-For complete step-by-step workflows and real-world scenarios, see [butler-references/examples.md](butler-references/examples.md).
+For complete step-by-step workflows and real-world scenarios, see [docs/butler/examples.md](../../docs/butler/examples.md).
 
 **Starting independent work:**
 
