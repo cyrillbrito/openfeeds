@@ -1,323 +1,80 @@
-# PostHog Analytics Strategy
+# PostHog Analytics
 
-This document outlines the analytics strategy for OpenFeeds using PostHog.
+Analytics powered by [PostHog](https://posthog.com/) with EU data residency.
 
-## Best Practices (from PostHog docs)
+## Setup
 
-### 1. Prefer Backend to Frontend Tracking
+| Component | SDK                   | Host                                       | Init Location                                 |
+| --------- | --------------------- | ------------------------------------------ | --------------------------------------------- |
+| Web app   | `posthog-js`          | `https://ph.openfeeds.app` (reverse proxy) | `apps/web/src/utils/posthog.ts`               |
+| Marketing | `posthog-js` (inline) | `https://ph.openfeeds.app` (reverse proxy) | `apps/marketing/src/components/PostHog.astro` |
+| Server    | `posthog-node`        | `https://eu.i.posthog.com` (direct)        | `packages/domain/src/config.ts`               |
 
-Backend analytics are more reliable than frontend for three reasons:
+- **Person profiles**: `identified_only` — anonymous users are not tracked
+- **Reverse proxy**: Cloudflare Worker at `ph.openfeeds.app` → PostHog EU. Bypasses ad-blockers. See [PostHog proxy docs](https://posthog.com/docs/advanced/proxy/cloudflare).
+- **Super properties**: Each app registers `{ app: 'web' | 'marketing' | 'server' }`.
 
-1. **No ad-blockers** - Many users have tracking blocked on browsers
-2. **No JS interruptions** - Network issues, CORS, browser settings can't interfere
-3. **Full control** - Server execution is deterministic
+### Env Vars
 
-**When to use frontend tracking:**
+| Var                  | Package                       | Required               | Notes                            |
+| -------------------- | ----------------------------- | ---------------------- | -------------------------------- |
+| `POSTHOG_PUBLIC_KEY` | `packages/domain`, `apps/web` | No                     | Disabled when absent (local dev) |
+| `POSTHOG_APP`        | `packages/domain`             | No, default `'server'` | Attached to exception metadata   |
+| `PUBLIC_POSTHOG_KEY` | `apps/marketing`              | No                     | Astro public env convention      |
 
-- User journeys (page sequences)
-- UI interactions (clicks, scrolls)
-- Client-side performance
+## User Identification
 
-**When to use backend tracking:**
+- **Identify** on sign-in, sign-up, and frame load (`posthog.identify(userId, { email, name })`)
+- **Reset** on sign-out (`posthog.reset()`)
 
-- CRUD operations (create, update, delete)
-- Accurate counts (signups, purchases)
-- Business metrics
+Locations: `apps/web/src/routes/_frame.tsx`, `signup.tsx`, `signin.tsx`, `UserMenu.tsx`.
 
-### 2. Naming Convention
+## Best Practices
 
-Following PostHog's recommended `category:object_action` pattern:
+- **Prefer server-side tracking** — no ad-blockers, no JS interruptions, deterministic execution. Use client-side only for UI interactions (clicks, page views, scrolls).
+- **No PII in event properties** — use IDs, not emails or names.
+- **Filter internal users** — exclude internal email domains and dev environments from analytics.
 
-- **Lowercase only**
-- **Snake case**: `signup_flow:pricing_page_view`
-- **Present-tense verbs**: `create`, `submit`, `view` (not `created`, `submitted`)
-- **Category prefix**: Groups related events
+## Event Naming Convention
 
-**Allowed verbs:**
+`category:object_action` in lowercase snake_case with present-tense verbs.
 
-```
-click, submit, create, view, add, invite, update, delete, remove, start, end, cancel, fail, generate, send
-```
+Allowed verbs: `click`, `submit`, `create`, `view`, `add`, `invite`, `update`, `delete`, `remove`, `start`, `end`, `cancel`, `fail`, `generate`, `send`.
 
-**Property naming:**
+## Events
 
-- `object_adjective` pattern: `user_id`, `feed_url`, `article_count`
-- Boolean prefix `is_/has_`: `is_bulk`, `has_content`
-- Date suffix `_date/_timestamp`: `created_at`, `sync_timestamp`
+### Server-Side (posthog-node)
 
-### 3. Reverse Proxy
+Tracked via `trackEvent()` in `packages/domain/src/analytics.ts`. Preferred over client-side for reliability.
 
-A reverse proxy routes events through your domain, bypassing ad-blockers. This typically increases event capture by 10-30%.
+| Event                 | Properties                                | Location                                      |
+| --------------------- | ----------------------------------------- | --------------------------------------------- |
+| `auth:account_create` | `method`                                  | `apps/web/src/server/auth.ts`                 |
+| `auth:session_create` | `method`                                  | `apps/web/src/server/auth.ts`                 |
+| `feeds:feed_create`   | `feed_id`, `feed_url`, `source`           | `packages/domain/src/entities/feed.ts`        |
+| `feeds:feed_delete`   | `feed_id`                                 | `packages/domain/src/entities/feed.ts`        |
+| `feeds:opml_import`   | `feed_count`, `tag_count`, `failed_count` | `packages/domain/src/import.ts`               |
+| `tags:tag_create`     | `tag_id`, `color`                         | `packages/domain/src/entities/tag.ts`         |
+| `tags:tag_delete`     | `tag_id`                                  | `packages/domain/src/entities/tag.ts`         |
+| `filters:rule_create` | `feed_id`, `operator`                     | `packages/domain/src/entities/filter-rule.ts` |
+| `tts:audio_generate`  | `article_id`, `duration_ms`               | `packages/domain/src/tts.ts`                  |
 
-**Done:** Cloudflare Worker proxy at `ph.openfeeds.app` forwarding to PostHog EU.
+### Client-Side (posthog-js)
 
-See: https://posthog.com/docs/advanced/proxy/cloudflare
+| Event                   | Properties                        | Location                                             |
+| ----------------------- | --------------------------------- | ---------------------------------------------------- |
+| `articles:article_view` | `article_id`, `feed_id`, `source` | `apps/web/src/routes/_frame.articles.$articleId.tsx` |
 
-### 4. Filter Out Internal Users
+### Exception Capture
 
-Add filtering for:
+- **Client**: `posthog.captureException()` on unexpected auth errors (sign-in, sign-up, reset-password, forgot-password).
+- **Server**: `posthog.captureException()` in `packages/domain/src/logger.ts` on `logger.error()` calls.
 
-- Internal email domains
-- `is_employee` property
-- Development environments (`localhost`, staging)
+## Links
 
----
-
-## Current Setup
-
-### SDK Integration
-
-- **Client-side**: `posthog-js` in `apps/web`
-- **Server-side**: `posthog-node` in `packages/domain`
-- **Marketing**: Inline snippet in `apps/marketing`
-
-### Configuration
-
-- **Host**: `https://ph.openfeeds.app` (Cloudflare Worker proxy → EU data residency)
-- **Person profiles**: `identified_only`
-- **App labels**: Each app registers its source (`web`, `server`, `worker`, `marketing`)
-
----
-
-## Event Taxonomy
-
-### Backend Events (Server-Side)
-
-These events are tracked in `packages/domain` functions for reliability.
-
-#### Authentication
-
-| Event                 | Properties | Location  |
-| --------------------- | ---------- | --------- |
-| `auth:account_create` | `method`   | `auth.ts` |
-| `auth:session_create` | `method`   | `auth.ts` |
-
-#### Feed Management
-
-| Event               | Properties                                | Location            |
-| ------------------- | ----------------------------------------- | ------------------- |
-| `feeds:feed_create` | `feed_id`, `feed_url`, `source`           | `createFeed()`      |
-| `feeds:feed_delete` | `feed_id`                                 | `deleteFeed()`      |
-| `feeds:opml_import` | `feed_count`, `tag_count`, `failed_count` | `importOpmlFeeds()` |
-
-#### Tag Management
-
-| Event             | Properties        | Location      |
-| ----------------- | ----------------- | ------------- |
-| `tags:tag_create` | `tag_id`, `color` | `createTag()` |
-| `tags:tag_delete` | `tag_id`          | `deleteTag()` |
-
-#### Filter Rules
-
-| Event                 | Properties            | Location             |
-| --------------------- | --------------------- | -------------------- |
-| `filters:rule_create` | `feed_id`, `operator` | `createFilterRule()` |
-
-#### Audio/TTS
-
-| Event                | Properties                  | Location                 |
-| -------------------- | --------------------------- | ------------------------ |
-| `tts:audio_generate` | `article_id`, `duration_ms` | `generateArticleAudio()` |
-
-### Frontend Events (Client-Side)
-
-These events are tracked in `apps/web` for UI-specific interactions.
-
-#### Article Viewing
-
-| Event                   | Properties                        | Location      |
-| ----------------------- | --------------------------------- | ------------- |
-| `articles:article_view` | `article_id`, `feed_id`, `source` | Article route |
-
-**Note:** `article_view` is frontend-only because it tracks the UI action of opening an article, not a database change.
-
----
-
-## Implementation Architecture
-
-### Server-Side Tracking (Preferred)
-
-Location: `packages/domain/src/analytics.ts`
-
-```typescript
-import { posthog } from './config';
-
-export function trackEvent(
-  userId: string,
-  event: string,
-  properties?: Record<string, unknown>,
-): void {
-  if (posthog) {
-    posthog.capture({ distinctId: userId, event, properties });
-  }
-}
-```
-
-Domain functions call `trackEvent()` after successful operations:
-
-```typescript
-// In packages/domain/src/entities/feed.ts
-export async function createFeed(data: CreateFeed, userId: string): Promise<Feed> {
-  const feed = await db
-    .insert(feeds)
-    .values({ ...data, userId })
-    .returning();
-
-  trackEvent(userId, 'feeds:feed_create', {
-    feed_id: feed.id,
-    feed_url: data.url,
-    source: 'manual',
-  });
-
-  return feed;
-}
-```
-
-### Client-Side Tracking (UI Only)
-
-Use `posthog-js` directly for client-side events:
-
-```typescript
-import posthog from 'posthog-js';
-
-// Track UI-specific events
-posthog.capture('articles:article_view', {
-  article_id: id,
-  feed_id: feedId,
-  source: 'inbox',
-});
-```
-
-### User Identification
-
-Call `posthog.identify()` after successful login (client-side):
-
-```typescript
-posthog.identify(user.id, {
-  email: user.email,
-  name: user.name,
-  created_at: user.createdAt,
-});
-```
-
-Call `posthog.reset()` on logout.
-
----
-
-## Dashboards
-
-### 1. Growth Dashboard
-
-| Metric                   | Query                         |
-| ------------------------ | ----------------------------- |
-| Daily Active Users (DAU) | Unique users with any event   |
-| New signups              | `auth:account_create` count   |
-| Feed subscriptions       | `feeds:feed_create` count     |
-| Net feed growth          | `feed_create` - `feed_delete` |
-
-### 2. Engagement Funnel
-
-```
-auth:account_create
-  -> feeds:feed_create (within 1 day)
-    -> articles:article_view (within 7 days)
-      -> 5+ article_view events (within 7 days)
-        -> Return Day 2+
-```
-
-### 3. Feature Adoption
-
-| Feature      | Event                 | Target |
-| ------------ | --------------------- | ------ |
-| Tags         | `tags:tag_create`     | 30%    |
-| Filter Rules | `filters:rule_create` | 10%    |
-| Audio/TTS    | `tts:audio_generate`  | 5%     |
-| OPML Import  | `feeds:opml_import`   | 20%    |
-
-### 4. Retention Cohorts
-
-- D1/D7/D30 retention rates
-- Retention by acquisition source (OPML vs manual)
-- Retention by feature usage (tags, filters)
-
----
-
-## Feature Flags (Future)
-
-| Flag                    | Purpose                           |
-| ----------------------- | --------------------------------- |
-| `enable-youtube-shorts` | Gradual rollout of shorts feature |
-| `enable-audio-tts`      | Control TTS feature availability  |
-| `new-article-reader`    | A/B test new reader layout        |
-| `onboarding-v2`         | Test new onboarding flow          |
-
----
-
-## Privacy Considerations
-
-- Person profiles set to `identified_only` - anonymous users not tracked
-- EU data residency (`eu.i.posthog.com`)
-- No PII in event properties (use IDs, not emails/names in properties)
-- Session replay respects user privacy settings
-
----
-
-## MCP Integration
-
-The PostHog MCP server can be used to:
-
-1. **Create dashboards programmatically**
-2. **Query analytics data** from AI agents
-3. **Manage feature flags** via CLI/agent
-4. **Search documentation** for implementation help
-
-### Example MCP Prompts
-
-```
-"Create a funnel: auth:user_signup -> feeds:feed_create -> articles:article_view within 7 days"
-
-"Show me DAU for the last 30 days"
-
-"What % of users who signed up last week have used tags:tag_create?"
-
-"Create a feature flag called 'new-reader-layout' with 10% rollout"
-```
-
----
-
-## Metrics to Monitor
-
-### North Star Metric
-
-**Articles Viewed per Week** - Core value delivery metric
-
-### Supporting Metrics
-
-| Category    | Metric                    | Target    |
-| ----------- | ------------------------- | --------- |
-| Acquisition | Weekly signups            | Growth    |
-| Activation  | % signup -> first article | > 50%     |
-| Engagement  | Articles viewed per user  | > 10/week |
-| Retention   | D7 retention              | > 40%     |
-| Retention   | D30 retention             | > 20%     |
-
----
-
-## Implementation Status
-
-- [x] Document analytics strategy
-- [x] Implement user identification (client-side)
-- [x] Add client-side analytics utility
-- [x] Add server-side analytics utility
-- [x] Move CRUD events to server-side (domain package)
-  - [x] `feeds:feed_create`, `feeds:feed_delete` in `feed.ts`
-  - [x] `feeds:opml_import` in `import.ts`
-  - [x] `tags:tag_create`, `tags:tag_delete` in `tag.ts`
-  - [x] `filters:rule_create` in `filter-rule.ts`
-  - [x] `audio:audio_generate` in `tts.ts`
-- [x] Set up reverse proxy (`ph.openfeeds.app` via Cloudflare Worker)
-- [ ] Create Growth Dashboard in PostHog
-- [ ] Create Engagement Funnel in PostHog
-- [ ] Set up retention cohorts
-- [ ] Implement feature flags
-- [ ] Add internal user filtering
+- [PostHog EU Dashboard](https://eu.posthog.com/)
+- [PostHog Docs](https://posthog.com/docs)
+- [Reverse Proxy Setup](https://posthog.com/docs/advanced/proxy/cloudflare)
+- [Naming Conventions](https://posthog.com/docs/data/events#best-practices)
+- [posthog-js API](https://posthog.com/docs/libraries/js)
+- [posthog-node API](https://posthog.com/docs/libraries/node)

@@ -26,7 +26,7 @@ export interface ServerAnalyticsEventMap {
   'feeds:feed_create': {
     feed_id: string;
     feed_url: string;
-    source: 'manual' | 'opml' | 'discovery';
+    source: 'manual';
   };
   'feeds:feed_delete': {
     feed_id: string;
@@ -57,20 +57,6 @@ export interface ServerAnalyticsEventMap {
     article_id: string;
     duration_ms?: number;
   };
-
-  // Background job events
-  'jobs:feed_sync': {
-    feed_id: string;
-    article_count: number;
-    new_article_count: number;
-  };
-  'jobs:feed_sync_fail': {
-    feed_id: string;
-    error: string;
-  };
-  'jobs:auto_archive': {
-    count: number;
-  };
 }
 
 /**
@@ -90,23 +76,6 @@ export function trackEvent<T extends keyof ServerAnalyticsEventMap>(
   if (posthog) {
     posthog.capture({
       distinctId: userId,
-      event,
-      properties,
-    });
-  }
-}
-
-/**
- * Track a server-side analytics event without requiring a user ID.
- * Use sparingly - only for system-level events not tied to a specific user.
- *
- * @param event - Event name
- * @param properties - Event properties
- */
-export function trackSystemEvent(event: string, properties?: Record<string, unknown>): void {
-  if (posthog) {
-    posthog.capture({
-      distinctId: 'system',
       event,
       properties,
     });

@@ -38,4 +38,4 @@ export {
 } from './queues';
 
 // Analytics
-export { trackEvent, trackSystemEvent, type ServerAnalyticsEventMap } from './analytics';
+export { trackEvent, type ServerAnalyticsEventMap } from './analytics';
