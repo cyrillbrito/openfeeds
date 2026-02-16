@@ -58,6 +58,26 @@ export interface ServerAnalyticsEventMap {
     article_id: string;
     duration_ms?: number;
   };
+
+  // Limit enforcement
+  'limits:feeds_limit_hit': {
+    source: 'manual' | 'opml_import';
+    current_usage: number;
+    limit: number;
+  };
+  'limits:filter_rules_limit_hit': {
+    current_usage: number;
+    limit: number;
+  };
+  'limits:saved_articles_limit_hit': {
+    current_usage: number;
+    limit: number;
+  };
+  'limits:extractions_limit_hit': {
+    window: 'daily' | 'monthly';
+    current_usage: number;
+    limit: number;
+  };
 }
 
 /**
