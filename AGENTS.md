@@ -183,65 +183,7 @@ import { QUEUE_NAMES, redisConnection } from '@repo/domain';
 
 ## Version Control (GitButler)
 
-**This repo uses GitButler workspace mode. Use `but` commands instead of `git` for all write operations.**
-
-Load the `but` skill for full command reference and workflows.
-
-**Always group changes into a relevant branch.** Before committing, check if a branch already exists for the type of work you're doing (`but status --json`). If one exists, commit there. If not, create a new branch (`but branch new <name>`).
-
-**Example workflow:**
-
-```bash
-but status --json                                          # Check existing branches
-but branch new add-tag-filtering                           # Create branch if needed
-# ... make changes ...
-but status --json                                          # Get file/change IDs
-but commit add-tag-filtering -m "Add tag filter" --changes <id>,<id>  # Commit specific files
-but push add-tag-filtering                                 # Push branch to remote
-but pr new add-tag-filtering -F /tmp/pr.md                 # Create PR from file
-```
-
-**Creating pull requests:**
-
-Use `but pr new <branch>` — NOT `gh pr create`. The `but` command handles authentication via SSH (which is configured), while `gh` may have expired tokens.
-
-**PR titles MUST follow [Conventional Commits](https://www.conventionalcommits.org/) format.** This is enforced by CI (`action-semantic-pull-request`) and used by Release Please to auto-generate changelogs and version bumps.
-
-Format: `type: description` or `type(scope): description`
-
-Common types: `feat`, `fix`, `chore`, `refactor`, `docs`, `test`, `perf`, `ci`, `build`
-
-Examples: `feat: add tag filtering`, `fix: resolve undefined tag in header`, `chore: update dependencies`
-
-- **Non-interactive mode:** Must provide one of: `-m` (message), `-F` (file), or `-t` (default/auto).
-- **Recommended: use `-F <file>`** — Write PR title and description to a temp file, then pass it. First line = title, rest = body. This avoids shell escaping issues with `-m`.
-- `-t` (default) uses the commit message(s) as title/description automatically.
-
-```bash
-# Option 1: Write to temp file (recommended for multi-line descriptions)
-# First line = PR title (must be Conventional Commits format), remaining lines = PR body
-cat > /tmp/pr.md << 'EOF'
-fix: resolve tag page header showing undefined
-
-- Fix tag page displaying "Tag #undefined" in the header
-- Switch from deprecated .data to accessor pattern
-EOF
-but pr new my-branch -F /tmp/pr.md
-
-# Option 2: Use default commit message as PR content
-but pr new my-branch -t
-
-# Option 3: Inline message (single line only, avoid special chars)
-but pr new my-branch -m "fix: resolve undefined tag in header"
-```
-
-**Key rules:**
-
-- Use `but` for all write operations (commit, branch, push, PRs). Read-only git commands (`git log`, `git diff`) are fine.
-- Commit early and often -- GitButler makes editing history trivial (`squash`, `absorb`, `reword`).
-- **Never use `but amend` or `but absorb` unless explicitly asked.** Always create new commits. This preserves history visibility so changes can be reviewed incrementally.
-- **ALWAYS use `--changes <id>,<id>` to commit only the specific files you changed.** Never commit without `--changes` — omitting it commits ALL uncommitted changes (including unrelated files from other tools or branches). Run `but status --json` first to get the correct file IDs.
-- Keep branches focused: one theme/feature per branch.
+**This repo uses GitButler workspace mode. Delegate ALL git/version control operations to the `@butler` sub-agent.** This includes commits, branches, pushes, PRs, and history editing. The sub-agent has full command reference and project-specific rules built in.
 
 ## Code Quality
 
