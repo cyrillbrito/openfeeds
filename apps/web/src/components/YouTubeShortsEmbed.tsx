@@ -1,3 +1,4 @@
+import { Show } from 'solid-js';
 import { twMerge } from 'tailwind-merge';
 import { extractYouTubeVideoId } from '~/utils/youtube';
 
@@ -16,17 +17,15 @@ export function YouTubeShortsEmbed(props: YouTubeShortsEmbedProps) {
     return props.autoplay ? `${baseUrl}?autoplay=1` : baseUrl;
   };
 
-  if (!videoId()) {
-    return null;
-  }
-
   return (
-    <iframe
-      src={embedUrl()}
-      title={props.title || 'YouTube Shorts'}
-      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-      allowfullscreen
-      class={twMerge('aspect-9/16', props.class)}
-    />
+    <Show when={videoId()}>
+      <iframe
+        src={embedUrl()}
+        title={props.title || 'YouTube Shorts'}
+        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+        allowfullscreen
+        class={twMerge('aspect-9/16', props.class)}
+      />
+    </Show>
   );
 }
