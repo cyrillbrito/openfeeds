@@ -15,6 +15,7 @@ export const settingsCollection = createCollection(
 
     shapeOptions: {
       url: getShapeUrl('settings'),
+      parser: timestampParser,
       columnMapper: snakeCamelMapper(),
     },
 

@@ -49,6 +49,7 @@ export function AddRuleForm(props: AddRuleFormProps) {
     }
 
     setError(null);
+    const now = new Date().toISOString();
     filterRulesCollection.insert({
       id: createId(),
       userId,
@@ -56,7 +57,8 @@ export function AddRuleForm(props: AddRuleFormProps) {
       pattern: trimmedPattern,
       operator: operator(),
       isActive: isActive(),
-      createdAt: new Date().toISOString(),
+      createdAt: now,
+      updatedAt: now,
     });
 
     // Reset form
