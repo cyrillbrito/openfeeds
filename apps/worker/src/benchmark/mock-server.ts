@@ -47,13 +47,13 @@ function generateRssFeed(feedId: string, articleCount: number, baseUrl: string):
     .replace('{{ITEMS}}', items);
 }
 
-export interface MockServerConfig {
+interface MockServerConfig {
   port: number;
   articlesPerFeed: number;
   delay?: number;
 }
 
-export interface MockServer {
+interface MockServer {
   url: string;
   close: () => void;
 }

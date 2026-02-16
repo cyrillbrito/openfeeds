@@ -30,5 +30,3 @@ export const ResetPassword = ({ resetUrl }: ResetPasswordProps) => (
 ResetPassword.PreviewProps = {
   resetUrl: 'https://openfeeds.app/reset-password?token=abc123xyz',
 } as ResetPasswordProps;
-
-export default ResetPassword;

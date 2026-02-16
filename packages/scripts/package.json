@@ -7,7 +7,6 @@
   },
   "dependencies": {
     "@repo/db": "workspace:*",
-    "@repo/shared": "workspace:*",
     "@t3-oss/env-core": "^0.13.10",
     "better-auth": "catalog:",
     "bullmq": "^5.69.2",

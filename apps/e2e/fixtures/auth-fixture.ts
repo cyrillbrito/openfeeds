@@ -1,13 +1,13 @@
 import { test as base, expect } from '@playwright/test';
 import { generateTestEmail, generateTestPassword } from '../utils/creds';
 
-export interface TestUser {
+interface TestUser {
   name: string;
   email: string;
   password: string;
 }
 
-export interface AuthFixtures {
+interface AuthFixtures {
   user: TestUser;
 }
 

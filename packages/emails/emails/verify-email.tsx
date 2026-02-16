@@ -30,5 +30,3 @@ export const VerifyEmail = ({ verificationUrl }: VerifyEmailProps) => (
 VerifyEmail.PreviewProps = {
   verificationUrl: 'https://openfeeds.app/verify?token=abc123xyz',
 } as VerifyEmailProps;
-
-export default VerifyEmail;

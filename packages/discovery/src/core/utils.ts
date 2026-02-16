@@ -90,15 +90,6 @@ export function shouldSkipUrl(url: string): boolean {
   return false;
 }
 
-export function isValidFeedUrl(url: string): boolean {
-  try {
-    const urlObj = new URL(url);
-    return urlObj.protocol === 'http:' || urlObj.protocol === 'https:';
-  } catch {
-    return false;
-  }
-}
-
 export function dedupeFeeds<T extends { url: string }>(feeds: T[]): T[] {
   return feeds.filter((feed, index, array) => array.findIndex((f) => f.url === feed.url) === index);
 }

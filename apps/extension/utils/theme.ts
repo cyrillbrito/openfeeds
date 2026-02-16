@@ -2,7 +2,7 @@ import type { StorageData } from './types';
 
 export type Theme = 'light' | 'dark' | 'system';
 
-export async function getTheme(): Promise<Theme> {
+async function getTheme(): Promise<Theme> {
   const result = (await browser.storage.local.get('theme')) as StorageData;
   return result.theme || 'system';
 }
@@ -16,7 +16,7 @@ function getSystemTheme(): 'light' | 'dark' {
   return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
 }
 
-export function applyTheme(theme: Theme): void {
+function applyTheme(theme: Theme): void {
   const resolved = theme === 'system' ? getSystemTheme() : theme;
   document.documentElement.setAttribute('data-theme', resolved === 'light' ? 'garden' : 'dracula');
 }
