@@ -1,3 +1,4 @@
+import posthog from 'posthog-js';
 import {
   createEffect,
   createSignal,
@@ -80,11 +81,14 @@ export function LazyModal(props: LazyModalProps) {
       <div class={twMerge('modal-box border-base-300 border shadow-sm', props.class)}>
         <h3 class="mb-4 text-lg font-bold">{props.title}</h3>
         <ErrorBoundary
-          fallback={(err) => (
-            <div class="alert alert-error">
-              <span>Something went wrong: {err.toString()}</span>
-            </div>
-          )}
+          fallback={(err) => {
+            posthog.captureException(err);
+            return (
+              <div class="alert alert-error">
+                <span>Something went wrong: {err.toString()}</span>
+              </div>
+            );
+          }}
         >
           <Suspense
             fallback={

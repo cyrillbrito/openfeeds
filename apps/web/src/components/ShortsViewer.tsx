@@ -1,6 +1,7 @@
 import type { Article, Feed } from '@repo/domain/client';
 import { Link } from '@tanstack/solid-router';
 import { ArrowLeft, ChevronLeft, ChevronRight, EllipsisVertical, Shuffle, X } from 'lucide-solid';
+import posthog from 'posthog-js';
 import {
   createEffect,
   createSignal,
@@ -224,18 +225,21 @@ export function ShortsViewer(props: ShortsViewerProps) {
       </div>
       <div class="flex flex-1 flex-col overflow-hidden">
         <ErrorBoundary
-          fallback={(error, reset) => (
-            <div class="flex flex-col items-center justify-center bg-black text-center text-white">
-              <div class="mb-4">
-                <X size={96} class="text-red-500" />
+          fallback={(error, reset) => {
+            posthog.captureException(error);
+            return (
+              <div class="flex flex-col items-center justify-center bg-black text-center text-white">
+                <div class="mb-4">
+                  <X size={96} class="text-red-500" />
+                </div>
+                <h2 class="mb-2 text-2xl font-semibold text-white">Something went wrong</h2>
+                <p class="mb-6 text-white/60">{error.message}</p>
+                <button class="btn btn-primary" onClick={reset}>
+                  Try Again
+                </button>
               </div>
-              <h2 class="mb-2 text-2xl font-semibold text-white">Something went wrong</h2>
-              <p class="mb-6 text-white/60">{error.message}</p>
-              <button class="btn btn-primary" onClick={reset}>
-                Try Again
-              </button>
-            </div>
-          )}
+            );
+          }}
         >
           <Suspense
             fallback={

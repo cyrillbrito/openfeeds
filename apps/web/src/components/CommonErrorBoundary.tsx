@@ -1,3 +1,4 @@
+import posthog from 'posthog-js';
 import { createSignal, ErrorBoundary, Show, type JSXElement } from 'solid-js';
 
 export function CommonErrorBoundary(props: { children: JSXElement }) {
@@ -5,6 +6,7 @@ export function CommonErrorBoundary(props: { children: JSXElement }) {
     <ErrorBoundary
       fallback={(err, reset) => {
         console.error(err);
+        posthog.captureException(err);
         const [showDetails, setShowDetails] = createSignal(false);
         const errorMessage = err instanceof Error ? err.message : String(err);
         const errorStack =

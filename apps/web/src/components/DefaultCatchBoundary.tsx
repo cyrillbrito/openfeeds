@@ -1,5 +1,6 @@
 import { Link, useRouter, type ErrorComponentProps } from '@tanstack/solid-router';
 import { TriangleAlert } from 'lucide-solid';
+import posthog from 'posthog-js';
 import { createSignal, Show } from 'solid-js';
 
 export function DefaultCatchBoundary({ error }: ErrorComponentProps) {
@@ -7,6 +8,7 @@ export function DefaultCatchBoundary({ error }: ErrorComponentProps) {
   const [showDetails, setShowDetails] = createSignal(false);
 
   console.error('DefaultCatchBoundary Error:', error);
+  posthog.captureException(error);
 
   const errorMessage = error instanceof Error ? error.message : String(error);
   const errorStack =
