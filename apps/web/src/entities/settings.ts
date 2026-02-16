@@ -20,10 +20,14 @@ export const settingsCollection = createCollection(
     },
 
     onUpdate: async ({ transaction }) => {
-      const updates = transaction.mutations.map(
-        (mutation) => mutation.changes as Partial<Settings>,
-      );
-      await $$updateSettings({ data: updates });
+      try {
+        const updates = transaction.mutations.map(
+          (mutation) => mutation.changes as Partial<Settings>,
+        );
+        await $$updateSettings({ data: updates });
+      } catch (error) {
+        console.error('[settings.onUpdate] Sync error:', error);
+      }
     },
 
     // Settings cannot be inserted or deleted by clients

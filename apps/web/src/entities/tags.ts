@@ -2,6 +2,7 @@ import { snakeCamelMapper } from '@electric-sql/client';
 import { TagSchema } from '@repo/domain/client';
 import { electricCollectionOptions } from '@tanstack/electric-db-collection';
 import { createCollection, useLiveQuery } from '@tanstack/solid-db';
+import { handleCollectionError } from '~/lib/collection-errors';
 import { getShapeUrl, timestampParser } from '~/lib/electric-client';
 import { $$createTags, $$deleteTags, $$updateTags } from './tags.server';
 
@@ -19,24 +20,36 @@ export const tagsCollection = createCollection(
     },
 
     onInsert: async ({ transaction }) => {
-      const tags = transaction.mutations.map((mutation) => {
-        const tag = mutation.modified;
-        return { id: mutation.key as string, name: tag.name, color: tag.color };
-      });
-      await $$createTags({ data: tags });
+      try {
+        const tags = transaction.mutations.map((mutation) => {
+          const tag = mutation.modified;
+          return { id: mutation.key as string, name: tag.name, color: tag.color };
+        });
+        await $$createTags({ data: tags });
+      } catch (error) {
+        handleCollectionError(error, 'tags.onInsert');
+      }
     },
 
     onUpdate: async ({ transaction }) => {
-      const updates = transaction.mutations.map((mutation) => ({
-        id: mutation.key,
-        ...mutation.changes,
-      }));
-      await $$updateTags({ data: updates });
+      try {
+        const updates = transaction.mutations.map((mutation) => ({
+          id: mutation.key,
+          ...mutation.changes,
+        }));
+        await $$updateTags({ data: updates });
+      } catch (error) {
+        handleCollectionError(error, 'tags.onUpdate');
+      }
     },
 
     onDelete: async ({ transaction }) => {
-      const ids = transaction.mutations.map((mutation) => mutation.key as string);
-      await $$deleteTags({ data: ids });
+      try {
+        const ids = transaction.mutations.map((mutation) => mutation.key as string);
+        await $$deleteTags({ data: ids });
+      } catch (error) {
+        handleCollectionError(error, 'tags.onDelete');
+      }
     },
   }),
 );

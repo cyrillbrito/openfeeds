@@ -2,6 +2,7 @@ import { snakeCamelMapper } from '@electric-sql/client';
 import { FeedTagSchema } from '@repo/domain/client';
 import { electricCollectionOptions } from '@tanstack/electric-db-collection';
 import { createCollection, useLiveQuery } from '@tanstack/solid-db';
+import { handleCollectionError } from '~/lib/collection-errors';
 import { getShapeUrl } from '~/lib/electric-client';
 import { $$createFeedTags, $$deleteFeedTags } from './feed-tags.server';
 
@@ -18,16 +19,24 @@ export const feedTagsCollection = createCollection(
     },
 
     onInsert: async ({ transaction }) => {
-      const tags = transaction.mutations.map((mutation) => {
-        const tag = mutation.modified;
-        return { id: mutation.key as string, feedId: tag.feedId, tagId: tag.tagId };
-      });
-      await $$createFeedTags({ data: tags });
+      try {
+        const tags = transaction.mutations.map((mutation) => {
+          const tag = mutation.modified;
+          return { id: mutation.key as string, feedId: tag.feedId, tagId: tag.tagId };
+        });
+        await $$createFeedTags({ data: tags });
+      } catch (error) {
+        handleCollectionError(error, 'feedTags.onInsert');
+      }
     },
 
     onDelete: async ({ transaction }) => {
-      const ids = transaction.mutations.map((mutation) => mutation.key as string);
-      await $$deleteFeedTags({ data: ids });
+      try {
+        const ids = transaction.mutations.map((mutation) => mutation.key as string);
+        await $$deleteFeedTags({ data: ids });
+      } catch (error) {
+        handleCollectionError(error, 'feedTags.onDelete');
+      }
     },
   }),
 );
