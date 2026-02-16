@@ -132,9 +132,10 @@ function ImportResultView(props: { result: ImportResult }) {
 
   // Pick the hero state
   const heroIcon = () => {
-    if (noFeedsFound()) return <FileWarning size={24} class="text-warning" />;
-    if (allFailed()) return <X size={24} class="text-error" />;
-    return <Check size={24} class="text-success" />;
+    if (noFeedsFound())
+      return <FileWarning size={32} class="text-base-content/70" strokeWidth={1.5} />;
+    if (allFailed()) return <X size={32} class="text-error-content" strokeWidth={2.5} />;
+    return <Check size={32} class="text-success" strokeWidth={2.5} />;
   };
 
   const heroLabel = () => {
@@ -151,15 +152,15 @@ function ImportResultView(props: { result: ImportResult }) {
   };
 
   const heroBgClass = () => {
-    if (noFeedsFound()) return 'bg-warning/10';
-    if (allFailed()) return 'bg-error/10';
-    return 'bg-success/10';
+    if (noFeedsFound()) return 'bg-base-300';
+    if (allFailed()) return 'bg-error';
+    return 'bg-success/15';
   };
 
   return (
-    <div class="flex flex-col items-center py-6">
+    <div class="flex flex-col items-center py-4">
       {/* Hero icon + label */}
-      <div class={`flex size-12 items-center justify-center rounded-full ${heroBgClass()}`}>
+      <div class={`flex size-16 items-center justify-center rounded-full ${heroBgClass()}`}>
         {heroIcon()}
       </div>
       <p class="mt-3 text-lg font-medium">{heroLabel()}</p>
