@@ -1,7 +1,7 @@
 import { eq, useLiveQuery } from '@tanstack/solid-db';
 import { createFileRoute, Link } from '@tanstack/solid-router';
 import { Video } from 'lucide-solid';
-import { createMemo, createSignal, onMount, Show, Suspense } from 'solid-js';
+import { createSignal, onMount, Show, Suspense } from 'solid-js';
 import { ArticleList, ARTICLES_PER_PAGE } from '~/components/ArticleList';
 import { ArticleListToolbar } from '~/components/ArticleListToolbar';
 import { CommonErrorBoundary } from '~/components/CommonErrorBoundary';
@@ -16,6 +16,7 @@ import { useFeeds } from '~/entities/feeds';
 import { useTags } from '~/entities/tags';
 import { useSessionRead } from '~/providers/session-read';
 import { useToast } from '~/providers/toast';
+import { readStatusFilter } from '~/utils/article-queries';
 import { validateReadStatusSearch } from '~/utils/routing';
 
 export const Route = createFileRoute('/_frame/inbox/')({
@@ -34,18 +35,15 @@ function Inbox() {
   // Pagination state - lifted from ArticleList
   const [visibleCount, setVisibleCount] = createSignal(ARTICLES_PER_PAGE);
 
-  // Only filter by isRead on server when showing 'read' status
-  // For 'unread', we handle filtering client-side to support session-read tracking
-  const isRead = () => (readStatus() === 'read' ? true : null);
-
   // Query articles with orderBy and limit for pagination
   const articlesQuery = useLiveQuery((q) => {
     let query = q
       .from({ article: articlesCollection })
       .where(({ article }) => eq(article.isArchived, false));
 
-    if (isRead() !== null) {
-      query = query.where(({ article }) => eq(article.isRead, isRead()));
+    const filter = readStatusFilter(readStatus(), sessionReadIds());
+    if (filter) {
+      query = query.where(({ article }) => filter(article));
     }
 
     const direction = sortOrder() === 'oldest' ? 'asc' : 'desc';
@@ -58,8 +56,9 @@ function Inbox() {
       .from({ article: articlesCollection })
       .where(({ article }) => eq(article.isArchived, false));
 
-    if (isRead() !== null) {
-      query = query.where(({ article }) => eq(article.isRead, isRead()));
+    const filter = readStatusFilter(readStatus(), sessionReadIds());
+    if (filter) {
+      query = query.where(({ article }) => filter(article));
     }
 
     return query;
@@ -90,21 +89,10 @@ function Inbox() {
     }
   };
 
-  // Filter for session-read articles (client-side)
-  const filteredArticles = createMemo(() => {
-    const articles = articlesQuery() || [];
-    if (readStatus() !== 'unread') return articles;
+  // Articles are already filtered by the live query (including session-read handling)
+  const filteredArticles = () => articlesQuery() || [];
 
-    return articles.filter((a) => !a.isRead || sessionReadIds().has(a.id));
-  });
-
-  const totalCount = () => {
-    const allArticles = totalCountQuery() || [];
-    if (readStatus() !== 'unread') return allArticles.length;
-
-    // For unread, apply same filter to get accurate count
-    return allArticles.filter((a) => !a.isRead || sessionReadIds().has(a.id)).length;
-  };
+  const totalCount = () => (totalCountQuery() || []).length;
 
   const handleLoadMore = () => {
     setVisibleCount((prev) => prev + ARTICLES_PER_PAGE);

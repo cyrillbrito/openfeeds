@@ -6,6 +6,7 @@ import { ShortsViewer } from '~/components/ShortsViewer';
 import { articlesCollection } from '~/entities/articles';
 import { useFeeds } from '~/entities/feeds';
 import { useSessionRead } from '~/providers/session-read';
+import { readStatusFilter } from '~/utils/article-queries';
 import { validateReadStatusSearch } from '~/utils/routing';
 
 export const Route = createFileRoute('/_frame/feeds/$feedId/shorts/')({
@@ -22,17 +23,15 @@ function FocusedShorts() {
 
   onMount(() => setViewKey(`feed-shorts:${feedId()}`));
 
-  // Only filter by isRead on server when showing 'read' status
-  const isRead = () => (readStatus() === 'read' ? true : null);
-
   const shortsQuery = useLiveQuery((q) => {
     let query = q
       .from({ article: articlesCollection })
       .where(({ article }) => eq(article.feedId, feedId()))
       .where(({ article }) => ilike(article.url, '%youtube.com/shorts%'));
 
-    if (isRead() !== null) {
-      query = query.where(({ article }) => eq(article.isRead, isRead()));
+    const filter = readStatusFilter(readStatus(), sessionReadIds());
+    if (filter) {
+      query = query.where(({ article }) => filter(article));
     }
 
     return query.orderBy(({ article }) => article.pubDate, 'desc');
@@ -40,13 +39,7 @@ function FocusedShorts() {
 
   const feedsQuery = useFeeds();
 
-  const shorts = () => {
-    const allShorts = shortsQuery() || [];
-    if (readStatus() !== 'unread') return allShorts;
-
-    // Show unread + session-read shorts
-    return allShorts.filter((a) => !a.isRead || sessionReadIds().has(a.id));
-  };
+  const shorts = () => shortsQuery() || [];
 
   const markAsRead = (articleId: string) => {
     addSessionRead(articleId);
