@@ -270,7 +270,18 @@ const USAGE_LABELS: Record<keyof UserUsage, string> = {
   feeds: 'Feed subscriptions',
   filterRules: 'Filter rules',
   savedArticles: 'Saved articles',
+  extractions: 'Content extractions',
 };
+
+function flattenUsage(usage: UserUsage) {
+  return [
+    { label: USAGE_LABELS.feeds, ...usage.feeds },
+    { label: USAGE_LABELS.filterRules, ...usage.filterRules },
+    { label: USAGE_LABELS.savedArticles, ...usage.savedArticles },
+    { label: 'Daily extractions', ...usage.extractions.daily },
+    { label: 'Monthly extractions', ...usage.extractions.monthly },
+  ];
+}
 
 function UsageLimitsCard() {
   const [usage] = createResource(() => $$getUserUsage());
@@ -294,22 +305,21 @@ function UsageLimitsCard() {
       >
         <Show when={usage()}>
           <div class="space-y-4">
-            <For each={Object.keys(usage()!) as (keyof UserUsage)[]}>
-              {(key) => {
-                const item = () => usage()![key];
-                const pct = () => Math.round((item().used / item().limit) * 100);
+            <For each={flattenUsage(usage()!)}>
+              {(item) => {
+                const pct = () => Math.round((item.used / item.limit) * 100);
                 return (
                   <div>
                     <div class="mb-1 flex justify-between text-sm">
-                      <span>{USAGE_LABELS[key]}</span>
+                      <span>{item.label}</span>
                       <span class="text-base-content-gray">
-                        {item().used} / {item().limit}
+                        {item.used} / {item.limit}
                       </span>
                     </div>
                     <progress
                       class={`progress w-full ${pct() >= 90 ? 'progress-error' : pct() >= 70 ? 'progress-warning' : 'progress-primary'}`}
-                      value={item().used}
-                      max={item().limit}
+                      value={item.used}
+                      max={item.limit}
                     />
                   </div>
                 );
