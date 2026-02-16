@@ -43,7 +43,7 @@ interface TagFormProps {
   onClose: () => void;
 }
 
-export function TagForm(props: TagFormProps) {
+function TagForm(props: TagFormProps) {
   const isEditMode = () => !!props.editTag;
 
   const [tagName, setTagName] = createSignal('');

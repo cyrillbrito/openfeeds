@@ -64,11 +64,3 @@ export function getTagDotColor(color: TagColor | null): string {
   }
   return colorMap[color];
 }
-
-/** Get text color classes for tag icons (sidebar, etc) */
-export function getTagIconColor(color: TagColor | null): string {
-  if (!color) {
-    return 'text-slate-400 dark:text-slate-500';
-  }
-  return colorMap[color].replace(/bg-/g, 'text-');
-}

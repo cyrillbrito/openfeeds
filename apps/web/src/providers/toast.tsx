@@ -1,11 +1,11 @@
 import { createContext, createSignal, For, Show, useContext, type ParentComponent } from 'solid-js';
 
-export interface ToastAction {
+interface ToastAction {
   label: string;
   onClick: () => void;
 }
 
-export interface Toast {
+interface Toast {
   id: string;
   message: string;
   action?: ToastAction;

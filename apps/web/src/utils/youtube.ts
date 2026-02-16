@@ -9,6 +9,26 @@ export function isYouTubeUrl(url: string): boolean {
   }
 }
 
+export function getYouTubeEmbedUrl(videoId: string, isShorts = false): string {
+  const baseUrl = `https://www.youtube.com/embed/${videoId}`;
+  if (isShorts) {
+    return `${baseUrl}?autoplay=1`;
+  }
+  return baseUrl;
+}
+
+export function isYouTubeShorts(url: string): boolean {
+  if (!url) return false;
+
+  try {
+    const urlObj = new URL(url);
+
+    return urlObj.hostname.includes('youtube.com') && urlObj.pathname.includes('/shorts/');
+  } catch {
+    return false;
+  }
+}
+
 export function extractYouTubeVideoId(url: string): string | null {
   if (!url) return null;
 
@@ -42,36 +62,5 @@ export function extractYouTubeVideoId(url: string): string | null {
     return null;
   } catch {
     return null;
-  }
-}
-
-export function getYouTubeEmbedUrl(videoId: string, isShorts = false): string {
-  const baseUrl = `https://www.youtube.com/embed/${videoId}`;
-  if (isShorts) {
-    return `${baseUrl}?autoplay=1`;
-  }
-  return baseUrl;
-}
-
-export function isYouTubeShorts(url: string): boolean {
-  if (!url) return false;
-
-  try {
-    const urlObj = new URL(url);
-
-    return urlObj.hostname.includes('youtube.com') && urlObj.pathname.includes('/shorts/');
-  } catch {
-    return false;
-  }
-}
-
-export function isYouTubeFeed(feedUrl: string): boolean {
-  if (!feedUrl) return false;
-
-  try {
-    const urlObj = new URL(feedUrl);
-    return urlObj.hostname.includes('youtube.com') && feedUrl.includes('feeds/videos.xml');
-  } catch {
-    return false;
   }
 }
