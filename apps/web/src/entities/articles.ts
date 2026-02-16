@@ -2,7 +2,7 @@ import { snakeCamelMapper } from '@electric-sql/client';
 import { ElectricArticleSchema } from '@repo/domain/client';
 import { electricCollectionOptions } from '@tanstack/electric-db-collection';
 import { createCollection } from '@tanstack/solid-db';
-import { handleCollectionError } from '~/lib/collection-errors';
+import { handleCollectionError, handleShapeError } from '~/lib/collection-errors';
 import { getShapeUrl, timestampParser } from '~/lib/electric-client';
 import { $$createArticle, $$updateArticles } from './articles.server';
 
@@ -17,9 +17,7 @@ export const articlesCollection = createCollection(
       url: getShapeUrl('articles'),
       parser: timestampParser,
       columnMapper: snakeCamelMapper(),
-      onError: (error) => {
-        console.error('Electric articles sync error:', error);
-      },
+      onError: (error) => handleShapeError(error, 'articles.shape'),
     },
 
     onInsert: async ({ transaction }) => {

@@ -2,7 +2,7 @@ import { snakeCamelMapper } from '@electric-sql/client';
 import { FeedSchema } from '@repo/domain/client';
 import { electricCollectionOptions } from '@tanstack/electric-db-collection';
 import { createCollection, useLiveQuery } from '@tanstack/solid-db';
-import { handleCollectionError } from '~/lib/collection-errors';
+import { handleCollectionError, handleShapeError } from '~/lib/collection-errors';
 import { getShapeUrl, timestampParser } from '~/lib/electric-client';
 import { $$createFeeds, $$deleteFeeds, $$updateFeeds } from './feeds.server';
 
@@ -17,10 +17,14 @@ export const feedsCollection = createCollection(
       url: getShapeUrl('feeds'),
       parser: timestampParser,
       columnMapper: snakeCamelMapper(),
+      onError: (error) => handleShapeError(error, 'feeds.shape'),
     },
 
     onInsert: async ({ transaction }) => {
       try {
+        // TODO: REMOVE — fake error to test rollback + toast
+        throw new Error('[TEST] Fake insert error — feed should rollback from UI');
+
         const feeds = transaction.mutations.map((mutation) => {
           const feed = mutation.modified;
           return { id: mutation.key as string, url: feed.url };

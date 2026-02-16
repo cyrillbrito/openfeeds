@@ -2,7 +2,7 @@ import { snakeCamelMapper } from '@electric-sql/client';
 import { filterRuleSchema, type CreateFilterRuleApi, type FilterRule } from '@repo/domain/client';
 import { electricCollectionOptions } from '@tanstack/electric-db-collection';
 import { createCollection, eq, useLiveQuery } from '@tanstack/solid-db';
-import { handleCollectionError } from '~/lib/collection-errors';
+import { handleCollectionError, handleShapeError } from '~/lib/collection-errors';
 import { getShapeUrl, timestampParser } from '~/lib/electric-client';
 import {
   $$createFilterRules,
@@ -21,6 +21,7 @@ export const filterRulesCollection = createCollection(
       url: getShapeUrl('filter-rules'),
       parser: timestampParser,
       columnMapper: snakeCamelMapper(),
+      onError: (error) => handleShapeError(error, 'filterRules.shape'),
     },
 
     onInsert: async ({ transaction }) => {

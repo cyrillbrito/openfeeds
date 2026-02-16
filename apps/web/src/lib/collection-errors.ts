@@ -1,26 +1,22 @@
-type ErrorHandler = (message: string) => void;
-
-let _errorHandler: ErrorHandler | null = null;
+import { toastService } from '~/lib/toast-service';
 
 /**
- * Register a global handler for collection sync errors.
- * Called once from the ToastProvider to bridge the gap between
- * collection callbacks (no context access) and the toast UI.
+ * Handle an error from a collection mutation handler (onInsert, onUpdate, onDelete).
+ * Shows an error toast then re-throws so TanStack DB rolls back optimistic state.
  */
-export function registerCollectionErrorHandler(handler: ErrorHandler): void {
-  _errorHandler = handler;
+export function handleCollectionError(error: unknown, context: string): never {
+  console.log('[handleCollectionError]', context, error); // TODO: REMOVE
+  const message = error instanceof Error ? error.message : 'Something went wrong';
+  toastService.error(message);
+  throw error;
 }
 
 /**
- * Handle an error from a collection callback (onInsert, onUpdate, onDelete).
- * Shows a user-friendly toast with the error message.
+ * Handle an Electric shape stream error (sync/network layer).
+ * Shows an error toast but does NOT throw — stream errors are informational.
  */
-export function handleCollectionError(error: unknown, context: string): void {
-  const message = error instanceof Error ? error.message : 'Something went wrong';
-
-  if (_errorHandler) {
-    _errorHandler(message);
-  } else {
-    console.error(`[${context}] Collection sync error:`, message);
-  }
+export function handleShapeError(error: unknown, context: string): void {
+  console.log('[handleShapeError]', context, error); // TODO: REMOVE
+  const message = error instanceof Error ? error.message : 'Sync connection error';
+  toastService.error(message);
 }

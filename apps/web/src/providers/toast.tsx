@@ -7,7 +7,7 @@ import {
   useContext,
   type ParentComponent,
 } from 'solid-js';
-import { registerCollectionErrorHandler } from '~/lib/collection-errors';
+import { toastService } from '~/lib/toast-service';
 
 export type ToastVariant = 'success' | 'error' | 'warning' | 'info';
 
@@ -78,11 +78,9 @@ export const ToastProvider: ParentComponent = (props) => {
     removeToast,
   };
 
-  // Bridge collection errors (which have no context access) to the toast system
+  // Wire up the module-scope toast service so collection handlers can show toasts
   onMount(() => {
-    registerCollectionErrorHandler((message) => {
-      showToast(message, { variant: 'error', duration: 8000 });
-    });
+    toastService.showToast = showToast;
   });
 
   return (

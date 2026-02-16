@@ -2,7 +2,7 @@ import { snakeCamelMapper } from '@electric-sql/client';
 import { TagSchema } from '@repo/domain/client';
 import { electricCollectionOptions } from '@tanstack/electric-db-collection';
 import { createCollection, useLiveQuery } from '@tanstack/solid-db';
-import { handleCollectionError } from '~/lib/collection-errors';
+import { handleCollectionError, handleShapeError } from '~/lib/collection-errors';
 import { getShapeUrl, timestampParser } from '~/lib/electric-client';
 import { $$createTags, $$deleteTags, $$updateTags } from './tags.server';
 
@@ -17,6 +17,7 @@ export const tagsCollection = createCollection(
       url: getShapeUrl('tags'),
       parser: timestampParser,
       columnMapper: snakeCamelMapper(),
+      onError: (error) => handleShapeError(error, 'tags.shape'),
     },
 
     onInsert: async ({ transaction }) => {
@@ -33,6 +34,9 @@ export const tagsCollection = createCollection(
 
     onUpdate: async ({ transaction }) => {
       try {
+        // TODO: REMOVE — fake error to test rollback + toast
+        throw new Error('[TEST] Fake update error — tag edit should rollback');
+
         const updates = transaction.mutations.map((mutation) => ({
           id: mutation.key,
           ...mutation.changes,

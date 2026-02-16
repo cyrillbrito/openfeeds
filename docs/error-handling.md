@@ -93,6 +93,59 @@ Server function throw      →  try-catch in handler           →  setError(err
 Uncaught server fn throw   →  DefaultCatchBoundary           →  Full-page error
 ```
 
+## Web App: Collection Errors (TanStack DB + Electric SQL)
+
+Collections are module-scope singletons created with `createCollection()` in `src/entities/*.ts`. Two error categories:
+
+### Mutation Errors (optimistic rollback)
+
+TanStack DB rolls back optimistic state **only if the mutation handler throws**. Every `onInsert`/`onUpdate`/`onDelete` handler catches errors through `handleCollectionError()`, which shows a toast then **re-throws** so the transaction transitions to `failed` and optimistic state is reverted.
+
+```typescript
+onInsert: async (tx, item) => {
+  try {
+    await $$createFeed({ data: { url: item.url } });
+  } catch (error) {
+    handleCollectionError(error, 'feeds');
+    // handleCollectionError always throws (return type: never)
+  }
+},
+```
+
+**Critical rule:** Never swallow errors in mutation handlers. If the handler doesn't throw, TanStack DB considers the mutation successful and the optimistic state becomes permanent — even if the server rejected it.
+
+### Shape Stream Errors (Electric SQL sync)
+
+Electric shape streams can fail due to network issues, auth expiry, etc. Every collection passes `shapeOptions.onError` using `handleShapeError()`, which shows a toast but does **not** throw (stream errors are informational).
+
+```typescript
+electricCollectionOptions({
+  // ...
+  shapeOptions: {
+    onError: (error) => handleShapeError(error, 'feeds'),
+  },
+}),
+```
+
+### Toast Service (`src/lib/toast-service.ts`)
+
+Collections exist at module scope, outside the SolidJS component tree, so they can't use `useContext()`. The toast service bridges this gap:
+
+1. `toastService` is a module-scope singleton with a `showToast` ref (initially `null`)
+2. `ToastProvider` sets `toastService.showToast = showToast` on mount
+3. `handleCollectionError` / `handleShapeError` call `toastService.error()`, which delegates to `showToast` if available, else falls back to `console.error`
+
+This is safe because mutation handlers only fire from user interactions (post-mount), never during SSR.
+
+### Key files
+
+| File                           | Role                                                                  |
+| ------------------------------ | --------------------------------------------------------------------- |
+| `src/lib/toast-service.ts`     | Module-scope toast singleton                                          |
+| `src/lib/collection-errors.ts` | `handleCollectionError` (throws) + `handleShapeError` (doesn't throw) |
+| `src/providers/toast.tsx`      | Wires `toastService.showToast` on mount                               |
+| `src/entities/*.ts`            | All collections use both handlers                                     |
+
 ## Web App: API Routes
 
 API routes run server-side where `instanceof` works. Map domain errors to HTTP status codes:
