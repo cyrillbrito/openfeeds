@@ -165,101 +165,98 @@ export function ArticleAudioPlayer(props: ArticleAudioPlayerProps) {
     return state === 'ready' || state === 'playing' || state === 'paused';
   };
 
-  // Don't render if TTS is not configured on the server
-  if (ttsAvailable.loading || !isTtsAvailable()) {
-    return null;
-  }
-
   return (
-    <div
-      class="border-base-300 bg-base-200 mb-6 rounded-lg border p-4 transition-all"
-      classList={{
-        'sticky top-18 z-10 shadow-md': isSticky(),
-      }}
-    >
-      {/* Hidden audio element */}
-      <Show when={audioUrl()}>
-        <audio
-          ref={(el) => (audioRef = el)}
-          src={audioUrl()!}
-          onEnded={handleEnded}
-          onLoadedMetadata={handleLoadedMetadata}
-          preload="metadata"
-        />
-      </Show>
-
-      <div class="flex items-center gap-4">
-        {/* Play/Generate button */}
-        <Show when={audio.audioState() === 'idle'}>
-          <button
-            class="btn btn-primary btn-sm gap-2"
-            onClick={generateAudio}
-            title="Generate audio for this article"
-          >
-            <Headphones size={18} />
-            <span>Listen</span>
-          </button>
+    <Show when={!ttsAvailable.loading && isTtsAvailable()}>
+      <div
+        class="border-base-300 bg-base-200 mb-6 rounded-lg border p-4 transition-all"
+        classList={{
+          'sticky top-18 z-10 shadow-md': isSticky(),
+        }}
+      >
+        {/* Hidden audio element */}
+        <Show when={audioUrl()}>
+          <audio
+            ref={(el) => (audioRef = el)}
+            src={audioUrl()!}
+            onEnded={handleEnded}
+            onLoadedMetadata={handleLoadedMetadata}
+            preload="metadata"
+          />
         </Show>
 
-        <Show when={audio.audioState() === 'generating'}>
-          <button class="btn btn-primary btn-sm gap-2" disabled>
-            <Loader2 size={18} class="animate-spin" />
-            <span>Generating...</span>
-          </button>
-        </Show>
-
-        <Show when={audio.audioState() === 'loading'}>
-          <button class="btn btn-primary btn-sm gap-2" disabled>
-            <Loader2 size={18} class="animate-spin" />
-            <span>Loading...</span>
-          </button>
-        </Show>
-
-        <Show
-          when={
-            audio.audioState() === 'ready' ||
-            audio.audioState() === 'playing' ||
-            audio.audioState() === 'paused'
-          }
-        >
-          <button class="btn btn-primary btn-circle btn-sm" onClick={togglePlayPause}>
-            <Show when={audio.audioState() === 'playing'} fallback={<Play size={18} />}>
-              <Pause size={18} />
-            </Show>
-          </button>
-
-          {/* Progress bar */}
-          <div class="flex flex-1 items-center gap-2">
-            <span class="text-base-content/60 w-10 text-xs tabular-nums">
-              {formatTime(currentTime())}
-            </span>
-            <input
-              type="range"
-              min="0"
-              max={duration()}
-              value={currentTime()}
-              class="range range-primary range-xs flex-1"
-              onInput={(e) => {
-                if (audioRef) {
-                  audioRef.currentTime = Number(e.currentTarget.value);
-                }
-              }}
-            />
-            <span class="text-base-content/60 w-10 text-xs tabular-nums">
-              {formatTime(duration())}
-            </span>
-          </div>
-        </Show>
-
-        <Show when={audio.audioState() === 'error'}>
-          <div class="flex items-center gap-2">
-            <span class="text-error text-sm">{error()}</span>
-            <button class="btn btn-ghost btn-sm" onClick={generateAudio}>
-              Retry
+        <div class="flex items-center gap-4">
+          {/* Play/Generate button */}
+          <Show when={audio.audioState() === 'idle'}>
+            <button
+              class="btn btn-primary btn-sm gap-2"
+              onClick={generateAudio}
+              title="Generate audio for this article"
+            >
+              <Headphones size={18} />
+              <span>Listen</span>
             </button>
-          </div>
-        </Show>
+          </Show>
+
+          <Show when={audio.audioState() === 'generating'}>
+            <button class="btn btn-primary btn-sm gap-2" disabled>
+              <Loader2 size={18} class="animate-spin" />
+              <span>Generating...</span>
+            </button>
+          </Show>
+
+          <Show when={audio.audioState() === 'loading'}>
+            <button class="btn btn-primary btn-sm gap-2" disabled>
+              <Loader2 size={18} class="animate-spin" />
+              <span>Loading...</span>
+            </button>
+          </Show>
+
+          <Show
+            when={
+              audio.audioState() === 'ready' ||
+              audio.audioState() === 'playing' ||
+              audio.audioState() === 'paused'
+            }
+          >
+            <button class="btn btn-primary btn-circle btn-sm" onClick={togglePlayPause}>
+              <Show when={audio.audioState() === 'playing'} fallback={<Play size={18} />}>
+                <Pause size={18} />
+              </Show>
+            </button>
+
+            {/* Progress bar */}
+            <div class="flex flex-1 items-center gap-2">
+              <span class="text-base-content/60 w-10 text-xs tabular-nums">
+                {formatTime(currentTime())}
+              </span>
+              <input
+                type="range"
+                min="0"
+                max={duration()}
+                value={currentTime()}
+                class="range range-primary range-xs flex-1"
+                onInput={(e) => {
+                  if (audioRef) {
+                    audioRef.currentTime = Number(e.currentTarget.value);
+                  }
+                }}
+              />
+              <span class="text-base-content/60 w-10 text-xs tabular-nums">
+                {formatTime(duration())}
+              </span>
+            </div>
+          </Show>
+
+          <Show when={audio.audioState() === 'error'}>
+            <div class="flex items-center gap-2">
+              <span class="text-error text-sm">{error()}</span>
+              <button class="btn btn-ghost btn-sm" onClick={generateAudio}>
+                Retry
+              </button>
+            </div>
+          </Show>
+        </div>
       </div>
-    </div>
+    </Show>
   );
 }
