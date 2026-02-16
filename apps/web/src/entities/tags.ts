@@ -2,7 +2,7 @@ import { snakeCamelMapper } from '@electric-sql/client';
 import { TagSchema } from '@repo/domain/client';
 import { electricCollectionOptions } from '@tanstack/electric-db-collection';
 import { createCollection, useLiveQuery } from '@tanstack/solid-db';
-import { collectionErrorHandler, handleShapeError } from '~/lib/collection-errors';
+import { collectionErrorHandler, shapeErrorHandler } from '~/lib/collection-errors';
 import { getShapeUrl, timestampParser } from '~/lib/electric-client';
 import { $$createTags, $$deleteTags, $$updateTags } from './tags.server';
 
@@ -17,7 +17,7 @@ export const tagsCollection = createCollection(
       url: getShapeUrl('tags'),
       parser: timestampParser,
       columnMapper: snakeCamelMapper(),
-      onError: (error) => handleShapeError(error, 'tags.shape'),
+      onError: shapeErrorHandler('tags.shape'),
     },
 
     onInsert: collectionErrorHandler('tags.onInsert', async ({ transaction }) => {

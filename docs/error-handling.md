@@ -115,13 +115,13 @@ onInsert: collectionErrorHandler('feeds.onInsert', async ({ transaction }) => {
 
 ### Shape Stream Errors (Electric SQL sync)
 
-Electric shape streams can fail due to network issues, auth expiry, etc. Every collection passes `shapeOptions.onError` using `handleShapeError()`, which shows a toast but does **not** throw (stream errors are informational).
+Electric shape streams can fail due to network issues, auth expiry, etc. Every collection passes `shapeOptions.onError` using `shapeErrorHandler()`, which returns a handler that shows a toast but does **not** throw (stream errors are informational).
 
 ```typescript
 electricCollectionOptions({
   // ...
   shapeOptions: {
-    onError: (error) => handleShapeError(error, 'feeds'),
+    onError: shapeErrorHandler('feeds.shape'),
   },
 }),
 ```
@@ -132,18 +132,18 @@ Collections exist at module scope, outside the SolidJS component tree, so they c
 
 1. `toastService` is a module-scope singleton with a `showToast` ref (initially `null`)
 2. `ToastProvider` sets `toastService.showToast = showToast` on mount
-3. `collectionErrorHandler` / `handleShapeError` call `toastService.error()`, which delegates to `showToast` if available, else falls back to `console.error`
+3. `collectionErrorHandler` / `shapeErrorHandler` call `toastService.error()`, which delegates to `showToast` if available, else falls back to `console.error`
 
 This is safe because mutation handlers only fire from user interactions (post-mount), never during SSR.
 
 ### Key files
 
-| File                           | Role                                                                              |
-| ------------------------------ | --------------------------------------------------------------------------------- |
-| `src/lib/toast-service.ts`     | Module-scope toast singleton                                                      |
-| `src/lib/collection-errors.ts` | `collectionErrorHandler` (wraps + re-throws) + `handleShapeError` (doesn't throw) |
-| `src/providers/toast.tsx`      | Wires `toastService.showToast` on mount                                           |
-| `src/entities/*.ts`            | All collections use both handlers                                                 |
+| File                           | Role                                                                               |
+| ------------------------------ | ---------------------------------------------------------------------------------- |
+| `src/lib/toast-service.ts`     | Module-scope toast singleton                                                       |
+| `src/lib/collection-errors.ts` | `collectionErrorHandler` (wraps + re-throws) + `shapeErrorHandler` (doesn't throw) |
+| `src/providers/toast.tsx`      | Wires `toastService.showToast` on mount                                            |
+| `src/entities/*.ts`            | All collections use both handlers                                                  |
 
 ## Web App: API Routes
 

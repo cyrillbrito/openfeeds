@@ -2,7 +2,7 @@ import { snakeCamelMapper } from '@electric-sql/client';
 import { FeedSchema } from '@repo/domain/client';
 import { electricCollectionOptions } from '@tanstack/electric-db-collection';
 import { createCollection, useLiveQuery } from '@tanstack/solid-db';
-import { collectionErrorHandler, handleShapeError } from '~/lib/collection-errors';
+import { collectionErrorHandler, shapeErrorHandler } from '~/lib/collection-errors';
 import { getShapeUrl, timestampParser } from '~/lib/electric-client';
 import { $$createFeeds, $$deleteFeeds, $$updateFeeds } from './feeds.server';
 
@@ -17,7 +17,7 @@ export const feedsCollection = createCollection(
       url: getShapeUrl('feeds'),
       parser: timestampParser,
       columnMapper: snakeCamelMapper(),
-      onError: (error) => handleShapeError(error, 'feeds.shape'),
+      onError: shapeErrorHandler('feeds.shape'),
     },
 
     onInsert: collectionErrorHandler('feeds.onInsert', async ({ transaction }) => {
