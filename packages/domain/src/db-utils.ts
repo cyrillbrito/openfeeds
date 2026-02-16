@@ -29,11 +29,11 @@ export function articleDbToApi(dbArticle: DbArticle): Article {
     description: dbArticle.description,
     content: dbArticle.content,
     author: dbArticle.author,
-    pubDate: dbArticle.pubDate ?? null,
+    pubDate: dbArticle.pubDate?.toISOString() ?? null,
     isRead: dbArticle.isRead,
     isArchived: dbArticle.isArchived,
     hasCleanContent: !!dbArticle.cleanContent,
-    createdAt: dbArticle.createdAt,
+    createdAt: dbArticle.createdAt.toISOString(),
   };
 }
 
@@ -49,6 +49,7 @@ export function feedDbToApi(dbFeed: DbFeed): Feed {
     icon: dbFeed.icon,
     description: dbFeed.description,
     createdAt: dbFeed.createdAt.toISOString(),
+    updatedAt: dbFeed.updatedAt.toISOString(),
     lastSyncAt: dbFeed.lastSyncAt?.toISOString() ?? null,
     syncStatus: dbFeed.syncStatus as Feed['syncStatus'],
     syncError: dbFeed.syncError,
@@ -65,6 +66,7 @@ export function tagDbToApi(dbTag: DbTag): Tag {
     name: dbTag.name,
     color: dbTag.color as TagColor,
     createdAt: dbTag.createdAt.toISOString(),
+    updatedAt: dbTag.updatedAt.toISOString(),
   };
 }
 

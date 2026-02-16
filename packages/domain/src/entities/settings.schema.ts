@@ -7,6 +7,7 @@ export const SettingsSchema = z.object({
   userId: z.string(),
   theme: z.enum(['light', 'dark', 'system']),
   autoArchiveDays: z.number().min(1).max(365).nullable(),
+  updatedAt: z.iso.datetime(),
 });
 export type Settings = z.infer<typeof SettingsSchema>;
 

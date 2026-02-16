@@ -229,7 +229,7 @@ export async function generateArticleAudio(
     articleId,
     duration,
     wordTimings,
-    createdAt: new Date(),
+    createdAt: new Date().toISOString(),
   };
 
   // Ensure audio directory exists
