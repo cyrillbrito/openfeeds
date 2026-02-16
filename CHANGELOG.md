@@ -1,5 +1,20 @@
 # Changelog
 
+## [0.3.0](https://github.com/cyrillbrito/openfeeds/compare/v0.2.0...v0.3.0) (2026-02-16)
+
+
+### Features
+
+* add PostHog error tracking to error boundaries ([#82](https://github.com/cyrillbrito/openfeeds/issues/82)) ([fd29344](https://github.com/cyrillbrito/openfeeds/commit/fd29344bfad9652a60241eff535b041bcaffe6a3))
+* collection error handling ([#79](https://github.com/cyrillbrito/openfeeds/issues/79)) ([72f02ce](https://github.com/cyrillbrito/openfeeds/commit/72f02ce28919eb2ddd4d3c987096fc858aa1846a))
+* revamp OPML import result UI with detailed feedback ([#75](https://github.com/cyrillbrito/openfeeds/issues/75)) ([0361ca7](https://github.com/cyrillbrito/openfeeds/commit/0361ca7af7217de00cf45ca81b2915083365ab18))
+
+
+### Bug Fixes
+
+* replace imperative early returns with reactive SolidJS guards ([#74](https://github.com/cyrillbrito/openfeeds/issues/74)) ([5b98241](https://github.com/cyrillbrito/openfeeds/commit/5b98241fc3eae999e5937a421541a684c2cba6d0))
+* standardize timestamp handling across frontend and backend ([#81](https://github.com/cyrillbrito/openfeeds/issues/81)) ([e6cf3d3](https://github.com/cyrillbrito/openfeeds/commit/e6cf3d31816be2bb6df7ce4e407aa56926c69b8e))
+
 ## [0.2.0](https://github.com/cyrillbrito/openfeeds/compare/v0.1.0...v0.2.0) (2026-02-16)
 
 
