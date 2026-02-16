@@ -2,6 +2,7 @@ import { snakeCamelMapper } from '@electric-sql/client';
 import { ArticleTagSchema } from '@repo/domain/client';
 import { electricCollectionOptions } from '@tanstack/electric-db-collection';
 import { createCollection, useLiveQuery } from '@tanstack/solid-db';
+import { collectionErrorHandler, shapeErrorHandler } from '~/lib/collection-errors';
 import { getShapeUrl } from '~/lib/electric-client';
 import { $$createArticleTags, $$deleteArticleTags } from './article-tags.server';
 
@@ -15,20 +16,21 @@ export const articleTagsCollection = createCollection(
     shapeOptions: {
       url: getShapeUrl('article-tags'),
       columnMapper: snakeCamelMapper(),
+      onError: shapeErrorHandler('articleTags.shape'),
     },
 
-    onInsert: async ({ transaction }) => {
+    onInsert: collectionErrorHandler('articleTags.onInsert', async ({ transaction }) => {
       const tags = transaction.mutations.map((mutation) => {
         const tag = mutation.modified;
         return { id: mutation.key as string, articleId: tag.articleId, tagId: tag.tagId };
       });
       await $$createArticleTags({ data: tags });
-    },
+    }),
 
-    onDelete: async ({ transaction }) => {
+    onDelete: collectionErrorHandler('articleTags.onDelete', async ({ transaction }) => {
       const ids = transaction.mutations.map((mutation) => mutation.key as string);
       await $$deleteArticleTags({ data: ids });
-    },
+    }),
   }),
 );
 

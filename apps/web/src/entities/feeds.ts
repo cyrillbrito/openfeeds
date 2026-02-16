@@ -2,6 +2,7 @@ import { snakeCamelMapper } from '@electric-sql/client';
 import { FeedSchema } from '@repo/domain/client';
 import { electricCollectionOptions } from '@tanstack/electric-db-collection';
 import { createCollection, useLiveQuery } from '@tanstack/solid-db';
+import { collectionErrorHandler, shapeErrorHandler } from '~/lib/collection-errors';
 import { getShapeUrl, timestampParser } from '~/lib/electric-client';
 import { $$createFeeds, $$deleteFeeds, $$updateFeeds } from './feeds.server';
 
@@ -16,28 +17,29 @@ export const feedsCollection = createCollection(
       url: getShapeUrl('feeds'),
       parser: timestampParser,
       columnMapper: snakeCamelMapper(),
+      onError: shapeErrorHandler('feeds.shape'),
     },
 
-    onInsert: async ({ transaction }) => {
+    onInsert: collectionErrorHandler('feeds.onInsert', async ({ transaction }) => {
       const feeds = transaction.mutations.map((mutation) => {
         const feed = mutation.modified;
         return { id: mutation.key as string, url: feed.url };
       });
       await $$createFeeds({ data: feeds });
-    },
+    }),
 
-    onUpdate: async ({ transaction }) => {
+    onUpdate: collectionErrorHandler('feeds.onUpdate', async ({ transaction }) => {
       const updates = transaction.mutations.map((mutation) => ({
         id: mutation.key as string,
         ...mutation.changes,
       }));
       await $$updateFeeds({ data: updates });
-    },
+    }),
 
-    onDelete: async ({ transaction }) => {
+    onDelete: collectionErrorHandler('feeds.onDelete', async ({ transaction }) => {
       const ids = transaction.mutations.map((mutation) => mutation.key as string);
       await $$deleteFeeds({ data: ids });
-    },
+    }),
   }),
 );
 

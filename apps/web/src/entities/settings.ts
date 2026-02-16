@@ -2,6 +2,7 @@ import { snakeCamelMapper } from '@electric-sql/client';
 import { SettingsSchema, type ArchiveResult, type Settings } from '@repo/domain/client';
 import { electricCollectionOptions } from '@tanstack/electric-db-collection';
 import { createCollection, useLiveQuery } from '@tanstack/solid-db';
+import { collectionErrorHandler, shapeErrorHandler } from '~/lib/collection-errors';
 import { getShapeUrl, timestampParser } from '~/lib/electric-client';
 import { $$triggerAutoArchive, $$updateSettings } from './settings.server';
 
@@ -17,14 +18,15 @@ export const settingsCollection = createCollection(
       url: getShapeUrl('settings'),
       parser: timestampParser,
       columnMapper: snakeCamelMapper(),
+      onError: shapeErrorHandler('settings.shape'),
     },
 
-    onUpdate: async ({ transaction }) => {
+    onUpdate: collectionErrorHandler('settings.onUpdate', async ({ transaction }) => {
       const updates = transaction.mutations.map(
         (mutation) => mutation.changes as Partial<Settings>,
       );
       await $$updateSettings({ data: updates });
-    },
+    }),
 
     // Settings cannot be inserted or deleted by clients
     onInsert: async () => {

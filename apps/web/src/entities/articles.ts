@@ -2,6 +2,7 @@ import { snakeCamelMapper } from '@electric-sql/client';
 import { ElectricArticleSchema } from '@repo/domain/client';
 import { electricCollectionOptions } from '@tanstack/electric-db-collection';
 import { createCollection } from '@tanstack/solid-db';
+import { collectionErrorHandler, shapeErrorHandler } from '~/lib/collection-errors';
 import { getShapeUrl, timestampParser } from '~/lib/electric-client';
 import { $$createArticle, $$updateArticles } from './articles.server';
 
@@ -16,12 +17,10 @@ export const articlesCollection = createCollection(
       url: getShapeUrl('articles'),
       parser: timestampParser,
       columnMapper: snakeCamelMapper(),
-      onError: (error) => {
-        console.error('Electric articles sync error:', error);
-      },
+      onError: shapeErrorHandler('articles.shape'),
     },
 
-    onInsert: async ({ transaction }) => {
+    onInsert: collectionErrorHandler('articles.onInsert', async ({ transaction }) => {
       for (const mutation of transaction.mutations) {
         const data = mutation.modified;
         // Only call server for articles created from URL (no feedId)
@@ -46,10 +45,10 @@ export const articlesCollection = createCollection(
           });
         }
       }
-    },
+    }),
 
     // Handle client-side updates (isRead, isArchived)
-    onUpdate: async ({ transaction }) => {
+    onUpdate: collectionErrorHandler('articles.onUpdate', async ({ transaction }) => {
       const updates = transaction.mutations.map((mutation) => {
         return {
           id: mutation.key as string,
@@ -58,7 +57,7 @@ export const articlesCollection = createCollection(
         };
       });
       await $$updateArticles({ data: updates });
-    },
+    }),
 
     // Articles are archived, not deleted
     onDelete: async () => {},

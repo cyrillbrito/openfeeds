@@ -2,6 +2,7 @@ import { snakeCamelMapper } from '@electric-sql/client';
 import { filterRuleSchema, type CreateFilterRuleApi, type FilterRule } from '@repo/domain/client';
 import { electricCollectionOptions } from '@tanstack/electric-db-collection';
 import { createCollection, eq, useLiveQuery } from '@tanstack/solid-db';
+import { collectionErrorHandler, shapeErrorHandler } from '~/lib/collection-errors';
 import { getShapeUrl, timestampParser } from '~/lib/electric-client';
 import {
   $$createFilterRules,
@@ -20,9 +21,10 @@ export const filterRulesCollection = createCollection(
       url: getShapeUrl('filter-rules'),
       parser: timestampParser,
       columnMapper: snakeCamelMapper(),
+      onError: shapeErrorHandler('filterRules.shape'),
     },
 
-    onInsert: async ({ transaction }) => {
+    onInsert: collectionErrorHandler('filterRules.onInsert', async ({ transaction }) => {
       const rules = transaction.mutations.map((mutation) => {
         const rule = mutation.modified as FilterRule & CreateFilterRuleApi;
         return {
@@ -34,9 +36,9 @@ export const filterRulesCollection = createCollection(
         };
       });
       await $$createFilterRules({ data: rules });
-    },
+    }),
 
-    onUpdate: async ({ transaction }) => {
+    onUpdate: collectionErrorHandler('filterRules.onUpdate', async ({ transaction }) => {
       const updates = transaction.mutations.map((mutation) => {
         const rule = mutation.modified as FilterRule;
         return {
@@ -46,9 +48,9 @@ export const filterRulesCollection = createCollection(
         };
       });
       await $$updateFilterRules({ data: updates });
-    },
+    }),
 
-    onDelete: async ({ transaction }) => {
+    onDelete: collectionErrorHandler('filterRules.onDelete', async ({ transaction }) => {
       const items = transaction.mutations.map((mutation) => {
         const rule = mutation.original as FilterRule;
         return {
@@ -57,7 +59,7 @@ export const filterRulesCollection = createCollection(
         };
       });
       await $$deleteFilterRules({ data: items });
-    },
+    }),
   }),
 );
 
