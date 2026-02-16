@@ -11,6 +11,7 @@ export const FeedSchema = z.object({
   description: z.string().nullable(),
   icon: z.string().nullable(),
   createdAt: z.iso.datetime(),
+  updatedAt: z.iso.datetime(),
   lastSyncAt: z.iso.datetime().nullable(),
   syncStatus: SyncStatusSchema.default('ok'),
   syncError: z.string().nullable().default(null),

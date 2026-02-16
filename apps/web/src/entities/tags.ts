@@ -2,7 +2,7 @@ import { snakeCamelMapper } from '@electric-sql/client';
 import { TagSchema } from '@repo/domain/client';
 import { electricCollectionOptions } from '@tanstack/electric-db-collection';
 import { createCollection, useLiveQuery } from '@tanstack/solid-db';
-import { getShapeUrl } from '~/lib/electric-client';
+import { getShapeUrl, timestampParser } from '~/lib/electric-client';
 import { $$createTags, $$deleteTags, $$updateTags } from './tags.server';
 
 // Tags Collection - Electric-powered real-time sync
@@ -14,6 +14,7 @@ export const tagsCollection = createCollection(
 
     shapeOptions: {
       url: getShapeUrl('tags'),
+      parser: timestampParser,
       columnMapper: snakeCamelMapper(),
     },
 

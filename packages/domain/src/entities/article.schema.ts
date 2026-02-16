@@ -35,11 +35,11 @@ export const ArticleSchema = z.object({
   description: z.string().nullable(),
   content: z.string().nullable(),
   author: z.string().nullable(),
-  pubDate: z.coerce.date().nullable(),
+  pubDate: z.iso.datetime().nullable(),
   isRead: z.boolean().nullable(),
   isArchived: z.boolean().nullable(),
   hasCleanContent: z.boolean(),
-  createdAt: z.coerce.date(),
+  createdAt: z.iso.datetime(),
 });
 export type Article = z.infer<typeof ArticleSchema>;
 
@@ -83,11 +83,11 @@ export const ElectricArticleSchema = z.object({
   description: z.string().nullable(),
   content: z.string().nullable(),
   author: z.string().nullable(),
-  pubDate: z.coerce.date().nullable(),
+  pubDate: z.iso.datetime().nullable(),
   isRead: z.boolean().nullable(),
   isArchived: z.boolean().nullable(),
   cleanContent: z.string().nullable(),
-  contentExtractedAt: z.coerce.date().nullable(),
-  createdAt: z.coerce.date(),
+  contentExtractedAt: z.iso.datetime().nullable(),
+  createdAt: z.iso.datetime(),
   hasCleanContent: z.boolean().optional().default(false),
 });

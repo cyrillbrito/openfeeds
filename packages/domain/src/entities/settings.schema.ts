@@ -7,6 +7,7 @@ export const SettingsSchema = z.object({
   userId: z.string(),
   theme: z.enum(['light', 'dark', 'system']),
   autoArchiveDays: z.number().min(1).max(365).nullable(),
+  updatedAt: z.iso.datetime(),
 });
 export type Settings = z.infer<typeof SettingsSchema>;
 
@@ -14,7 +15,10 @@ export type Settings = z.infer<typeof SettingsSchema>;
  * For updates - can set autoArchiveDays to null to reset to default.
  * userId comes from auth, not request body.
  */
-export const UpdateSettingsSchema = SettingsSchema.omit({ userId: true }).partial();
+export const UpdateSettingsSchema = SettingsSchema.omit({
+  userId: true,
+  updatedAt: true,
+}).partial();
 
 export interface ArchiveResult {
   markedCount: number;

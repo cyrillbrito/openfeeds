@@ -13,6 +13,6 @@ export const ArticleAudioMetadataSchema = z.object({
   articleId: z.string(),
   duration: z.number(), // total duration in seconds
   wordTimings: z.array(WordTimingSchema),
-  createdAt: z.coerce.date(),
+  createdAt: z.iso.datetime(),
 });
 export type ArticleAudioMetadata = z.infer<typeof ArticleAudioMetadataSchema>;

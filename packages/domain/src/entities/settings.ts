@@ -1,5 +1,6 @@
 import { db, settings as settingsTable } from '@repo/db';
 import { eq } from 'drizzle-orm';
+import { assert } from '../errors';
 import { getEffectiveAutoArchiveDays, type Settings } from './settings.schema';
 
 // Re-export schemas and types from schema file
@@ -27,6 +28,7 @@ export async function getSettings(userId: string): Promise<Settings> {
       userId,
       theme: 'system',
       autoArchiveDays: null,
+      updatedAt: new Date().toISOString(),
     };
   }
 
@@ -34,6 +36,7 @@ export async function getSettings(userId: string): Promise<Settings> {
     userId: settings.userId,
     theme: settings.theme as Settings['theme'],
     autoArchiveDays: settings.autoArchiveDays,
+    updatedAt: settings.updatedAt.toISOString(),
   };
 }
 
@@ -48,31 +51,36 @@ export async function updateSettings(
   const currentSettings = await getSettings(userId);
 
   // Merge updates - undefined means "don't change"
-  const newSettings: Settings = {
-    userId,
-    theme: updates.theme !== undefined ? updates.theme : currentSettings.theme,
-    autoArchiveDays:
-      updates.autoArchiveDays !== undefined
-        ? updates.autoArchiveDays
-        : currentSettings.autoArchiveDays,
-  };
+  const theme = updates.theme !== undefined ? updates.theme : currentSettings.theme;
+  const autoArchiveDays =
+    updates.autoArchiveDays !== undefined
+      ? updates.autoArchiveDays
+      : currentSettings.autoArchiveDays;
 
-  await db
+  const [row] = await db
     .insert(settingsTable)
     .values({
       userId,
-      theme: newSettings.theme,
-      autoArchiveDays: newSettings.autoArchiveDays,
+      theme,
+      autoArchiveDays,
     })
     .onConflictDoUpdate({
       target: settingsTable.userId,
       set: {
-        theme: newSettings.theme,
-        autoArchiveDays: newSettings.autoArchiveDays,
+        theme,
+        autoArchiveDays,
       },
-    });
+    })
+    .returning();
 
-  return newSettings;
+  assert(row, 'Upserted settings must exist');
+
+  return {
+    userId: row.userId,
+    theme: row.theme as Settings['theme'],
+    autoArchiveDays: row.autoArchiveDays,
+    updatedAt: row.updatedAt.toISOString(),
+  };
 }
 
 /**
