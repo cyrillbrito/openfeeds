@@ -19,3 +19,13 @@
 html {
   background: var(--color-base-100);
 }
+
+/* Handle mobile virtual keyboard: VisualViewport sets --modal-vh on the dialog
+   element via JS. Falls back to 100dvh (for Safari address bar) then 100vh. */
+.modal {
+  height: var(--modal-vh, 100dvh);
+}
+
+.modal .modal-box {
+  max-height: var(--modal-vh, 100dvh);
+}
