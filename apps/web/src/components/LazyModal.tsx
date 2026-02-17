@@ -31,6 +31,13 @@ export function LazyModal(props: LazyModalProps) {
   const openModal = () => {
     setIsOpen(true);
     dialogRef?.showModal();
+    // iOS Safari: overflow:hidden on :root doesn't reliably prevent scrolling.
+    // Lock body scroll explicitly via touch-action + fixed positioning.
+    document.body.style.setProperty('touch-action', 'none');
+    document.body.style.setProperty('overflow', 'hidden');
+    // Start tracking viewport height only while modal is open.
+    updateViewportHeight();
+    window.visualViewport?.addEventListener('resize', updateViewportHeight);
   };
 
   const closeModal = () => {
@@ -48,6 +55,14 @@ export function LazyModal(props: LazyModalProps) {
     }
   };
 
+  // Track visual viewport height to handle mobile keyboard.
+  // On iOS Safari, dvh/vh don't shrink when the keyboard opens.
+  // VisualViewport.height reflects the actual visible area.
+  const updateViewportHeight = () => {
+    const vh = window.visualViewport?.height ?? window.innerHeight;
+    dialogRef?.style.setProperty('--modal-vh', `${vh}px`);
+  };
+
   createEffect(() => {
     const dialog = dialogRef;
     if (dialog) {
@@ -59,14 +74,21 @@ export function LazyModal(props: LazyModalProps) {
 
       const handleClose = () => {
         setIsOpen(false); // Destroy the component when dialog closes
+        window.visualViewport?.removeEventListener('resize', updateViewportHeight);
+        document.body.style.removeProperty('touch-action');
+        document.body.style.removeProperty('overflow');
         props.onClose?.();
       };
 
       dialog.addEventListener('cancel', handleCancel);
       dialog.addEventListener('close', handleClose);
+
       onCleanup(() => {
         dialog.removeEventListener('cancel', handleCancel);
         dialog.removeEventListener('close', handleClose);
+        window.visualViewport?.removeEventListener('resize', updateViewportHeight);
+        document.body.style.removeProperty('touch-action');
+        document.body.style.removeProperty('overflow');
       });
     }
   });
