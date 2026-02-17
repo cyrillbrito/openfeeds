@@ -35,6 +35,9 @@ export function LazyModal(props: LazyModalProps) {
     // Lock body scroll explicitly via touch-action + fixed positioning.
     document.body.style.setProperty('touch-action', 'none');
     document.body.style.setProperty('overflow', 'hidden');
+    // Start tracking viewport height only while modal is open.
+    updateViewportHeight();
+    window.visualViewport?.addEventListener('resize', updateViewportHeight);
   };
 
   const closeModal = () => {
@@ -71,6 +74,7 @@ export function LazyModal(props: LazyModalProps) {
 
       const handleClose = () => {
         setIsOpen(false); // Destroy the component when dialog closes
+        window.visualViewport?.removeEventListener('resize', updateViewportHeight);
         document.body.style.removeProperty('touch-action');
         document.body.style.removeProperty('overflow');
         props.onClose?.();
@@ -78,9 +82,6 @@ export function LazyModal(props: LazyModalProps) {
 
       dialog.addEventListener('cancel', handleCancel);
       dialog.addEventListener('close', handleClose);
-
-      updateViewportHeight();
-      window.visualViewport?.addEventListener('resize', updateViewportHeight);
 
       onCleanup(() => {
         dialog.removeEventListener('cancel', handleCancel);
