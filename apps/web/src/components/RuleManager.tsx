@@ -1,6 +1,8 @@
+import { shouldMarkAsRead } from '@repo/domain/client';
+import { eq, useLiveQuery } from '@tanstack/solid-db';
 import { CircleAlert } from 'lucide-solid';
 import { createSignal, For, Show } from 'solid-js';
-import { $$applyFilterRules } from '~/entities/actions.server';
+import { articlesCollection } from '~/entities/articles';
 import { useFilterRules } from '~/entities/filter-rules';
 import { AddRuleForm } from './AddRuleForm';
 import { RuleItem } from './RuleItem';
@@ -12,9 +14,15 @@ interface RuleManagerProps {
 export function RuleManager(props: RuleManagerProps) {
   const filterRulesQuery = useFilterRules(props.feedId);
 
+  const unreadArticlesQuery = useLiveQuery((q) =>
+    q
+      .from({ article: articlesCollection })
+      .where(({ article }) => eq(article.feedId, props.feedId))
+      .where(({ article }) => eq(article.isRead, false)),
+  );
+
   const [showAddForm, setShowAddForm] = createSignal(false);
   const [applyError, setApplyError] = createSignal<string | null>(null);
-  const [isApplying, setIsApplying] = createSignal(false);
 
   const rules = () => filterRulesQuery() || [];
   const activeRulesCount = () => rules().filter((rule) => rule.isActive).length;
@@ -35,21 +43,29 @@ export function RuleManager(props: RuleManagerProps) {
     // Live query auto-updates, no manual refetch needed
   };
 
-  const handleApplyRules = async () => {
+  const handleApplyRules = () => {
     try {
       setApplyError(null);
-      setIsApplying(true);
-      const result = await $$applyFilterRules({ data: { feedId: props.feedId } });
+      const activeRules = rules().filter((rule) => rule.isActive);
+      const articles = unreadArticlesQuery() || [];
 
-      // Show a success message or toast
-      alert(
-        `Applied rules to ${result.articlesProcessed} articles, marked ${result.articlesMarkedAsRead} as read.`,
+      const toMarkAsRead = articles.filter((article) =>
+        shouldMarkAsRead(activeRules, article.title),
       );
+
+      if (toMarkAsRead.length > 0) {
+        articlesCollection.update(
+          toMarkAsRead.map((a) => a.id),
+          (drafts) => {
+            drafts.forEach((d) => (d.isRead = true));
+          },
+        );
+      }
+
+      alert(`Applied rules to ${articles.length} articles, marked ${toMarkAsRead.length} as read.`);
     } catch (err) {
       console.error('Failed to apply rules:', err);
       setApplyError(err instanceof Error ? err.message : 'Failed to apply rules');
-    } finally {
-      setIsApplying(false);
     }
   };
 
@@ -72,13 +88,10 @@ export function RuleManager(props: RuleManagerProps) {
             <button
               class="btn btn-sm btn-outline"
               onClick={handleApplyRules}
-              disabled={isApplying() || activeRulesCount() === 0}
+              disabled={activeRulesCount() === 0}
               title="Mark existing articles as read based on current rules"
             >
-              <Show when={isApplying()} fallback="Mark Existing as Read">
-                <span class="loading loading-spinner loading-xs"></span>
-                Applying...
-              </Show>
+              Mark Existing as Read
             </button>
           </Show>
           <button class="btn btn-sm btn-primary" onClick={() => setShowAddForm(!showAddForm())}>

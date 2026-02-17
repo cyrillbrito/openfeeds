@@ -32,14 +32,13 @@ interface SaveArticleFormProps {
 }
 
 function SaveArticleForm(props: SaveArticleFormProps) {
-  const [isSaving, setIsSaving] = createSignal(false);
   const [articleUrl, setArticleUrl] = createSignal('');
   const [selectedTags, setSelectedTags] = createSignal<string[]>([]);
   const [error, setError] = createSignal<string | null>(null);
 
   const tagsQuery = useTags();
 
-  const handleSaveArticle = async (e: Event) => {
+  const handleSaveArticle = (e: Event) => {
     e.preventDefault();
     const url = articleUrl().trim();
 
@@ -48,50 +47,42 @@ function SaveArticleForm(props: SaveArticleFormProps) {
       return;
     }
 
-    try {
-      setError(null);
-      setIsSaving(true);
+    setError(null);
 
-      const articleId = createId();
+    const articleId = createId();
 
-      // Insert into collection - onInsert will call server and update with real data
-      articlesCollection.insert({
-        id: articleId,
-        feedId: null,
-        title: url, // Placeholder, will be updated by onInsert
-        url,
-        description: null,
-        content: null,
-        author: null,
-        pubDate: new Date().toISOString(),
-        isRead: false,
-        isArchived: false,
-        cleanContent: null,
-        contentExtractedAt: null,
-        hasCleanContent: false,
-        createdAt: new Date().toISOString(),
-      });
+    // Insert into collection - onInsert will call server and update with real data
+    articlesCollection.insert({
+      id: articleId,
+      feedId: null,
+      title: url, // Placeholder, will be updated by onInsert
+      url,
+      description: null,
+      content: null,
+      author: null,
+      pubDate: new Date().toISOString(),
+      isRead: false,
+      isArchived: false,
+      cleanContent: null,
+      contentExtractedAt: null,
+      hasCleanContent: false,
+      createdAt: new Date().toISOString(),
+    });
 
-      // Add tags if selected (using article tags collection)
-      const tagsToAdd = selectedTags();
-      if (tagsToAdd.length > 0) {
-        for (const tagId of tagsToAdd) {
-          articleTagsCollection.insert({
-            id: createId(),
-            userId: '', // Will be set by server
-            articleId,
-            tagId,
-          });
-        }
+    // Add tags if selected (using article tags collection)
+    const tagsToAdd = selectedTags();
+    if (tagsToAdd.length > 0) {
+      for (const tagId of tagsToAdd) {
+        articleTagsCollection.insert({
+          id: createId(),
+          userId: '', // Will be set by server
+          articleId,
+          tagId,
+        });
       }
-
-      props.onClose();
-    } catch (err) {
-      console.error('Failed to save article:', err);
-      setError(err instanceof Error ? err.message : 'Failed to save article');
-    } finally {
-      setIsSaving(false);
     }
+
+    props.onClose();
   };
 
   return (
@@ -131,14 +122,11 @@ function SaveArticleForm(props: SaveArticleFormProps) {
       </Show>
 
       <div class="modal-action">
-        <button type="button" class="btn" onClick={() => props.onClose()} disabled={isSaving()}>
+        <button type="button" class="btn" onClick={() => props.onClose()}>
           Cancel
         </button>
-        <button type="submit" class="btn btn-primary" disabled={isSaving()}>
-          <Show when={isSaving()}>
-            <span class="loading loading-spinner"></span>
-          </Show>
-          {isSaving() ? 'Saving...' : 'Save Article'}
+        <button type="submit" class="btn btn-primary">
+          Save Article
         </button>
       </div>
     </form>
