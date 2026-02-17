@@ -108,14 +108,7 @@ export function RuleManager(props: RuleManagerProps) {
         </div>
       </Show>
 
-      <Show
-        when={!filterRulesQuery.isLoading}
-        fallback={
-          <div class="flex justify-center py-4">
-            <span class="loading loading-spinner loading-md"></span>
-          </div>
-        }
-      >
+      <div class="space-y-2">
         <Show
           when={rules().length > 0}
           fallback={
@@ -130,22 +123,13 @@ export function RuleManager(props: RuleManagerProps) {
             </div>
           }
         >
-          <div class="space-y-2">
-            <For each={rules()}>
-              {(rule) => (
-                <RuleItem rule={rule} onUpdate={handleRuleUpdate} onDelete={handleRuleDelete} />
-              )}
-            </For>
-          </div>
+          <For each={rules()}>
+            {(rule) => (
+              <RuleItem rule={rule} onUpdate={handleRuleUpdate} onDelete={handleRuleDelete} />
+            )}
+          </For>
         </Show>
-      </Show>
-
-      <Show when={filterRulesQuery.isError}>
-        <div class="alert alert-error">
-          <CircleAlert size={20} />
-          <span>Failed to load filter rules. Please try again.</span>
-        </div>
-      </Show>
+      </div>
     </div>
   );
 }
