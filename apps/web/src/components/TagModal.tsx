@@ -25,8 +25,6 @@ export function TagModal(props: TagModalProps) {
       }}
       class="max-w-md"
       title={isEditMode() ? 'Edit Tag' : 'Create New Tag'}
-      // onClose={resetForm}
-      // disableBackdropClose={false} // Tag modals allow backdrop close
     >
       <TagForm
         editTag={props.editTag}
