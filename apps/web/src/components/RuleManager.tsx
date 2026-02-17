@@ -1,8 +1,6 @@
-import { shouldMarkAsRead } from '@repo/domain/client';
-import { eq, useLiveQuery } from '@tanstack/solid-db';
 import { CircleAlert } from 'lucide-solid';
 import { createSignal, For, Show } from 'solid-js';
-import { articlesCollection } from '~/entities/articles';
+import { $$applyFilterRules } from '~/entities/actions.server';
 import { useFilterRules } from '~/entities/filter-rules';
 import { AddRuleForm } from './AddRuleForm';
 import { RuleItem } from './RuleItem';
@@ -14,15 +12,9 @@ interface RuleManagerProps {
 export function RuleManager(props: RuleManagerProps) {
   const filterRulesQuery = useFilterRules(props.feedId);
 
-  const unreadArticlesQuery = useLiveQuery((q) =>
-    q
-      .from({ article: articlesCollection })
-      .where(({ article }) => eq(article.feedId, props.feedId))
-      .where(({ article }) => eq(article.isRead, false)),
-  );
-
   const [showAddForm, setShowAddForm] = createSignal(false);
   const [applyError, setApplyError] = createSignal<string | null>(null);
+  const [isApplying, setIsApplying] = createSignal(false);
 
   const rules = () => filterRulesQuery() || [];
   const activeRulesCount = () => rules().filter((rule) => rule.isActive).length;
@@ -43,29 +35,21 @@ export function RuleManager(props: RuleManagerProps) {
     // Live query auto-updates, no manual refetch needed
   };
 
-  const handleApplyRules = () => {
+  const handleApplyRules = async () => {
     try {
       setApplyError(null);
-      const activeRules = rules().filter((rule) => rule.isActive);
-      const articles = unreadArticlesQuery() || [];
+      setIsApplying(true);
+      const result = await $$applyFilterRules({ data: { feedId: props.feedId } });
 
-      const toMarkAsRead = articles.filter((article) =>
-        shouldMarkAsRead(activeRules, article.title),
+      // Show a success message or toast
+      alert(
+        `Applied rules to ${result.articlesProcessed} articles, marked ${result.articlesMarkedAsRead} as read.`,
       );
-
-      if (toMarkAsRead.length > 0) {
-        articlesCollection.update(
-          toMarkAsRead.map((a) => a.id),
-          (drafts) => {
-            drafts.forEach((d) => (d.isRead = true));
-          },
-        );
-      }
-
-      alert(`Applied rules to ${articles.length} articles, marked ${toMarkAsRead.length} as read.`);
     } catch (err) {
       console.error('Failed to apply rules:', err);
       setApplyError(err instanceof Error ? err.message : 'Failed to apply rules');
+    } finally {
+      setIsApplying(false);
     }
   };
 
@@ -88,10 +72,13 @@ export function RuleManager(props: RuleManagerProps) {
             <button
               class="btn btn-sm btn-outline"
               onClick={handleApplyRules}
-              disabled={activeRulesCount() === 0}
+              disabled={isApplying() || activeRulesCount() === 0}
               title="Mark existing articles as read based on current rules"
             >
-              Mark Existing as Read
+              <Show when={isApplying()} fallback="Mark Existing as Read">
+                <span class="loading loading-spinner loading-xs"></span>
+                Applying...
+              </Show>
             </button>
           </Show>
           <button class="btn btn-sm btn-primary" onClick={() => setShowAddForm(!showAddForm())}>
@@ -121,14 +108,7 @@ export function RuleManager(props: RuleManagerProps) {
         </div>
       </Show>
 
-      <Show
-        when={!filterRulesQuery.isLoading}
-        fallback={
-          <div class="flex justify-center py-4">
-            <span class="loading loading-spinner loading-md"></span>
-          </div>
-        }
-      >
+      <div class="space-y-2">
         <Show
           when={rules().length > 0}
           fallback={
@@ -143,22 +123,13 @@ export function RuleManager(props: RuleManagerProps) {
             </div>
           }
         >
-          <div class="space-y-2">
-            <For each={rules()}>
-              {(rule) => (
-                <RuleItem rule={rule} onUpdate={handleRuleUpdate} onDelete={handleRuleDelete} />
-              )}
-            </For>
-          </div>
+          <For each={rules()}>
+            {(rule) => (
+              <RuleItem rule={rule} onUpdate={handleRuleUpdate} onDelete={handleRuleDelete} />
+            )}
+          </For>
         </Show>
-      </Show>
-
-      <Show when={filterRulesQuery.isError}>
-        <div class="alert alert-error">
-          <CircleAlert size={20} />
-          <span>Failed to load filter rules. Please try again.</span>
-        </div>
-      </Show>
+      </div>
     </div>
   );
 }
