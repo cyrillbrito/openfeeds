@@ -86,6 +86,8 @@ export function LazyModal(props: LazyModalProps) {
         dialog.removeEventListener('cancel', handleCancel);
         dialog.removeEventListener('close', handleClose);
         window.visualViewport?.removeEventListener('resize', updateViewportHeight);
+        document.body.style.removeProperty('touch-action');
+        document.body.style.removeProperty('overflow');
       });
     }
   });
