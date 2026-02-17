@@ -8,5 +8,5 @@ export function initPosthog(key: string) {
     capture_exceptions: true,
   });
 
-  posthog.register({ app: 'web' });
+  posthog.register({ app: 'web', app_version: __APP_VERSION__ });
 }
