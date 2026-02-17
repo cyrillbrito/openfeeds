@@ -40,22 +40,26 @@ export const auth = betterAuth({
       const newSession = ctx.context.newSession;
       if (!newSession) return;
 
-      if (ctx.path === '/sign-up/email') {
-        trackEvent(newSession.user.id, 'auth:account_create', { method: 'email' });
-      } else if (ctx.path === '/sign-in/email') {
-        trackEvent(newSession.user.id, 'auth:session_create', { method: 'email' });
-      } else if (ctx.path === '/callback/google') {
-        trackEvent(newSession.user.id, 'auth:session_create', { method: 'google' });
-      } else if (ctx.path === '/callback/apple') {
-        trackEvent(newSession.user.id, 'auth:session_create', { method: 'apple' });
-      }
+      const method = ctx.path.includes('google')
+        ? 'google'
+        : ctx.path.includes('apple')
+          ? 'apple'
+          : 'email';
+
+      trackEvent(newSession.user.id, 'auth:session_create', { method });
     }),
   },
   databaseHooks: {
     user: {
       create: {
-        after: async (user) => {
-          // Create default settings for new users
+        after: async (user, context) => {
+          const method = context?.path?.includes('google')
+            ? 'google'
+            : context?.path?.includes('apple')
+              ? 'apple'
+              : 'email';
+
+          trackEvent(user.id, 'auth:account_create', { method });
           await createSettings(user.id);
         },
       },
