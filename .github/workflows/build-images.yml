@@ -17,7 +17,71 @@ on:
         type: string
 
 jobs:
-  build:
+  # Web: build on runner, upload sourcemaps, then package into Docker
+  build-web:
+    name: Build web
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+
+      - name: Install dependencies
+        run: bun install --frozen-lockfile
+
+      - name: Build
+        run: bun run build --filter=@repo/web
+
+      - name: Read version from package.json
+        id: version
+        run: echo "value=$(jq -r .version package.json)" >> "$GITHUB_OUTPUT"
+
+      - name: Upload sourcemaps to PostHog
+        uses: PostHog/upload-source-maps@v2
+        with:
+          directory: apps/web/.output
+          project-id: ${{ secrets.POSTHOG_PROJECT_ID }}
+          api-key: ${{ secrets.POSTHOG_CLI_API_KEY }}
+          host: https://eu.posthog.com
+          release-name: openfeeds-web
+          release-version: ${{ steps.version.outputs.value }}
+
+      - name: Remove sourcemaps from build output
+        run: find apps/web/.output -name '*.map' -delete
+
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Docker metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ghcr.io/cyrillbrito/openfeeds-web
+          tags: |
+            type=raw,value=edge,enable=${{ github.ref == 'refs/heads/main' }}
+            type=raw,value=latest,enable=${{ inputs.tag != '' }}
+            type=raw,value=${{ inputs.tag }},enable=${{ inputs.tag != '' }}
+
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: apps/web/Dockerfile
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+
+  # Worker and Migrator: build on runner (turbo prune + install), then package into Docker
+  build-service:
     name: Build ${{ matrix.app }}
     runs-on: ubuntu-latest
     permissions:
@@ -27,18 +91,37 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - app: web
-            image: ghcr.io/cyrillbrito/openfeeds-web
-            dockerfile: apps/web/Dockerfile
           - app: worker
+            workspace: '@repo/worker'
             image: ghcr.io/cyrillbrito/openfeeds-worker
             dockerfile: apps/worker/Dockerfile
+            needs-build: true
           - app: migrator
+            workspace: '@repo/migrator'
             image: ghcr.io/cyrillbrito/openfeeds-migrations
             dockerfile: apps/migrator/Dockerfile
+            needs-build: false
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+
+      - name: Install turbo
+        run: bun install -g turbo@^2
+
+      - name: Prune monorepo
+        run: turbo prune ${{ matrix.workspace }}
+
+      - name: Install dependencies
+        run: bun install --frozen-lockfile
+        working-directory: out
+
+      - name: Build dependencies
+        if: matrix.needs-build
+        run: bun run build
+        working-directory: out
 
       - name: Log in to GitHub Container Registry
         uses: docker/login-action@v3

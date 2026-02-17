@@ -28,5 +28,6 @@ jobs:
       contents: read
       packages: write
     uses: ./.github/workflows/build-images.yml
+    secrets: inherit
     with:
       tag: ${{ needs.release-please.outputs.tag_name }}
