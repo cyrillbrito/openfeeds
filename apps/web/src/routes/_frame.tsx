@@ -72,7 +72,7 @@ function FrameLayout() {
         <div class="drawer-side z-10 shadow-sm">
           <label for="my-drawer" aria-label="close sidebar" class="drawer-overlay"></label>
           {/* h-dvh instead of h-screen to handle mobile browser UI correctly on rotation */}
-          <aside class="menu bg-base-100 border-base-300 flex h-dvh w-80 flex-col flex-nowrap border-r p-4">
+          <aside class="menu bg-base-100 border-base-300 flex h-dvh w-80 flex-col flex-nowrap border-r px-4 pt-4 pb-2">
             <ClientOnly fallback={<CenterLoader />}>
               {/* Menu Header */}
 

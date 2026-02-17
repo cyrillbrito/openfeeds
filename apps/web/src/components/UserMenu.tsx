@@ -141,7 +141,7 @@ export function UserMenu() {
         </li>
       </Dropdown>
       <div class="mt-1 text-center">
-        <span class="text-base-content/40 text-xs">v{__APP_VERSION__}</span>
+        <span class="text-base-content/40 text-xs">Version {__APP_VERSION__}</span>
       </div>
     </Suspense>
   );
