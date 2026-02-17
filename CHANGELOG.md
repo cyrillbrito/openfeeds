@@ -1,5 +1,21 @@
 # Changelog
 
+## [0.4.0](https://github.com/cyrillbrito/openfeeds/compare/v0.3.0...v0.4.0) (2026-02-17)
+
+
+### Features
+
+* add Google and Apple social login with last-used method tracking ([#88](https://github.com/cyrillbrito/openfeeds/issues/88)) ([ed8fe6a](https://github.com/cyrillbrito/openfeeds/commit/ed8fe6ac8dbf21ab8dc7a959fad281b00049810c))
+* add PostHog sourcemaps, app version tracking, and restructure Docker builds ([#85](https://github.com/cyrillbrito/openfeeds/issues/85)) ([e72d96f](https://github.com/cyrillbrito/openfeeds/commit/e72d96fd1fdef9234f5b390daaac0b86cc07c79a))
+
+
+### Bug Fixes
+
+* add --bun flag to vite build for Bun runtime resolution ([#92](https://github.com/cyrillbrito/openfeeds/issues/92)) ([7d632db](https://github.com/cyrillbrito/openfeeds/commit/7d632db3d21b939bc98b16738707401cf826c7e0))
+* **ci:** pin PostHog/upload-source-maps to v2.0.0 ([#91](https://github.com/cyrillbrito/openfeeds/issues/91)) ([25b91d7](https://github.com/cyrillbrito/openfeeds/commit/25b91d73fd6e36344068ee8666f735a47b436384))
+* **ci:** shorten PostHog sourcemap release name ([#90](https://github.com/cyrillbrito/openfeeds/issues/90)) ([cd09dad](https://github.com/cyrillbrito/openfeeds/commit/cd09dadcb4b8a4f6dc848cc3c59ecff9ad421b33))
+* handle mobile virtual keyboard and scroll lock for modals ([#93](https://github.com/cyrillbrito/openfeeds/issues/93)) ([fb5e4d7](https://github.com/cyrillbrito/openfeeds/commit/fb5e4d78b6e92c57cd4c0aa81b8a17004fa31b61))
+
 ## [0.3.0](https://github.com/cyrillbrito/openfeeds/compare/v0.2.0...v0.3.0) (2026-02-16)
 
 
