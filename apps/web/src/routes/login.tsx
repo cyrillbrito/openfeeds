@@ -139,7 +139,7 @@ function LoginPage() {
               </Show>
               {isLoading() ? 'Logging In...' : 'Log In'}
               <Show when={lastMethod() === 'email'}>
-                <span class="badge badge-sm ml-auto">Last used</span>
+                <span class="badge badge-sm badge-primary ml-auto">Last used</span>
               </Show>
             </button>
           </div>
