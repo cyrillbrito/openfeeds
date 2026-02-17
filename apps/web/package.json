@@ -3,8 +3,8 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "bun --env-file=../../.env vite dev --port 3000",
-    "build": "bun --env-file=../../.env vite build",
+    "dev": "bun --bun --env-file=../../.env vite dev --port 3000",
+    "build": "bun --bun --env-file=../../.env vite build",
     "preview": "bun --env-file=../../.env vite preview",
     "test": "vitest run",
     "start": "bun --env-file=../../.env .output/server/index.mjs",
