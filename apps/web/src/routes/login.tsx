@@ -18,11 +18,11 @@ export const Route = createFileRoute('/login')({
       redirect: typeof search?.redirect === 'string' ? search.redirect : undefined,
     };
   },
-  component: SignInPage,
+  component: LoginPage,
 });
 
-// TODO This page should use error boundry, should handle known errors and report unknown ones
-function SignInPage() {
+// TODO This page should use error boundary, should handle known errors and report unknown ones
+function LoginPage() {
   const navigate = useNavigate();
   const search = Route.useSearch();
   const [email, setEmail] = createSignal('');
@@ -31,7 +31,7 @@ function SignInPage() {
   const [isLoading, setIsLoading] = createSignal(false);
   const lastMethod = useLastLoginMethod();
 
-  const handleSignIn = async (e: Event) => {
+  const handleLogin = async (e: Event) => {
     e.preventDefault();
     setError(null);
     setIsLoading(true);
@@ -47,7 +47,7 @@ function SignInPage() {
 
       setIsLoading(false);
 
-      // Identify user for PostHog (signin event tracked server-side)
+      // Identify user for PostHog (login event tracked server-side)
       const session = await authClient.getSession();
       if (session.data?.user) {
         posthog.identify(session.data.user.id, {
@@ -75,7 +75,7 @@ function SignInPage() {
       <Card class="max-w-lg [&>.card-body]:sm:p-10">
         <div class="mb-6 text-center">
           <h1 class="text-base-content text-3xl font-bold">Welcome Back</h1>
-          <p class="text-base-content-gray mt-2">Sign in to your OpenFeeds account</p>
+          <p class="text-base-content-gray mt-2">Log in to your OpenFeeds account</p>
         </div>
 
         <Show when={error()}>
@@ -92,7 +92,7 @@ function SignInPage() {
 
         <div class="divider">or</div>
 
-        <form onSubmit={handleSignIn} class="space-y-4">
+        <form onSubmit={handleLogin} class="space-y-4">
           <div class="form-control">
             <label class="label">
               <span class="label-text">Email</span>
@@ -137,7 +137,7 @@ function SignInPage() {
               <Show when={isLoading()}>
                 <Loader />
               </Show>
-              {isLoading() ? 'Signing In...' : 'Sign In'}
+              {isLoading() ? 'Logging In...' : 'Log In'}
               <Show when={lastMethod() === 'email'}>
                 <span class="badge badge-sm ml-auto">Last used</span>
               </Show>

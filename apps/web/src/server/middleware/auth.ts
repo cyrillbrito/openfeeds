@@ -8,7 +8,7 @@ export type AuthContext = { user: User; session: Session };
 
 /**
  * Function middleware for server functions (createServerFn)
- * Redirects to signin page if not authenticated
+ * Redirects to login page if not authenticated
  */
 export const authMiddleware = createMiddleware().server(async ({ request, next }) => {
   const headers = getRequestHeaders();
@@ -24,7 +24,7 @@ export const authMiddleware = createMiddleware().server(async ({ request, next }
 });
 
 /**
- * Server middleware for guest-only pages (signin, signup, forgot-password, reset-password)
+ * Server middleware for guest-only pages (login, signup, forgot-password, reset-password)
  * Redirects authenticated users to the app root
  */
 export const guestMiddleware = createMiddleware().server(async ({ next }) => {
