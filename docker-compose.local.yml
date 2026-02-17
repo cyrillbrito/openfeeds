@@ -1,5 +1,5 @@
-# Local development: build and run all services from local Dockerfiles
-# Use this to test the full containerized stack locally
+# Local development: infrastructure services only
+# App services (web, worker, migrator) run directly via `bun dev`
 services:
   postgres:
     image: postgres:18.1-alpine
@@ -11,8 +11,6 @@ services:
       POSTGRES_PASSWORD: postgres
     volumes:
       - postgres_data:/var/lib/postgresql/data
-    networks:
-      - openfeeds-network
     restart: unless-stopped
     command:
       - postgres
@@ -32,8 +30,6 @@ services:
       - '6379:6379'
     volumes:
       - redis_data:/data
-    networks:
-      - openfeeds-network
     restart: unless-stopped
     command: redis-server --save 60 1 --loglevel warning
 
@@ -45,81 +41,9 @@ services:
     environment:
       DATABASE_URL: postgresql://postgres:postgres@postgres:5432/openfeeds?sslmode=disable
       ELECTRIC_INSECURE: true
-    networks:
-      - openfeeds-network
     depends_on:
       postgres:
         condition: service_healthy
-    restart: unless-stopped
-
-  migrator:
-    build:
-      context: .
-      dockerfile: apps/migrator/Dockerfile
-    environment:
-      - DATABASE_URL=postgresql://postgres:postgres@postgres:5432/openfeeds
-    networks:
-      - openfeeds-network
-    depends_on:
-      postgres:
-        condition: service_healthy
-    restart: 'no'
-
-  web:
-    build:
-      context: .
-      dockerfile: apps/web/Dockerfile
-    ports:
-      - '3200:80'
-    environment:
-      - BASE_URL=${BASE_URL:-http://localhost:3200}
-      - DATABASE_URL=postgresql://postgres:postgres@postgres:5432/openfeeds
-      - REDIS_HOST=redis
-      - BETTER_AUTH_SECRET=${BETTER_AUTH_SECRET:-dev-secret-change-me}
-      - TRUSTED_ORIGINS=${TRUSTED_ORIGINS:-http://localhost:3200}
-      - SIMPLE_AUTH=${SIMPLE_AUTH:-true}
-      - ELECTRIC_URL=http://electric:3000
-      - POSTHOG_PUBLIC_KEY=$POSTHOG_PUBLIC_KEY
-      - UNREAL_SPEECH_API_KEY=$UNREAL_SPEECH_API_KEY
-      - TTS_DEFAULT_VOICE=$TTS_DEFAULT_VOICE
-      - DATA_PATH=${DATA_PATH:-/data}
-    volumes:
-      - web_data:${DATA_PATH:-/data}
-    depends_on:
-      redis:
-        condition: service_started
-      postgres:
-        condition: service_healthy
-      electric:
-        condition: service_started
-      migrator:
-        condition: service_completed_successfully
-    networks:
-      - openfeeds-network
-    restart: unless-stopped
-
-  worker:
-    build:
-      context: .
-      dockerfile: apps/worker/Dockerfile
-    environment:
-      - DATABASE_URL=postgresql://postgres:postgres@postgres:5432/openfeeds
-      - REDIS_HOST=redis
-      - POSTHOG_PUBLIC_KEY=$POSTHOG_PUBLIC_KEY
-      - RESEND_API_KEY=$RESEND_API_KEY
-      - WORKER_CONCURRENCY_ORCHESTRATOR=$WORKER_CONCURRENCY_ORCHESTRATOR
-      - WORKER_CONCURRENCY_FEED_SYNC=$WORKER_CONCURRENCY_FEED_SYNC
-      - WORKER_CONCURRENCY_FEED_DETAILS=$WORKER_CONCURRENCY_FEED_DETAILS
-      - WORKER_CONCURRENCY_AUTO_ARCHIVE=$WORKER_CONCURRENCY_AUTO_ARCHIVE
-    depends_on:
-      redis:
-        condition: service_started
-      postgres:
-        condition: service_healthy
-      migrator:
-        condition: service_completed_successfully
-    networks:
-      - openfeeds-network
     restart: unless-stopped
 
   # Queue management UI
@@ -131,8 +55,6 @@ services:
       - QUEUES_CONFIG_JSON={"queues":[{"name":"feed-sync-orchestrator","displayName":"Feed Sync Orchestrator","type":"bullmq","connectionUrl":"redis://redis:6379"},{"name":"single-feed-sync","displayName":"Single Feed Sync","type":"bullmq","connectionUrl":"redis://redis:6379"},{"name":"feed-detail","displayName":"Feed Details","type":"bullmq","connectionUrl":"redis://redis:6379"},{"name":"auto-archive","displayName":"Auto Archive","type":"bullmq","connectionUrl":"redis://redis:6379"}]}
     depends_on:
       - redis
-    networks:
-      - openfeeds-network
     restart: unless-stopped
 
 volumes:
@@ -140,9 +62,3 @@ volumes:
     driver: local
   redis_data:
     driver: local
-  web_data:
-    driver: local
-
-networks:
-  openfeeds-network:
-    driver: bridge

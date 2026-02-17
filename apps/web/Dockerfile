@@ -1,42 +1,11 @@
-# Use Bun image as base
-FROM oven/bun:1 AS base
-
-
-# Pruner stage - prune the monorepo
-FROM base AS pruner
-
-# Install turbo globally
-RUN bun install -g turbo@^2
-
-# Copy entire monorepo
-COPY . .
-
-# Generate a partial monorepo with a pruned lockfile for the "web" workspace
-RUN turbo prune @repo/web --docker
-
-
-# Builder stage - install dependencies & build
-FROM base AS builder
-
-# Copy pruned lockfile and package.json files first (changes less often)
-COPY --from=pruner /home/bun/app/out/json/ .
-
-# Install dependencies using Bun with cache mount
-RUN --mount=type=cache,target=/root/.bun/install/cache bun install --frozen-lockfile
-
-# Copy the full pruned source code
-COPY --from=pruner /home/bun/app/out/full/ .
-
-RUN bun run build --filter=@repo/web
-
-# Runner stage - final production image
-FROM base AS runner
+# Packaging only — build happens on CI runner
+# Nitro's node-server output is fully self-contained
+FROM oven/bun:1
 
 WORKDIR /app
 
-# Copy built output and dependencies
-COPY --from=builder /home/bun/app/apps/web/.output ./.output
-COPY --from=builder /home/bun/app/node_modules ./node_modules
+# Copy pre-built Nitro output (already has chunkIds injected, sourcemaps removed)
+COPY out/apps/web/.output ./.output
 
 ENV PORT=80
 EXPOSE 80

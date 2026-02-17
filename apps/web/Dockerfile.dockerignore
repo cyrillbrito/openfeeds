@@ -1,0 +1,3 @@
+# Web Dockerfile only needs .output (pre-built on CI runner)
+*
+!out/apps/web/.output

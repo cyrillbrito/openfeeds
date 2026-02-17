@@ -1,42 +1,11 @@
-# Worker service - processes BullMQ background jobs
-FROM oven/bun:1 AS base
-
-
-# Pruner stage - prune the monorepo
-FROM base AS pruner
-
-# Install turbo globally
-RUN bun install -g turbo@^2
-
-# Copy entire monorepo
-COPY . .
-
-# Generate a partial monorepo with a pruned lockfile for the "worker" workspace
-RUN turbo prune @repo/worker --docker
-
-
-# Builder stage - install dependencies
-FROM base AS builder
-
-# Copy pruned lockfile and package.json files first
-COPY --from=pruner /home/bun/app/out/json/ .
-
-# Install dependencies using Bun with cache mount
-RUN --mount=type=cache,target=/root/.bun/install/cache bun install --frozen-lockfile
-
-# Copy the full pruned source code
-COPY --from=pruner /home/bun/app/out/full/ .
-
-# Build dependencies (e.g., @repo/emails)
-RUN bun run build
-
-
-# Runner stage - final production image
-FROM base AS runner
+# Packaging only — build happens on CI runner
+# turbo prune + bun install + bun build runs on the runner,
+# producing a self-contained pruned monorepo in out/
+FROM oven/bun:1
 
 WORKDIR /app
 
-# Copy everything from builder (pruned monorepo structure)
-COPY --from=builder /home/bun/app .
+# Copy pre-built pruned monorepo (includes node_modules and built deps)
+COPY out/ .
 
 CMD ["bun", "--bun", "run", "apps/worker/src/index.ts"]

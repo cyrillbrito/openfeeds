@@ -139,12 +139,10 @@ export function UserMenu() {
             <span>Sign Out</span>
           </button>
         </li>
-
-        {/* Version */}
-        <li class="menu-title px-4 py-2">
-          <span class="text-base-content/40 text-xs">Version v0.24.12</span>
-        </li>
       </Dropdown>
+      <div class="mt-1 text-center">
+        <span class="text-base-content/40 text-xs">Version {__APP_VERSION__}</span>
+      </div>
     </Suspense>
   );
 }
