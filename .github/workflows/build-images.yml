@@ -54,7 +54,7 @@ jobs:
           project-id: ${{ secrets.POSTHOG_PROJECT_ID }}
           api-key: ${{ secrets.POSTHOG_CLI_API_KEY }}
           host: https://eu.posthog.com
-          release-name: openfeeds-web
+          release-name: web
           release-version: ${{ steps.version.outputs.value }}
           delete-after-upload: true
 
