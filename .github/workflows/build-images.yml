@@ -48,7 +48,7 @@ jobs:
         working-directory: out
 
       - name: Upload sourcemaps to PostHog
-        uses: PostHog/upload-source-maps@v2
+        uses: PostHog/upload-source-maps@v2.0.0
         with:
           directory: out/apps/web/.output
           project-id: ${{ secrets.POSTHOG_PROJECT_ID }}
