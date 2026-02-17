@@ -23,7 +23,7 @@ export const Route = createFileRoute('/oauth/consent')({
 
 function ConsentPage() {
   return (
-    <div class="flex min-h-screen items-center justify-center px-4">
+    <div class="bg-base-200 flex min-h-screen items-center justify-center px-4">
       <ClientOnly fallback={<CenterLoader />}>
         <ConsentContent />
       </ClientOnly>

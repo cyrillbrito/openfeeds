@@ -16,10 +16,10 @@ import { posthog } from './config';
 export interface ServerAnalyticsEventMap {
   // Authentication
   'auth:account_create': {
-    method: 'email';
+    method: 'email' | 'google' | 'apple';
   };
   'auth:session_create': {
-    method: 'email';
+    method: 'email' | 'google' | 'apple';
   };
 
   // Feed Management

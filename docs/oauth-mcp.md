@@ -75,7 +75,7 @@ The OAuth provider is configured in `src/server/auth.ts`:
 plugins: [
   jwt(),
   oauthProvider({
-    loginPage: '/signin',
+    loginPage: '/login',
     consentPage: '/oauth/consent',
     allowDynamicClientRegistration: true,
     allowUnauthenticatedClientRegistration: true,

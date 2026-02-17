@@ -15,7 +15,7 @@
 
 ### Code Quality
 
-- [ ] Sign-in page error boundary (`apps/web/src/routes/signin.tsx:22`)
+- [ ] Login page error boundary (`apps/web/src/routes/login.tsx:22`)
 - [ ] MCP in-process JWKS resolution (`apps/web/src/routes/api/mcp/$.ts:22`)
 - [ ] Cursor schema — add proper `.describe()` (`packages/domain/src/entities/common.schema.ts:10`)
 - [ ] Extract address-bar-hiding logic to a reusable hook (`apps/web/src/components/ShortsViewer.tsx:93`)

@@ -99,7 +99,7 @@ test('handle signin with redirect parameter', async ({ page }) => {
   await createTestUser(testUser.email, testUser.name, testUser.password);
 
   // Navigate with redirect parameter
-  await page.goto('/signin?redirect=/feeds');
+  await page.goto('/login?redirect=/feeds');
 
   await signinPage.signinWithCredentials(testUser.email, testUser.password);
 

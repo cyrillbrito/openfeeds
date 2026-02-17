@@ -121,7 +121,7 @@ test('disable form during submission', async ({ page }) => {
 
 test('navigate to signin page when clicking sign in link', async ({ page }) => {
   await signupPage.clickSignInLink();
-  await expect(page).toHaveURL('/signin');
+  await expect(page).toHaveURL('/login');
 });
 
 test('handle successful signup and redirect', async ({ page }) => {

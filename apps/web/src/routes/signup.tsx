@@ -1,10 +1,11 @@
 import { BetterFetchError } from '@better-fetch/fetch';
 import { createFileRoute, Link, useNavigate } from '@tanstack/solid-router';
-import { Mail } from 'lucide-solid';
+import { CircleX, Mail } from 'lucide-solid';
 import posthog from 'posthog-js';
 import { createSignal, Show } from 'solid-js';
 import { Card } from '~/components/Card';
 import { Loader } from '~/components/Loader';
+import { SocialLoginButtons } from '~/components/SocialLoginButtons';
 import { authClient } from '~/lib/auth-client';
 import { guestMiddleware } from '~/server/middleware/auth';
 
@@ -49,7 +50,7 @@ function SignUpPage() {
           email: email(),
           password: password(),
           name: name(),
-          callbackURL: '/signin',
+          callbackURL: '/login',
         },
         { throw: true },
       );
@@ -87,8 +88,8 @@ function SignUpPage() {
   };
 
   return (
-    <div class="flex min-h-screen items-center justify-center px-4">
-      <Card class="max-w-md">
+    <div class="bg-base-200 flex min-h-screen items-center justify-center px-4">
+      <Card class="max-w-lg [&>.card-body]:sm:p-10">
         <Show
           when={!verificationSent()}
           fallback={
@@ -102,8 +103,8 @@ function SignUpPage() {
               <div class="divider" />
               <p class="text-base-content-gray text-sm">
                 Already verified?{' '}
-                <Link to="/signin" search={{}} class="link link-primary font-medium">
-                  Sign in
+                <Link to="/login" search={{}} class="link link-primary font-medium">
+                  Log in
                 </Link>
               </p>
             </div>
@@ -113,6 +114,20 @@ function SignUpPage() {
             <h1 class="text-3xl font-bold">Join OpenFeeds</h1>
             <p class="text-base-content-gray mt-2">Create your account to get started</p>
           </div>
+
+          <Show when={error()}>
+            <div class="alert alert-error">
+              <CircleX class="h-6 w-6 shrink-0" />
+              <span>{error()}</span>
+            </div>
+          </Show>
+
+          <SocialLoginButtons
+            callbackURL={search()?.redirect || '/'}
+            onError={(msg) => setError(msg)}
+          />
+
+          <div class="divider">or</div>
 
           <form onSubmit={handleSignUp} class="space-y-4">
             <div class="form-control">
@@ -180,25 +195,6 @@ function SignUpPage() {
               />
             </div>
 
-            <Show when={error()}>
-              <div class="alert alert-error">
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  class="h-6 w-6 shrink-0 stroke-current"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    stroke-width="2"
-                    d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"
-                  />
-                </svg>
-                <span>{error()}</span>
-              </div>
-            </Show>
-
             <div class="form-control mt-6">
               <button type="submit" class="btn btn-primary w-full" disabled={isLoading()}>
                 <Show when={isLoading()}>
@@ -212,23 +208,31 @@ function SignUpPage() {
           <div class="mt-4 text-center">
             <p class="text-base-content-gray text-xs">
               By signing up, you agree to our{' '}
-              <a href="#" class="link link-hover">
+              <a
+                href="https://openfeeds.app/terms"
+                target="_blank"
+                rel="noopener noreferrer"
+                class="link link-hover"
+              >
                 Terms of Service
               </a>{' '}
               and{' '}
-              <a href="#" class="link link-hover">
+              <a
+                href="https://openfeeds.app/privacy"
+                target="_blank"
+                rel="noopener noreferrer"
+                class="link link-hover"
+              >
                 Privacy Policy
               </a>
             </p>
           </div>
 
-          <div class="divider">or</div>
-
-          <div class="text-center">
+          <div class="mt-6 text-center">
             <p class="text-base-content-gray text-sm">
               Already have an account?{' '}
-              <Link to="/signin" search={{}} class="link link-primary font-medium">
-                Sign in
+              <Link to="/login" search={{}} class="link link-primary font-medium">
+                Log in
               </Link>
             </p>
           </div>

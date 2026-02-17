@@ -1,13 +1,15 @@
 import { BetterFetchError } from '@better-fetch/fetch';
 import { createFileRoute, Link, useNavigate } from '@tanstack/solid-router';
+import { CircleX } from 'lucide-solid';
 import posthog from 'posthog-js';
 import { createSignal, Show } from 'solid-js';
 import { Card } from '~/components/Card';
 import { Loader } from '~/components/Loader';
+import { SocialLoginButtons, useLastLoginMethod } from '~/components/SocialLoginButtons';
 import { authClient } from '~/lib/auth-client';
 import { guestMiddleware } from '~/server/middleware/auth';
 
-export const Route = createFileRoute('/signin')({
+export const Route = createFileRoute('/login')({
   server: {
     middleware: [guestMiddleware],
   },
@@ -16,19 +18,20 @@ export const Route = createFileRoute('/signin')({
       redirect: typeof search?.redirect === 'string' ? search.redirect : undefined,
     };
   },
-  component: SignInPage,
+  component: LoginPage,
 });
 
-// TODO This page should use error boundry, should handle known errors and report unknown ones
-function SignInPage() {
+// TODO This page should use error boundary, should handle known errors and report unknown ones
+function LoginPage() {
   const navigate = useNavigate();
   const search = Route.useSearch();
   const [email, setEmail] = createSignal('');
   const [password, setPassword] = createSignal('');
   const [error, setError] = createSignal<string | null>(null);
   const [isLoading, setIsLoading] = createSignal(false);
+  const lastMethod = useLastLoginMethod();
 
-  const handleSignIn = async (e: Event) => {
+  const handleLogin = async (e: Event) => {
     e.preventDefault();
     setError(null);
     setIsLoading(true);
@@ -44,7 +47,7 @@ function SignInPage() {
 
       setIsLoading(false);
 
-      // Identify user for PostHog (signin event tracked server-side)
+      // Identify user for PostHog (login event tracked server-side)
       const session = await authClient.getSession();
       if (session.data?.user) {
         posthog.identify(session.data.user.id, {
@@ -68,14 +71,28 @@ function SignInPage() {
   };
 
   return (
-    <div class="flex min-h-screen items-center justify-center px-4">
-      <Card class="max-w-md">
+    <div class="bg-base-200 flex min-h-screen items-center justify-center px-4">
+      <Card class="max-w-lg [&>.card-body]:sm:p-10">
         <div class="mb-6 text-center">
           <h1 class="text-base-content text-3xl font-bold">Welcome Back</h1>
-          <p class="text-base-content-gray mt-2">Sign in to your OpenFeeds account</p>
+          <p class="text-base-content-gray mt-2">Log in to your OpenFeeds account</p>
         </div>
 
-        <form onSubmit={handleSignIn} class="space-y-4">
+        <Show when={error()}>
+          <div class="alert alert-error">
+            <CircleX class="h-6 w-6 shrink-0" />
+            <span>{error()}</span>
+          </div>
+        </Show>
+
+        <SocialLoginButtons
+          callbackURL={search()?.redirect || '/'}
+          onError={(msg) => setError(msg)}
+        />
+
+        <div class="divider">or</div>
+
+        <form onSubmit={handleLogin} class="space-y-4">
           <div class="form-control">
             <label class="label">
               <span class="label-text">Email</span>
@@ -115,38 +132,20 @@ function SignInPage() {
             </label>
           </div>
 
-          <Show when={error()}>
-            <div class="alert alert-error">
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                class="h-6 w-6 shrink-0 stroke-current"
-                fill="none"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"
-                />
-              </svg>
-              <span>{error()}</span>
-            </div>
-          </Show>
-
           <div class="form-control mt-6">
             <button type="submit" class="btn btn-primary w-full" disabled={isLoading()}>
               <Show when={isLoading()}>
                 <Loader />
               </Show>
-              {isLoading() ? 'Signing In...' : 'Sign In'}
+              {isLoading() ? 'Logging In...' : 'Log In'}
+              <Show when={lastMethod() === 'email'}>
+                <span class="badge badge-sm badge-primary ml-auto">Last used</span>
+              </Show>
             </button>
           </div>
         </form>
 
-        <div class="divider">or</div>
-
-        <div class="text-center">
+        <div class="mt-6 text-center">
           <p class="text-base-content-gray text-sm">
             Don't have an account?{' '}
             <Link

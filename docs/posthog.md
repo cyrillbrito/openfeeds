@@ -27,7 +27,7 @@ Analytics powered by [PostHog](https://posthog.com/) with EU data residency.
 - **Identify** on sign-in, sign-up, and frame load (`posthog.identify(userId, { email, name })`)
 - **Reset** on sign-out (`posthog.reset()`)
 
-Locations: `apps/web/src/routes/_frame.tsx`, `signup.tsx`, `signin.tsx`, `UserMenu.tsx`.
+Locations: `apps/web/src/routes/_frame.tsx`, `signup.tsx`, `login.tsx`, `UserMenu.tsx`.
 
 ## Best Practices
 
