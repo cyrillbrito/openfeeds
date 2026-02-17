@@ -179,7 +179,7 @@ These rules are set by the project maintainer and MUST be followed:
 1. **Always use `--changes <id>,<id>`** to commit only specific files. Never commit without `--changes` -- it commits ALL uncommitted changes including unrelated files.
 2. **Never use `but amend` or `but absorb` unless explicitly asked.** Always create new commits to preserve history visibility.
 3. **Group changes into relevant branches.** Check if a branch exists for the work (`but status --json`). If yes, commit there. If not, create one.
-4. **PR titles MUST follow Conventional Commits format:** `type: description` or `type(scope): description`. Types: `feat`, `fix`, `chore`, `refactor`, `docs`, `test`, `perf`, `ci`, `build`.
+4. **PR titles MUST follow Conventional Commits format:** `type: description` or `type(scope): description`. Types: `feat`, `fix`, `chore`, `refactor`, `docs`, `test`, `perf`, `ci`, `build`. The title should be slightly user/product-facing since it's used for changelogs. Don't go full product-speak, but lean slightly toward what changed for the user rather than pure implementation details. PR body/details can remain technical.
 5. **Use `but pr new`** for PRs, NOT `gh pr create`. Butler handles auth via SSH.
 6. **Use `-F <file>` for PR messages** (recommended). Write title + body to a temp file, pass it. Avoids shell escaping issues.
 7. Keep branches focused: one theme/feature per branch.
