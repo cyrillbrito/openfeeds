@@ -42,7 +42,7 @@ export class SigninPage {
 
   // Actions
   async goto() {
-    await this.page.goto('/signin');
+    await this.page.goto('/login');
   }
 
   async fillEmail(email: string) {

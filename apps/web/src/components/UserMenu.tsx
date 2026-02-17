@@ -50,7 +50,7 @@ export function UserMenu() {
     try {
       await authClient.signOut();
       posthog.reset();
-      window.location.href = '/signin';
+      window.location.href = '/login';
     } catch (error) {
       console.error('Sign out error:', error);
     }

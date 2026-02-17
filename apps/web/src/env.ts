@@ -23,6 +23,11 @@ export const env = createEnv({
       .pipe(z.array(z.url())),
     BASE_URL: z.url(),
     PORT: z.coerce.number().default(3000),
+    // Social login providers (optional — social login disabled when not set)
+    GOOGLE_CLIENT_ID: z.string().optional(),
+    GOOGLE_CLIENT_SECRET: z.string().optional(),
+    APPLE_CLIENT_ID: z.string().optional(),
+    APPLE_CLIENT_SECRET: z.string().optional(),
   },
   runtimeEnv: process.env,
   emptyStringAsUndefined: true,

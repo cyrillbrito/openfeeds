@@ -1,4 +1,5 @@
 import { oauthProviderClient } from '@better-auth/oauth-provider/client';
+import { lastLoginMethodClient } from 'better-auth/client/plugins';
 import { createAuthClient } from 'better-auth/solid';
 import { isServer } from 'solid-js/web';
 import { env } from '~/env';
@@ -9,5 +10,5 @@ import { env } from '~/env';
 
 export const authClient = createAuthClient({
   baseURL: isServer ? env.TRUSTED_ORIGINS[0] : undefined,
-  plugins: [oauthProviderClient()],
+  plugins: [oauthProviderClient(), lastLoginMethodClient()],
 });

@@ -1,7 +1,7 @@
 import { oauthProvider } from '@better-auth/oauth-provider';
 import { betterAuth } from 'better-auth';
 import { drizzleAdapter } from 'better-auth/adapters/drizzle';
-import { jwt } from 'better-auth/plugins';
+import { jwt, lastLoginMethod } from 'better-auth/plugins';
 import { tanstackStartCookies } from 'better-auth/tanstack-start/solid';
 import { SQL } from 'bun';
 
@@ -10,7 +10,18 @@ import { SQL } from 'bun';
 
 export const auth = betterAuth({
   database: drizzleAdapter(new SQL(''), { provider: 'pg' }),
+  trustedOrigins: ['https://appleid.apple.com'],
   disabledPaths: ['/token'],
+  socialProviders: {
+    google: {
+      clientId: '',
+      clientSecret: '',
+    },
+    apple: {
+      clientId: '',
+      clientSecret: '',
+    },
+  },
   emailAndPassword: {
     enabled: true,
     requireEmailVerification: true,
@@ -24,8 +35,9 @@ export const auth = betterAuth({
   },
   plugins: [
     jwt({ disableSettingJwtHeader: true }),
+    lastLoginMethod(),
     oauthProvider({
-      loginPage: '/signin',
+      loginPage: '/login',
       consentPage: '/oauth/consent',
       allowDynamicClientRegistration: true,
       allowUnauthenticatedClientRegistration: true, // Required for MCP clients (public clients)

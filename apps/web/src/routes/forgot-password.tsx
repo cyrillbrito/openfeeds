@@ -55,7 +55,7 @@ function ForgotPasswordPage() {
   };
 
   return (
-    <div class="flex min-h-screen items-center justify-center px-4">
+    <div class="bg-base-200 flex min-h-screen items-center justify-center px-4">
       <Card class="max-w-md">
         <div class="mb-6 text-center">
           <h1 class="text-base-content text-3xl font-bold">Reset Password</h1>
@@ -112,8 +112,8 @@ function ForgotPasswordPage() {
         <div class="text-center">
           <p class="text-base-content-gray text-sm">
             Remember your password?{' '}
-            <Link to="/signin" class="link link-primary font-medium">
-              Sign in
+            <Link to="/login" class="link link-primary font-medium">
+              Log in
             </Link>
           </p>
         </div>

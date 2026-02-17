@@ -61,7 +61,7 @@ function ResetPasswordPage() {
       setIsLoading(false);
 
       // Redirect to sign in after successful password reset
-      void navigate({ to: '/signin', replace: true });
+      void navigate({ to: '/login', replace: true });
     } catch (err) {
       setIsLoading(false);
       if (err instanceof BetterFetchError) {
@@ -74,7 +74,7 @@ function ResetPasswordPage() {
   };
 
   return (
-    <div class="flex min-h-screen items-center justify-center px-4">
+    <div class="bg-base-200 flex min-h-screen items-center justify-center px-4">
       <Card class="max-w-md">
         <div class="mb-6 text-center">
           <h1 class="text-base-content text-3xl font-bold">Set New Password</h1>
@@ -160,8 +160,8 @@ function ResetPasswordPage() {
         <div class="text-center">
           <p class="text-base-content-gray text-sm">
             Remember your password?{' '}
-            <Link to="/signin" class="link link-primary font-medium">
-              Sign in
+            <Link to="/login" class="link link-primary font-medium">
+              Log in
             </Link>
           </p>
         </div>

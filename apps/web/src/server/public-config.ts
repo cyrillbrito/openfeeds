@@ -5,5 +5,9 @@ import { env } from '~/env';
 export const $$getPublicConfig = createServerFn().handler(() => {
   return {
     posthogKey: env.POSTHOG_PUBLIC_KEY,
+    socialProviders: {
+      google: !!(env.GOOGLE_CLIENT_ID && env.GOOGLE_CLIENT_SECRET),
+      apple: !!(env.APPLE_CLIENT_ID && env.APPLE_CLIENT_SECRET),
+    },
   };
 });

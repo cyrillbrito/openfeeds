@@ -4,6 +4,7 @@ import posthog from 'posthog-js';
 import { createSignal, Show } from 'solid-js';
 import { Card } from '~/components/Card';
 import { Loader } from '~/components/Loader';
+import { SocialLoginButtons, useLastLoginMethod } from '~/components/SocialLoginButtons';
 import { authClient } from '~/lib/auth-client';
 import { guestMiddleware } from '~/server/middleware/auth';
 
@@ -27,6 +28,7 @@ function SignInPage() {
   const [password, setPassword] = createSignal('');
   const [error, setError] = createSignal<string | null>(null);
   const [isLoading, setIsLoading] = createSignal(false);
+  const lastMethod = useLastLoginMethod();
 
   const handleSignIn = async (e: Event) => {
     e.preventDefault();
@@ -140,9 +142,17 @@ function SignInPage() {
                 <Loader />
               </Show>
               {isLoading() ? 'Signing In...' : 'Sign In'}
+              <Show when={lastMethod() === 'email'}>
+                <span class="badge badge-sm ml-auto">Last used</span>
+              </Show>
             </button>
           </div>
         </form>
+
+        <SocialLoginButtons
+          callbackURL={search()?.redirect || '/'}
+          onError={(msg) => setError(msg)}
+        />
 
         <div class="divider">or</div>
 

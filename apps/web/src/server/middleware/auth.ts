@@ -18,7 +18,7 @@ export const authMiddleware = createMiddleware().server(async ({ request, next }
     const redirectPath = url.pathname + url.search;
     // Only include redirect param if it's a meaningful path (not just "/")
     const search = redirectPath && redirectPath !== '/' ? { redirect: redirectPath } : undefined;
-    throw redirect({ to: '/signin', search });
+    throw redirect({ to: '/login', search });
   }
   return next({ context: { user: session.user, session: session.session } as AuthContext });
 });
