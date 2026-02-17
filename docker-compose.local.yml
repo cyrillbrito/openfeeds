@@ -1,5 +1,10 @@
 # Local development: build and run all services from local Dockerfiles
 # Use this to test the full containerized stack locally
+#
+# Pre-build steps (all apps use packaging-only Dockerfiles):
+#   Web:      bun run build --filter=@repo/web
+#   Worker:   turbo prune @repo/worker && cd out && bun install && bun run build
+#   Migrator: turbo prune @repo/migrator && cd out && bun install
 services:
   postgres:
     image: postgres:18.1-alpine

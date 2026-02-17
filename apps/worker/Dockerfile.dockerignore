@@ -1,0 +1,3 @@
+# Only allow the pruned monorepo output through
+*
+!out/
