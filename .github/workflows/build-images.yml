@@ -31,28 +31,32 @@ jobs:
       - name: Setup Bun
         uses: oven-sh/setup-bun@v2
 
+      - name: Prune monorepo
+        run: bunx turbo@^2 prune @repo/web
+
       - name: Install dependencies
         run: bun install --frozen-lockfile
+        working-directory: out
 
       - name: Build
-        run: bun run build --filter=@repo/web
+        run: bun run build
+        working-directory: out
 
       - name: Read version from package.json
         id: version
         run: echo "value=$(jq -r .version package.json)" >> "$GITHUB_OUTPUT"
+        working-directory: out
 
       - name: Upload sourcemaps to PostHog
         uses: PostHog/upload-source-maps@v2
         with:
-          directory: apps/web/.output
+          directory: out/apps/web/.output
           project-id: ${{ secrets.POSTHOG_PROJECT_ID }}
           api-key: ${{ secrets.POSTHOG_CLI_API_KEY }}
           host: https://eu.posthog.com
           release-name: openfeeds-web
           release-version: ${{ steps.version.outputs.value }}
-
-      - name: Remove sourcemaps from build output
-        run: find apps/web/.output -name '*.map' -delete
+          delete-after-upload: true
 
       - name: Log in to GitHub Container Registry
         uses: docker/login-action@v3
@@ -94,11 +98,8 @@ jobs:
       - name: Setup Bun
         uses: oven-sh/setup-bun@v2
 
-      - name: Install turbo
-        run: bun install -g turbo@^2
-
       - name: Prune monorepo
-        run: turbo prune @repo/worker
+        run: bunx turbo@^2 prune @repo/worker
 
       - name: Install dependencies
         run: bun install --frozen-lockfile
@@ -148,11 +149,8 @@ jobs:
       - name: Setup Bun
         uses: oven-sh/setup-bun@v2
 
-      - name: Install turbo
-        run: bun install -g turbo@^2
-
       - name: Prune monorepo
-        run: turbo prune @repo/migrator
+        run: bunx turbo@^2 prune @repo/migrator
 
       - name: Install dependencies
         run: bun install --frozen-lockfile

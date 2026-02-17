@@ -5,7 +5,7 @@ FROM oven/bun:1
 WORKDIR /app
 
 # Copy pre-built Nitro output (already has chunkIds injected, sourcemaps removed)
-COPY apps/web/.output ./.output
+COPY out/apps/web/.output ./.output
 
 ENV PORT=80
 EXPOSE 80
