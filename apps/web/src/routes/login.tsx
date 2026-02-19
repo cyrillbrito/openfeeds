@@ -133,13 +133,13 @@ function LoginPage() {
           </div>
 
           <div class="form-control mt-6">
-            <button type="submit" class="btn btn-primary w-full" disabled={isLoading()}>
+            <button type="submit" class="btn btn-primary relative w-full" disabled={isLoading()}>
               <Show when={isLoading()}>
                 <Loader />
               </Show>
               {isLoading() ? 'Logging In...' : 'Log In'}
               <Show when={lastMethod() === 'email'}>
-                <span class="badge badge-sm badge-primary ml-auto">Last used</span>
+                <span class="badge badge-sm badge-info absolute -top-2 -right-2">Last used</span>
               </Show>
             </button>
           </div>
