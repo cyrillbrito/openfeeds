@@ -11,10 +11,12 @@ import { ToastProvider } from '~/providers/toast';
 import { $$getPublicConfig } from '~/server/public-config';
 import appCss from '~/styles/app.css?url';
 
+let publicConfigCache: Awaited<ReturnType<typeof $$getPublicConfig>> | undefined;
+
 export const Route = createRootRoute({
   beforeLoad: async () => {
-    const config = await $$getPublicConfig();
-    return { publicConfig: config };
+    publicConfigCache ??= await $$getPublicConfig();
+    return { publicConfig: publicConfigCache };
   },
   head: () => ({
     meta: [
@@ -45,7 +47,7 @@ function RootComponent() {
   const context = Route.useRouteContext();
 
   onMount(() => {
-    const posthogKey = context().publicConfig.posthogKey;
+    const posthogKey = context()?.publicConfig?.posthogKey;
     if (posthogKey) {
       import('../utils/posthog').then(({ initPosthog }) => {
         initPosthog(posthogKey);

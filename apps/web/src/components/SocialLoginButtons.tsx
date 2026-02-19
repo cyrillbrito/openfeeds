@@ -19,12 +19,12 @@ export function SocialLoginButtons(props: {
   onError: (message: string) => void;
 }) {
   const context = useRouteContext({ from: '__root__' });
-  const socialProviders = () => context().publicConfig.socialProviders;
+  const socialProviders = () => context()?.publicConfig?.socialProviders;
   const lastMethod = useLastLoginMethod();
 
   const [loadingProvider, setLoadingProvider] = createSignal<string | null>(null);
 
-  const hasSocialProviders = () => socialProviders().google || socialProviders().apple;
+  const hasSocialProviders = () => socialProviders()?.google || socialProviders()?.apple;
 
   const handleSocialSignIn = async (provider: 'google' | 'apple') => {
     setLoadingProvider(provider);
@@ -42,7 +42,7 @@ export function SocialLoginButtons(props: {
   return (
     <Show when={hasSocialProviders()}>
       <div class="space-y-3">
-        <Show when={socialProviders().google}>
+        <Show when={socialProviders()?.google}>
           <button
             type="button"
             class="btn btn-outline w-full"
@@ -59,7 +59,7 @@ export function SocialLoginButtons(props: {
           </button>
         </Show>
 
-        <Show when={socialProviders().apple}>
+        <Show when={socialProviders()?.apple}>
           <button
             type="button"
             class="btn btn-outline w-full"
