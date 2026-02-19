@@ -1,4 +1,3 @@
-import { readFileSync } from 'node:fs';
 import {
   initializeScheduledJobs,
   logger,
@@ -6,6 +5,7 @@ import {
   setAppVersion,
   shutdownDomain,
 } from '@repo/domain';
+import pkg from '../../../package.json' with { type: 'json' };
 import {
   createAutoArchiveWorker,
   createFeedDetailsWorker,
@@ -13,13 +13,7 @@ import {
   createSingleFeedSyncWorker,
 } from './workers';
 
-// Read version from root package.json (available in pruned monorepo)
-try {
-  const pkg = JSON.parse(readFileSync('package.json', 'utf-8'));
-  setAppVersion(pkg.version);
-} catch {
-  // Falls back to 'dev' default
-}
+setAppVersion(pkg.version);
 
 // Initialize scheduled jobs (orchestrator, auto-archive)
 await initializeScheduledJobs();

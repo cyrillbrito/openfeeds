@@ -1,4 +1,4 @@
-let appVersion = 'dev';
+let appVersion = 'unkown';
 
 export function setAppVersion(version: string): void {
   appVersion = version;
