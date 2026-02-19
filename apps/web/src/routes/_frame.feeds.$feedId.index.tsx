@@ -285,7 +285,7 @@ function FeedArticles() {
                     rel="noopener noreferrer"
                     class="link link-primary font-medium"
                   >
-                    Channel
+                    Website
                   </a>
                   <a
                     href={feed().feedUrl}
