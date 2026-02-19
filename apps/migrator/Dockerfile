@@ -8,4 +8,7 @@ WORKDIR /app
 # Copy pre-built pruned monorepo (includes node_modules and built deps)
 COPY out/ .
 
+# Run as non-root
+USER bun
+
 CMD ["bun", "--bun", "run", "apps/migrator/src/index.ts"]

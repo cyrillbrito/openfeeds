@@ -7,6 +7,8 @@ WORKDIR /app
 # Copy pre-built Nitro output (already has chunkIds injected, sourcemaps removed)
 COPY out/apps/web/.output ./.output
 
-ENV PORT=80
-EXPOSE 80
+# Run as non-root
+USER bun
+
+EXPOSE 3000
 CMD ["bun", "--bun", "run", ".output/server/index.mjs"]

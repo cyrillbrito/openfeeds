@@ -59,7 +59,7 @@ services:
   web:
     image: ghcr.io/cyrillbrito/openfeeds-web:latest
     ports:
-      - '3000:80'
+      - '3000:3000'
     environment:
       - BASE_URL=$BASE_URL
       - DATABASE_URL=postgresql://postgres:postgres@postgres:5432/openfeeds
