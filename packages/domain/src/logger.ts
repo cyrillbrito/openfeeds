@@ -1,5 +1,6 @@
 import { posthog } from './config';
 import { env } from './env';
+import { getAppVersion } from './version';
 
 export interface LogMetadata {
   // Known metadata fields
@@ -26,6 +27,7 @@ export const logger = {
         ...rest,
         $session_id: sessionId,
         app: env.POSTHOG_APP,
+        app_version: getAppVersion(),
       });
     }
   },

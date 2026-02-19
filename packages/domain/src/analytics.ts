@@ -1,4 +1,5 @@
 import { posthog } from './config';
+import { getAppVersion } from './version';
 
 /**
  * Server-side analytics event definitions.
@@ -77,7 +78,10 @@ export function trackEvent<T extends keyof ServerAnalyticsEventMap>(
     posthog.capture({
       distinctId: userId,
       event,
-      properties,
+      properties: {
+        ...properties,
+        app_version: getAppVersion(),
+      },
     });
   }
 }

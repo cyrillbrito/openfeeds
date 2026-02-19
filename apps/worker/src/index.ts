@@ -1,10 +1,19 @@
-import { initializeScheduledJobs, logger, QUEUE_NAMES, shutdownDomain } from '@repo/domain';
+import {
+  initializeScheduledJobs,
+  logger,
+  QUEUE_NAMES,
+  setAppVersion,
+  shutdownDomain,
+} from '@repo/domain';
+import pkg from '../../../package.json' with { type: 'json' };
 import {
   createAutoArchiveWorker,
   createFeedDetailsWorker,
   createFeedSyncOrchestratorWorker,
   createSingleFeedSyncWorker,
 } from './workers';
+
+setAppVersion(pkg.version);
 
 // Initialize scheduled jobs (orchestrator, auto-archive)
 await initializeScheduledJobs();

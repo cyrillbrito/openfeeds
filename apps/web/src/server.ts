@@ -1,6 +1,9 @@
+import { setAppVersion } from '@repo/domain';
 import handler, { createServerEntry } from '@tanstack/solid-start/server-entry';
 import { withDevCors } from './server/dev-cors';
 import { handleWellKnown } from './server/well-known';
+
+setAppVersion(__APP_VERSION__);
 
 export default createServerEntry({
   fetch: withDevCors((request) => {
