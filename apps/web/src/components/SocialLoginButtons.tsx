@@ -19,7 +19,7 @@ export function SocialLoginButtons(props: {
   onError: (message: string) => void;
 }) {
   const context = useRouteContext({ from: '__root__' });
-  const socialProviders = () => context().publicConfig?.socialProviders;
+  const socialProviders = () => context()?.publicConfig?.socialProviders;
   const lastMethod = useLastLoginMethod();
 
   const [loadingProvider, setLoadingProvider] = createSignal<string | null>(null);
