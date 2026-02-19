@@ -130,44 +130,52 @@ export async function syncFeedArticles(
   });
 
   for (const item of newItems) {
-    const shouldAutoArchive = item.pubDate < autoArchiveCutoffDate;
+    try {
+      const shouldAutoArchive = item.pubDate < autoArchiveCutoffDate;
 
-    // Evaluate filter rules using pre-loaded rules (pure function, no DB queries)
-    const shouldMarkAsReadByRules = shouldMarkAsRead(apiRules, item.title);
+      // Evaluate filter rules using pre-loaded rules (pure function, no DB queries)
+      const shouldMarkAsReadByRules = shouldMarkAsRead(apiRules, item.title);
 
-    const [newArticle] = await db
-      .insert(articles)
-      .values({
-        id: createId(),
-        userId,
-        feedId: feedId,
-        guid: item.guid,
-        title: item.title,
-        content: item.content,
-        description: item.description,
-        url: item.url,
-        pubDate: item.pubDate,
-        author: item.author,
-        isRead: shouldMarkAsReadByRules,
-        isArchived: shouldAutoArchive,
-        // cleanContent is null - will be extracted on-demand when user views the article
-        cleanContent: null,
-      })
-      .returning({ id: articles.id });
-
-    // Auto-assign feed tags to the new article using pre-loaded tags
-    if (newArticle && feedTagsList.length > 0) {
-      await db.insert(articleTags).values(
-        feedTagsList.map((ft) => ({
+      const [newArticle] = await db
+        .insert(articles)
+        .values({
           id: createId(),
           userId,
-          articleId: newArticle.id,
-          tagId: ft.tagId,
-        })),
-      );
-    }
+          feedId: feedId,
+          guid: item.guid,
+          title: item.title,
+          content: item.content,
+          description: item.description,
+          url: item.url,
+          pubDate: item.pubDate,
+          author: item.author,
+          isRead: shouldMarkAsReadByRules,
+          isArchived: shouldAutoArchive,
+          // cleanContent is null - will be extracted on-demand when user views the article
+          cleanContent: null,
+        })
+        .returning({ id: articles.id });
 
-    counts.created++;
+      // Auto-assign feed tags to the new article using pre-loaded tags
+      if (newArticle && feedTagsList.length > 0) {
+        await db.insert(articleTags).values(
+          feedTagsList.map((ft) => ({
+            id: createId(),
+            userId,
+            articleId: newArticle.id,
+            tagId: ft.tagId,
+          })),
+        );
+      }
+
+      counts.created++;
+    } catch (error) {
+      logger.error(error instanceof Error ? error : new Error(String(error)), {
+        feedId,
+        guid: item.guid,
+        title: item.title?.slice(0, 100),
+      });
+    }
   }
 
   return counts;
