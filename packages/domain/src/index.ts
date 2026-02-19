@@ -39,3 +39,6 @@ export {
 
 // Analytics
 export { trackEvent, type ServerAnalyticsEventMap } from './analytics';
+
+// Version
+export { setAppVersion, getAppVersion } from './version';
