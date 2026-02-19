@@ -1,25 +1,15 @@
 import { BetterFetchError } from '@better-fetch/fetch';
-import { createFileRoute, Link, redirect } from '@tanstack/solid-router';
+import { createFileRoute, Link } from '@tanstack/solid-router';
 import { CircleCheck, CircleX } from 'lucide-solid';
 import posthog from 'posthog-js';
 import { createSignal, Show } from 'solid-js';
-import { isServer } from 'solid-js/web';
 import { Card } from '~/components/Card';
 import { Loader } from '~/components/Loader';
 import { authClient } from '~/lib/auth-client';
-import { guestMiddleware } from '~/server/middleware/auth';
+import { guestGuard } from '~/lib/guards';
 
 export const Route = createFileRoute('/forgot-password')({
-  server: {
-    middleware: [guestMiddleware],
-  },
-  beforeLoad: async () => {
-    if (isServer) return;
-    const session = await authClient.getSession();
-    if (session.data) {
-      throw redirect({ to: '/' });
-    }
-  },
+  beforeLoad: guestGuard,
   validateSearch: (search): { email?: string } => {
     return {
       email: typeof search?.email === 'string' ? search.email : undefined,
