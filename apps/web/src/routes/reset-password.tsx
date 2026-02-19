@@ -6,12 +6,10 @@ import { createSignal, Show } from 'solid-js';
 import { Card } from '~/components/Card';
 import { Loader } from '~/components/Loader';
 import { authClient } from '~/lib/auth-client';
-import { guestMiddleware } from '~/server/middleware/auth';
+import { guestGuard } from '~/lib/guards';
 
 export const Route = createFileRoute('/reset-password')({
-  server: {
-    middleware: [guestMiddleware],
-  },
+  beforeLoad: guestGuard,
   validateSearch: (search): { token?: string; error?: string } => {
     return {
       token: typeof search?.token === 'string' ? search.token : undefined,

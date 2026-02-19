@@ -11,12 +11,12 @@ import { TagModal } from '~/components/TagModal';
 import { UserMenu } from '~/components/UserMenu';
 import { useTags } from '~/entities/tags';
 import { authClient } from '~/lib/auth-client';
-import { authMiddleware } from '~/server/middleware/auth.ts';
+import { authGuard } from '~/lib/guards';
 import { getTagDotColor } from '~/utils/tagColors';
 
 export const Route = createFileRoute('/_frame')({
-  server: {
-    middleware: [authMiddleware],
+  beforeLoad: async ({ location }) => {
+    await authGuard(location);
   },
   component: FrameLayout,
 });

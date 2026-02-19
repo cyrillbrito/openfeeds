@@ -1,10 +1,10 @@
 import { createFileRoute, redirect } from '@tanstack/solid-router';
 import { $$hasAnyFeeds } from '~/entities/feeds.server';
-import { authMiddleware } from '~/server/middleware/auth';
+import { authGuard } from '~/lib/guards';
 
 export const Route = createFileRoute('/')({
-  server: {
-    middleware: [authMiddleware],
+  beforeLoad: async () => {
+    await authGuard();
   },
   loader: async () => {
     const hasFeeds = await $$hasAnyFeeds();

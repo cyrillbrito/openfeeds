@@ -7,12 +7,10 @@ import { Card } from '~/components/Card';
 import { Loader } from '~/components/Loader';
 import { SocialLoginButtons } from '~/components/SocialLoginButtons';
 import { authClient } from '~/lib/auth-client';
-import { guestMiddleware } from '~/server/middleware/auth';
+import { guestGuard } from '~/lib/guards';
 
 export const Route = createFileRoute('/signup')({
-  server: {
-    middleware: [guestMiddleware],
-  },
+  beforeLoad: guestGuard,
   validateSearch: (search) => {
     return {
       redirect: typeof search.redirect === 'string' ? search.redirect : undefined,
