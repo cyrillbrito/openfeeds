@@ -2,10 +2,7 @@ import { redirect } from '@tanstack/solid-router';
 import { createMiddleware } from '@tanstack/solid-start';
 import { getRequestHeaders } from '@tanstack/solid-start/server';
 import type { Session, User } from 'better-auth';
-
-// Lazy import to avoid leaking @repo/db into client bundle.
-// TanStack Start's DCE doesn't fully eliminate middleware imports (TanStack/router#2783).
-const getAuth = () => import('~/server/auth').then((m) => m.auth);
+import { auth } from '~/server/auth';
 
 export type AuthContext = { user: User; session: Session };
 
@@ -14,7 +11,6 @@ export type AuthContext = { user: User; session: Session };
  * Redirects to login page if not authenticated
  */
 export const authMiddleware = createMiddleware().server(async ({ request, next }) => {
-  const auth = await getAuth();
   const headers = getRequestHeaders();
   const session = await auth.api.getSession({ headers });
   if (!session) {
@@ -32,7 +28,6 @@ export const authMiddleware = createMiddleware().server(async ({ request, next }
  * Redirects authenticated users to the app root
  */
 export const guestMiddleware = createMiddleware().server(async ({ next }) => {
-  const auth = await getAuth();
   const headers = getRequestHeaders();
   const session = await auth.api.getSession({ headers });
   if (session) {
@@ -47,7 +42,6 @@ export const guestMiddleware = createMiddleware().server(async ({ next }) => {
  */
 export const authRequestMiddleware = createMiddleware({ type: 'request' }).server<AuthContext>(
   async ({ request, next }) => {
-    const auth = await getAuth();
     const session = await auth.api.getSession({ headers: request.headers });
     if (!session) {
       return new Response(JSON.stringify({ message: 'Unauthorized' }), {
