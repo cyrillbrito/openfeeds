@@ -63,7 +63,7 @@ export async function enqueueFeedSync(feedId: string) {
     {
       // Deduplication key: BullMQ skips adding this job if one with the same jobId
       // is already in waiting, delayed, or active state.
-      jobId: `feed-sync:${feedId}`,
+      jobId: `feed-sync-${feedId}`,
       removeOnComplete: 100,
       removeOnFail: 500,
     },
@@ -78,7 +78,7 @@ export async function enqueueFeedSync(feedId: string) {
  */
 export async function forceEnqueueFeedSync(feedId: string) {
   const queue = getSingleFeedSyncQueue();
-  const jobId = `feed-sync:${feedId}`;
+  const jobId = `feed-sync-${feedId}`;
   await queue.remove(jobId);
   return queue.add(feedId, { feedId }, { jobId, removeOnComplete: 100, removeOnFail: 500 });
 }

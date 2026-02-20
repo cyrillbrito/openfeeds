@@ -14,6 +14,7 @@ import { FeedIllustration } from '~/components/Icons';
 import { ImportOpmlModal } from '~/components/ImportOpmlModal';
 import type { ModalController } from '~/components/LazyModal';
 import { CenterLoader } from '~/components/Loader';
+import { SyncLogsModal } from '~/components/SyncLogsModal';
 import { useFeedTags } from '~/entities/feed-tags';
 import { feedsCollection, useFeeds } from '~/entities/feeds';
 import { $$retryFeed } from '~/entities/feeds.server';
@@ -43,10 +44,12 @@ function FeedsComponent() {
   let importOpmlModalController!: ModalController;
   let deleteFeedModalController!: ModalController;
   let editFeedModalController!: ModalController;
+  let syncLogsModalController!: ModalController;
 
   // Modal state
   const [feedToDelete, setFeedToDelete] = createSignal<Feed | null>(null);
   const [editingFeed, setEditingFeed] = createSignal<Feed | null>(null);
+  const [syncLogsFeed, setSyncLogsFeed] = createSignal<Feed | null>(null);
 
   // const [searchInput, setSearchInput] = createSignal(search()?.q ?? '');
   const [searchDebounced, setSearchDebounced] = createSignal(search()?.q ?? '');
@@ -128,6 +131,11 @@ function FeedsComponent() {
         <EditFeedModal
           controller={(controller) => (editFeedModalController = controller)}
           feed={editingFeed()}
+        />
+
+        <SyncLogsModal
+          controller={(controller) => (syncLogsModalController = controller)}
+          feed={syncLogsFeed()}
         />
 
         <Switch>
@@ -245,6 +253,16 @@ function FeedsComponent() {
                                 </button>
                               </li>
                             </Show>
+                            <li>
+                              <button
+                                onClick={() => {
+                                  setSyncLogsFeed(feed);
+                                  syncLogsModalController.open();
+                                }}
+                              >
+                                Sync Logs
+                              </button>
+                            </li>
                             <div class="divider my-0"></div>
                             <li>
                               <button

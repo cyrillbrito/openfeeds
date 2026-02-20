@@ -65,3 +65,10 @@ export const $$retryFeed = createServerFn({ method: 'POST' })
   .handler(({ context, data }) => {
     return feedsDomain.retryFeed(data.id, context.user.id);
   });
+
+export const $$getFeedSyncLogs = createServerFn()
+  .middleware([authMiddleware])
+  .inputValidator(z.object({ feedId: z.string() }))
+  .handler(({ context, data }) => {
+    return feedsDomain.getFeedSyncLogs(context.user.id, data.feedId, 200);
+  });

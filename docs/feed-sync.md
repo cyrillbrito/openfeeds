@@ -32,4 +32,4 @@ On the first failed attempt the feed is set to `failing`. After all retries are 
 
 ## Deduplication
 
-Job IDs are `feed-sync:{feedId}`. BullMQ drops duplicate enqueues for jobs already waiting, delayed, or active — so the orchestrator never stacks jobs for a feed that is mid-retry. `forceEnqueueFeedSync` explicitly removes the existing job first to bypass this.
+Job IDs are `feed-sync-{feedId}`. BullMQ drops duplicate enqueues for jobs already waiting, delayed, or active — so the orchestrator never stacks jobs for a feed that is mid-retry. `forceEnqueueFeedSync` explicitly removes the existing job first to bypass this.
