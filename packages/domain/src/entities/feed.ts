@@ -68,7 +68,7 @@ export async function createFeed(data: CreateFeed, userId: string): Promise<Feed
 
   // Enqueue for worker to fetch metadata and sync articles
   await enqueueFeedDetail(userId, feedId);
-  await enqueueFeedSync(userId, feedId);
+  await enqueueFeedSync(feedId);
 
   // Track feed creation (server-side for reliability)
   trackEvent(userId, 'feeds:feed_create', {

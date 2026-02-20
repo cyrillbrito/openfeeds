@@ -181,8 +181,6 @@ export async function syncFeedArticles(
 
 /** Feeds not synced in this many minutes are considered stale */
 const OUTDATED_MIN = 15;
-/** Max stale feeds enqueued per orchestrator run */
-const SYNC_LIMIT = 50;
 
 export interface SyncSingleFeedResult {
   httpStatus: number;
@@ -378,8 +376,7 @@ export async function enqueueStaleFeeds(): Promise<void> {
         or(isNull(feeds.lastSyncAt), lt(feeds.lastSyncAt, outdatedDate)),
       ),
     )
-    .orderBy(asc(feeds.lastSyncAt))
-    .limit(SYNC_LIMIT);
+    .orderBy(asc(feeds.lastSyncAt));
 
   if (feedsToSync.length === 0) {
     return;
