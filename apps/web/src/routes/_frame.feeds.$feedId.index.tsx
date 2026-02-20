@@ -15,6 +15,7 @@ import { CenterLoader } from '~/components/Loader';
 import { MarkAllArchivedButton } from '~/components/MarkAllArchivedButton';
 import { ReadStatusToggle, type ReadStatus } from '~/components/ReadStatusToggle';
 import { ShuffleButton } from '~/components/ShuffleButton';
+import { SyncLogsModal } from '~/components/SyncLogsModal';
 import { articlesCollection } from '~/entities/articles';
 import { useFeedTags } from '~/entities/feed-tags';
 import { feedsCollection, useFeeds } from '~/entities/feeds';
@@ -78,6 +79,7 @@ function FeedArticles() {
   let editFeedModalController!: ModalController;
   let deleteFeedModalController!: ModalController;
   let markAllModalController!: ModalController;
+  let syncLogsModalController!: ModalController;
 
   const [feedToDelete, setFeedToDelete] = createSignal<Feed | null>(null);
   const [isMarkingAllArchived, setIsMarkingAllArchived] = createSignal(false);
@@ -149,6 +151,9 @@ function FeedArticles() {
             <Dropdown end btnClasses="btn-sm" btnContent={<MoreVertical size={20} />}>
               <li>
                 <button onClick={() => editFeedModalController.open()}>Edit Feed</button>
+              </li>
+              <li>
+                <button onClick={() => syncLogsModalController.open()}>Sync Logs</button>
               </li>
               <div class="divider my-0"></div>
               <li>
@@ -366,6 +371,11 @@ function FeedArticles() {
         controller={(controller) => (deleteFeedModalController = controller)}
         feed={feedToDelete()}
         onDeleteComplete={() => setFeedToDelete(null)}
+      />
+
+      <SyncLogsModal
+        controller={(controller) => (syncLogsModalController = controller)}
+        feed={currentFeed()}
       />
 
       <LazyModal
