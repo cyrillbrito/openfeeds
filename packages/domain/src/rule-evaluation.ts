@@ -1,6 +1,5 @@
 import { articles, db, feeds, filterRules } from '@repo/db';
 import { and, eq } from 'drizzle-orm';
-import { filterRuleDbToApi } from './db-utils';
 import { shouldMarkAsRead } from './entities/filter-rule';
 
 /**
@@ -40,11 +39,10 @@ export async function applyFilterRulesToExistingArticles(
   });
 
   let articlesMarkedAsRead = 0;
-  const apiRules = rules.map(filterRuleDbToApi);
 
   // Apply rules to each article
   for (const article of feedArticles) {
-    if (shouldMarkAsRead(apiRules, article.title)) {
+    if (shouldMarkAsRead(rules, article.title)) {
       await db
         .update(articles)
         .set({ isRead: true })

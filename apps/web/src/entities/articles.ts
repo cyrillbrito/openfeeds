@@ -1,5 +1,5 @@
 import { snakeCamelMapper } from '@electric-sql/client';
-import { ElectricArticleSchema } from '@repo/domain/client';
+import { ArticleSchema } from '@repo/domain/client';
 import { electricCollectionOptions } from '@tanstack/electric-db-collection';
 import { createCollection } from '@tanstack/solid-db';
 import { collectionErrorHandler, shapeErrorHandler } from '~/lib/collection-errors';
@@ -10,7 +10,7 @@ import { $$createArticle, $$updateArticles } from './articles.server';
 export const articlesCollection = createCollection(
   electricCollectionOptions({
     id: 'articles',
-    schema: ElectricArticleSchema,
+    schema: ArticleSchema,
     getKey: (item) => item.id,
 
     shapeOptions: {
@@ -40,7 +40,8 @@ export const articlesCollection = createCollection(
             content: article.content,
             author: article.author,
             pubDate: article.pubDate ?? new Date().toISOString(),
-            hasCleanContent: article.hasCleanContent,
+            cleanContent: article.cleanContent,
+            contentExtractedAt: article.contentExtractedAt,
             createdAt: article.createdAt,
           });
         }

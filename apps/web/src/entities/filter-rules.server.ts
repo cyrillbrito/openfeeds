@@ -1,44 +1,32 @@
-import {
-  createFilterRule,
-  createFilterRuleApiSchema,
-  deleteFilterRule,
-  getAllFilterRules,
-  updateFilterRule,
-  updateFilterRuleSchema,
-} from '@repo/domain';
+import * as filterRulesDomain from '@repo/domain';
+import { CreateFilterRuleSchema, UpdateFilterRuleSchema } from '@repo/domain';
 import { createServerFn } from '@tanstack/solid-start';
 import { z } from 'zod';
 import { authMiddleware } from '~/server/middleware/auth';
 
-export const $$getAllFilterRules = createServerFn({ method: 'GET' })
-  .middleware([authMiddleware])
-  .handler(({ context }) => {
-    return getAllFilterRules(context.user.id);
-  });
-
 export const $$createFilterRules = createServerFn({ method: 'POST' })
   .middleware([authMiddleware])
-  .inputValidator(z.array(createFilterRuleApiSchema.extend({ feedId: z.string() })))
+  .inputValidator(z.array(CreateFilterRuleSchema))
   .handler(({ context, data }) => {
     return Promise.all(
-      data.map(({ feedId, ...rule }) => createFilterRule(feedId, rule, context.user.id)),
+      data.map((rule) => filterRulesDomain.createFilterRule(rule, context.user.id)),
     );
   });
 
 export const $$updateFilterRules = createServerFn({ method: 'POST' })
   .middleware([authMiddleware])
-  .inputValidator(z.array(updateFilterRuleSchema.extend({ feedId: z.string(), id: z.string() })))
+  .inputValidator(z.array(UpdateFilterRuleSchema.extend({ id: z.string() })))
   .handler(({ context, data }) => {
     return Promise.all(
-      data.map(({ feedId, id, ...updates }) =>
-        updateFilterRule(feedId, id, updates, context.user.id),
+      data.map(({ id, ...updates }) =>
+        filterRulesDomain.updateFilterRule(id, updates, context.user.id),
       ),
     );
   });
 
 export const $$deleteFilterRules = createServerFn({ method: 'POST' })
   .middleware([authMiddleware])
-  .inputValidator(z.array(z.object({ feedId: z.string(), id: z.string() })))
-  .handler(({ context, data }) => {
-    return Promise.all(data.map(({ feedId, id }) => deleteFilterRule(feedId, id, context.user.id)));
+  .inputValidator(z.array(z.string()))
+  .handler(({ context, data: ids }) => {
+    return Promise.all(ids.map((id) => filterRulesDomain.deleteFilterRule(id, context.user.id)));
   });

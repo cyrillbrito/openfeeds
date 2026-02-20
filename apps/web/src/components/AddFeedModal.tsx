@@ -83,6 +83,7 @@ function AddFeedForm(props: AddFeedFormProps) {
 
     feedsCollection.insert({
       id: feedId,
+      userId: '', // Will be set by server
       url: feed.url,
       feedUrl: feed.url,
       title: feed.title || feed.url,
@@ -120,6 +121,7 @@ function AddFeedForm(props: AddFeedFormProps) {
 
     feedsCollection.insert({
       id: feedId,
+      userId: '', // Will be set by server
       url,
       feedUrl: url,
       title: url,

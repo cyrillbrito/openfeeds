@@ -1,9 +1,8 @@
-import { db, feeds, type DbInsertFeed } from '@repo/db';
+import { db, feeds, type DbFeed, type DbInsertFeed } from '@repo/db';
 import { discoverFeeds } from '@repo/discovery/server';
 import { createId } from '@repo/shared/utils';
 import { and, eq } from 'drizzle-orm';
 import { trackEvent } from '../analytics';
-import { feedDbToApi } from '../db-utils';
 import { assert, BadRequestError, ConflictError, NotFoundError } from '../errors';
 import { enqueueFeedDetail, enqueueFeedSync } from '../queues';
 import type { CreateFeed, DiscoveredFeed, Feed, UpdateFeed } from './feed.schema';
@@ -11,28 +10,34 @@ import type { CreateFeed, DiscoveredFeed, Feed, UpdateFeed } from './feed.schema
 // Re-export schemas and types from schema file
 export * from './feed.schema';
 
-export async function getAllFeeds(userId: string): Promise<Feed[]> {
-  const allFeeds = await db.query.feeds.findMany({
-    where: eq(feeds.userId, userId),
-  });
-
-  return allFeeds.map(feedDbToApi);
+function toApiFeed(f: DbFeed): Feed {
+  return {
+    id: f.id,
+    userId: f.userId,
+    url: f.url,
+    feedUrl: f.feedUrl,
+    title: f.title,
+    description: f.description,
+    icon: f.icon,
+    createdAt: f.createdAt.toISOString(),
+    updatedAt: f.updatedAt.toISOString(),
+    lastSyncAt: f.lastSyncAt?.toISOString() ?? null,
+    syncStatus: f.syncStatus as Feed['syncStatus'],
+    syncError: f.syncError,
+    syncFailCount: f.syncFailCount,
+  };
 }
 
-/**
- * Get feed by ID
- * Used for business logic that needs a single feed
- */
-export async function getFeedById(id: string, userId: string): Promise<Feed> {
+/** Existence + ownership guard. Throws NotFoundError if feed doesn't exist or doesn't belong to user. */
+async function assertFeedExists(id: string, userId: string): Promise<void> {
   const feed = await db.query.feeds.findFirst({
     where: and(eq(feeds.id, id), eq(feeds.userId, userId)),
+    columns: { id: true },
   });
 
   if (!feed) {
     throw new NotFoundError();
   }
-
-  return feedDbToApi(feed);
 }
 
 export async function createFeed(data: CreateFeed, userId: string): Promise<Feed> {
@@ -73,12 +78,12 @@ export async function createFeed(data: CreateFeed, userId: string): Promise<Feed
     source: 'manual',
   });
 
-  return feedDbToApi(newFeed);
+  return toApiFeed(newFeed);
 }
 
-export async function updateFeed(id: string, data: UpdateFeed, userId: string): Promise<Feed> {
+export async function updateFeed(id: string, data: UpdateFeed, userId: string): Promise<void> {
   // Verify feed exists and belongs to user
-  await getFeedById(id, userId);
+  await assertFeedExists(id, userId);
 
   const feedUpdateData = {
     title: data.title,
@@ -99,20 +104,10 @@ export async function updateFeed(id: string, data: UpdateFeed, userId: string): 
       .set(feedUpdateData)
       .where(and(eq(feeds.id, id), eq(feeds.userId, userId)));
   }
-
-  // Fetch and return the updated feed with consistent query structure
-  return getFeedById(id, userId);
 }
 
 export async function deleteFeed(id: string, userId: string): Promise<void> {
-  const existingFeed = await db.query.feeds.findFirst({
-    columns: { id: true },
-    where: and(eq(feeds.id, id), eq(feeds.userId, userId)),
-  });
-
-  if (!existingFeed) {
-    throw new NotFoundError();
-  }
+  await assertFeedExists(id, userId);
 
   await db.delete(feeds).where(and(eq(feeds.id, id), eq(feeds.userId, userId)));
 
@@ -125,9 +120,9 @@ export async function deleteFeed(id: string, userId: string): Promise<void> {
  * Reset a feed's sync error state so the orchestrator picks it up again.
  * Does NOT immediately sync — the next orchestrator run will handle it.
  */
-export async function retryFeed(id: string, userId: string): Promise<Feed> {
+export async function retryFeed(id: string, userId: string): Promise<void> {
   // Verify feed exists and belongs to user
-  await getFeedById(id, userId);
+  await assertFeedExists(id, userId);
 
   await db
     .update(feeds)
@@ -137,8 +132,6 @@ export async function retryFeed(id: string, userId: string): Promise<Feed> {
       syncError: null,
     })
     .where(and(eq(feeds.id, id), eq(feeds.userId, userId)));
-
-  return getFeedById(id, userId);
 }
 
 export async function discoverRssFeeds(url: string): Promise<DiscoveredFeed[]> {

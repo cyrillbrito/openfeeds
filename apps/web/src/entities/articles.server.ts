@@ -1,19 +1,8 @@
 import * as articlesDomain from '@repo/domain';
-import {
-  ArticleQueryInputSchema,
-  CreateArticleFromUrlSchema,
-  UpdateArticleSchema,
-} from '@repo/domain';
+import { CreateArticleFromUrlSchema, UpdateArticleSchema } from '@repo/domain';
 import { createServerFn } from '@tanstack/solid-start';
 import { z } from 'zod';
 import { authMiddleware } from '~/server/middleware/auth';
-
-export const $$getArticles = createServerFn({ method: 'GET' })
-  .middleware([authMiddleware])
-  .inputValidator(ArticleQueryInputSchema)
-  .handler(({ context, data: query }) => {
-    return articlesDomain.getArticles(query, context.user.id);
-  });
 
 export const $$updateArticles = createServerFn({ method: 'POST' })
   .middleware([authMiddleware])

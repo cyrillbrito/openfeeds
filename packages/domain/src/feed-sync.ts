@@ -3,7 +3,6 @@ import { sanitizeHtml } from '@repo/readability/sanitize';
 import { createId } from '@repo/shared/utils';
 import { and, asc, eq, inArray, isNull, lt, ne, or } from 'drizzle-orm';
 import { autoArchiveArticles } from './archive';
-import { filterRuleDbToApi } from './db-utils';
 import { shouldMarkAsRead } from './entities/filter-rule';
 import { getAutoArchiveCutoffDate } from './entities/settings';
 import { logger } from './logger';
@@ -121,7 +120,6 @@ export async function syncFeedArticles(
       eq(filterRules.isActive, true),
     ),
   });
-  const apiRules = activeRules.map(filterRuleDbToApi);
 
   // Batch feed tags: load once instead of per-article
   const feedTagsList = await db.query.feedTags.findMany({
@@ -134,7 +132,7 @@ export async function syncFeedArticles(
       const shouldAutoArchive = item.pubDate < autoArchiveCutoffDate;
 
       // Evaluate filter rules using pre-loaded rules (pure function, no DB queries)
-      const shouldMarkAsReadByRules = shouldMarkAsRead(apiRules, item.title);
+      const shouldMarkAsReadByRules = shouldMarkAsRead(activeRules, item.title);
 
       const [newArticle] = await db
         .insert(articles)

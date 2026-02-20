@@ -5,7 +5,7 @@ export const FilterOperator = {
   NOT_INCLUDES: 'not_includes',
 } as const;
 
-export const filterRuleSchema = z.object({
+export const FilterRuleSchema = z.object({
   id: z.string(),
   userId: z.string(),
   feedId: z.string(),
@@ -15,27 +15,32 @@ export const filterRuleSchema = z.object({
   createdAt: z.iso.datetime(),
   updatedAt: z.iso.datetime().optional(),
 });
-export type FilterRule = z.infer<typeof filterRuleSchema>;
+export type FilterRule = z.infer<typeof FilterRuleSchema>;
 
-const createFilterRuleSchema = filterRuleSchema
-  .omit({
-    userId: true,
-    createdAt: true,
-    updatedAt: true,
-  })
-  .extend({
-    id: z.string().optional(),
-  });
-
-export const createFilterRuleApiSchema = createFilterRuleSchema.omit({
-  feedId: true,
+export const CreateFilterRuleSchema = z.object({
+  id: z.string().optional(),
+  feedId: z.string(),
+  pattern: z.string().min(1),
+  operator: z.enum([FilterOperator.INCLUDES, FilterOperator.NOT_INCLUDES]),
+  isActive: z.boolean(),
 });
-export type CreateFilterRuleApi = z.infer<typeof createFilterRuleApiSchema>;
+export type CreateFilterRule = z.infer<typeof CreateFilterRuleSchema>;
 
-export const updateFilterRuleSchema = createFilterRuleSchema.partial();
-export type UpdateFilterRule = z.infer<typeof updateFilterRuleSchema>;
+export const UpdateFilterRuleSchema = z.object({
+  pattern: z.string().min(1).optional(),
+  operator: z.enum([FilterOperator.INCLUDES, FilterOperator.NOT_INCLUDES]).optional(),
+  isActive: z.boolean().optional(),
+});
+export type UpdateFilterRule = z.infer<typeof UpdateFilterRuleSchema>;
 
-export function evaluateRule(rule: FilterRule, title: string): boolean {
+/** Minimal shape needed for rule evaluation — works with both API and DB types */
+export interface EvaluableRule {
+  pattern: string;
+  operator: string;
+  isActive: boolean;
+}
+
+export function evaluateRule(rule: EvaluableRule, title: string): boolean {
   const normalizedTitle = title.toLowerCase();
   const normalizedPattern = rule.pattern.toLowerCase();
 
@@ -49,7 +54,7 @@ export function evaluateRule(rule: FilterRule, title: string): boolean {
   }
 }
 
-export function shouldMarkAsRead(rules: FilterRule[], title: string): boolean {
+export function shouldMarkAsRead(rules: EvaluableRule[], title: string): boolean {
   const activeRules = rules.filter((rule) => rule.isActive);
   return activeRules.some((rule) => evaluateRule(rule, title));
 }

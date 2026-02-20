@@ -2,10 +2,10 @@ import { existsSync } from 'node:fs';
 import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import { trackEvent } from './analytics';
-import { getArticleWithContent } from './entities/article';
+import { extractArticleContent } from './entities/article';
 import type { ArticleAudioMetadata, WordTiming } from './entities/tts.schema';
 import { env } from './env';
-import { NotFoundError, TtsNotConfiguredError } from './errors';
+import { TtsNotConfiguredError } from './errors';
 
 // Re-export client-safe types
 export * from './entities/tts.schema';
@@ -155,17 +155,15 @@ export async function generateArticleAudio(
     }
   }
 
-  // Get article content
-  const article = await getArticleWithContent(articleId, userId);
-  if (!article) {
-    throw new NotFoundError();
+  const cleanContent = await extractArticleContent(articleId, userId);
+
+  if (!cleanContent) {
+    throw new Error('Article has no content to convert to speech');
   }
 
-  // Get text content - prefer cleanContent, fallback to description
-  const htmlContent = article.cleanContent || article.description || article.title;
-  const textContent = stripHtml(htmlContent);
+  const textContent = stripHtml(cleanContent);
 
-  if (!textContent || textContent.length === 0) {
+  if (!textContent) {
     throw new Error('Article has no content to convert to speech');
   }
 

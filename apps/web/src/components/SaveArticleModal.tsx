@@ -54,6 +54,7 @@ function SaveArticleForm(props: SaveArticleFormProps) {
     // Insert into collection - onInsert will call server and update with real data
     articlesCollection.insert({
       id: articleId,
+      userId: '', // Will be set by server
       feedId: null,
       title: url, // Placeholder, will be updated by onInsert
       url,
@@ -65,7 +66,6 @@ function SaveArticleForm(props: SaveArticleFormProps) {
       isArchived: false,
       cleanContent: null,
       contentExtractedAt: null,
-      hasCleanContent: false,
       createdAt: new Date().toISOString(),
     });
 

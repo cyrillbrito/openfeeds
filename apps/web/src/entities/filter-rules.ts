@@ -1,5 +1,5 @@
 import { snakeCamelMapper } from '@electric-sql/client';
-import { filterRuleSchema, type CreateFilterRuleApi, type FilterRule } from '@repo/domain/client';
+import { FilterRuleSchema, type FilterRule } from '@repo/domain/client';
 import { electricCollectionOptions } from '@tanstack/electric-db-collection';
 import { createCollection, eq, useLiveQuery } from '@tanstack/solid-db';
 import { collectionErrorHandler, shapeErrorHandler } from '~/lib/collection-errors';
@@ -14,7 +14,7 @@ import {
 export const filterRulesCollection = createCollection(
   electricCollectionOptions({
     id: 'filter-rules',
-    schema: filterRuleSchema,
+    schema: FilterRuleSchema,
     getKey: (item) => item.id,
 
     shapeOptions: {
@@ -26,7 +26,7 @@ export const filterRulesCollection = createCollection(
 
     onInsert: collectionErrorHandler('filterRules.onInsert', async ({ transaction }) => {
       const rules = transaction.mutations.map((mutation) => {
-        const rule = mutation.modified as FilterRule & CreateFilterRuleApi;
+        const rule = mutation.modified as FilterRule;
         return {
           id: mutation.key as string,
           feedId: rule.feedId,
@@ -39,26 +39,16 @@ export const filterRulesCollection = createCollection(
     }),
 
     onUpdate: collectionErrorHandler('filterRules.onUpdate', async ({ transaction }) => {
-      const updates = transaction.mutations.map((mutation) => {
-        const rule = mutation.modified as FilterRule;
-        return {
-          feedId: rule.feedId,
-          id: mutation.key as string,
-          ...mutation.changes,
-        };
-      });
+      const updates = transaction.mutations.map((mutation) => ({
+        id: mutation.key as string,
+        ...mutation.changes,
+      }));
       await $$updateFilterRules({ data: updates });
     }),
 
     onDelete: collectionErrorHandler('filterRules.onDelete', async ({ transaction }) => {
-      const items = transaction.mutations.map((mutation) => {
-        const rule = mutation.original as FilterRule;
-        return {
-          feedId: rule.feedId,
-          id: mutation.key as string,
-        };
-      });
-      await $$deleteFilterRules({ data: items });
+      const ids = transaction.mutations.map((mutation) => mutation.key as string);
+      await $$deleteFilterRules({ data: ids });
     }),
   }),
 );
