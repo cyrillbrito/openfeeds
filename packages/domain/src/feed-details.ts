@@ -148,8 +148,9 @@ export async function updateFeedMetadata(userId: string, feedId: string) {
 
   assert(feed);
 
-  const parseFeedResult = await fetchRss(feed.feedUrl);
-  const partialFeedWithMetadata = await fetchFeedMetadata(parseFeedResult);
+  const fetchResult = await fetchRss(feed.feedUrl);
+  if (fetchResult.notModified) return;
+  const partialFeedWithMetadata = await fetchFeedMetadata(fetchResult.feed);
 
   // Only update fields that are safe to update
   const updateData: {

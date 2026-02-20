@@ -2,10 +2,13 @@ import {
   autoArchiveForAllUsers,
   enqueueStaleFeeds,
   logger,
+  markFeedAsFailing,
   QUEUE_NAMES,
+  recordFeedSyncFailure,
   redisConnection,
   syncSingleFeed,
   updateFeedMetadata,
+  type FeedSyncJobData,
   type UserFeedJobData,
 } from '@repo/domain';
 import { Worker, type Job } from 'bullmq';
@@ -26,33 +29,51 @@ export function createFeedSyncOrchestratorWorker() {
 }
 
 export function createSingleFeedSyncWorker() {
-  return new Worker<UserFeedJobData>(
+  const worker = new Worker<FeedSyncJobData>(
     QUEUE_NAMES.SINGLE_FEED_SYNC,
     async (job) => {
       console.log(
-        `Starting single feed sync job ${job.id} for user ${job.data.userId}, feed ${job.data.feedId}`,
+        `Starting single feed sync job ${job.id} for feed ${job.data.feedId} (attempt ${job.attemptsMade + 1})`,
       );
-      const { userId, feedId } = job.data;
-
-      // Feed sync errors are handled internally (tracked in DB as sync_status/sync_error).
-      // We don't re-throw because a broken feed is an expected scenario, not a worker failure.
-      try {
-        await syncSingleFeed(userId, feedId);
-      } catch (err) {
-        logger.error(err instanceof Error ? err : new Error(String(err)), {
-          source: 'worker',
-          jobName: job.queueName,
-          userId,
-          operation: 'single_feed_sync_worker',
-          feedId,
-        });
-      }
+      const { feedId } = job.data;
+      // Throws on error — BullMQ will retry with exponential backoff (configured on the queue).
+      // syncFailCount is only incremented after all attempts are exhausted (see 'failed' event).
+      await syncSingleFeed(feedId, job.attemptsMade + 1);
     },
     {
       connection: redisConnection,
       concurrency: env.WORKER_CONCURRENCY_FEED_SYNC,
+
+      // Rate limit: max 10 feed sync jobs processed per second across all worker instances.
+      // Prevents hammering a single RSS host (e.g. YouTube) with too many concurrent requests.
+      // Must match the queue limiter in @repo/domain/queues.ts if one is set.
+      limiter: { max: 5, duration: 1000 },
     },
   );
+
+  // `failed` fires on every failed attempt.
+  // - If retries remain: mark feed as 'failing' so the UI shows it's having trouble.
+  // - If all retries exhausted: mark feed as 'broken' and stop future orchestrator syncs.
+  worker.on('failed', async (job: Job<FeedSyncJobData> | undefined, err: Error) => {
+    if (!job) return;
+    const { feedId } = job.data;
+    const attemptsExhausted = job.attemptsMade >= (job.opts.attempts ?? 1);
+    try {
+      if (attemptsExhausted) {
+        await recordFeedSyncFailure(feedId, err);
+      } else {
+        await markFeedAsFailing(feedId);
+      }
+    } catch (updateErr) {
+      logger.error(updateErr instanceof Error ? updateErr : new Error(String(updateErr)), {
+        source: 'worker',
+        operation: QUEUE_NAMES.SINGLE_FEED_SYNC,
+        feedId,
+      });
+    }
+  });
+
+  return worker;
 }
 
 export function createFeedDetailsWorker() {

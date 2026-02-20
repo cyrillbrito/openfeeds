@@ -191,17 +191,12 @@ function FeedArticles() {
                   <Show when={feed().syncError}>
                     <p class="text-base-content/60 mt-1 text-xs">{feed().syncError}</p>
                   </Show>
-                  <p class="text-base-content/40 mt-1 text-xs">
-                    {feed().syncFailCount} consecutive failure
-                    {feed().syncFailCount !== 1 ? 's' : ''}
-                  </p>
                   <div class="mt-3 flex gap-2">
                     <button
                       class="btn btn-outline btn-sm"
                       onClick={async () => {
                         feedsCollection.update(feed().id, (draft) => {
                           draft.syncStatus = 'ok';
-                          draft.syncFailCount = 0;
                           draft.syncError = null;
                         });
                         await $$retryFeed({ data: { id: feed().id } });

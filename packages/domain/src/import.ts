@@ -160,7 +160,7 @@ export async function importOpmlFeeds(opmlContent: string, userId: string): Prom
       }
 
       try {
-        await enqueueFeedSync(userId, feedId);
+        await enqueueFeedSync(feedId);
       } catch (enqueueError) {
         logger.error(enqueueError as Error, {
           operation: 'import_feed_enqueue_sync',

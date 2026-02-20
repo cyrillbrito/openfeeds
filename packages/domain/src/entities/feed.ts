@@ -24,7 +24,6 @@ function toApiFeed(f: DbFeed): Feed {
     lastSyncAt: f.lastSyncAt?.toISOString() ?? null,
     syncStatus: f.syncStatus as Feed['syncStatus'],
     syncError: f.syncError,
-    syncFailCount: f.syncFailCount,
   };
 }
 
@@ -128,7 +127,6 @@ export async function retryFeed(id: string, userId: string): Promise<void> {
     .update(feeds)
     .set({
       syncStatus: 'ok',
-      syncFailCount: 0,
       syncError: null,
     })
     .where(and(eq(feeds.id, id), eq(feeds.userId, userId)));

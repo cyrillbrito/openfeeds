@@ -143,7 +143,7 @@ export async function runBenchmark(ctx: BenchmarkContext): Promise<BenchmarkResu
   const startTime = Date.now();
 
   for (const feedId of ctx.feedIds) {
-    const job = await enqueueFeedSync(ctx.userId, feedId);
+    const job = await enqueueFeedSync(feedId);
     if (job.id) {
       jobTimings.set(job.id, { enqueuedAt: Date.now() });
     }
