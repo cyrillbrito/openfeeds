@@ -80,7 +80,7 @@ export function UserMenu() {
       >
         {/* Settings */}
         <li>
-          <Link to="/settings" class="flex items-center gap-3 px-4 py-2">
+          <Link to="/settings/general" class="flex items-center gap-3 px-4 py-2">
             <Settings size={16} />
             <span>Settings</span>
           </Link>
