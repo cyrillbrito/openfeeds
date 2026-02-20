@@ -4,14 +4,7 @@ import { createResource, createSignal, For, Show } from 'solid-js';
 import { Card } from '~/components/Card';
 import { CenterLoader, Loader } from '~/components/Loader';
 import { authClient } from '~/lib/auth-client';
-
-const SCOPE_DESCRIPTIONS: Record<string, string> = {
-  openid: 'Verify your identity',
-  profile: 'View your name and profile picture',
-  email: 'View your email address',
-  offline_access: 'Stay connected when you are not actively using it',
-  'mcp:tools': 'Use tools on your behalf',
-};
+import { SCOPE_DESCRIPTIONS } from '~/utils/oauth';
 
 export const Route = createFileRoute('/oauth/consent')({
   validateSearch: (search): { client_id?: string; scope?: string } => ({

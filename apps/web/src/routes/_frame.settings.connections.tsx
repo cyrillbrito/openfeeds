@@ -5,23 +5,15 @@ import { Card } from '~/components/Card';
 import { LazyModal, type ModalController } from '~/components/LazyModal';
 import { CenterLoader } from '~/components/Loader';
 import { authClient } from '~/lib/auth-client';
+import { SCOPE_DESCRIPTIONS } from '~/utils/oauth';
 
-const SCOPE_DESCRIPTIONS: Record<string, string> = {
-  openid: 'Verify your identity',
-  profile: 'View your name and profile picture',
-  email: 'View your email address',
-  offline_access: 'Stay connected when not actively using it',
-  'mcp:tools': 'Access your feeds, articles, and tags',
-};
+async function fetchConsents() {
+  const result = await authClient.oauth2.getConsents();
+  if (result.error) throw new Error(result.error.message ?? 'Failed to load connections');
+  return result.data ?? [];
+}
 
-type ConnectionInfo = {
-  consentId: string;
-  clientId: string;
-  name: string;
-  uri: string | null;
-  scopes: string[];
-  authorizedAt: Date;
-};
+type Consent = Awaited<ReturnType<typeof fetchConsents>>[number];
 
 export const Route = createFileRoute('/_frame/settings/connections')({
   component: ConnectionsPage,
@@ -36,45 +28,23 @@ function ConnectionsPage() {
 }
 
 function ConnectionsContent() {
-  const [revokingId, setRevokingId] = createSignal<string | null>(null);
   const [revokeError, setRevokeError] = createSignal<string | null>(null);
-  const [revokeTarget, setRevokeTarget] = createSignal<ConnectionInfo | null>(null);
+  const [revokeTarget, setRevokeTarget] = createSignal<Consent | null>(null);
+  const [revokingId, setRevokingId] = createSignal<string | null>(null);
   let revokeModalController!: ModalController;
 
-  const [connections, { mutate, refetch }] = createResource(async () => {
-    const result = await authClient.oauth2.getConsents();
-    if (result.error) throw new Error(result.error.message ?? 'Failed to load connections');
-    const consents = result.data ?? [];
+  const [consents, { mutate, refetch }] = createResource(fetchConsents);
 
-    // Fetch client info for each consent
-    const enriched: ConnectionInfo[] = [];
-    for (const consent of consents) {
-      const clientResult = await authClient.oauth2.publicClient({
-        query: { client_id: consent.clientId },
-      });
-      enriched.push({
-        consentId: consent.id,
-        clientId: consent.clientId,
-        name: clientResult.data?.client_name || clientResult.data?.client_uri || consent.clientId,
-        uri: clientResult.data?.client_uri ?? null,
-        scopes: consent.scopes as string[],
-        authorizedAt: new Date(consent.createdAt),
-      });
-    }
-    return enriched;
-  });
-
-  const handleRevoke = async (consentId: string) => {
+  const handleRevoke = async (consent: Consent) => {
     setRevokeError(null);
-    setRevokingId(consentId);
+    setRevokingId(consent.id);
     try {
-      const result = await authClient.oauth2.deleteConsent({ id: consentId });
+      const result = await authClient.oauth2.deleteConsent({ id: consent.id });
       if (result.error) {
         setRevokeError(result.error.message ?? 'Failed to revoke access');
         return;
       }
-      // Optimistically remove the revoked connection
-      mutate((prev) => prev?.filter((c) => c.consentId !== consentId));
+      mutate((prev) => prev?.filter((c) => c.id !== consent.id));
     } catch (err) {
       setRevokeError(err instanceof Error ? err.message : 'Failed to revoke access');
     } finally {
@@ -99,11 +69,11 @@ function ConnectionsContent() {
         </div>
       </Show>
 
-      <Show when={connections.loading}>
+      <Show when={consents.loading}>
         <CenterLoader />
       </Show>
 
-      <Show when={connections.error}>
+      <Show when={consents.error}>
         <div class="alert alert-error">
           <CircleX class="h-5 w-5 shrink-0" />
           <span>Failed to load connections</span>
@@ -113,9 +83,9 @@ function ConnectionsContent() {
         </div>
       </Show>
 
-      <Show when={connections() && !connections.loading}>
+      <Show when={consents() && !consents.loading}>
         <Show
-          when={connections()!.length > 0}
+          when={consents()!.length > 0}
           fallback={
             <Card>
               <div class="flex flex-col items-center gap-2 py-4 text-center">
@@ -130,52 +100,15 @@ function ConnectionsContent() {
           }
         >
           <div class="space-y-4">
-            <For each={connections()}>
-              {(connection) => (
-                <Card>
-                  <div class="flex items-start justify-between gap-4">
-                    <div class="min-w-0 flex-1">
-                      <h3 class="text-base-content font-semibold">{connection.name}</h3>
-                      <Show when={connection.uri}>
-                        <p class="text-base-content-gray mt-0.5 truncate text-sm">
-                          {connection.uri}
-                        </p>
-                      </Show>
-                      <p class="text-base-content-gray mt-1 text-xs">
-                        Authorized {connection.authorizedAt.toLocaleDateString()}
-                      </p>
-                    </div>
-                    <button
-                      class="btn btn-error btn-outline btn-sm shrink-0"
-                      onClick={() => {
-                        setRevokeTarget(connection);
-                        revokeModalController.open();
-                      }}
-                    >
-                      Revoke
-                    </button>
-                  </div>
-
-                  <Show when={connection.scopes.length > 0}>
-                    <div class="border-base-300 mt-3 border-t pt-3">
-                      <p class="text-base-content-gray mb-1.5 text-xs font-medium tracking-wide uppercase">
-                        Permissions
-                      </p>
-                      <ul class="space-y-1">
-                        <For each={connection.scopes}>
-                          {(scope) => (
-                            <li class="flex items-center gap-1.5">
-                              <CircleCheck class="text-success h-3.5 w-3.5 shrink-0" />
-                              <span class="text-base-content text-sm">
-                                {SCOPE_DESCRIPTIONS[scope] ?? scope}
-                              </span>
-                            </li>
-                          )}
-                        </For>
-                      </ul>
-                    </div>
-                  </Show>
-                </Card>
+            <For each={consents()}>
+              {(consent) => (
+                <ConnectionCard
+                  consent={consent}
+                  onRevoke={() => {
+                    setRevokeTarget(consent);
+                    revokeModalController.open();
+                  }}
+                />
               )}
             </For>
           </div>
@@ -193,7 +126,7 @@ function ConnectionsContent() {
             <>
               <p class="mb-4">
                 Are you sure you want to revoke access for{' '}
-                <span class="font-semibold">{target().name}</span>? The application will need to
+                <span class="font-semibold">{target().clientId}</span>? The application will need to
                 re-authorize to access your account.
               </p>
               <div class="modal-action">
@@ -202,7 +135,7 @@ function ConnectionsContent() {
                 </button>
                 <button
                   class="btn btn-error"
-                  onClick={() => handleRevoke(target().consentId)}
+                  onClick={() => handleRevoke(target())}
                   disabled={revokingId() !== null}
                 >
                   <Show when={revokingId() !== null}>
@@ -216,5 +149,64 @@ function ConnectionsContent() {
         </Show>
       </LazyModal>
     </>
+  );
+}
+
+function ConnectionCard(props: { consent: Consent; onRevoke: () => void }) {
+  const [clientInfo] = createResource(
+    () => props.consent.clientId,
+    async (clientId) => {
+      const result = await authClient.oauth2.publicClient({ query: { client_id: clientId } });
+      return result.data;
+    },
+  );
+
+  const name = () =>
+    clientInfo()?.client_name || clientInfo()?.client_uri || props.consent.clientId;
+  const uri = () => clientInfo()?.client_uri ?? null;
+  const scopes = () => props.consent.scopes as string[];
+
+  return (
+    <Card>
+      <div class="flex items-start justify-between gap-4">
+        <div class="min-w-0 flex-1">
+          <Show when={clientInfo.loading}>
+            <div class="bg-base-300 h-5 w-32 animate-pulse rounded" />
+          </Show>
+          <Show when={!clientInfo.loading}>
+            <h3 class="text-base-content font-semibold">{name()}</h3>
+            <Show when={uri()}>
+              <p class="text-base-content-gray mt-0.5 truncate text-sm">{uri()}</p>
+            </Show>
+          </Show>
+          <p class="text-base-content-gray mt-1 text-xs">
+            Authorized {new Date(props.consent.createdAt).toLocaleDateString()}
+          </p>
+        </div>
+        <button class="btn btn-error btn-outline btn-sm shrink-0" onClick={props.onRevoke}>
+          Revoke
+        </button>
+      </div>
+
+      <Show when={scopes().length > 0}>
+        <div class="border-base-300 mt-3 border-t pt-3">
+          <p class="text-base-content-gray mb-1.5 text-xs font-medium tracking-wide uppercase">
+            Permissions
+          </p>
+          <ul class="space-y-1">
+            <For each={scopes()}>
+              {(scope) => (
+                <li class="flex items-center gap-1.5">
+                  <CircleCheck class="text-success h-3.5 w-3.5 shrink-0" />
+                  <span class="text-base-content text-sm">
+                    {SCOPE_DESCRIPTIONS[scope] ?? scope}
+                  </span>
+                </li>
+              )}
+            </For>
+          </ul>
+        </div>
+      </Show>
+    </Card>
   );
 }
