@@ -24,7 +24,7 @@ Frontend (TanStack DB Collections)
          ↓
     Domain Logic (@repo/domain)
          ↓
-    Database (SQLite)
+    Database (PostgreSQL)
 ```
 
 **Key principle**: Frontend code only interacts with TanStack DB collections. The sync mechanism is abstracted away via server functions.
@@ -61,33 +61,35 @@ Same pattern applies to feed-tags if needed later.
 
 ## Current Implementation
 
-Using **query-based collections** (`queryCollectionOptions`) with TanStack Start server functions.
+Using **Electric SQL-powered collections** (`electricCollectionOptions`) with real-time sync and TanStack Start server functions for mutations.
 
 ```typescript
-// Server function (runs on server)
-const $$getAllFeeds = createServerFn({ method: 'GET' })
-  .middleware([authMiddleware])
-  .handler(({ context }) => {
-    return feedsDomain.getAllFeeds(context.user.id);
-  });
-
-// Collection (client-side with sync)
+// Collection (client-side with Electric SQL sync)
 export const feedsCollection = createCollection(
-  queryCollectionOptions({
+  electricCollectionOptions({
     id: 'feeds',
-    queryKey: ['feeds'],
-    queryClient,
-    getKey: (item) => item.id,
     schema: FeedSchema,
-    queryFn: () => $$getAllFeeds(),
-    onInsert: async ({ transaction }) => {
-      /* sync to server */
+    getKey: (item) => item.id,
+
+    shapeOptions: {
+      url: getShapeUrl('feeds'),
+      parser: timestampParser,
+      columnMapper: snakeCamelMapper(),
+      onError: shapeErrorHandler('feeds.shape'),
     },
+
+    onInsert: collectionErrorHandler('feeds.onInsert', async ({ transaction }) => {
+      const feeds = transaction.mutations.map((mutation) => {
+        const feed = mutation.modified;
+        return { id: mutation.key as string, url: feed.url };
+      });
+      await $$createFeeds({ data: feeds });
+    }),
     onUpdate: async ({ transaction }) => {
-      /* sync to server */
+      /* batch sync to server */
     },
     onDelete: async ({ transaction }) => {
-      /* sync to server */
+      /* batch sync to server */
     },
   }),
 );
@@ -101,9 +103,9 @@ Mutations are **fire-and-forget** - no awaiting required:
 
 ```typescript
 // Good: Fire and forget
-updateArticle(id, { isRead: true });
-createFeed({ url: 'https://example.com/feed' });
-deleteTag(tagId);
+updateArticles([{ id, isRead: true }]);
+createFeeds([{ url: 'https://example.com/feed' }]);
+deleteTags([tagId]);
 
 // Unnecessary: Awaiting persistence
 await tx.isPersisted.promise; // Don't do this
@@ -118,13 +120,8 @@ await tx.isPersisted.promise; // Don't do this
 
 **Future enhancement**: Client-generated UUIDs for inserts would eliminate temp ID mapping entirely, making inserts truly fire-and-forget without server round-trip for ID resolution.
 
-## Future: Sync Engine Evolution
+## Sync Engine
 
-As the ecosystem matures, can swap to real sync engines:
+Currently using **Electric SQL** for real-time Postgres-to-client sync via shape streams. Collections subscribe to shapes filtered by `user_id`, with automatic reconnection and error handling.
 
-- **ElectricSQL**: If using Postgres, direct DB-to-client sync
-- **Turso**: SQLite-based edge database with sync capabilities
-- **PowerSync**: Another Postgres sync option
-- **Custom WebSocket sync**: Real-time server push
-
-The transition requires only changing the collection configuration - no frontend component changes needed.
+The TanStack DB collection abstraction means the sync engine could be swapped without changing frontend components — only collection configuration needs updating.
