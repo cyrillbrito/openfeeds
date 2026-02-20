@@ -62,7 +62,7 @@ export function createSingleFeedSyncWorker() {
       if (attemptsExhausted) {
         await recordFeedSyncFailure(feedId, err);
       } else {
-        await markFeedAsFailing(feedId);
+        await markFeedAsFailing(feedId, err);
       }
     } catch (updateErr) {
       logger.error(updateErr instanceof Error ? updateErr : new Error(String(updateErr)), {

@@ -290,8 +290,11 @@ export async function syncSingleFeed(feedId: string, attemptNumber = 1): Promise
  * Called by the worker's `failed` event on intermediate failures (retries still remaining).
  * Sets syncStatus to 'failing' so the UI can show the feed is having trouble.
  */
-export async function markFeedAsFailing(feedId: string): Promise<void> {
-  await db.update(feeds).set({ syncStatus: 'failing' }).where(eq(feeds.id, feedId));
+export async function markFeedAsFailing(feedId: string, error: Error): Promise<void> {
+  await db
+    .update(feeds)
+    .set({ syncStatus: 'failing', syncError: error.message.slice(0, 1000) })
+    .where(eq(feeds.id, feedId));
 }
 
 /**
