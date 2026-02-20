@@ -82,6 +82,7 @@ function TagForm(props: TagFormProps) {
       const now = new Date().toISOString();
       tagsCollection.insert({
         id: createId(),
+        userId: '', // Will be set by server
         name,
         color: tagColor(),
         createdAt: now,

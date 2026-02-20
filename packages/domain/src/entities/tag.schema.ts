@@ -25,6 +25,7 @@ export type TagColor = z.infer<typeof TagColorSchema>;
 
 export const TagSchema = z.object({
   id: z.string(),
+  userId: z.string(),
   name: z.string(),
   color: TagColorSchema,
   createdAt: z.iso.datetime(),

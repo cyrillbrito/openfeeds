@@ -1,7 +1,6 @@
 // Entity modules - schemas, types, and CRUD functions
 export * from './entities/article';
 export * from './entities/article-tag';
-export * from './entities/common';
 export * from './entities/feed';
 export * from './entities/feed-tag';
 export * from './entities/filter-rule';
@@ -19,9 +18,6 @@ export * from './import';
 export * from './rss-fetch';
 export * from './rule-evaluation';
 export * from './tts';
-
-// Utilities
-export * from './db-utils';
 
 // Infrastructure
 export { shutdownDomain, redisConnection, QUEUE_NAMES } from './config';

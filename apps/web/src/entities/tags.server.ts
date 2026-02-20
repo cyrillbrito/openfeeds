@@ -4,12 +4,6 @@ import { createServerFn } from '@tanstack/solid-start';
 import { z } from 'zod';
 import { authMiddleware } from '~/server/middleware/auth';
 
-export const $$getAllTags = createServerFn({ method: 'GET' })
-  .middleware([authMiddleware])
-  .handler(({ context }) => {
-    return tagsDomain.getAllTags(context.user.id);
-  });
-
 export const $$createTags = createServerFn({ method: 'POST' })
   .middleware([authMiddleware])
   .inputValidator(z.array(CreateTagSchema))

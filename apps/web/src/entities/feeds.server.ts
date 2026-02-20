@@ -26,12 +26,6 @@ export const $$exportOpml = createServerFn()
     return feedsDomain.exportOpmlFeeds(context.user.id);
   });
 
-export const $$getAllFeeds = createServerFn()
-  .middleware([authMiddleware])
-  .handler(({ context }) => {
-    return feedsDomain.getAllFeeds(context.user.id);
-  });
-
 export const $$hasAnyFeeds = createServerFn()
   .middleware([authMiddleware])
   .handler(async ({ context }) => {

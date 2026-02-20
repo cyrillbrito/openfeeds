@@ -5,6 +5,7 @@ export type SyncStatus = z.infer<typeof SyncStatusSchema>;
 
 export const FeedSchema = z.object({
   id: z.string(),
+  userId: z.string(),
   url: z.string(),
   feedUrl: z.string(),
   title: z.string(),
