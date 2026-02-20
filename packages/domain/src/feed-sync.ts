@@ -184,9 +184,10 @@ const OUTDATED_MIN = 15;
 /** Max stale feeds enqueued per orchestrator run */
 const SYNC_LIMIT = 50;
 
-export type SyncSingleFeedResult =
-  | { status: 'ok'; httpStatus: number; articlesAdded: number }
-  | { status: 'skipped' };
+export interface SyncSingleFeedResult {
+  httpStatus: number;
+  articlesAdded: number;
+}
 
 /**
  * Sync a single feed by ID.
@@ -205,9 +206,7 @@ export async function syncSingleFeed(feedId: string): Promise<SyncSingleFeedResu
   });
 
   if (!feed) {
-    console.warn(`Feed ${feedId} not found for sync`);
-    // Treat as skipped — nothing to do, don't fail the job
-    return { status: 'skipped' };
+    throw new Error(`Feed ${feedId} not found`);
   }
 
   const userId = feed.userId;
@@ -220,7 +219,7 @@ export async function syncSingleFeed(feedId: string): Promise<SyncSingleFeedResu
   // 304 Not Modified — feed hasn't changed, just bump lastSyncAt
   if (fetchResult.notModified) {
     await db.update(feeds).set({ lastSyncAt: new Date() }).where(eq(feeds.id, feed.id));
-    return { status: 'skipped' };
+    return { httpStatus: 304, articlesAdded: 0 };
   }
 
   const autoArchiveCutoffDate = await getAutoArchiveCutoffDate(userId);
@@ -244,7 +243,6 @@ export async function syncSingleFeed(feedId: string): Promise<SyncSingleFeedResu
     .where(eq(feeds.id, feed.id));
 
   return {
-    status: 'ok',
     httpStatus: fetchResult.httpStatus,
     articlesAdded: created,
   };
@@ -351,29 +349,16 @@ export async function writeFeedSyncLog(
 
   if (!feed) return;
 
-  if (result.status === 'skipped') {
-    await db.insert(feedSyncLogs).values({
-      id: createId(),
-      userId: feed.userId,
-      feedId: feed.id,
-      status: 'skipped',
-      durationMs,
-      httpStatus: 304,
-      error: null,
-      articlesAdded: 0,
-    });
-  } else {
-    await db.insert(feedSyncLogs).values({
-      id: createId(),
-      userId: feed.userId,
-      feedId: feed.id,
-      status: 'ok',
-      durationMs,
-      httpStatus: result.httpStatus,
-      error: null,
-      articlesAdded: result.articlesAdded,
-    });
-  }
+  await db.insert(feedSyncLogs).values({
+    id: createId(),
+    userId: feed.userId,
+    feedId: feed.id,
+    status: 'ok',
+    durationMs,
+    httpStatus: result.httpStatus,
+    error: null,
+    articlesAdded: result.articlesAdded,
+  });
 }
 
 /**

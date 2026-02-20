@@ -4,11 +4,11 @@
 
 Every minute the orchestrator finds feeds where `last_sync_at < now - 15min` and `sync_status != 'broken'`, and enqueues up to 50 (oldest first). Each job fetches the feed URL, inserts new articles (deduped by GUID per user), and updates `last_sync_at`.
 
-ETag / Last-Modified headers are stored on the feed row and sent on the next request. A 304 response skips all processing and just bumps `last_sync_at`.
+ETag / Last-Modified headers are stored on the feed row and sent on the next request. A 304 response bumps `last_sync_at` and is logged as `status: 'ok'` with `http_status: 304`.
 
-Every attempt — success, skipped, or failure — writes a row to `feed_sync_logs`. All log writes happen in the worker's BullMQ event handlers (`completed` / `failed`), not inside `syncSingleFeed`. This ensures exactly one log row per attempt with no duplicates.
+Every attempt — success or failure — writes a row to `feed_sync_logs`. All log writes happen in the worker's BullMQ event handlers (`completed` / `failed`), not inside `syncSingleFeed`. This ensures exactly one log row per attempt with no duplicates.
 
-`syncSingleFeed` returns a result object `{ status, httpStatus, articlesAdded }` on success, which BullMQ stores as the job return value and passes to the `completed` event. On failure, a custom error class (`FeedSyncError`) carries `httpStatus` alongside the message so the `failed` event has full context for the log.
+`syncSingleFeed` returns `{ httpStatus, articlesAdded }` on success, which BullMQ stores as the job return value and passes to the `completed` event. On failure, errors propagate naturally to BullMQ; the worker's `failed` event extracts `httpStatus` via `instanceof HttpFetchError`. Duration is derived from `job.processedOn` / `job.finishedOn`.
 
 ## Retry system
 
