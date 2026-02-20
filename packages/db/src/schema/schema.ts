@@ -31,7 +31,10 @@ export const feeds = pgTable(
     /** Last sync error message (null when healthy) */
     syncError: text('sync_error'),
     /** Consecutive sync failure count */
-    syncFailCount: integer('sync_fail_count').notNull().default(0),
+    /** HTTP ETag header from last successful fetch (for conditional requests) */
+    etagHeader: text('etag_header'),
+    /** HTTP Last-Modified header from last successful fetch (for conditional requests) */
+    lastModifiedHeader: text('last_modified_header'),
     createdAt: timestamp('created_at').notNull().defaultNow(),
     updatedAt: timestamp('updated_at')
       .$onUpdate(() => new Date())
@@ -200,6 +203,7 @@ export const feedsRelations = relations(feeds, ({ one, many }) => ({
   articles: many(articles),
   feedTags: many(feedTags),
   filterRules: many(filterRules),
+  syncLogs: many(feedSyncLogs),
 }));
 
 export const articlesRelations = relations(articles, ({ one, many }) => ({
@@ -271,6 +275,51 @@ export const filterRulesRelations = relations(filterRules, ({ one }) => ({
   }),
 }));
 
+/**
+ * Append-only log of every feed sync attempt.
+ * Server-side only — not synced to the client via Electric SQL.
+ * Used for debugging and traceability.
+ */
+export const feedSyncLogs = pgTable(
+  'feed_sync_logs',
+  {
+    id: text('id').primaryKey(),
+    userId: text('user_id')
+      .notNull()
+      .references(() => user.id, { onDelete: 'cascade' }),
+    feedId: text('feed_id')
+      .notNull()
+      .references(() => feeds.id, { onDelete: 'cascade' }),
+    /** 'ok' | 'skipped' | 'failed' */
+    status: text('status').notNull(),
+    /** How long the sync took in milliseconds */
+    durationMs: integer('duration_ms'),
+    /** HTTP status code (null for network errors or timeouts) */
+    httpStatus: integer('http_status'),
+    /** Error message when status is 'failed' */
+    error: text('error'),
+    /** Number of new articles inserted */
+    articlesAdded: integer('articles_added').notNull().default(0),
+    createdAt: timestamp('created_at').notNull().defaultNow(),
+  },
+  (table) => [
+    index('feed_sync_logs_user_id_idx').on(table.userId),
+    index('feed_sync_logs_feed_id_idx').on(table.feedId),
+    index('feed_sync_logs_created_at_idx').on(table.createdAt),
+  ],
+);
+
+export const feedSyncLogsRelations = relations(feedSyncLogs, ({ one }) => ({
+  user: one(user, {
+    fields: [feedSyncLogs.userId],
+    references: [user.id],
+  }),
+  feed: one(feeds, {
+    fields: [feedSyncLogs.feedId],
+    references: [feeds.id],
+  }),
+}));
+
 // Types derived from schema
 export type DbFeed = typeof feeds.$inferSelect;
 export type DbInsertFeed = typeof feeds.$inferInsert;
@@ -281,3 +330,5 @@ export type DbArticleTag = typeof articleTags.$inferSelect;
 export type DbSettings = typeof settings.$inferSelect;
 export type DbInsertSettings = typeof settings.$inferInsert;
 export type DbFilterRule = typeof filterRules.$inferSelect;
+export type DbFeedSyncLog = typeof feedSyncLogs.$inferSelect;
+export type DbInsertFeedSyncLog = typeof feedSyncLogs.$inferInsert;

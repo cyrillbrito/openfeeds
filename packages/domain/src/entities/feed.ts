@@ -24,7 +24,6 @@ function toApiFeed(f: DbFeed): Feed {
     lastSyncAt: f.lastSyncAt?.toISOString() ?? null,
     syncStatus: f.syncStatus as Feed['syncStatus'],
     syncError: f.syncError,
-    syncFailCount: f.syncFailCount,
   };
 }
 
@@ -69,7 +68,7 @@ export async function createFeed(data: CreateFeed, userId: string): Promise<Feed
 
   // Enqueue for worker to fetch metadata and sync articles
   await enqueueFeedDetail(userId, feedId);
-  await enqueueFeedSync(userId, feedId);
+  await enqueueFeedSync(feedId);
 
   // Track feed creation (server-side for reliability)
   trackEvent(userId, 'feeds:feed_create', {
@@ -128,7 +127,6 @@ export async function retryFeed(id: string, userId: string): Promise<void> {
     .update(feeds)
     .set({
       syncStatus: 'ok',
-      syncFailCount: 0,
       syncError: null,
     })
     .where(and(eq(feeds.id, id), eq(feeds.userId, userId)));

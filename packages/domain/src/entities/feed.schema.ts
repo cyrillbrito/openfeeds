@@ -16,7 +16,6 @@ export const FeedSchema = z.object({
   lastSyncAt: z.iso.datetime().nullable(),
   syncStatus: SyncStatusSchema.default('ok'),
   syncError: z.string().nullable().default(null),
-  syncFailCount: z.number().default(0),
 });
 export type Feed = z.infer<typeof FeedSchema>;
 

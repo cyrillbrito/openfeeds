@@ -36,7 +36,6 @@ singleFeedSyncWorker.on('failed', (job, err) => {
   logger.error(err, {
     operation: QUEUE_NAMES.SINGLE_FEED_SYNC,
     jobId: job?.id,
-    userId: job?.data?.userId,
     feedId: job?.data?.feedId,
   });
 });

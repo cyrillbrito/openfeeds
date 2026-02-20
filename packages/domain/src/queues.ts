@@ -1,6 +1,10 @@
 import { Queue } from 'bullmq';
 import { QUEUE_NAMES, redisConnection } from './config';
 
+export interface FeedSyncJobData {
+  feedId: string;
+}
+
 export interface UserFeedJobData {
   userId: string;
   feedId: string;
@@ -13,10 +17,20 @@ export function getFeedSyncOrchestratorQueue(): Queue {
   }));
 }
 
-let _singleFeedSyncQueue: Queue<UserFeedJobData> | null = null;
-export function getSingleFeedSyncQueue(): Queue<UserFeedJobData> {
-  return (_singleFeedSyncQueue ??= new Queue<UserFeedJobData>(QUEUE_NAMES.SINGLE_FEED_SYNC, {
+let _singleFeedSyncQueue: Queue<FeedSyncJobData> | null = null;
+export function getSingleFeedSyncQueue(): Queue<FeedSyncJobData> {
+  return (_singleFeedSyncQueue ??= new Queue<FeedSyncJobData>(QUEUE_NAMES.SINGLE_FEED_SYNC, {
     connection: redisConnection,
+    defaultJobOptions: {
+      // 10 attempts with exponential backoff (5min base).
+      // Spread: ~5m, 10m, 20m, 40m, 80m, 160m, 320m, 640m, 1280m, 2560m ≈ 3 days total.
+      // After all attempts are exhausted the worker's `failed` event marks the feed as broken.
+      attempts: 10,
+      backoff: {
+        type: 'exponential',
+        delay: 5 * 60_000,
+      },
+    },
   }));
 }
 
@@ -37,20 +51,36 @@ export function getAutoArchiveQueue(): Queue {
 let _queuesInitialized = false;
 
 /**
- * Enqueue a single feed sync job
+ * Enqueue a single feed sync job.
+ * Uses jobId for deduplication — if a job for this feed is already waiting, delayed
+ * (in retry backoff), or active, the new enqueue is silently ignored by BullMQ.
+ * This prevents the orchestrator (running every minute) from stacking duplicate jobs.
  */
-export async function enqueueFeedSync(userId: string, feedId: string) {
+export async function enqueueFeedSync(feedId: string) {
   return getSingleFeedSyncQueue().add(
-    `${userId}-${feedId}`,
+    feedId,
+    { feedId },
     {
-      userId,
-      feedId,
-    },
-    {
+      // Deduplication key: BullMQ skips adding this job if one with the same jobId
+      // is already in waiting, delayed, or active state.
+      jobId: `feed-sync:${feedId}`,
       removeOnComplete: 100,
       removeOnFail: 500,
     },
   );
+}
+
+/**
+ * Force-enqueue a feed sync, bypassing deduplication.
+ * Removes any existing waiting/delayed/active job for this feed first,
+ * then adds a fresh job with no delay and attempt count reset to 0.
+ * Use this for user-triggered "sync now" or "reset broken feed" actions.
+ */
+export async function forceEnqueueFeedSync(feedId: string) {
+  const queue = getSingleFeedSyncQueue();
+  const jobId = `feed-sync:${feedId}`;
+  await queue.remove(jobId);
+  return queue.add(feedId, { feedId }, { jobId, removeOnComplete: 100, removeOnFail: 500 });
 }
 
 /**

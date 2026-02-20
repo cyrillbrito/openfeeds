@@ -236,7 +236,6 @@ function FeedsComponent() {
                                   onClick={() => {
                                     feedsCollection.update(feed.id, (draft) => {
                                       draft.syncStatus = 'ok';
-                                      draft.syncFailCount = 0;
                                       draft.syncError = null;
                                     });
                                     $$retryFeed({ data: { id: feed.id } });

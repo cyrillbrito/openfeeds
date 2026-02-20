@@ -1,13 +1,13 @@
-import { articles, articleTags, db, feeds, feedTags, filterRules } from '@repo/db';
+import { articles, articleTags, db, feeds, feedSyncLogs, feedTags, filterRules } from '@repo/db';
 import { sanitizeHtml } from '@repo/readability/sanitize';
 import { createId } from '@repo/shared/utils';
-import { and, asc, eq, inArray, isNull, lt, ne, or } from 'drizzle-orm';
+import { and, asc, desc, eq, inArray, isNull, lt, ne, or } from 'drizzle-orm';
 import { autoArchiveArticles } from './archive';
 import { shouldMarkAsRead } from './entities/filter-rule';
 import { getAutoArchiveCutoffDate } from './entities/settings';
 import { logger } from './logger';
 import { enqueueFeedSync } from './queues';
-import { fetchRss, type ParseFeedResult } from './rss-fetch';
+import { fetchRss, HttpFetchError, type ParseFeedResult } from './rss-fetch';
 
 // Normalized item structure for our database
 interface NormalizedFeedItem {
@@ -180,81 +180,183 @@ export async function syncFeedArticles(
 }
 
 /** Feeds not synced in this many minutes are considered stale */
-const OUTDATED_MIN = 10;
-/** Max stale feeds enqueued per orchestrator run */
-const SYNC_LIMIT = 50;
-/** Consecutive sync failures before a feed is marked as broken and excluded from sync */
-const BROKEN_THRESHOLD = 3;
+const OUTDATED_MIN = 15;
+
+export interface SyncSingleFeedResult {
+  httpStatus: number;
+  articlesAdded: number;
+}
 
 /**
  * Sync a single feed by ID.
- * Fetches RSS, inserts new articles, tracks sync health (ok/failing/broken).
+ * Fetches RSS, inserts new articles, updates sync health on the feed row.
+ *
+ * Returns a result object on success so the worker's `completed` event can write
+ * the feed_sync_logs row. Throws FeedSyncError on failure (carries httpStatus +
+ * durationMs) so the worker's `failed` event can write the log row.
+ *
+ * No log writes happen inside this function — all logging is centralised in the
+ * worker event handlers to guarantee exactly one log row per attempt.
  */
-export async function syncSingleFeed(userId: string, feedId: string): Promise<void> {
+export async function syncSingleFeed(feedId: string): Promise<SyncSingleFeedResult> {
   const feed = await db.query.feeds.findFirst({
-    where: and(eq(feeds.id, feedId), eq(feeds.userId, userId)),
+    where: eq(feeds.id, feedId),
   });
 
   if (!feed) {
-    console.warn(`Feed ${feedId} not found for sync`);
-    return;
+    throw new Error(`Feed ${feedId} not found`);
   }
 
-  try {
-    const feedResult = await fetchRss(feed.feedUrl);
-    const autoArchiveCutoffDate = await getAutoArchiveCutoffDate(userId);
-    await syncFeedArticles(feedResult, feed.id, userId, autoArchiveCutoffDate);
-  } catch (err) {
-    const feedSyncErr = err instanceof Error ? err : new Error(String(err));
-    logger.error(feedSyncErr, {
-      operation: 'sync_feed',
-      feedId: feed.id,
-      feedTitle: feed.title,
-      feedUrl: feed.feedUrl,
-    });
+  const userId = feed.userId;
 
-    // Track the failure: increment count and update status
-    const newFailCount = feed.syncFailCount + 1;
-    const newStatus = newFailCount >= BROKEN_THRESHOLD ? 'broken' : 'failing';
+  const fetchResult = await fetchRss(feed.feedUrl, {
+    etag: feed.etagHeader,
+    lastModified: feed.lastModifiedHeader,
+  });
 
-    try {
-      await db
-        .update(feeds)
-        .set({
-          lastSyncAt: new Date(),
-          syncStatus: newStatus,
-          syncFailCount: newFailCount,
-          syncError: feedSyncErr.message.slice(0, 1000),
-        })
-        .where(eq(feeds.id, feed.id));
-    } catch (updateErr) {
-      logger.error(updateErr instanceof Error ? updateErr : new Error(String(updateErr)), {
-        operation: 'update_feed_sync_failure',
-        feedId: feed.id,
-        feedTitle: feed.title,
-      });
-    }
-    return;
+  // 304 Not Modified — feed hasn't changed, just bump lastSyncAt
+  if (fetchResult.notModified) {
+    await db.update(feeds).set({ lastSyncAt: new Date() }).where(eq(feeds.id, feed.id));
+    return { httpStatus: 304, articlesAdded: 0 };
   }
 
-  // Success: reset sync health and update lastSyncAt
-  try {
-    await db
-      .update(feeds)
-      .set({
-        lastSyncAt: new Date(),
-        syncStatus: 'ok',
-        syncFailCount: 0,
-        syncError: null,
-      })
-      .where(eq(feeds.id, feed.id));
-  } catch (updateErr) {
-    logger.error(updateErr instanceof Error ? updateErr : new Error(String(updateErr)), {
-      operation: 'update_feed_sync_time',
-      feedId: feed.id,
-      feedTitle: feed.title,
-    });
-  }
+  const autoArchiveCutoffDate = await getAutoArchiveCutoffDate(userId);
+  const { created } = await syncFeedArticles(
+    fetchResult.feed,
+    feed.id,
+    userId,
+    autoArchiveCutoffDate,
+  );
+
+  // Success: reset sync health, update lastSyncAt, and store cache headers
+  await db
+    .update(feeds)
+    .set({
+      lastSyncAt: new Date(),
+      syncStatus: 'ok',
+      syncError: null,
+      etagHeader: fetchResult.etag,
+      lastModifiedHeader: fetchResult.lastModified,
+    })
+    .where(eq(feeds.id, feed.id));
+
+  return {
+    httpStatus: fetchResult.httpStatus,
+    articlesAdded: created,
+  };
+}
+
+/**
+ * Called by the worker's `failed` event on intermediate failures (retries still remaining).
+ * Sets syncStatus to 'failing' and writes a feed_sync_logs row.
+ */
+export async function markFeedAsFailing(
+  feedId: string,
+  error: Error,
+  attemptNumber: number,
+  durationMs: number | null,
+): Promise<void> {
+  const feed = await db.query.feeds.findFirst({
+    where: eq(feeds.id, feedId),
+    columns: { id: true, userId: true },
+  });
+
+  if (!feed) return;
+
+  const httpStatus = error instanceof HttpFetchError ? error.status : null;
+
+  await db
+    .update(feeds)
+    .set({ syncStatus: 'failing', syncError: error.message.slice(0, 1000) })
+    .where(eq(feeds.id, feedId));
+
+  await db.insert(feedSyncLogs).values({
+    id: createId(),
+    userId: feed.userId,
+    feedId: feed.id,
+    status: 'failed',
+    durationMs,
+    httpStatus,
+    error: `[attempt ${attemptNumber}] ${error.message}`.slice(0, 1000),
+    articlesAdded: 0,
+  });
+}
+
+/**
+ * Called by the worker's `failed` event after all BullMQ retry attempts are exhausted.
+ * Marks the feed as broken so it is excluded from future orchestrator runs.
+ * Writes a feed_sync_logs row for the final attempt.
+ * The user can reset a broken feed via forceEnqueueFeedSync which clears syncStatus.
+ */
+export async function recordFeedSyncFailure(
+  feedId: string,
+  error: Error,
+  attemptNumber: number,
+  durationMs: number | null,
+): Promise<void> {
+  const feed = await db.query.feeds.findFirst({
+    where: eq(feeds.id, feedId),
+    columns: { id: true, userId: true, title: true, feedUrl: true },
+  });
+
+  if (!feed) return;
+
+  const httpStatus = error instanceof HttpFetchError ? error.status : null;
+
+  await db
+    .update(feeds)
+    .set({
+      lastSyncAt: new Date(),
+      syncStatus: 'broken',
+      syncError: error.message.slice(0, 1000),
+    })
+    .where(eq(feeds.id, feed.id));
+
+  await db.insert(feedSyncLogs).values({
+    id: createId(),
+    userId: feed.userId,
+    feedId: feed.id,
+    status: 'failed',
+    durationMs,
+    httpStatus,
+    error: `[attempt ${attemptNumber}] ${error.message}`.slice(0, 1000),
+    articlesAdded: 0,
+  });
+
+  logger.error(error, {
+    operation: 'sync_feed_exhausted',
+    feedId: feed.id,
+    feedTitle: feed.title,
+    feedUrl: feed.feedUrl,
+  });
+}
+
+/**
+ * Called by the worker's `completed` event to write a feed_sync_logs row on success.
+ * durationMs is derived by the worker from job.processedOn / job.finishedOn.
+ */
+export async function writeFeedSyncLog(
+  feedId: string,
+  result: SyncSingleFeedResult,
+  durationMs: number | null,
+): Promise<void> {
+  const feed = await db.query.feeds.findFirst({
+    where: eq(feeds.id, feedId),
+    columns: { id: true, userId: true },
+  });
+
+  if (!feed) return;
+
+  await db.insert(feedSyncLogs).values({
+    id: createId(),
+    userId: feed.userId,
+    feedId: feed.id,
+    status: 'ok',
+    durationMs,
+    httpStatus: result.httpStatus,
+    error: null,
+    articlesAdded: result.articlesAdded,
+  });
 }
 
 /**
@@ -266,7 +368,7 @@ export async function enqueueStaleFeeds(): Promise<void> {
   const outdatedDate = new Date(Date.now() - OUTDATED_MIN * 60 * 1000);
 
   const feedsToSync = await db
-    .select({ id: feeds.id, userId: feeds.userId })
+    .select({ id: feeds.id })
     .from(feeds)
     .where(
       and(
@@ -274,8 +376,7 @@ export async function enqueueStaleFeeds(): Promise<void> {
         or(isNull(feeds.lastSyncAt), lt(feeds.lastSyncAt, outdatedDate)),
       ),
     )
-    .orderBy(asc(feeds.lastSyncAt))
-    .limit(SYNC_LIMIT);
+    .orderBy(asc(feeds.lastSyncAt));
 
   if (feedsToSync.length === 0) {
     return;
@@ -284,10 +385,22 @@ export async function enqueueStaleFeeds(): Promise<void> {
   console.log(`[SYNC] Enqueueing ${feedsToSync.length} feeds for sync`);
 
   for (const feed of feedsToSync) {
-    await enqueueFeedSync(feed.userId, feed.id);
+    await enqueueFeedSync(feed.id);
   }
 
   console.log(`[SYNC] Successfully enqueued ${feedsToSync.length} feed sync jobs`);
+}
+
+/**
+ * Returns the sync log history for a feed, newest first.
+ * Server-side only — not synced to the client via Electric SQL.
+ */
+export async function getFeedSyncLogs(userId: string, feedId: string, limit = 50) {
+  return db.query.feedSyncLogs.findMany({
+    where: and(eq(feedSyncLogs.userId, userId), eq(feedSyncLogs.feedId, feedId)),
+    orderBy: desc(feedSyncLogs.createdAt),
+    limit,
+  });
 }
 
 /**

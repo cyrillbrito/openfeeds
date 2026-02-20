@@ -25,7 +25,9 @@ export { logger, type LogMetadata } from './logger';
 export {
   enqueueFeedDetail,
   enqueueFeedSync,
+  forceEnqueueFeedSync,
   initializeScheduledJobs,
+  type FeedSyncJobData,
   type UserFeedJobData,
   getFeedSyncOrchestratorQueue,
   getSingleFeedSyncQueue,
