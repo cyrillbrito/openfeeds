@@ -27,6 +27,7 @@ export const CreateFilterRuleSchema = z.object({
 export type CreateFilterRule = z.infer<typeof CreateFilterRuleSchema>;
 
 export const UpdateFilterRuleSchema = z.object({
+  id: z.string(),
   pattern: z.string().min(1).optional(),
   operator: z.enum([FilterOperator.INCLUDES, FilterOperator.NOT_INCLUDES]).optional(),
   isActive: z.boolean().optional(),

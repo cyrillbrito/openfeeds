@@ -47,7 +47,7 @@ export const Route = createFileRoute('/api/feeds')({
         }
 
         try {
-          const feed = await feedsDomain.createFeed({ url: body.url }, session.user.id);
+          const [feed] = await feedsDomain.createFeeds([{ url: body.url }], session.user.id);
           return Response.json(feed, { status: 201, headers });
         } catch (error) {
           if (error instanceof feedsDomain.ConflictError) {

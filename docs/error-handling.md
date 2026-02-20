@@ -151,7 +151,7 @@ API routes run server-side where `instanceof` works. Map domain errors to HTTP s
 
 ```typescript
 try {
-  const result = await createFeed(userId, data);
+  const [result] = await createFeeds([data], userId);
   return Response.json(result, { status: 201 });
 } catch (error) {
   if (error instanceof ConflictError)
@@ -166,20 +166,10 @@ try {
 
 Workers run server-side where `instanceof` works. Two strategies:
 
-- **Let it throw** — job fails in BullMQ, triggers retry (transient/system errors)
+- **Let it throw** — job fails in BullMQ, triggers retry with exponential backoff (transient/system errors)
 - **Catch + log + continue** — per-item errors logged, job succeeds (expected per-item failures)
 
-```typescript
-// Per-item failure — log and continue
-try {
-  await syncSingleFeed(userId, feedId);
-} catch (err) {
-  logger.error(err instanceof Error ? err : new Error(String(err)), {
-    operation: 'single_feed_sync_worker',
-    feedId,
-  });
-}
-```
+See [feed-sync.md](./feed-sync.md) for the full feed sync retry and health tracking flow.
 
 ## Production Error Monitoring
 

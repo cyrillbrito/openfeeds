@@ -1,9 +1,9 @@
 import { db, feeds, type DbFeed, type DbInsertFeed } from '@repo/db';
 import { discoverFeeds } from '@repo/discovery/server';
 import { createId } from '@repo/shared/utils';
-import { and, eq } from 'drizzle-orm';
+import { and, eq, inArray } from 'drizzle-orm';
 import { trackEvent } from '../analytics';
-import { assert, BadRequestError, ConflictError, NotFoundError } from '../errors';
+import { BadRequestError, ConflictError, NotFoundError } from '../errors';
 import { enqueueFeedDetail, enqueueFeedSync } from '../queues';
 import type { CreateFeed, DiscoveredFeed, Feed, UpdateFeed } from './feed.schema';
 
@@ -39,80 +39,84 @@ async function assertFeedExists(id: string, userId: string): Promise<void> {
   }
 }
 
-export async function createFeed(data: CreateFeed, userId: string): Promise<Feed> {
-  // Check if feed with this URL already exists for this user
-  const existingFeed = await db.query.feeds.findFirst({
-    where: and(eq(feeds.feedUrl, data.url), eq(feeds.userId, userId)),
-  });
+export async function createFeeds(data: CreateFeed[], userId: string): Promise<Feed[]> {
+  if (data.length === 0) return [];
 
-  if (existingFeed) {
-    throw new ConflictError('Feed with this URL already exists');
-  }
-
-  const feedId = data.id ?? createId();
-  const feed: DbInsertFeed = {
-    id: feedId,
+  const values: DbInsertFeed[] = data.map((item) => ({
+    id: item.id ?? createId(),
     userId,
     title: 'Unknown',
     description: '',
-    url: data.url,
-    feedUrl: data.url,
+    url: item.url,
+    feedUrl: item.url,
     lastSyncAt: null,
     createdAt: undefined,
-  };
+  }));
 
-  const dbResult = await db.insert(feeds).values(feed).returning();
+  const inserted = await db
+    .insert(feeds)
+    .values(values)
+    .onConflictDoNothing({ target: [feeds.userId, feeds.feedUrl] })
+    .returning();
 
-  const newFeed = dbResult[0];
-  assert(newFeed, 'Created feed must exist');
+  // Check if any were skipped due to conflict
+  if (inserted.length < data.length) {
+    const insertedUrls = new Set(inserted.map((f) => f.feedUrl));
+    const conflicting = data.filter((d) => !insertedUrls.has(d.url));
+    if (conflicting.length > 0) {
+      throw new ConflictError('Feed with this URL already exists');
+    }
+  }
 
-  // Enqueue for worker to fetch metadata and sync articles
-  await enqueueFeedDetail(userId, feedId);
-  await enqueueFeedSync(feedId);
+  // Enqueue workers for all newly created feeds
+  await Promise.all(
+    inserted.map(async (feed) => {
+      await enqueueFeedDetail(userId, feed.id);
+      await enqueueFeedSync(feed.id);
+    }),
+  );
 
-  // Track feed creation (server-side for reliability)
-  trackEvent(userId, 'feeds:feed_create', {
-    feed_id: feedId,
-    feed_url: data.url,
-    source: 'manual',
-  });
+  // Track feed creations
+  for (const feed of inserted) {
+    trackEvent(userId, 'feeds:feed_create', {
+      feed_id: feed.id,
+      feed_url: feed.feedUrl,
+      source: 'manual',
+    });
+  }
 
-  return toApiFeed(newFeed);
+  return inserted.map(toApiFeed);
 }
 
-export async function updateFeed(id: string, data: UpdateFeed, userId: string): Promise<void> {
-  // Verify feed exists and belongs to user
-  await assertFeedExists(id, userId);
+export async function updateFeeds(data: UpdateFeed[], userId: string): Promise<void> {
+  if (data.length === 0) return;
 
-  const feedUpdateData = {
-    title: data.title,
-    description: data.description,
-    url: data.url,
-    icon: data.icon,
-  };
+  await db.transaction(async (tx) => {
+    for (const { id, ...updates } of data) {
+      const feedUpdateData: Record<string, unknown> = {};
+      if (updates.title !== undefined) feedUpdateData.title = updates.title;
+      if (updates.description !== undefined) feedUpdateData.description = updates.description;
+      if (updates.url !== undefined) feedUpdateData.url = updates.url;
+      if (updates.icon !== undefined) feedUpdateData.icon = updates.icon;
 
-  Object.keys(feedUpdateData).forEach((key) => {
-    if (feedUpdateData[key as keyof typeof feedUpdateData] === undefined) {
-      delete feedUpdateData[key as keyof typeof feedUpdateData];
+      if (Object.keys(feedUpdateData).length > 0) {
+        await tx
+          .update(feeds)
+          .set(feedUpdateData)
+          .where(and(eq(feeds.id, id), eq(feeds.userId, userId)));
+      }
     }
   });
-
-  if (Object.keys(feedUpdateData).length > 0) {
-    await db
-      .update(feeds)
-      .set(feedUpdateData)
-      .where(and(eq(feeds.id, id), eq(feeds.userId, userId)));
-  }
 }
 
-export async function deleteFeed(id: string, userId: string): Promise<void> {
-  await assertFeedExists(id, userId);
+export async function deleteFeeds(ids: string[], userId: string): Promise<void> {
+  if (ids.length === 0) return;
 
-  await db.delete(feeds).where(and(eq(feeds.id, id), eq(feeds.userId, userId)));
+  await db.delete(feeds).where(and(inArray(feeds.id, ids), eq(feeds.userId, userId)));
 
-  trackEvent(userId, 'feeds:feed_delete', {
-    feed_id: id,
-  });
+  for (const id of ids) {
+    trackEvent(userId, 'feeds:feed_delete', { feed_id: id });
+  }
 }
 
 /**

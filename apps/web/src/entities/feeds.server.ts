@@ -40,23 +40,21 @@ export const $$createFeeds = createServerFn({ method: 'POST' })
   .middleware([authMiddleware])
   .inputValidator(z.array(CreateFeedSchema))
   .handler(({ context, data }) => {
-    return Promise.all(data.map((feed) => feedsDomain.createFeed(feed, context.user.id)));
+    return feedsDomain.createFeeds(data, context.user.id);
   });
 
 export const $$updateFeeds = createServerFn({ method: 'POST' })
   .middleware([authMiddleware])
-  .inputValidator(z.array(UpdateFeedSchema.extend({ id: z.string() })))
+  .inputValidator(z.array(UpdateFeedSchema))
   .handler(({ context, data }) => {
-    return Promise.all(
-      data.map(({ id, ...updates }) => feedsDomain.updateFeed(id, updates, context.user.id)),
-    );
+    return feedsDomain.updateFeeds(data, context.user.id);
   });
 
 export const $$deleteFeeds = createServerFn({ method: 'POST' })
   .middleware([authMiddleware])
   .inputValidator(z.array(z.string()))
   .handler(({ context, data: ids }) => {
-    return Promise.all(ids.map((id) => feedsDomain.deleteFeed(id, context.user.id)));
+    return feedsDomain.deleteFeeds(ids, context.user.id);
   });
 
 export const $$retryFeed = createServerFn({ method: 'POST' })

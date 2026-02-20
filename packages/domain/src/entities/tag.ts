@@ -1,85 +1,89 @@
 import { db, tags } from '@repo/db';
 import { createId } from '@repo/shared/utils';
-import { and, eq, sql } from 'drizzle-orm';
+import { and, eq, inArray, sql } from 'drizzle-orm';
 import { trackEvent } from '../analytics';
-import { assert, ConflictError, NotFoundError } from '../errors';
-import type { CreateTag, UpdateTag } from './tag.schema';
+import { ConflictError } from '../errors';
+import type { CreateTag, Tag, UpdateTag } from './tag.schema';
 
 // Re-export schemas and types from schema file
 export * from './tag.schema';
 
-/** Existence + ownership guard. Throws NotFoundError if tag doesn't exist or doesn't belong to user. */
-async function assertTagExists(id: string, userId: string): Promise<void> {
-  const tag = await db.query.tags.findFirst({
-    where: and(eq(tags.id, id), eq(tags.userId, userId)),
-    columns: { id: true },
-  });
+export async function createTags(data: CreateTag[], userId: string): Promise<Tag[]> {
+  if (data.length === 0) return [];
 
-  if (!tag) {
-    throw new NotFoundError();
-  }
-}
+  // Batch case-insensitive duplicate check
+  const lowerNames = data.map((d) => d.name.toLowerCase());
+  const existing = await db
+    .select({ name: tags.name })
+    .from(tags)
+    .where(and(eq(tags.userId, userId), inArray(sql`lower(${tags.name})`, lowerNames)));
 
-export async function createTag(data: CreateTag, userId: string): Promise<void> {
-  // Check if tag name already exists for this user (case-insensitive)
-  const existingTag = await db.query.tags.findFirst({
-    where: and(eq(tags.userId, userId), sql`lower(${tags.name}) = lower(${data.name})`),
-  });
-
-  if (existingTag) {
+  if (existing.length > 0) {
     throw new ConflictError('Tag name already exists');
   }
 
-  const dbResult = await db
-    .insert(tags)
-    .values({
-      id: data.id ?? createId(),
-      userId,
-      name: data.name,
-      color: data.color,
-    })
-    .returning();
+  const values = data.map((item) => ({
+    id: item.id ?? createId(),
+    userId,
+    name: item.name,
+    color: item.color ?? null,
+  }));
 
-  const newTag = dbResult[0];
-  assert(newTag, 'Created tag must exist');
+  const inserted = await db.insert(tags).values(values).returning();
 
-  trackEvent(userId, 'tags:tag_create', {
-    tag_id: newTag.id,
-    color: newTag.color ?? 'default',
+  for (const tag of inserted) {
+    trackEvent(userId, 'tags:tag_create', {
+      tag_id: tag.id,
+      color: tag.color ?? 'default',
+    });
+  }
+
+  return inserted.map((t) => ({
+    id: t.id,
+    userId: t.userId,
+    name: t.name,
+    color: t.color as Tag['color'],
+    createdAt: t.createdAt.toISOString(),
+    updatedAt: t.updatedAt.toISOString(),
+  }));
+}
+
+export async function updateTags(data: UpdateTag[], userId: string): Promise<void> {
+  if (data.length === 0) return;
+
+  await db.transaction(async (tx) => {
+    for (const { id, ...updates } of data) {
+      // Check if new name already exists for this user (excluding current tag) - case-insensitive
+      if (updates.name) {
+        const duplicateTag = await tx.query.tags.findFirst({
+          where: and(eq(tags.userId, userId), sql`lower(${tags.name}) = lower(${updates.name})`),
+        });
+
+        if (duplicateTag && duplicateTag.id !== id) {
+          throw new ConflictError('Tag name already exists');
+        }
+      }
+
+      const updateData: { name?: string; color?: string | null } = {};
+      if (updates.name !== undefined) updateData.name = updates.name;
+      if (updates.color !== undefined) updateData.color = updates.color;
+
+      if (Object.keys(updateData).length > 0) {
+        await tx
+          .update(tags)
+          .set(updateData)
+          .where(and(eq(tags.id, id), eq(tags.userId, userId)));
+      }
+    }
   });
 }
 
-export async function updateTag(id: string, data: UpdateTag, userId: string): Promise<void> {
-  // Verify tag exists and belongs to user
-  await assertTagExists(id, userId);
+export async function deleteTags(ids: string[], userId: string): Promise<void> {
+  if (ids.length === 0) return;
 
-  // Check if new name already exists for this user (excluding current tag) - case-insensitive
-  if (data.name) {
-    const duplicateTag = await db.query.tags.findFirst({
-      where: and(eq(tags.userId, userId), sql`lower(${tags.name}) = lower(${data.name})`),
-    });
+  await db.delete(tags).where(and(inArray(tags.id, ids), eq(tags.userId, userId)));
 
-    if (duplicateTag && duplicateTag.id !== id) {
-      throw new ConflictError('Tag name already exists');
-    }
+  for (const id of ids) {
+    trackEvent(userId, 'tags:tag_delete', { tag_id: id });
   }
-
-  // Build update object with only provided fields
-  const updateData: { name?: string; color?: string | null } = {};
-  if (data.name !== undefined) updateData.name = data.name;
-  if (data.color !== undefined) updateData.color = data.color;
-
-  await db
-    .update(tags)
-    .set(updateData)
-    .where(and(eq(tags.id, id), eq(tags.userId, userId)));
-}
-
-export async function deleteTag(id: string, userId: string): Promise<void> {
-  // Verify tag exists and belongs to user
-  await assertTagExists(id, userId);
-
-  await db.delete(tags).where(and(eq(tags.id, id), eq(tags.userId, userId)));
-
-  trackEvent(userId, 'tags:tag_delete', { tag_id: id });
 }
