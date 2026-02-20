@@ -1,5 +1,24 @@
 # Changelog
 
+## [0.5.0](https://github.com/cyrillbrito/openfeeds/compare/v0.4.0...v0.5.0) (2026-02-20)
+
+
+### Features
+
+* add settings tabs layout with OAuth connections page ([#102](https://github.com/cyrillbrito/openfeeds/issues/102)) ([1b464ce](https://github.com/cyrillbrito/openfeeds/commit/1b464cebdb215bb90b65ec73bfe0bc15e446fbdc))
+* add sync logs viewer modal to feed pages ([#106](https://github.com/cyrillbrito/openfeeds/issues/106)) ([0423be1](https://github.com/cyrillbrito/openfeeds/commit/0423be1ca292bb9e05783a2b3439a5f7a147406c))
+* **feed-sync:** HTTP caching, exponential backoff retries, and feed health states ([#105](https://github.com/cyrillbrito/openfeeds/issues/105)) ([58b74f3](https://github.com/cyrillbrito/openfeeds/commit/58b74f3b845d8dce3f98d04d62c9062bd8bec34e))
+
+
+### Bug Fixes
+
+* add client-side auth guards for route navigations ([#95](https://github.com/cyrillbrito/openfeeds/issues/95)) ([6d8d66b](https://github.com/cyrillbrito/openfeeds/commit/6d8d66b0ee823a74861da86898924345a31adaec))
+* guard SocialLoginButtons against undefined publicConfig during hydration ([#94](https://github.com/cyrillbrito/openfeeds/issues/94)) ([c372a3a](https://github.com/cyrillbrito/openfeeds/commit/c372a3a750cdd1e680bb55cd0d9f90ff4842ad79))
+* improve error handling in feed synchronization flow ([#101](https://github.com/cyrillbrito/openfeeds/issues/101)) ([2bbd131](https://github.com/cyrillbrito/openfeeds/commit/2bbd1314310ced43118791ed86a40489ecf31c38))
+* rename "Channel" link to "Website" on feed pages ([#99](https://github.com/cyrillbrito/openfeeds/issues/99)) ([c3a3236](https://github.com/cyrillbrito/openfeeds/commit/c3a32364a4d2073b2413d54552f0fb66441c9237))
+* resolve SSR hydration mismatch on login pages ([#98](https://github.com/cyrillbrito/openfeeds/issues/98)) ([aff8d47](https://github.com/cyrillbrito/openfeeds/commit/aff8d47551882e10e3b7f2159c2fead9ca0a52f8))
+* run Docker containers as non-root using built-in bun user ([#100](https://github.com/cyrillbrito/openfeeds/issues/100)) ([37b079c](https://github.com/cyrillbrito/openfeeds/commit/37b079cd19d79b928827ec447d1a3a5976498bde))
+
 ## [0.4.0](https://github.com/cyrillbrito/openfeeds/compare/v0.3.0...v0.4.0) (2026-02-17)
 
 
