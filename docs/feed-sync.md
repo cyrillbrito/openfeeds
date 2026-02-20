@@ -6,13 +6,15 @@ Every minute the orchestrator finds feeds where `last_sync_at < now - 15min` and
 
 ETag / Last-Modified headers are stored on the feed row and sent on the next request. A 304 response skips all processing and just bumps `last_sync_at`.
 
-Every attempt — success, skipped, or failure — writes a row to `feed_sync_logs`.
+Every attempt — success, skipped, or failure — writes a row to `feed_sync_logs`. All log writes happen in the worker's BullMQ event handlers (`completed` / `failed`), not inside `syncSingleFeed`. This ensures exactly one log row per attempt with no duplicates.
+
+`syncSingleFeed` returns a result object `{ status, httpStatus, articlesAdded }` on success, which BullMQ stores as the job return value and passes to the `completed` event. On failure, a custom error class (`FeedSyncError`) carries `httpStatus` alongside the message so the `failed` event has full context for the log.
 
 ## Retry system
 
 All retries are handled by BullMQ. On failure the job is retried with exponential backoff (5 min base, 10 attempts total, ~3 day spread). There is no in-app retry loop.
 
-Each failed attempt logs a `failed` entry with `[attempt N]` prefixed in the error message.
+Each failed attempt writes one `failed` log entry. The attempt number is derived from `job.attemptsMade + 1`.
 
 ## Feed health (`sync_status`)
 

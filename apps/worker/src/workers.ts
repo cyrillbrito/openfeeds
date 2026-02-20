@@ -8,6 +8,7 @@ import {
   redisConnection,
   syncSingleFeed,
   updateFeedMetadata,
+  writeFeedSyncLog,
   type FeedSyncJobData,
   type UserFeedJobData,
 } from '@repo/domain';
@@ -36,9 +37,9 @@ export function createSingleFeedSyncWorker() {
         `Starting single feed sync job ${job.id} for feed ${job.data.feedId} (attempt ${job.attemptsMade + 1})`,
       );
       const { feedId } = job.data;
-      // Throws on error — BullMQ will retry with exponential backoff (configured on the queue).
-      // syncFailCount is only incremented after all attempts are exhausted (see 'failed' event).
-      await syncSingleFeed(feedId, job.attemptsMade + 1);
+      // Throws FeedSyncError on failure — BullMQ retries with exponential backoff.
+      // The `completed` and `failed` events below are responsible for writing feed_sync_logs.
+      return await syncSingleFeed(feedId);
     },
     {
       connection: redisConnection,
@@ -51,18 +52,37 @@ export function createSingleFeedSyncWorker() {
     },
   );
 
+  // Write a feed_sync_logs row on successful completion.
+  worker.on('completed', async (job: Job<FeedSyncJobData>, result) => {
+    const { feedId } = job.data;
+    const durationMs =
+      job.processedOn != null && job.finishedOn != null ? job.finishedOn - job.processedOn : null;
+    try {
+      await writeFeedSyncLog(feedId, result, durationMs);
+    } catch (logErr) {
+      logger.error(logErr instanceof Error ? logErr : new Error(String(logErr)), {
+        source: 'worker',
+        operation: 'write_sync_log_completed',
+        feedId,
+      });
+    }
+  });
+
   // `failed` fires on every failed attempt.
-  // - If retries remain: mark feed as 'failing' so the UI shows it's having trouble.
-  // - If all retries exhausted: mark feed as 'broken' and stop future orchestrator syncs.
+  // - If retries remain: mark feed as 'failing' and write a feed_sync_logs row.
+  // - If all retries exhausted: mark feed as 'broken' and write a feed_sync_logs row.
   worker.on('failed', async (job: Job<FeedSyncJobData> | undefined, err: Error) => {
     if (!job) return;
     const { feedId } = job.data;
+    const attemptNumber = job.attemptsMade; // incremented by BullMQ after failure, so already 1-indexed
     const attemptsExhausted = job.attemptsMade >= (job.opts.attempts ?? 1);
+    const durationMs =
+      job.processedOn != null && job.finishedOn != null ? job.finishedOn - job.processedOn : null;
     try {
       if (attemptsExhausted) {
-        await recordFeedSyncFailure(feedId, err);
+        await recordFeedSyncFailure(feedId, err, attemptNumber, durationMs);
       } else {
-        await markFeedAsFailing(feedId, err);
+        await markFeedAsFailing(feedId, err, attemptNumber, durationMs);
       }
     } catch (updateErr) {
       logger.error(updateErr instanceof Error ? updateErr : new Error(String(updateErr)), {

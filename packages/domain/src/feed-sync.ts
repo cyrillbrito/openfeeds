@@ -184,125 +184,120 @@ const OUTDATED_MIN = 15;
 /** Max stale feeds enqueued per orchestrator run */
 const SYNC_LIMIT = 50;
 
+export type SyncSingleFeedResult =
+  | { status: 'ok'; httpStatus: number; articlesAdded: number }
+  | { status: 'skipped' };
+
 /**
  * Sync a single feed by ID.
- * Fetches RSS, inserts new articles, tracks sync health (ok/failing/broken).
+ * Fetches RSS, inserts new articles, updates sync health on the feed row.
  *
- * Throws on error so BullMQ can handle retries with exponential backoff.
- * Every attempt (success or failure) writes a row to feed_sync_logs.
- * The worker's `failed` event (fired after all attempts are exhausted) is
- * responsible for incrementing syncFailCount and updating syncStatus.
+ * Returns a result object on success so the worker's `completed` event can write
+ * the feed_sync_logs row. Throws FeedSyncError on failure (carries httpStatus +
+ * durationMs) so the worker's `failed` event can write the log row.
  *
- * @param attemptNumber 1-indexed attempt number, for logging (defaults to 1)
+ * No log writes happen inside this function — all logging is centralised in the
+ * worker event handlers to guarantee exactly one log row per attempt.
  */
-export async function syncSingleFeed(feedId: string, attemptNumber = 1): Promise<void> {
+export async function syncSingleFeed(feedId: string): Promise<SyncSingleFeedResult> {
   const feed = await db.query.feeds.findFirst({
     where: eq(feeds.id, feedId),
   });
 
   if (!feed) {
     console.warn(`Feed ${feedId} not found for sync`);
-    return;
+    // Treat as skipped — nothing to do, don't fail the job
+    return { status: 'skipped' };
   }
 
   const userId = feed.userId;
 
-  const startedAt = Date.now();
+  const fetchResult = await fetchRss(feed.feedUrl, {
+    etag: feed.etagHeader,
+    lastModified: feed.lastModifiedHeader,
+  });
 
-  try {
-    const fetchResult = await fetchRss(feed.feedUrl, {
-      etag: feed.etagHeader,
-      lastModified: feed.lastModifiedHeader,
-    });
-
-    // 304 Not Modified — feed hasn't changed, just bump lastSyncAt and log
-    if (fetchResult.notModified) {
-      await db.update(feeds).set({ lastSyncAt: new Date() }).where(eq(feeds.id, feed.id));
-
-      await db.insert(feedSyncLogs).values({
-        id: createId(),
-        userId,
-        feedId: feed.id,
-        status: 'skipped',
-        durationMs: Date.now() - startedAt,
-        httpStatus: 304,
-        error: null,
-        articlesAdded: 0,
-      });
-
-      return;
-    }
-
-    const autoArchiveCutoffDate = await getAutoArchiveCutoffDate(userId);
-    const { created } = await syncFeedArticles(
-      fetchResult.feed,
-      feed.id,
-      userId,
-      autoArchiveCutoffDate,
-    );
-
-    // Success: reset sync health, update lastSyncAt, and store cache headers
-    await db
-      .update(feeds)
-      .set({
-        lastSyncAt: new Date(),
-        syncStatus: 'ok',
-        syncError: null,
-        etagHeader: fetchResult.etag,
-        lastModifiedHeader: fetchResult.lastModified,
-      })
-      .where(eq(feeds.id, feed.id));
-
-    await db.insert(feedSyncLogs).values({
-      id: createId(),
-      userId,
-      feedId: feed.id,
-      status: 'ok',
-      durationMs: Date.now() - startedAt,
-      httpStatus: fetchResult.httpStatus,
-      error: null,
-      articlesAdded: created,
-    });
-  } catch (err) {
-    const error = err instanceof Error ? err : new Error(String(err));
-    const httpStatus = err instanceof HttpFetchError ? err.status : null;
-
-    // Log every failed attempt so the sync history is complete.
-    // We re-throw so BullMQ retries the job with exponential backoff.
-    // syncFailCount/syncStatus are only updated after all retries are exhausted
-    // (handled by recordFeedSyncFailure in the worker's `failed` event).
-    await db.insert(feedSyncLogs).values({
-      id: createId(),
-      userId,
-      feedId: feed.id,
-      status: 'failed',
-      durationMs: Date.now() - startedAt,
-      httpStatus,
-      error: `[attempt ${attemptNumber}] ${error.message}`.slice(0, 1000),
-      articlesAdded: 0,
-    });
-
-    throw err;
+  // 304 Not Modified — feed hasn't changed, just bump lastSyncAt
+  if (fetchResult.notModified) {
+    await db.update(feeds).set({ lastSyncAt: new Date() }).where(eq(feeds.id, feed.id));
+    return { status: 'skipped' };
   }
+
+  const autoArchiveCutoffDate = await getAutoArchiveCutoffDate(userId);
+  const { created } = await syncFeedArticles(
+    fetchResult.feed,
+    feed.id,
+    userId,
+    autoArchiveCutoffDate,
+  );
+
+  // Success: reset sync health, update lastSyncAt, and store cache headers
+  await db
+    .update(feeds)
+    .set({
+      lastSyncAt: new Date(),
+      syncStatus: 'ok',
+      syncError: null,
+      etagHeader: fetchResult.etag,
+      lastModifiedHeader: fetchResult.lastModified,
+    })
+    .where(eq(feeds.id, feed.id));
+
+  return {
+    status: 'ok',
+    httpStatus: fetchResult.httpStatus,
+    articlesAdded: created,
+  };
 }
 
 /**
  * Called by the worker's `failed` event on intermediate failures (retries still remaining).
- * Sets syncStatus to 'failing' so the UI can show the feed is having trouble.
+ * Sets syncStatus to 'failing' and writes a feed_sync_logs row.
  */
-export async function markFeedAsFailing(feedId: string, error: Error): Promise<void> {
+export async function markFeedAsFailing(
+  feedId: string,
+  error: Error,
+  attemptNumber: number,
+  durationMs: number | null,
+): Promise<void> {
+  const feed = await db.query.feeds.findFirst({
+    where: eq(feeds.id, feedId),
+    columns: { id: true, userId: true },
+  });
+
+  if (!feed) return;
+
+  const httpStatus = error instanceof HttpFetchError ? error.status : null;
+
   await db
     .update(feeds)
     .set({ syncStatus: 'failing', syncError: error.message.slice(0, 1000) })
     .where(eq(feeds.id, feedId));
+
+  await db.insert(feedSyncLogs).values({
+    id: createId(),
+    userId: feed.userId,
+    feedId: feed.id,
+    status: 'failed',
+    durationMs,
+    httpStatus,
+    error: `[attempt ${attemptNumber}] ${error.message}`.slice(0, 1000),
+    articlesAdded: 0,
+  });
 }
 
 /**
  * Called by the worker's `failed` event after all BullMQ retry attempts are exhausted.
  * Marks the feed as broken so it is excluded from future orchestrator runs.
+ * Writes a feed_sync_logs row for the final attempt.
  * The user can reset a broken feed via forceEnqueueFeedSync which clears syncStatus.
  */
-export async function recordFeedSyncFailure(feedId: string, error: Error): Promise<void> {
+export async function recordFeedSyncFailure(
+  feedId: string,
+  error: Error,
+  attemptNumber: number,
+  durationMs: number | null,
+): Promise<void> {
   const feed = await db.query.feeds.findFirst({
     where: eq(feeds.id, feedId),
     columns: { id: true, userId: true, title: true, feedUrl: true },
@@ -310,7 +305,7 @@ export async function recordFeedSyncFailure(feedId: string, error: Error): Promi
 
   if (!feed) return;
 
-  const userId = feed.userId;
+  const httpStatus = error instanceof HttpFetchError ? error.status : null;
 
   await db
     .update(feeds)
@@ -323,12 +318,12 @@ export async function recordFeedSyncFailure(feedId: string, error: Error): Promi
 
   await db.insert(feedSyncLogs).values({
     id: createId(),
-    userId,
+    userId: feed.userId,
     feedId: feed.id,
     status: 'failed',
-    durationMs: null,
-    httpStatus: null,
-    error: error.message.slice(0, 1000),
+    durationMs,
+    httpStatus,
+    error: `[attempt ${attemptNumber}] ${error.message}`.slice(0, 1000),
     articlesAdded: 0,
   });
 
@@ -338,6 +333,47 @@ export async function recordFeedSyncFailure(feedId: string, error: Error): Promi
     feedTitle: feed.title,
     feedUrl: feed.feedUrl,
   });
+}
+
+/**
+ * Called by the worker's `completed` event to write a feed_sync_logs row on success.
+ * durationMs is derived by the worker from job.processedOn / job.finishedOn.
+ */
+export async function writeFeedSyncLog(
+  feedId: string,
+  result: SyncSingleFeedResult,
+  durationMs: number | null,
+): Promise<void> {
+  const feed = await db.query.feeds.findFirst({
+    where: eq(feeds.id, feedId),
+    columns: { id: true, userId: true },
+  });
+
+  if (!feed) return;
+
+  if (result.status === 'skipped') {
+    await db.insert(feedSyncLogs).values({
+      id: createId(),
+      userId: feed.userId,
+      feedId: feed.id,
+      status: 'skipped',
+      durationMs,
+      httpStatus: 304,
+      error: null,
+      articlesAdded: 0,
+    });
+  } else {
+    await db.insert(feedSyncLogs).values({
+      id: createId(),
+      userId: feed.userId,
+      feedId: feed.id,
+      status: 'ok',
+      durationMs,
+      httpStatus: result.httpStatus,
+      error: null,
+      articlesAdded: result.articlesAdded,
+    });
+  }
 }
 
 /**
