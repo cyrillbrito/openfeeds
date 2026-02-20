@@ -98,10 +98,7 @@ export async function extractArticleContent(id: string, userId: string): Promise
   }
 }
 
-export async function updateArticles(
-  data: (UpdateArticle & { id: string })[],
-  userId: string,
-): Promise<void> {
+export async function updateArticles(data: UpdateArticle[], userId: string): Promise<void> {
   if (data.length === 0) return;
 
   await db.transaction(async (tx) => {

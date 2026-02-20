@@ -26,6 +26,7 @@ export const CreateFeedSchema = z.object({
 export type CreateFeed = z.infer<typeof CreateFeedSchema>;
 
 export const UpdateFeedSchema = z.object({
+  id: z.string(),
   title: z.string().optional(),
   description: z.string().nullable().optional(),
   url: z.url().optional(),

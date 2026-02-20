@@ -26,6 +26,7 @@ export const CreateArticleFromUrlSchema = z.object({
 export type CreateArticleFromUrl = z.infer<typeof CreateArticleFromUrlSchema>;
 
 export const UpdateArticleSchema = z.object({
+  id: z.string(),
   isRead: z.boolean().optional(),
   isArchived: z.boolean().optional(),
 });

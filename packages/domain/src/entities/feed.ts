@@ -88,10 +88,7 @@ export async function createFeeds(data: CreateFeed[], userId: string): Promise<F
   return inserted.map(toApiFeed);
 }
 
-export async function updateFeeds(
-  data: (UpdateFeed & { id: string })[],
-  userId: string,
-): Promise<void> {
+export async function updateFeeds(data: UpdateFeed[], userId: string): Promise<void> {
   if (data.length === 0) return;
 
   await db.transaction(async (tx) => {

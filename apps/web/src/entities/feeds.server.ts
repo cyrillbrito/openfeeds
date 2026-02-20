@@ -45,7 +45,7 @@ export const $$createFeeds = createServerFn({ method: 'POST' })
 
 export const $$updateFeeds = createServerFn({ method: 'POST' })
   .middleware([authMiddleware])
-  .inputValidator(z.array(UpdateFeedSchema.extend({ id: z.string() })))
+  .inputValidator(z.array(UpdateFeedSchema))
   .handler(({ context, data }) => {
     return feedsDomain.updateFeeds(data, context.user.id);
   });

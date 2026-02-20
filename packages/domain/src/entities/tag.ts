@@ -48,10 +48,7 @@ export async function createTags(data: CreateTag[], userId: string): Promise<Tag
   }));
 }
 
-export async function updateTags(
-  data: (UpdateTag & { id: string })[],
-  userId: string,
-): Promise<void> {
+export async function updateTags(data: UpdateTag[], userId: string): Promise<void> {
   if (data.length === 0) return;
 
   await db.transaction(async (tx) => {

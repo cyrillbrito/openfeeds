@@ -29,10 +29,7 @@ export async function createFilterRules(data: CreateFilterRule[], userId: string
   }
 }
 
-export async function updateFilterRules(
-  data: (UpdateFilterRule & { id: string })[],
-  userId: string,
-): Promise<void> {
+export async function updateFilterRules(data: UpdateFilterRule[], userId: string): Promise<void> {
   if (data.length === 0) return;
 
   await db.transaction(async (tx) => {

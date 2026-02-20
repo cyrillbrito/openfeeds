@@ -41,6 +41,7 @@ export const CreateTagSchema = z.object({
 export type CreateTag = z.infer<typeof CreateTagSchema>;
 
 export const UpdateTagSchema = z.object({
+  id: z.string(),
   name: z.string().optional(),
   color: TagColorSchema.optional(),
 });

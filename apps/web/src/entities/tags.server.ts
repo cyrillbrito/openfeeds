@@ -13,7 +13,7 @@ export const $$createTags = createServerFn({ method: 'POST' })
 
 export const $$updateTags = createServerFn({ method: 'POST' })
   .middleware([authMiddleware])
-  .inputValidator(z.array(UpdateTagSchema.extend({ id: z.string() })))
+  .inputValidator(z.array(UpdateTagSchema))
   .handler(({ context, data }) => {
     return tagsDomain.updateTags(data, context.user.id);
   });

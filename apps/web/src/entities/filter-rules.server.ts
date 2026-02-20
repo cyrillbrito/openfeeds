@@ -13,7 +13,7 @@ export const $$createFilterRules = createServerFn({ method: 'POST' })
 
 export const $$updateFilterRules = createServerFn({ method: 'POST' })
   .middleware([authMiddleware])
-  .inputValidator(z.array(UpdateFilterRuleSchema.extend({ id: z.string() })))
+  .inputValidator(z.array(UpdateFilterRuleSchema))
   .handler(({ context, data }) => {
     return filterRulesDomain.updateFilterRules(data, context.user.id);
   });
