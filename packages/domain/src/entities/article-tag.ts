@@ -32,9 +32,7 @@ export async function createArticleTags(
     tagId: item.tagId,
   }));
 
-  await db.insert(articleTags).values(newTags);
-
-  return newTags;
+  return db.insert(articleTags).values(newTags).onConflictDoNothing().returning();
 }
 
 export async function deleteArticleTags(ids: string[], userId: string): Promise<void> {

@@ -8,9 +8,7 @@ export const $$updateArticles = createServerFn({ method: 'POST' })
   .middleware([authMiddleware])
   .inputValidator(z.array(UpdateArticleSchema.extend({ id: z.string() })))
   .handler(({ context, data }) => {
-    return Promise.all(
-      data.map(({ id, ...updates }) => articlesDomain.updateArticle(id, updates, context.user.id)),
-    );
+    return articlesDomain.updateArticles(data, context.user.id);
   });
 
 export const $$createArticle = createServerFn({ method: 'POST' })

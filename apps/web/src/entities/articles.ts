@@ -21,31 +21,33 @@ export const articlesCollection = createCollection(
     },
 
     onInsert: collectionErrorHandler('articles.onInsert', async ({ transaction }) => {
-      for (const mutation of transaction.mutations) {
-        const data = mutation.modified;
-        // Only call server for articles created from URL (no feedId)
-        if (data.feedId === null && data.url) {
-          const article = await $$createArticle({
-            data: {
-              id: mutation.key as string,
-              url: data.url,
-            },
-          });
+      await Promise.all(
+        transaction.mutations.map(async (mutation) => {
+          const data = mutation.modified;
+          // Only call server for articles created from URL (no feedId)
+          if (data.feedId === null && data.url) {
+            const article = await $$createArticle({
+              data: {
+                id: mutation.key as string,
+                url: data.url,
+              },
+            });
 
-          // Write directly to synced data store without triggering onUpdate
-          articlesCollection.utils.writeUpdate({
-            id: mutation.key as string,
-            title: article.title,
-            description: article.description,
-            content: article.content,
-            author: article.author,
-            pubDate: article.pubDate ?? new Date().toISOString(),
-            cleanContent: article.cleanContent,
-            contentExtractedAt: article.contentExtractedAt,
-            createdAt: article.createdAt,
-          });
-        }
-      }
+            // Write directly to synced data store without triggering onUpdate
+            articlesCollection.utils.writeUpdate({
+              id: mutation.key as string,
+              title: article.title,
+              description: article.description,
+              content: article.content,
+              author: article.author,
+              pubDate: article.pubDate ?? new Date().toISOString(),
+              cleanContent: article.cleanContent,
+              contentExtractedAt: article.contentExtractedAt,
+              createdAt: article.createdAt,
+            });
+          }
+        }),
+      );
     }),
 
     // Handle client-side updates (isRead, isArchived)

@@ -2,23 +2,11 @@ import { articles, db } from '@repo/db';
 import { fetchArticleContent } from '@repo/readability/server';
 import { createId } from '@repo/shared/utils';
 import { and, eq } from 'drizzle-orm';
-import { NotFoundError } from '../errors';
+import { assert, NotFoundError } from '../errors';
 import type { Article, CreateArticleFromUrl, UpdateArticle } from './article.schema';
 
 // Re-export schemas and types from schema file
 export * from './article.schema';
-
-/** Existence + ownership guard. Throws NotFoundError if article doesn't exist or doesn't belong to user. */
-async function assertArticleExists(id: string, userId: string): Promise<void> {
-  const article = await db.query.articles.findFirst({
-    where: and(eq(articles.id, id), eq(articles.userId, userId)),
-    columns: { id: true },
-  });
-
-  if (!article) {
-    throw new NotFoundError();
-  }
-}
 
 export async function getArticleById(id: string, userId: string): Promise<Article> {
   const article = await db.query.articles.findFirst({
@@ -110,19 +98,22 @@ export async function extractArticleContent(id: string, userId: string): Promise
   }
 }
 
-export async function updateArticle(
-  id: string,
-  data: UpdateArticle,
+export async function updateArticles(
+  data: (UpdateArticle & { id: string })[],
   userId: string,
 ): Promise<void> {
-  if (Object.keys(data).length === 0) return;
+  if (data.length === 0) return;
 
-  await assertArticleExists(id, userId);
+  await db.transaction(async (tx) => {
+    for (const { id, ...updates } of data) {
+      if (Object.keys(updates).length === 0) continue;
 
-  await db
-    .update(articles)
-    .set(data)
-    .where(and(eq(articles.id, id), eq(articles.userId, userId)));
+      await tx
+        .update(articles)
+        .set(updates)
+        .where(and(eq(articles.id, id), eq(articles.userId, userId)));
+    }
+  });
 }
 
 export async function createArticle(data: CreateArticleFromUrl, userId: string): Promise<Article> {
@@ -135,19 +126,40 @@ export async function createArticle(data: CreateArticleFromUrl, userId: string):
     content: cleanContent,
   } = await fetchArticleContent(data.url);
 
-  await db.insert(articles).values({
-    id: articleId,
-    userId,
-    feedId: null,
-    title: extractedTitle || data.url,
-    description: excerpt,
-    url: data.url,
-    pubDate: now,
-    createdAt: now,
-    isRead: false,
-    isArchived: false,
-    cleanContent,
-  });
+  const dbResult = await db
+    .insert(articles)
+    .values({
+      id: articleId,
+      userId,
+      feedId: null,
+      title: extractedTitle || data.url,
+      description: excerpt,
+      url: data.url,
+      pubDate: now,
+      createdAt: now,
+      isRead: false,
+      isArchived: false,
+      cleanContent,
+    })
+    .returning();
 
-  return getArticleById(articleId, userId);
+  const row = dbResult[0];
+  assert(row, 'Created article must exist');
+
+  return {
+    id: row.id,
+    userId: row.userId,
+    feedId: row.feedId,
+    title: row.title,
+    url: row.url,
+    description: row.description,
+    content: row.content,
+    author: row.author,
+    pubDate: row.pubDate?.toISOString() ?? null,
+    isRead: row.isRead,
+    isArchived: row.isArchived,
+    cleanContent: row.cleanContent ?? null,
+    contentExtractedAt: row.contentExtractedAt?.toISOString() ?? null,
+    createdAt: row.createdAt.toISOString(),
+  };
 }

@@ -8,25 +8,19 @@ export const $$createFilterRules = createServerFn({ method: 'POST' })
   .middleware([authMiddleware])
   .inputValidator(z.array(CreateFilterRuleSchema))
   .handler(({ context, data }) => {
-    return Promise.all(
-      data.map((rule) => filterRulesDomain.createFilterRule(rule, context.user.id)),
-    );
+    return filterRulesDomain.createFilterRules(data, context.user.id);
   });
 
 export const $$updateFilterRules = createServerFn({ method: 'POST' })
   .middleware([authMiddleware])
   .inputValidator(z.array(UpdateFilterRuleSchema.extend({ id: z.string() })))
   .handler(({ context, data }) => {
-    return Promise.all(
-      data.map(({ id, ...updates }) =>
-        filterRulesDomain.updateFilterRule(id, updates, context.user.id),
-      ),
-    );
+    return filterRulesDomain.updateFilterRules(data, context.user.id);
   });
 
 export const $$deleteFilterRules = createServerFn({ method: 'POST' })
   .middleware([authMiddleware])
   .inputValidator(z.array(z.string()))
   .handler(({ context, data: ids }) => {
-    return Promise.all(ids.map((id) => filterRulesDomain.deleteFilterRule(id, context.user.id)));
+    return filterRulesDomain.deleteFilterRules(ids, context.user.id);
   });

@@ -29,9 +29,7 @@ export async function createFeedTags(data: CreateFeedTag[], userId: string): Pro
     tagId: item.tagId,
   }));
 
-  await db.insert(feedTags).values(newTags);
-
-  return newTags;
+  return db.insert(feedTags).values(newTags).onConflictDoNothing().returning();
 }
 
 export async function deleteFeedTags(ids: string[], userId: string): Promise<void> {

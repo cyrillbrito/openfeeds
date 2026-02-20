@@ -8,21 +8,19 @@ export const $$createTags = createServerFn({ method: 'POST' })
   .middleware([authMiddleware])
   .inputValidator(z.array(CreateTagSchema))
   .handler(({ context, data }) => {
-    return Promise.all(data.map((tag) => tagsDomain.createTag(tag, context.user.id)));
+    return tagsDomain.createTags(data, context.user.id);
   });
 
 export const $$updateTags = createServerFn({ method: 'POST' })
   .middleware([authMiddleware])
   .inputValidator(z.array(UpdateTagSchema.extend({ id: z.string() })))
   .handler(({ context, data }) => {
-    return Promise.all(
-      data.map(({ id, ...updates }) => tagsDomain.updateTag(id, updates, context.user.id)),
-    );
+    return tagsDomain.updateTags(data, context.user.id);
   });
 
 export const $$deleteTags = createServerFn({ method: 'POST' })
   .middleware([authMiddleware])
   .inputValidator(z.array(z.string()))
   .handler(({ context, data: ids }) => {
-    return Promise.all(ids.map((id) => tagsDomain.deleteTag(id, context.user.id)));
+    return tagsDomain.deleteTags(ids, context.user.id);
   });
