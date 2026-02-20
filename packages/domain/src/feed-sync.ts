@@ -181,8 +181,6 @@ export async function syncFeedArticles(
 
 /** Feeds not synced in this many minutes are considered stale */
 const OUTDATED_MIN = 10;
-/** Max stale feeds enqueued per orchestrator run */
-const SYNC_LIMIT = 50;
 /** Consecutive sync failures before a feed is marked as broken and excluded from sync */
 const BROKEN_THRESHOLD = 3;
 
@@ -274,8 +272,7 @@ export async function enqueueStaleFeeds(): Promise<void> {
         or(isNull(feeds.lastSyncAt), lt(feeds.lastSyncAt, outdatedDate)),
       ),
     )
-    .orderBy(asc(feeds.lastSyncAt))
-    .limit(SYNC_LIMIT);
+    .orderBy(asc(feeds.lastSyncAt));
 
   if (feedsToSync.length === 0) {
     return;
