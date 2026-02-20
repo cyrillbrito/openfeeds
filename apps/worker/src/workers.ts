@@ -56,7 +56,7 @@ export function createSingleFeedSyncWorker() {
   worker.on('completed', async (job: Job<FeedSyncJobData>, result) => {
     const { feedId } = job.data;
     const durationMs =
-      job.processedOn != null && job.finishedOn != null ? job.finishedOn - job.processedOn : null;
+      job.processedOn != null ? (job.finishedOn ?? Date.now()) - job.processedOn : null;
     try {
       await writeFeedSyncLog(feedId, result, durationMs);
     } catch (logErr) {
@@ -77,7 +77,7 @@ export function createSingleFeedSyncWorker() {
     const attemptNumber = job.attemptsMade; // incremented by BullMQ after failure, so already 1-indexed
     const attemptsExhausted = job.attemptsMade >= (job.opts.attempts ?? 1);
     const durationMs =
-      job.processedOn != null && job.finishedOn != null ? job.finishedOn - job.processedOn : null;
+      job.processedOn != null ? (job.finishedOn ?? Date.now()) - job.processedOn : null;
     try {
       if (attemptsExhausted) {
         await recordFeedSyncFailure(feedId, err, attemptNumber, durationMs);
