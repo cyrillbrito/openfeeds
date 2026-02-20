@@ -44,9 +44,9 @@ function SyncLogsContent(props: { feed: Feed }) {
           <p class="text-base-content-gray py-8 text-center text-sm">No sync logs yet.</p>
         </Match>
         <Match when={logs()}>
-          <div class="max-h-[60vh] overflow-auto">
+          <div class="min-h-[40vh] overflow-x-auto">
             <table class="table-sm table">
-              <thead class="bg-base-200 sticky top-0 z-10">
+              <thead>
                 <tr>
                   <th>Time</th>
                   <th>Status</th>
