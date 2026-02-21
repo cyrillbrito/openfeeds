@@ -1,10 +1,10 @@
 import { db, feeds, feedTags, tags } from '@repo/db';
 import { createId } from '@repo/shared/utils';
-import { and, count, eq, inArray } from 'drizzle-orm';
+import { and, eq, inArray } from 'drizzle-orm';
 import { parseOpml } from 'feedsmith';
 import { trackEvent } from './analytics';
 import { assert, LimitExceededError } from './errors';
-import { FREE_TIER_LIMITS } from './limits';
+import { countUserFeeds, FREE_TIER_LIMITS } from './limits';
 import { logger } from './logger';
 import { enqueueFeedDetail, enqueueFeedSync } from './queues';
 
@@ -67,11 +67,7 @@ export async function importOpmlFeeds(opmlContent: string, userId: string): Prom
   const feedsToImport = getFeedsFromOutlines(parsedOpml.body?.outlines || []);
 
   // Check free-tier feed limit: count existing feeds, deduplicate against OPML, and verify the new ones fit
-  const [feedCount] = await db
-    .select({ count: count() })
-    .from(feeds)
-    .where(eq(feeds.userId, userId));
-  const currentFeedCount = feedCount?.count ?? 0;
+  const currentFeedCount = await countUserFeeds(userId);
 
   const opmlUrls = feedsToImport.map((f) => f.xmlUrl);
   const existingFeedUrls = new Set(

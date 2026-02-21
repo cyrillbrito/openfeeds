@@ -1,10 +1,10 @@
 import { db, feeds, type DbFeed, type DbInsertFeed } from '@repo/db';
 import { discoverFeeds } from '@repo/discovery/server';
 import { createId } from '@repo/shared/utils';
-import { and, count, eq, inArray } from 'drizzle-orm';
+import { and, eq, inArray } from 'drizzle-orm';
 import { trackEvent } from '../analytics';
 import { BadRequestError, ConflictError, LimitExceededError, NotFoundError } from '../errors';
-import { FREE_TIER_LIMITS } from '../limits';
+import { countUserFeeds, FREE_TIER_LIMITS } from '../limits';
 import { enqueueFeedDetail, enqueueFeedSync } from '../queues';
 import type { CreateFeed, DiscoveredFeed, Feed, UpdateFeed } from './feed.schema';
 
@@ -44,14 +44,11 @@ export async function createFeeds(data: CreateFeed[], userId: string): Promise<F
   if (data.length === 0) return [];
 
   // Check free-tier feed limit
-  const [feedCount] = await db
-    .select({ count: count() })
-    .from(feeds)
-    .where(eq(feeds.userId, userId));
-  if (feedCount && feedCount.count + data.length > FREE_TIER_LIMITS.feeds) {
+  const currentCount = await countUserFeeds(userId);
+  if (currentCount + data.length > FREE_TIER_LIMITS.feeds) {
     trackEvent(userId, 'limits:feeds_limit_hit', {
       source: 'manual',
-      current_usage: feedCount.count,
+      current_usage: currentCount,
       limit: FREE_TIER_LIMITS.feeds,
     });
     throw new LimitExceededError('feeds', FREE_TIER_LIMITS.feeds);

@@ -1,10 +1,15 @@
 import { articles, db } from '@repo/db';
 import { fetchArticleContent } from '@repo/readability/server';
 import { createId } from '@repo/shared/utils';
-import { and, count, eq, isNull, sql } from 'drizzle-orm';
+import { and, eq } from 'drizzle-orm';
 import { trackEvent } from '../analytics';
 import { assert, LimitExceededError, NotFoundError } from '../errors';
-import { FREE_TIER_LIMITS } from '../limits';
+import {
+  countDailyExtractions,
+  countMonthlyExtractions,
+  countUserSavedArticles,
+  FREE_TIER_LIMITS,
+} from '../limits';
 import type { Article, CreateArticleFromUrl, UpdateArticle } from './article.schema';
 
 // Re-export schemas and types from schema file
@@ -55,22 +60,9 @@ function isYouTubeUrl(url: string | null): boolean {
 async function getExtractionLimitWindow(
   userId: string,
 ): Promise<{ window: 'daily' | 'monthly'; current_usage: number; limit: number } | null> {
-  const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
-  const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
-
   const [daily, monthly] = await Promise.all([
-    db
-      .select({ count: count() })
-      .from(articles)
-      .where(and(eq(articles.userId, userId), sql`${articles.contentExtractedAt} >= ${oneDayAgo}`))
-      .then((r) => r[0]?.count ?? 0),
-    db
-      .select({ count: count() })
-      .from(articles)
-      .where(
-        and(eq(articles.userId, userId), sql`${articles.contentExtractedAt} >= ${thirtyDaysAgo}`),
-      )
-      .then((r) => r[0]?.count ?? 0),
+    countDailyExtractions(userId),
+    countMonthlyExtractions(userId),
   ]);
 
   // Check daily first (more likely to be hit in normal use)
@@ -165,13 +157,10 @@ export async function updateArticles(data: UpdateArticle[], userId: string): Pro
 
 export async function createArticle(data: CreateArticleFromUrl, userId: string): Promise<Article> {
   // Check free-tier saved article limit (only user-created articles, not feed-synced)
-  const [savedCount] = await db
-    .select({ count: count() })
-    .from(articles)
-    .where(and(eq(articles.userId, userId), isNull(articles.feedId)));
-  if (savedCount && savedCount.count >= FREE_TIER_LIMITS.savedArticles) {
+  const currentCount = await countUserSavedArticles(userId);
+  if (currentCount >= FREE_TIER_LIMITS.savedArticles) {
     trackEvent(userId, 'limits:saved_articles_limit_hit', {
-      current_usage: savedCount.count,
+      current_usage: currentCount,
       limit: FREE_TIER_LIMITS.savedArticles,
     });
     throw new LimitExceededError('saved articles', FREE_TIER_LIMITS.savedArticles);

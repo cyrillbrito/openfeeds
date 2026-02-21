@@ -1,9 +1,9 @@
 import { db, filterRules } from '@repo/db';
 import { createId } from '@repo/shared/utils';
-import { and, count, eq, inArray } from 'drizzle-orm';
+import { and, eq, inArray } from 'drizzle-orm';
 import { trackEvent } from '../analytics';
 import { LimitExceededError } from '../errors';
-import { FREE_TIER_LIMITS } from '../limits';
+import { countUserFilterRules, FREE_TIER_LIMITS } from '../limits';
 import type { CreateFilterRule, UpdateFilterRule } from './filter-rule.schema';
 
 // Re-export schemas and types from schema file
@@ -13,13 +13,10 @@ export async function createFilterRules(data: CreateFilterRule[], userId: string
   if (data.length === 0) return;
 
   // Check free-tier filter rule limit
-  const [ruleCount] = await db
-    .select({ count: count() })
-    .from(filterRules)
-    .where(eq(filterRules.userId, userId));
-  if (ruleCount && ruleCount.count + data.length > FREE_TIER_LIMITS.filterRules) {
+  const currentCount = await countUserFilterRules(userId);
+  if (currentCount + data.length > FREE_TIER_LIMITS.filterRules) {
     trackEvent(userId, 'limits:filter_rules_limit_hit', {
-      current_usage: ruleCount.count,
+      current_usage: currentCount,
       limit: FREE_TIER_LIMITS.filterRules,
     });
     throw new LimitExceededError('filter rules', FREE_TIER_LIMITS.filterRules);
