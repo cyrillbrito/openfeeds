@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.6.0](https://github.com/cyrillbrito/openfeeds/compare/v0.5.0...v0.6.0) (2026-02-21)
+
+
+### Features
+
+* add free-tier usage limits to prevent abuse during beta ([#51](https://github.com/cyrillbrito/openfeeds/issues/51)) ([f46bc3c](https://github.com/cyrillbrito/openfeeds/commit/f46bc3ccfc00281701325d52305f7ff51837a310))
+* migrate user-data table IDs from text/ULID to uuid/UUIDv7 ([#111](https://github.com/cyrillbrito/openfeeds/issues/111)) ([2a6643d](https://github.com/cyrillbrito/openfeeds/commit/2a6643dc6e29e8690793626bccb5e204c2ab83cd))
+
 ## [0.5.0](https://github.com/cyrillbrito/openfeeds/compare/v0.4.0...v0.5.0) (2026-02-20)
 
 
