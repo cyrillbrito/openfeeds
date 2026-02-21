@@ -4,7 +4,7 @@ export const SyncStatusSchema = z.enum(['ok', 'failing', 'broken']);
 export type SyncStatus = z.infer<typeof SyncStatusSchema>;
 
 export const FeedSchema = z.object({
-  id: z.string(),
+  id: z.uuidv7(),
   userId: z.string(),
   url: z.string(),
   feedUrl: z.string(),
@@ -20,13 +20,13 @@ export const FeedSchema = z.object({
 export type Feed = z.infer<typeof FeedSchema>;
 
 export const CreateFeedSchema = z.object({
-  id: z.string().optional(),
+  id: z.uuidv7().optional(),
   url: z.url(),
 });
 export type CreateFeed = z.infer<typeof CreateFeedSchema>;
 
 export const UpdateFeedSchema = z.object({
-  id: z.string(),
+  id: z.uuidv7(),
   title: z.string().optional(),
   description: z.string().nullable().optional(),
   url: z.url().optional(),

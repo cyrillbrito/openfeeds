@@ -6,9 +6,9 @@ export const FilterOperator = {
 } as const;
 
 export const FilterRuleSchema = z.object({
-  id: z.string(),
+  id: z.uuidv7(),
   userId: z.string(),
-  feedId: z.string(),
+  feedId: z.uuidv7(),
   pattern: z.string().min(1),
   operator: z.enum([FilterOperator.INCLUDES, FilterOperator.NOT_INCLUDES]),
   isActive: z.boolean(),
@@ -18,8 +18,8 @@ export const FilterRuleSchema = z.object({
 export type FilterRule = z.infer<typeof FilterRuleSchema>;
 
 export const CreateFilterRuleSchema = z.object({
-  id: z.string().optional(),
-  feedId: z.string(),
+  id: z.uuidv7().optional(),
+  feedId: z.uuidv7(),
   pattern: z.string().min(1),
   operator: z.enum([FilterOperator.INCLUDES, FilterOperator.NOT_INCLUDES]),
   isActive: z.boolean(),
@@ -27,7 +27,7 @@ export const CreateFilterRuleSchema = z.object({
 export type CreateFilterRule = z.infer<typeof CreateFilterRuleSchema>;
 
 export const UpdateFilterRuleSchema = z.object({
-  id: z.string(),
+  id: z.uuidv7(),
   pattern: z.string().min(1).optional(),
   operator: z.enum([FilterOperator.INCLUDES, FilterOperator.NOT_INCLUDES]).optional(),
   isActive: z.boolean().optional(),

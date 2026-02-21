@@ -24,7 +24,7 @@ const TagColorSchema = z.enum(chromaticColors).nullable();
 export type TagColor = z.infer<typeof TagColorSchema>;
 
 export const TagSchema = z.object({
-  id: z.string(),
+  id: z.uuidv7(),
   userId: z.string(),
   name: z.string(),
   color: TagColorSchema,
@@ -34,14 +34,14 @@ export const TagSchema = z.object({
 export type Tag = z.infer<typeof TagSchema>;
 
 export const CreateTagSchema = z.object({
-  id: z.string().optional(),
+  id: z.uuidv7().optional(),
   name: z.string(),
   color: TagColorSchema.optional(),
 });
 export type CreateTag = z.infer<typeof CreateTagSchema>;
 
 export const UpdateTagSchema = z.object({
-  id: z.string(),
+  id: z.uuidv7(),
   name: z.string().optional(),
   color: TagColorSchema.optional(),
 });

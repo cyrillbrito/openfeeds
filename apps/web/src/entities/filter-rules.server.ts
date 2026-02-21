@@ -20,7 +20,7 @@ export const $$updateFilterRules = createServerFn({ method: 'POST' })
 
 export const $$deleteFilterRules = createServerFn({ method: 'POST' })
   .middleware([authMiddleware])
-  .inputValidator(z.array(z.string()))
+  .inputValidator(z.array(z.uuidv7()))
   .handler(({ context, data: ids }) => {
     return filterRulesDomain.deleteFilterRules(ids, context.user.id);
   });

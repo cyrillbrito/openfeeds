@@ -22,7 +22,7 @@ export const $$isTtsAvailable = createServerFn({ method: 'GET' }).handler(() => 
  */
 export const $$getArticleAudio = createServerFn({ method: 'GET' })
   .middleware([authMiddleware])
-  .inputValidator(z.object({ articleId: z.string() }))
+  .inputValidator(z.object({ articleId: z.uuidv7() }))
   .handler(({ context, data }) => {
     const userId = context.user.id;
     const { articleId } = data;
@@ -54,7 +54,7 @@ export const $$getArticleAudio = createServerFn({ method: 'GET' })
  */
 export const $$generateArticleAudio = createServerFn({ method: 'POST' })
   .middleware([authMiddleware])
-  .inputValidator(z.object({ articleId: z.string(), voice: z.string().optional() }))
+  .inputValidator(z.object({ articleId: z.uuidv7(), voice: z.string().optional() }))
   .handler(async ({ context, data }) => {
     const userId = context.user.id;
     const { articleId, voice } = data;

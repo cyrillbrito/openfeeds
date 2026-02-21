@@ -52,21 +52,21 @@ export const $$updateFeeds = createServerFn({ method: 'POST' })
 
 export const $$deleteFeeds = createServerFn({ method: 'POST' })
   .middleware([authMiddleware])
-  .inputValidator(z.array(z.string()))
+  .inputValidator(z.array(z.uuidv7()))
   .handler(({ context, data: ids }) => {
     return feedsDomain.deleteFeeds(ids, context.user.id);
   });
 
 export const $$retryFeed = createServerFn({ method: 'POST' })
   .middleware([authMiddleware])
-  .inputValidator(z.object({ id: z.string() }))
+  .inputValidator(z.object({ id: z.uuidv7() }))
   .handler(({ context, data }) => {
     return feedsDomain.retryFeed(data.id, context.user.id);
   });
 
 export const $$getFeedSyncLogs = createServerFn()
   .middleware([authMiddleware])
-  .inputValidator(z.object({ feedId: z.string() }))
+  .inputValidator(z.object({ feedId: z.uuidv7() }))
   .handler(({ context, data }) => {
     return feedsDomain.getFeedSyncLogs(context.user.id, data.feedId, 200);
   });
