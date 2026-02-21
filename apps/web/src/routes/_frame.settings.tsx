@@ -14,6 +14,7 @@ export const Route = createFileRoute('/_frame/settings')({
 
 const TABS = [
   { label: 'General', to: '/settings/general' as const },
+  { label: 'Usage', to: '/settings/usage' as const },
   { label: 'Connections', to: '/settings/connections' as const },
 ] as const;
 

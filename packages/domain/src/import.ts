@@ -61,27 +61,18 @@ function getFeedsFromOutlines(outlines: OPMLOutlines): Array<{
 
 // Core business logic for importing OPML feeds
 export async function importOpmlFeeds(opmlContent: string, userId: string): Promise<ImportResult> {
-  // Check free-tier feed limit before importing
-  const [feedCount] = await db
-    .select({ count: count() })
-    .from(feeds)
-    .where(eq(feeds.userId, userId));
-  const currentFeedCount = feedCount?.count ?? 0;
-  if (currentFeedCount >= FREE_TIER_LIMITS.feeds) {
-    trackEvent(userId, 'limits:feeds_limit_hit', {
-      source: 'opml_import',
-      current_usage: currentFeedCount,
-      limit: FREE_TIER_LIMITS.feeds,
-    });
-    throw new LimitExceededError('feeds', FREE_TIER_LIMITS.feeds);
-  }
-
   const parsedOpml = parseOpml(opmlContent);
 
   // Extract all feeds from the OPML structure
   const feedsToImport = getFeedsFromOutlines(parsedOpml.body?.outlines || []);
 
-  // Batch-check which feeds already exist so we know how many are genuinely new
+  // Check free-tier feed limit: count existing feeds, deduplicate against OPML, and verify the new ones fit
+  const [feedCount] = await db
+    .select({ count: count() })
+    .from(feeds)
+    .where(eq(feeds.userId, userId));
+  const currentFeedCount = feedCount?.count ?? 0;
+
   const opmlUrls = feedsToImport.map((f) => f.xmlUrl);
   const existingFeedUrls = new Set(
     (

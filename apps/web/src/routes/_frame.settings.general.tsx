@@ -3,15 +3,13 @@ import {
   getEffectiveAutoArchiveDays,
   isAutoArchiveDaysDefault,
   type ArchiveResult,
-  type UserUsage,
 } from '@repo/domain/client';
 import { createFileRoute } from '@tanstack/solid-router';
-import { createResource, createSignal, For, Show } from 'solid-js';
+import { createSignal, Show } from 'solid-js';
 import { Card } from '~/components/Card';
 import { LazyModal, type ModalController } from '~/components/LazyModal';
 import { $$exportOpml } from '~/entities/feeds.server';
 import { settingsCollection, triggerAutoArchive, useSettings } from '~/entities/settings';
-import { $$getUserUsage } from '~/entities/settings.server';
 
 export const Route = createFileRoute('/_frame/settings/general')({
   component: SettingsGeneralPage,
@@ -95,8 +93,6 @@ function SettingsGeneralPage() {
 
       <Show when={settings() && !settings.isLoading}>
         <div class="space-y-6">
-          <UsageLimitsCard />
-
           <Card>
             <Show when={!editMode()}>
               <div class="mb-4 flex items-center justify-between">
@@ -263,71 +259,5 @@ function SettingsGeneralPage() {
         </div>
       </LazyModal>
     </>
-  );
-}
-
-const USAGE_LABELS: Record<keyof UserUsage, string> = {
-  feeds: 'Feed subscriptions',
-  filterRules: 'Filter rules',
-  savedArticles: 'Saved articles',
-  extractions: 'Content extractions',
-};
-
-function flattenUsage(usage: UserUsage) {
-  return [
-    { label: USAGE_LABELS.feeds, ...usage.feeds },
-    { label: USAGE_LABELS.filterRules, ...usage.filterRules },
-    { label: USAGE_LABELS.savedArticles, ...usage.savedArticles },
-    { label: 'Daily extractions', ...usage.extractions.daily },
-    { label: 'Monthly extractions', ...usage.extractions.monthly },
-  ];
-}
-
-function UsageLimitsCard() {
-  const [usage] = createResource(() => $$getUserUsage());
-
-  return (
-    <Card>
-      <div class="mb-4 flex items-center justify-between">
-        <div>
-          <h2 class="text-base-content font-semibold">Usage & Limits</h2>
-          <p class="text-base-content-gray text-sm">Free plan</p>
-        </div>
-      </div>
-
-      <Show
-        when={!usage.loading}
-        fallback={
-          <div class="flex justify-center py-4">
-            <span class="loading loading-spinner loading-sm"></span>
-          </div>
-        }
-      >
-        <Show when={usage()}>
-          <div class="space-y-4">
-            <For each={flattenUsage(usage()!)}>
-              {(item) => {
-                const pct = () => Math.round((item.used / item.limit) * 100);
-                return (
-                  <div>
-                    <div class="mb-1 flex justify-between text-sm">
-                      <span>{item.label}</span>
-                      <span class="text-base-content-gray">
-                        {item.used} / {item.limit}
-                      </span>
-                    </div>
-                    <progress
-                      class={`progress w-full ${pct() >= 90 ? 'progress-error' : pct() >= 70 ? 'progress-warning' : 'progress-primary'}`}
-                      value={item.used}
-                      max={item.limit}
-                    />
-                  </div>
-                );
-              }}
-            </For>
-          </div>
-        </Show>
-      </Show>
-    </Card>
   );
 }
