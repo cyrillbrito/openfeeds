@@ -4,7 +4,7 @@ const clients = [
   {
     id: 'claude',
     name: 'Claude Desktop',
-    file: '~/.claude/claude_desktop_config.json',
+    file: 'claude_desktop_config.json',
     fileNote: 'Settings > Developer > Edit Config',
     config: `{
   "mcpServers": {
@@ -13,13 +13,6 @@ const clients = [
     }
   }
 }`,
-  },
-  {
-    id: 'chatgpt',
-    name: 'ChatGPT',
-    file: 'Settings > MCP Servers > Add',
-    fileNote: 'Paste the server URL when adding a new MCP server',
-    config: `https://openfeeds.app/api/mcp`,
   },
   {
     id: 'cursor',
@@ -42,6 +35,7 @@ const clients = [
     config: `{
   "servers": {
     "openfeeds": {
+      "type": "http",
       "url": "https://openfeeds.app/api/mcp"
     }
   }
