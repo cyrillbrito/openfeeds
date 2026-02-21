@@ -1,6 +1,4 @@
 ---
-import GitHubIcon from './icons/GitHubIcon.astro';
-import TwitterIcon from './icons/TwitterIcon.astro';
 import logoAlt from '../assets/logo-alt.svg';
 ---
 
@@ -11,25 +9,27 @@ import logoAlt from '../assets/logo-alt.svg';
       <span class="text-2xl font-bold text-foreground mt-[6px] font-logo">OpenFeeds</span>
     </a>
 
-    <div class="flex items-center gap-4">
+    <nav class="flex items-center gap-6">
       <a
-        href="https://twitter.com/cyrillbrito"
-        target="_blank"
-        rel="noopener noreferrer"
-        class="text-foreground/60 hover:text-foreground transition-colors"
-        aria-label="Follow us on Twitter"
+        href="/ai"
+        class="text-foreground/60 hover:text-foreground text-sm font-semibold transition-colors"
       >
-        <TwitterIcon />
+        AI
       </a>
       <a
-        href="https://github.com/cyrillbrito"
+        href="https://github.com/cyrillbrito/openfeeds"
         target="_blank"
         rel="noopener noreferrer"
-        class="text-foreground/60 hover:text-foreground transition-colors"
-        aria-label="View source on GitHub"
+        class="text-foreground/60 hover:text-foreground text-sm font-semibold transition-colors"
       >
-        <GitHubIcon />
+        GitHub
       </a>
-    </div>
+      <a
+        href="/signup"
+        class="bg-foreground hover:bg-foreground/90 rounded-lg px-4 py-2 text-sm font-semibold text-background transition-all"
+      >
+        Get Started
+      </a>
+    </nav>
   </div>
 </header>

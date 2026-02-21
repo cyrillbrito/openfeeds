@@ -24,9 +24,16 @@ export default defineConfig({
     },
   }),
 
+  server: {
+    host: true,
+  },
+
   integrations: [solidJs()],
 
   vite: {
     plugins: [tailwindcss()],
+    server: {
+      allowedHosts: true,
+    },
   },
 });
