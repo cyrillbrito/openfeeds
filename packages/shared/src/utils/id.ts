@@ -1,5 +1,5 @@
-import { ulid } from 'ulid';
+import { uuidv7 } from 'uuidv7';
 
 export function createId(): string {
-  return ulid();
+  return uuidv7();
 }

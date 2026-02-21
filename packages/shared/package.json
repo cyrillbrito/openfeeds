@@ -6,7 +6,7 @@
   },
   "scripts": {},
   "dependencies": {
-    "ulid": "^3.0.2"
+    "uuidv7": "^1.1.0"
   },
   "devDependencies": {
     "@types/bun": "^1.3.9",

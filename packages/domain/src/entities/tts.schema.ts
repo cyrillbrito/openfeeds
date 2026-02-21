@@ -10,7 +10,7 @@ export type WordTiming = z.infer<typeof WordTimingSchema>;
 
 /** TTS audio metadata stored alongside the audio file */
 export const ArticleAudioMetadataSchema = z.object({
-  articleId: z.string(),
+  articleId: z.uuidv7(),
   duration: z.number(), // total duration in seconds
   wordTimings: z.array(WordTimingSchema),
   createdAt: z.iso.datetime(),

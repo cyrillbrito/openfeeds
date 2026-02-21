@@ -1,10 +1,10 @@
 import { z } from 'zod';
 
 export const FeedTagSchema = z.object({
-  id: z.string(),
+  id: z.uuidv7(),
   userId: z.string(),
-  feedId: z.string(),
-  tagId: z.string(),
+  feedId: z.uuidv7(),
+  tagId: z.uuidv7(),
 });
 export type FeedTag = z.infer<typeof FeedTagSchema>;
 
@@ -12,6 +12,6 @@ export type FeedTag = z.infer<typeof FeedTagSchema>;
 export const CreateFeedTagSchema = FeedTagSchema.omit({
   userId: true,
 }).extend({
-  id: z.string().optional(),
+  id: z.uuidv7().optional(),
 });
 export type CreateFeedTag = z.infer<typeof CreateFeedTagSchema>;

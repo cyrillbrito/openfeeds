@@ -19,7 +19,7 @@ export const $$createArticleTags = createServerFn({ method: 'POST' })
 
 export const $$deleteArticleTags = createServerFn({ method: 'POST' })
   .middleware([authMiddleware])
-  .inputValidator(z.array(z.string()))
+  .inputValidator(z.array(z.uuidv7()))
   .handler(({ context, data: ids }) => {
     return articleTagsDomain.deleteArticleTags(ids, context.user.id);
   });

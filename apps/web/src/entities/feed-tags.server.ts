@@ -19,7 +19,7 @@ export const $$createFeedTags = createServerFn({ method: 'POST' })
 
 export const $$deleteFeedTags = createServerFn({ method: 'POST' })
   .middleware([authMiddleware])
-  .inputValidator(z.array(z.string()))
+  .inputValidator(z.array(z.uuidv7()))
   .handler(({ context, data: ids }) => {
     return feedTagsDomain.deleteFeedTags(ids, context.user.id);
   });
