@@ -46,7 +46,13 @@ export async function handleWellKnown(request: Request): Promise<Response> {
   }
 
   // OAuth 2.0 Protected Resource Metadata (RFC 9728)
-  if (path === '/.well-known/oauth-protected-resource') {
+  // The spec uses path appending: resource at /api/mcp → metadata at
+  // /.well-known/oauth-protected-resource/api/mcp
+  // Also serve at the root path for clients that don't append the resource path.
+  if (
+    path === '/.well-known/oauth-protected-resource' ||
+    path === '/.well-known/oauth-protected-resource/api/mcp'
+  ) {
     return handleProtectedResource(request);
   }
 
