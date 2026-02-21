@@ -1,4 +1,4 @@
-import { relations } from 'drizzle-orm';
+import { relations, sql } from 'drizzle-orm';
 import {
   boolean,
   index,
@@ -7,6 +7,7 @@ import {
   text,
   timestamp,
   uniqueIndex,
+  uuid,
 } from 'drizzle-orm/pg-core';
 import { user } from './auth';
 
@@ -14,7 +15,9 @@ import { user } from './auth';
 export const feeds = pgTable(
   'feeds',
   {
-    id: text('id').primaryKey(),
+    id: uuid()
+      .default(sql`uuidv7()`)
+      .primaryKey(),
     userId: text('user_id')
       .notNull()
       .references(() => user.id, { onDelete: 'cascade' }),
@@ -55,12 +58,14 @@ export const feeds = pgTable(
 export const articles = pgTable(
   'articles',
   {
-    id: text('id').primaryKey(),
+    id: uuid()
+      .default(sql`uuidv7()`)
+      .primaryKey(),
     userId: text('user_id')
       .notNull()
       .references(() => user.id, { onDelete: 'cascade' }),
     /** Null for user-saved URLs */
-    feedId: text('feed_id').references(() => feeds.id, { onDelete: 'cascade' }),
+    feedId: uuid('feed_id').references(() => feeds.id, { onDelete: 'cascade' }),
     title: text('title').notNull(),
     url: text('url'),
     description: text('description'),
@@ -91,7 +96,9 @@ export const articles = pgTable(
 export const tags = pgTable(
   'tags',
   {
-    id: text('id').primaryKey(),
+    id: uuid()
+      .default(sql`uuidv7()`)
+      .primaryKey(),
     userId: text('user_id')
       .notNull()
       .references(() => user.id, { onDelete: 'cascade' }),
@@ -111,14 +118,16 @@ export const tags = pgTable(
 export const feedTags = pgTable(
   'feed_tags',
   {
-    id: text('id').primaryKey(),
+    id: uuid()
+      .default(sql`uuidv7()`)
+      .primaryKey(),
     userId: text('user_id')
       .notNull()
       .references(() => user.id, { onDelete: 'cascade' }),
-    feedId: text('feed_id')
+    feedId: uuid('feed_id')
       .notNull()
       .references(() => feeds.id, { onDelete: 'cascade' }),
-    tagId: text('tag_id')
+    tagId: uuid('tag_id')
       .notNull()
       .references(() => tags.id, { onDelete: 'cascade' }),
   },
@@ -133,14 +142,16 @@ export const feedTags = pgTable(
 export const articleTags = pgTable(
   'article_tags',
   {
-    id: text('id').primaryKey(),
+    id: uuid()
+      .default(sql`uuidv7()`)
+      .primaryKey(),
     userId: text('user_id')
       .notNull()
       .references(() => user.id, { onDelete: 'cascade' }),
-    articleId: text('article_id')
+    articleId: uuid('article_id')
       .notNull()
       .references(() => articles.id, { onDelete: 'cascade' }),
-    tagId: text('tag_id')
+    tagId: uuid('tag_id')
       .notNull()
       .references(() => tags.id, { onDelete: 'cascade' }),
   },
@@ -169,11 +180,13 @@ export const settings = pgTable('settings', {
 export const filterRules = pgTable(
   'filter_rules',
   {
-    id: text('id').primaryKey(),
+    id: uuid()
+      .default(sql`uuidv7()`)
+      .primaryKey(),
     userId: text('user_id')
       .notNull()
       .references(() => user.id, { onDelete: 'cascade' }),
-    feedId: text('feed_id')
+    feedId: uuid('feed_id')
       .notNull()
       .references(() => feeds.id, { onDelete: 'cascade' }),
     /** Text to match against article title */
@@ -283,11 +296,13 @@ export const filterRulesRelations = relations(filterRules, ({ one }) => ({
 export const feedSyncLogs = pgTable(
   'feed_sync_logs',
   {
-    id: text('id').primaryKey(),
+    id: uuid()
+      .default(sql`uuidv7()`)
+      .primaryKey(),
     userId: text('user_id')
       .notNull()
       .references(() => user.id, { onDelete: 'cascade' }),
-    feedId: text('feed_id')
+    feedId: uuid('feed_id')
       .notNull()
       .references(() => feeds.id, { onDelete: 'cascade' }),
     /** 'ok' | 'skipped' | 'failed' */

@@ -13,9 +13,12 @@ bun check-types  # TypeScript checking
 bun lint         # oxlint type-aware linting
 bun checks       # Type check + lint
 bun migrate      # Run database migrations
+
+# Migration generation (from repo root)
+bun generate:migrations -- --name <migration-name>
 ```
 
-When DB migrations are needed, ask the user to run them for security reasons.
+When DB schema changes are made, suggest the migration generation command to the user with a descriptive `--name` (e.g. `--name add-bookmarks-table`, `--name uuid-v7-migration`). Do not run it yourself. After generation, suggest `bun migrate` to apply.
 
 ## Monorepo Structure
 
@@ -32,7 +35,7 @@ Each app/package has its own `AGENTS.md` with specific patterns and guidelines.
 
 **Packages:**
 
-- `packages/db/` — Drizzle ORM + SQLite3
+- `packages/db/` — Drizzle ORM + PostgreSQL
 - `packages/domain/` — business logic + queues
 - `packages/discovery/` — RSS feed discovery
 - `packages/shared/` — utilities + types
