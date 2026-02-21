@@ -13,6 +13,7 @@ export * from './email';
 export * from './feed-sync';
 export * from './errors';
 export * from './export';
+export * from './limits';
 export * from './feed-details';
 export * from './import';
 export * from './rss-fetch';

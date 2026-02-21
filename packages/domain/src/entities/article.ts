@@ -2,7 +2,14 @@ import { articles, db } from '@repo/db';
 import { fetchArticleContent } from '@repo/readability/server';
 import { createId } from '@repo/shared/utils';
 import { and, eq } from 'drizzle-orm';
-import { assert, NotFoundError } from '../errors';
+import { trackEvent } from '../analytics';
+import { assert, LimitExceededError, NotFoundError } from '../errors';
+import {
+  countDailyExtractions,
+  countMonthlyExtractions,
+  countUserSavedArticles,
+  FREE_TIER_LIMITS,
+} from '../limits';
 import type { Article, CreateArticleFromUrl, UpdateArticle } from './article.schema';
 
 // Re-export schemas and types from schema file
@@ -46,6 +53,33 @@ function isYouTubeUrl(url: string | null): boolean {
 }
 
 /**
+ * Check whether a user has exceeded their content extraction rate limits.
+ * Uses the `contentExtractedAt` column as a natural extraction timestamp.
+ * Returns the window that was hit ('daily' | 'monthly') or null if within limits.
+ */
+async function getExtractionLimitWindow(
+  userId: string,
+): Promise<{ window: 'daily' | 'monthly'; current_usage: number; limit: number } | null> {
+  const [daily, monthly] = await Promise.all([
+    countDailyExtractions(userId),
+    countMonthlyExtractions(userId),
+  ]);
+
+  // Check daily first (more likely to be hit in normal use)
+  if (daily >= FREE_TIER_LIMITS.extractionsPerDay) {
+    return { window: 'daily', current_usage: daily, limit: FREE_TIER_LIMITS.extractionsPerDay };
+  }
+  if (monthly >= FREE_TIER_LIMITS.extractionsPerMonth) {
+    return {
+      window: 'monthly',
+      current_usage: monthly,
+      limit: FREE_TIER_LIMITS.extractionsPerMonth,
+    };
+  }
+  return null;
+}
+
+/**
  * Extract readable content for an article on-demand.
  * Fetches the article URL, runs Readability, and stores the result.
  * Skips if content was already extracted (contentExtractedAt is set).
@@ -68,6 +102,14 @@ export async function extractArticleContent(id: string, userId: string): Promise
   // Nothing to extract from
   if (!article.url || isYouTubeUrl(article.url)) {
     return null;
+  }
+
+  // Check extraction rate limit (daily + monthly)
+  const extractionLimit = await getExtractionLimitWindow(userId);
+  if (extractionLimit) {
+    trackEvent(userId, 'limits:extractions_limit_hit', extractionLimit);
+    const windowLabel = extractionLimit.window === 'daily' ? 'daily' : 'monthly';
+    throw new LimitExceededError(`${windowLabel} content extractions`, extractionLimit.limit);
   }
 
   try {
@@ -114,6 +156,16 @@ export async function updateArticles(data: UpdateArticle[], userId: string): Pro
 }
 
 export async function createArticle(data: CreateArticleFromUrl, userId: string): Promise<Article> {
+  // Check free-tier saved article limit (only user-created articles, not feed-synced)
+  const currentCount = await countUserSavedArticles(userId);
+  if (currentCount >= FREE_TIER_LIMITS.savedArticles) {
+    trackEvent(userId, 'limits:saved_articles_limit_hit', {
+      current_usage: currentCount,
+      limit: FREE_TIER_LIMITS.savedArticles,
+    });
+    throw new LimitExceededError('saved articles', FREE_TIER_LIMITS.savedArticles);
+  }
+
   const articleId = data.id ?? createId();
   const now = new Date();
 

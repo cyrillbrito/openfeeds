@@ -33,14 +33,14 @@ interface ToastContextValue {
   removeToast: (id: string) => void;
 }
 
-const VARIANT_CLASSES: Record<ToastVariant, string> = {
+const ToastContext = createContext<ToastContextValue>();
+
+const variantClass: Record<ToastVariant, string> = {
   success: 'alert-success',
   error: 'alert-error',
   warning: 'alert-warning',
   info: 'alert-info',
 };
-
-const ToastContext = createContext<ToastContextValue>();
 
 export const ToastProvider: ParentComponent = (props) => {
   const [toasts, setToasts] = createSignal<Toast[]>([]);
@@ -91,7 +91,7 @@ export const ToastProvider: ParentComponent = (props) => {
         <For each={toasts()}>
           {(toast) => (
             <div
-              class={`alert ${VARIANT_CLASSES[toast.variant]} flex items-center justify-between shadow-lg`}
+              class={`alert ${variantClass[toast.variant]} flex items-center justify-between shadow-lg`}
             >
               <span>{toast.message}</span>
               <Show when={toast.action}>

@@ -37,6 +37,7 @@ function ArticleView() {
   const contentExtractedAt = () => article()?.contentExtractedAt;
 
   const [isExtracting, setIsExtracting] = createSignal(false);
+  const [extractionError, setExtractionError] = createSignal<string | null>(null);
 
   // Track article view when loaded (only once per article view)
   const [trackedArticleId, setTrackedArticleId] = createSignal<string | null>(null);
@@ -70,9 +71,14 @@ function ArticleView() {
         if (contentExtractedAt() || isExtracting() || !art.url || isYouTubeUrl(art.url)) return;
 
         setIsExtracting(true);
-        $$extractArticleContent({ data: { id } }).finally(() => {
-          setIsExtracting(false);
-        });
+        setExtractionError(null);
+        $$extractArticleContent({ data: { id } })
+          .catch((err: Error) => {
+            setExtractionError(err.message);
+          })
+          .finally(() => {
+            setIsExtracting(false);
+          });
       },
     ),
   );
@@ -293,6 +299,39 @@ function ArticleView() {
                     <Loader />
                     <p class="text-base-content/60 text-sm">Preparing readable content...</p>
                   </div>
+                </Show>
+
+                {/* Extraction rate limit hit */}
+                <Show when={!isVideo() && !isExtracting() && extractionError()}>
+                  <div class="bg-base-200 mb-6 rounded-lg p-4 text-center">
+                    <p class="text-base-content/60 text-sm">{extractionError()}</p>
+                    <Show when={art().url}>
+                      <a
+                        href={art().url!}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        class="btn btn-primary btn-sm mt-3"
+                      >
+                        View Original Article
+                      </a>
+                    </Show>
+                  </div>
+
+                  {/* Show RSS content as fallback when extraction was rate-limited */}
+                  <Show when={art().description || art().content}>
+                    <div class="prose prose-lg xl:prose-xl text-base-content prose-headings:text-base-content prose-a:text-primary prose-strong:text-base-content prose-code:text-base-content prose-blockquote:text-base-content/80 max-w-none">
+                      <Show
+                        when={containsHtml(art().description || art().content || '')}
+                        fallback={
+                          <p class="whitespace-pre-wrap">{art().description || art().content}</p>
+                        }
+                      >
+                        <div
+                          innerHTML={downshiftHeadings(art().description || art().content || '', 2)}
+                        />
+                      </Show>
+                    </div>
+                  </Show>
                 </Show>
 
                 {/* No content fallback - only show after extraction has been attempted */}

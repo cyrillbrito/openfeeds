@@ -45,6 +45,21 @@ export class TtsNotConfiguredError extends Error {
   }
 }
 
+/**
+ * Thrown when a user exceeds a free-tier usage limit.
+ * Message is user-friendly and displayed as-is on the client.
+ */
+export class LimitExceededError extends Error {
+  public readonly resource: string;
+  public readonly limit: number;
+
+  constructor(resource: string, limit: number) {
+    super(`You've reached the maximum of ${limit} ${resource} on the free plan.`);
+    this.resource = resource;
+    this.limit = limit;
+  }
+}
+
 export function assert(condition: unknown, msg?: string): asserts condition {
   if (!condition) {
     throw new AssertionError(msg);

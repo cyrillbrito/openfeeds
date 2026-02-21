@@ -31,6 +31,7 @@ import { Route as ApiShapesArticleTagsRouteImport } from './routes/api/shapes/ar
 import { Route as ApiMcpSplatRouteImport } from './routes/api/mcp/$'
 import { Route as ApiAuthSplatRouteImport } from './routes/api/auth/$'
 import { Route as FrameTagsTagIdRouteImport } from './routes/_frame.tags.$tagId'
+import { Route as FrameSettingsUsageRouteImport } from './routes/_frame.settings.usage'
 import { Route as FrameSettingsGeneralRouteImport } from './routes/_frame.settings.general'
 import { Route as FrameSettingsConnectionsRouteImport } from './routes/_frame.settings.connections'
 import { Route as FrameArticlesArticleIdRouteImport } from './routes/_frame.articles.$articleId'
@@ -148,6 +149,11 @@ const FrameTagsTagIdRoute = FrameTagsTagIdRouteImport.update({
   path: '/tags/$tagId',
   getParentRoute: () => FrameRoute,
 } as any)
+const FrameSettingsUsageRoute = FrameSettingsUsageRouteImport.update({
+  id: '/usage',
+  path: '/usage',
+  getParentRoute: () => FrameSettingsRoute,
+} as any)
 const FrameSettingsGeneralRoute = FrameSettingsGeneralRouteImport.update({
   id: '/general',
   path: '/general',
@@ -199,6 +205,7 @@ export interface FileRoutesByFullPath {
   '/articles/$articleId': typeof FrameArticlesArticleIdRoute
   '/settings/connections': typeof FrameSettingsConnectionsRoute
   '/settings/general': typeof FrameSettingsGeneralRoute
+  '/settings/usage': typeof FrameSettingsUsageRoute
   '/tags/$tagId': typeof FrameTagsTagIdRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
   '/api/mcp/$': typeof ApiMcpSplatRoute
@@ -229,6 +236,7 @@ export interface FileRoutesByTo {
   '/articles/$articleId': typeof FrameArticlesArticleIdRoute
   '/settings/connections': typeof FrameSettingsConnectionsRoute
   '/settings/general': typeof FrameSettingsGeneralRoute
+  '/settings/usage': typeof FrameSettingsUsageRoute
   '/tags/$tagId': typeof FrameTagsTagIdRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
   '/api/mcp/$': typeof ApiMcpSplatRoute
@@ -261,6 +269,7 @@ export interface FileRoutesById {
   '/_frame/articles/$articleId': typeof FrameArticlesArticleIdRoute
   '/_frame/settings/connections': typeof FrameSettingsConnectionsRoute
   '/_frame/settings/general': typeof FrameSettingsGeneralRoute
+  '/_frame/settings/usage': typeof FrameSettingsUsageRoute
   '/_frame/tags/$tagId': typeof FrameTagsTagIdRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
   '/api/mcp/$': typeof ApiMcpSplatRoute
@@ -293,6 +302,7 @@ export interface FileRouteTypes {
     | '/articles/$articleId'
     | '/settings/connections'
     | '/settings/general'
+    | '/settings/usage'
     | '/tags/$tagId'
     | '/api/auth/$'
     | '/api/mcp/$'
@@ -323,6 +333,7 @@ export interface FileRouteTypes {
     | '/articles/$articleId'
     | '/settings/connections'
     | '/settings/general'
+    | '/settings/usage'
     | '/tags/$tagId'
     | '/api/auth/$'
     | '/api/mcp/$'
@@ -354,6 +365,7 @@ export interface FileRouteTypes {
     | '/_frame/articles/$articleId'
     | '/_frame/settings/connections'
     | '/_frame/settings/general'
+    | '/_frame/settings/usage'
     | '/_frame/tags/$tagId'
     | '/api/auth/$'
     | '/api/mcp/$'
@@ -550,6 +562,13 @@ declare module '@tanstack/solid-router' {
       preLoaderRoute: typeof FrameTagsTagIdRouteImport
       parentRoute: typeof FrameRoute
     }
+    '/_frame/settings/usage': {
+      id: '/_frame/settings/usage'
+      path: '/usage'
+      fullPath: '/settings/usage'
+      preLoaderRoute: typeof FrameSettingsUsageRouteImport
+      parentRoute: typeof FrameSettingsRoute
+    }
     '/_frame/settings/general': {
       id: '/_frame/settings/general'
       path: '/general'
@@ -605,11 +624,13 @@ declare module '@tanstack/solid-router' {
 interface FrameSettingsRouteChildren {
   FrameSettingsConnectionsRoute: typeof FrameSettingsConnectionsRoute
   FrameSettingsGeneralRoute: typeof FrameSettingsGeneralRoute
+  FrameSettingsUsageRoute: typeof FrameSettingsUsageRoute
 }
 
 const FrameSettingsRouteChildren: FrameSettingsRouteChildren = {
   FrameSettingsConnectionsRoute: FrameSettingsConnectionsRoute,
   FrameSettingsGeneralRoute: FrameSettingsGeneralRoute,
+  FrameSettingsUsageRoute: FrameSettingsUsageRoute,
 }
 
 const FrameSettingsRouteWithChildren = FrameSettingsRoute._addFileChildren(
