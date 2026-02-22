@@ -8,3 +8,6 @@ export const db = drizzle(client, { schema });
 
 /** Type for database instance */
 export type Db = typeof db;
+
+/** Type for transaction object received in `db.transaction(async (tx) => ...)` */
+export type Transaction = Parameters<Parameters<Db['transaction']>[0]>[0];

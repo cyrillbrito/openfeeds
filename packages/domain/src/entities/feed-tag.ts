@@ -1,6 +1,5 @@
-import { db, feedTags } from '@repo/db';
+import { db, feedTags, type Transaction } from '@repo/db';
 import { and, eq, inArray, sql } from 'drizzle-orm';
-import type { PgDatabase } from 'drizzle-orm/pg-core';
 import type { CreateFeedTag, FeedTag } from './feed-tag.schema';
 
 // Re-export schemas and types from schema file
@@ -64,7 +63,7 @@ export async function deleteFeedTags(ids: string[], userId: string): Promise<voi
  * ON CONFLICT DO NOTHING so already-tagged articles are unaffected.
  */
 async function propagateTagsToArticles(
-  tx: PgDatabase<any, any>,
+  tx: Transaction,
   feedTagPairs: { feedId: string; tagId: string }[],
   userId: string,
 ): Promise<void> {
@@ -89,7 +88,7 @@ async function propagateTagsToArticles(
  * Single DELETE ... USING to avoid N+1 queries.
  */
 async function removeTagsFromFeedArticles(
-  tx: PgDatabase<any, any>,
+  tx: Transaction,
   feedTagPairs: { feedId: string; tagId: string }[],
   userId: string,
 ): Promise<void> {
