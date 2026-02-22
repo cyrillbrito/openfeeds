@@ -62,6 +62,7 @@ Tracked via `trackEvent()` in `packages/domain/src/analytics.ts`. Preferred over
 | `limits:filter_rules_limit_hit`   | `current_usage`, `limit`                  | `packages/domain/src/entities/filter-rule.ts`                           |
 | `limits:saved_articles_limit_hit` | `current_usage`, `limit`                  | `packages/domain/src/entities/article.ts`                               |
 | `limits:extractions_limit_hit`    | `window`, `current_usage`, `limit`        | `packages/domain/src/entities/article.ts`                               |
+| `limits:tts_limit_hit`            | `window`, `current_usage`, `limit`        | `packages/domain/src/tts.ts`                                            |
 
 ### Client-Side (posthog-js)
 
