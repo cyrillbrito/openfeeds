@@ -1,5 +1,4 @@
 import { db, feeds, feedTags, tags } from '@repo/db';
-import { createId } from '@repo/shared/utils';
 import { and, eq, inArray } from 'drizzle-orm';
 import { parseOpml } from 'feedsmith';
 import { trackEvent } from './analytics';
@@ -121,7 +120,7 @@ export async function importOpmlFeeds(opmlContent: string, userId: string): Prom
             try {
               const tagResult = await db
                 .insert(tags)
-                .values({ id: createId(), userId, name: category })
+                .values({ userId, name: category })
                 .returning();
               tagId = tagResult[0]?.id;
               assert(tagId);
@@ -150,39 +149,32 @@ export async function importOpmlFeeds(opmlContent: string, userId: string): Prom
         continue;
       }
 
-      const insertResult = await db
-        .insert(feeds)
-        .values({
-          id: createId(),
-          userId,
-          title: feed.title,
-          url: feed.htmlUrl,
-          feedUrl: feed.xmlUrl,
-        })
-        .returning();
+      const feedId = await db.transaction(async (tx) => {
+        const insertResult = await tx
+          .insert(feeds)
+          .values({
+            userId,
+            title: feed.title,
+            url: feed.htmlUrl,
+            feedUrl: feed.xmlUrl,
+          })
+          .returning();
 
-      const feedId = insertResult[0]?.id;
-      assert(feedId);
+        const id = insertResult[0]?.id;
+        assert(id);
 
-      if (tagIds.length > 0) {
-        try {
-          await db.insert(feedTags).values(
+        if (tagIds.length > 0) {
+          await tx.insert(feedTags).values(
             tagIds.map((tagId) => ({
-              id: createId(),
               userId,
-              feedId,
+              feedId: id,
               tagId,
             })),
           );
-        } catch (feedTagErr) {
-          logger.error(feedTagErr as Error, {
-            operation: 'import_feed_tag_association',
-            feedTitle: feed.title,
-            feedId,
-            tagIds,
-          });
         }
-      }
+
+        return id;
+      });
 
       try {
         await enqueueFeedSync(feedId);
