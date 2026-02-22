@@ -299,6 +299,7 @@ function FeedsComponent() {
                           <div class="min-w-0 flex-1">
                             <div class="mb-1.5 flex items-center gap-2">
                               <Link
+                                class="min-w-0"
                                 to="/feeds/$feedId"
                                 params={{ feedId: feed.id.toString() }}
                                 search={{ readStatus: 'unread' }}

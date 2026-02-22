@@ -11,7 +11,11 @@ interface SyncLogsModalProps {
 
 export function SyncLogsModal(props: SyncLogsModalProps) {
   return (
-    <LazyModal controller={(c) => props.controller(c)} class="max-w-3xl" title="Sync Logs">
+    <LazyModal
+      controller={(c) => props.controller(c)}
+      class="max-w-[min(95vw,48rem)]"
+      title="Sync Logs"
+    >
       <Show when={props.feed}>{(feed) => <SyncLogsContent feed={feed()} />}</Show>
     </LazyModal>
   );
@@ -44,46 +48,44 @@ function SyncLogsContent(props: { feed: Feed }) {
           <p class="text-base-content-gray py-8 text-center text-sm">No sync logs yet.</p>
         </Match>
         <Match when={logs()}>
-          <div class="min-h-[40vh] overflow-x-auto">
-            <table class="table-sm table">
-              <thead>
-                <tr>
-                  <th>Time</th>
-                  <th>Status</th>
-                  <th>HTTP</th>
-                  <th>Duration</th>
-                  <th>Articles</th>
-                  <th>Error</th>
-                </tr>
-              </thead>
-              <tbody>
-                <For each={logs()}>
-                  {(log) => (
-                    <tr>
-                      <td class="whitespace-nowrap">
-                        <TimeAgo date={new Date(log.createdAt)} tooltipBottom />
-                      </td>
-                      <td>
-                        <StatusBadge status={log.status} />
-                      </td>
-                      <td class="text-base-content/60">{log.httpStatus ?? '-'}</td>
-                      <td class="text-base-content/60">
-                        {log.durationMs != null ? `${log.durationMs}ms` : '-'}
-                      </td>
-                      <td>
-                        <Show when={log.articlesAdded > 0} fallback="-">
-                          <span class="text-success font-medium">+{log.articlesAdded}</span>
-                        </Show>
-                      </td>
-                      <td class="text-error max-w-xs truncate" title={log.error ?? undefined}>
-                        {log.error ?? '-'}
-                      </td>
-                    </tr>
-                  )}
-                </For>
-              </tbody>
-            </table>
-          </div>
+          <table class="table-sm table">
+            <thead>
+              <tr>
+                <th>Time</th>
+                <th>Status</th>
+                <th>HTTP</th>
+                <th>Duration</th>
+                <th>Articles</th>
+                <th>Error</th>
+              </tr>
+            </thead>
+            <tbody>
+              <For each={logs()}>
+                {(log) => (
+                  <tr>
+                    <td class="whitespace-nowrap">
+                      <TimeAgo date={new Date(log.createdAt)} tooltipBottom />
+                    </td>
+                    <td>
+                      <StatusBadge status={log.status} />
+                    </td>
+                    <td class="text-base-content/60">{log.httpStatus ?? '-'}</td>
+                    <td class="text-base-content/60">
+                      {log.durationMs != null ? `${log.durationMs}ms` : '-'}
+                    </td>
+                    <td>
+                      <Show when={log.articlesAdded > 0} fallback="-">
+                        <span class="text-success font-medium">+{log.articlesAdded}</span>
+                      </Show>
+                    </td>
+                    <td class="text-error max-w-xs truncate" title={log.error ?? undefined}>
+                      {log.error ?? '-'}
+                    </td>
+                  </tr>
+                )}
+              </For>
+            </tbody>
+          </table>
         </Match>
       </Switch>
     </div>
