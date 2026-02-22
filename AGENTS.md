@@ -15,7 +15,7 @@ bun checks       # Type check + lint
 bun migrate      # Run database migrations
 
 # Migration generation (from repo root)
-bun generate:migrations -- --name <migration-name>
+bun --cwd packages/db drizzle-kit generate --name <migration-name>
 ```
 
 When DB schema changes are made, suggest the migration generation command to the user with a descriptive `--name` (e.g. `--name add-bookmarks-table`, `--name uuid-v7-migration`). Do not run it yourself. After generation, suggest `bun migrate` to apply.

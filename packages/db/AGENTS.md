@@ -7,9 +7,9 @@ Drizzle ORM with PostgreSQL. Two separate schemas: user data and auth (Better Au
 All commands run from the **repo root**:
 
 ```bash
-bun generate:migrations -- --name <migration-name>   # Generate user schema migration
-bun generate:auth-schema                              # Regenerate auth schema from Better Auth config
-bun migrate                                           # Apply all pending migrations
+bun --cwd packages/db drizzle-kit generate --name <migration-name>   # Generate user schema migration
+bun generate:auth-schema                                              # Regenerate auth schema from Better Auth config
+bun migrate                                                           # Apply all pending migrations
 ```
 
 When DB schema changes are made, suggest the migration generation command to the user with a descriptive `--name` (e.g. `--name add-bookmarks-table`, `--name uuid-v7-migration`). Do not run it yourself. After generation, suggest `bun migrate` to apply.
@@ -25,7 +25,7 @@ When DB schema changes are made, suggest the migration generation command to the
 **User schema changes:**
 
 1. Modify table definitions in schema files
-2. Suggest `bun generate:migrations -- --name <descriptive-name>` to the user
+2. Suggest `bun --cwd packages/db drizzle-kit generate --name <descriptive-name>` to the user
 3. Suggest `bun migrate` to apply
 4. Commit schema + migration files
 

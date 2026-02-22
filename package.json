@@ -22,7 +22,6 @@
     "check-types": "turbo check-types",
     "checks": "turbo run check-types lint",
     "generate:auth-schema": "turbo -F @repo/db generate:auth-schema",
-    "generate:migrations": "turbo -F @repo/db generate:migrations",
     "migrate": "bun --cwd=apps/migrator migrate",
     "create-user": "bun --cwd=packages/scripts create-user",
     "test-ui": "bun --cwd=apps/e2e test-ui",
