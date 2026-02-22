@@ -20,6 +20,12 @@ export const FREE_TIER_LIMITS = {
 
   /** Maximum content extractions per user per month (rolling 30 days) */
   extractionsPerMonth: 300,
+
+  /** Maximum TTS audio generations per user per day */
+  ttsPerDay: 5,
+
+  /** Maximum TTS audio generations per user per month (rolling 30 days) */
+  ttsPerMonth: 30,
 } as const;
 
 export type LimitKey = keyof typeof FREE_TIER_LIMITS;
@@ -29,6 +35,10 @@ export interface UserUsage {
   filterRules: { used: number; limit: number };
   savedArticles: { used: number; limit: number };
   extractions: {
+    daily: { used: number; limit: number };
+    monthly: { used: number; limit: number };
+  };
+  tts: {
     daily: { used: number; limit: number };
     monthly: { used: number; limit: number };
   };

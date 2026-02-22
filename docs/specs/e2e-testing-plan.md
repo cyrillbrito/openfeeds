@@ -414,7 +414,8 @@ The application implements free-tier limits in the domain layer (`packages/domai
 - 100 feeds per user
 - 10 filter rules per user
 - 100 saved articles per user (manually created, not synced)
-- 60 content extractions per hour (rate-limited sliding window)
+- 20 content extractions per day / 300 per month (rolling windows)
+- 5 TTS audio generations per day / 30 per month (rolling windows)
 
 Limit errors use a `LimitExceededError` with `[LIMIT]` prefix for client-side detection after TanStack Start serialization.
 
@@ -443,9 +444,16 @@ Limit errors use a `LimitExceededError` with `[LIMIT]` prefix for client-side de
   - Error clearly indicates saved article limit
 
 - **Content Extraction Rate Limit Tests:**
-  - Show error toast when extraction rate exceeded (60/hour)
+  - Show error toast when extraction rate exceeded (20/day)
   - Error indicates rate limit (not total limit)
   - Can extract again after sufficient time passes
+
+- **TTS Generation Rate Limit Tests:**
+  - Show error when TTS generation rate exceeded (5/day)
+  - Error message mentions TTS generations specifically
+  - Already-generated audio can still be played (no re-count)
+  - Can generate again after sufficient time passes
+  - Monthly limit (30/month) enforced independently of daily
 
 - **Error UX Tests:**
   - Toast appears with error variant styling (not success)
@@ -456,7 +464,7 @@ Limit errors use a `LimitExceededError` with `[LIMIT]` prefix for client-side de
 **Test Setup Requirements:**
 
 - Helper to bulk-create feeds/rules/articles to reach limits
-- Ability to manipulate `contentExtractedAt` timestamps for rate limit testing
+- Ability to manipulate `contentExtractedAt` and `audioGeneratedAt` timestamps for rate limit testing
 - Clean up all test data after each test (zero-trace)
 
 **Priority:** Medium - Important for beta abuse prevention, but limits are high enough that normal users won't hit them

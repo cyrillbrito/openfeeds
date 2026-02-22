@@ -1,0 +1,1 @@
+ALTER TABLE "articles" ADD COLUMN "audio_generated_at" timestamp;

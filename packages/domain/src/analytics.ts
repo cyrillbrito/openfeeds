@@ -78,6 +78,11 @@ export interface ServerAnalyticsEventMap {
     current_usage: number;
     limit: number;
   };
+  'limits:tts_limit_hit': {
+    window: 'daily' | 'monthly';
+    current_usage: number;
+    limit: number;
+  };
 }
 
 /**

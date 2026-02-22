@@ -1,11 +1,15 @@
 import { existsSync } from 'node:fs';
 import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
+import { articles, db } from '@repo/db';
+import { eq } from 'drizzle-orm';
 import { trackEvent } from './analytics';
 import { extractArticleContent } from './entities/article';
 import type { ArticleAudioMetadata, WordTiming } from './entities/tts.schema';
 import { env } from './env';
-import { TtsNotConfiguredError } from './errors';
+import { LimitExceededError, TtsNotConfiguredError } from './errors';
+import { countDailyTts, countMonthlyTts } from './limits';
+import { FREE_TIER_LIMITS } from './limits.schema';
 
 // Re-export client-safe types
 export * from './entities/tts.schema';
@@ -135,6 +139,24 @@ function stripHtml(html: string): string {
 }
 
 /**
+ * Check whether a user has exceeded their TTS generation rate limits.
+ * Returns the window that was hit ('daily' | 'monthly') or null if within limits.
+ */
+async function getTtsLimitWindow(
+  userId: string,
+): Promise<{ window: 'daily' | 'monthly'; current_usage: number; limit: number } | null> {
+  const [daily, monthly] = await Promise.all([countDailyTts(userId), countMonthlyTts(userId)]);
+
+  if (daily >= FREE_TIER_LIMITS.ttsPerDay) {
+    return { window: 'daily', current_usage: daily, limit: FREE_TIER_LIMITS.ttsPerDay };
+  }
+  if (monthly >= FREE_TIER_LIMITS.ttsPerMonth) {
+    return { window: 'monthly', current_usage: monthly, limit: FREE_TIER_LIMITS.ttsPerMonth };
+  }
+  return null;
+}
+
+/**
  * Generate audio for an article using Unreal Speech API
  */
 export async function generateArticleAudio(
@@ -153,6 +175,14 @@ export async function generateArticleAudio(
     if (existing) {
       return existing;
     }
+  }
+
+  // Check TTS rate limit (daily + monthly)
+  const ttsLimit = await getTtsLimitWindow(userId);
+  if (ttsLimit) {
+    trackEvent(userId, 'limits:tts_limit_hit', ttsLimit);
+    const windowLabel = ttsLimit.window === 'daily' ? 'daily' : 'monthly';
+    throw new LimitExceededError(`${windowLabel} TTS generations`, ttsLimit.limit);
   }
 
   const cleanContent = await extractArticleContent(articleId, userId);
@@ -240,6 +270,9 @@ export async function generateArticleAudio(
   // Save timestamps/metadata
   const timestampsPath = getTimestampsPath(userId, articleId);
   await writeFile(timestampsPath, JSON.stringify(metadata, null, 2));
+
+  // Record generation timestamp in DB for rate limiting
+  await db.update(articles).set({ audioGeneratedAt: new Date() }).where(eq(articles.id, articleId));
 
   trackEvent(userId, 'tts:audio_generate', {
     article_id: articleId,

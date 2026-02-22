@@ -36,6 +36,13 @@
       "when": 1771705222892,
       "tag": "0004_uuid-v7-migration",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1771784250596,
+      "tag": "0005_add-audio-generated-at",
+      "breakpoints": true
     }
   ]
 }
