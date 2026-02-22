@@ -1,6 +1,5 @@
 import { articles, articleTags, db, feeds, feedSyncLogs, feedTags, filterRules } from '@repo/db';
 import { sanitizeHtml } from '@repo/readability/sanitize';
-import { createId } from '@repo/shared/utils';
 import { and, asc, desc, eq, inArray, isNull, lt, ne, or } from 'drizzle-orm';
 import { autoArchiveArticles } from './archive';
 import { shouldMarkAsRead } from './entities/filter-rule';
@@ -137,7 +136,6 @@ export async function syncFeedArticles(
       const [newArticle] = await db
         .insert(articles)
         .values({
-          id: createId(),
           userId,
           feedId: feedId,
           guid: item.guid,
@@ -158,7 +156,6 @@ export async function syncFeedArticles(
       if (newArticle && feedTagsList.length > 0) {
         await db.insert(articleTags).values(
           feedTagsList.map((ft) => ({
-            id: createId(),
             userId,
             articleId: newArticle.id,
             tagId: ft.tagId,
@@ -265,20 +262,21 @@ export async function markFeedAsFailing(
 
   const httpStatus = error instanceof HttpFetchError ? error.status : null;
 
-  await db
-    .update(feeds)
-    .set({ syncStatus: 'failing', syncError: error.message.slice(0, 1000) })
-    .where(eq(feeds.id, feedId));
+  await db.transaction(async (tx) => {
+    await tx
+      .update(feeds)
+      .set({ syncStatus: 'failing', syncError: error.message.slice(0, 1000) })
+      .where(eq(feeds.id, feedId));
 
-  await db.insert(feedSyncLogs).values({
-    id: createId(),
-    userId: feed.userId,
-    feedId: feed.id,
-    status: 'failed',
-    durationMs,
-    httpStatus,
-    error: `[attempt ${attemptNumber}] ${error.message}`.slice(0, 1000),
-    articlesAdded: 0,
+    await tx.insert(feedSyncLogs).values({
+      userId: feed.userId,
+      feedId: feed.id,
+      status: 'failed',
+      durationMs,
+      httpStatus,
+      error: `[attempt ${attemptNumber}] ${error.message}`.slice(0, 1000),
+      articlesAdded: 0,
+    });
   });
 }
 
@@ -303,24 +301,25 @@ export async function recordFeedSyncFailure(
 
   const httpStatus = error instanceof HttpFetchError ? error.status : null;
 
-  await db
-    .update(feeds)
-    .set({
-      lastSyncAt: new Date(),
-      syncStatus: 'broken',
-      syncError: error.message.slice(0, 1000),
-    })
-    .where(eq(feeds.id, feed.id));
+  await db.transaction(async (tx) => {
+    await tx
+      .update(feeds)
+      .set({
+        lastSyncAt: new Date(),
+        syncStatus: 'broken',
+        syncError: error.message.slice(0, 1000),
+      })
+      .where(eq(feeds.id, feed.id));
 
-  await db.insert(feedSyncLogs).values({
-    id: createId(),
-    userId: feed.userId,
-    feedId: feed.id,
-    status: 'failed',
-    durationMs,
-    httpStatus,
-    error: `[attempt ${attemptNumber}] ${error.message}`.slice(0, 1000),
-    articlesAdded: 0,
+    await tx.insert(feedSyncLogs).values({
+      userId: feed.userId,
+      feedId: feed.id,
+      status: 'failed',
+      durationMs,
+      httpStatus,
+      error: `[attempt ${attemptNumber}] ${error.message}`.slice(0, 1000),
+      articlesAdded: 0,
+    });
   });
 
   logger.error(error, {
@@ -348,7 +347,6 @@ export async function writeFeedSyncLog(
   if (!feed) return;
 
   await db.insert(feedSyncLogs).values({
-    id: createId(),
     userId: feed.userId,
     feedId: feed.id,
     status: 'ok',

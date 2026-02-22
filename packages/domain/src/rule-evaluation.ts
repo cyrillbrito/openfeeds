@@ -1,5 +1,5 @@
 import { articles, db, feeds, filterRules } from '@repo/db';
-import { and, eq } from 'drizzle-orm';
+import { and, eq, inArray } from 'drizzle-orm';
 import { shouldMarkAsRead } from './entities/filter-rule';
 
 /**
@@ -36,23 +36,23 @@ export async function applyFilterRulesToExistingArticles(
       eq(articles.userId, userId),
       eq(articles.isRead, false),
     ),
+    columns: { id: true, title: true },
   });
 
-  let articlesMarkedAsRead = 0;
+  // Evaluate rules in-memory and collect IDs to mark as read
+  const idsToMarkAsRead = feedArticles
+    .filter((article) => shouldMarkAsRead(rules, article.title))
+    .map((article) => article.id);
 
-  // Apply rules to each article
-  for (const article of feedArticles) {
-    if (shouldMarkAsRead(rules, article.title)) {
-      await db
-        .update(articles)
-        .set({ isRead: true })
-        .where(and(eq(articles.id, article.id), eq(articles.userId, userId)));
-      articlesMarkedAsRead++;
-    }
+  if (idsToMarkAsRead.length > 0) {
+    await db
+      .update(articles)
+      .set({ isRead: true })
+      .where(and(eq(articles.userId, userId), inArray(articles.id, idsToMarkAsRead)));
   }
 
   return {
     articlesProcessed: feedArticles.length,
-    articlesMarkedAsRead,
+    articlesMarkedAsRead: idsToMarkAsRead.length,
   };
 }

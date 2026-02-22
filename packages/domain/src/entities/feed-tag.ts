@@ -1,6 +1,6 @@
-import { articles, articleTags, db, feedTags } from '@repo/db';
-import { createId } from '@repo/shared/utils';
-import { and, eq, inArray } from 'drizzle-orm';
+import { db, feedTags } from '@repo/db';
+import { and, eq, inArray, sql } from 'drizzle-orm';
+import type { PgDatabase } from 'drizzle-orm/pg-core';
 import type { CreateFeedTag, FeedTag } from './feed-tag.schema';
 
 // Re-export schemas and types from schema file
@@ -23,121 +23,86 @@ export async function createFeedTags(data: CreateFeedTag[], userId: string): Pro
   if (data.length === 0) return [];
 
   const newTags = data.map((item) => ({
-    id: item.id ?? createId(),
+    id: item.id,
     userId,
     feedId: item.feedId,
     tagId: item.tagId,
   }));
 
-  const inserted = await db.insert(feedTags).values(newTags).onConflictDoNothing().returning();
+  return db.transaction(async (tx) => {
+    const inserted = await tx.insert(feedTags).values(newTags).onConflictDoNothing().returning();
 
-  // Propagate: add these tags to all existing articles of the affected feeds
-  if (inserted.length > 0) {
-    await propagateTagsToArticles(inserted, userId);
-  }
+    // Propagate: add these tags to all existing articles of the affected feeds
+    if (inserted.length > 0) {
+      await propagateTagsToArticles(tx, inserted, userId);
+    }
 
-  return inserted;
+    return inserted;
+  });
 }
 
 export async function deleteFeedTags(ids: string[], userId: string): Promise<void> {
   if (ids.length === 0) return;
 
-  // Look up which feed-tag pairs are being removed before deleting
-  const toDelete = await db
-    .select({ feedId: feedTags.feedId, tagId: feedTags.tagId })
-    .from(feedTags)
-    .where(and(inArray(feedTags.id, ids), eq(feedTags.userId, userId)));
+  await db.transaction(async (tx) => {
+    // Single DELETE ... RETURNING to get the pairs and remove in one query
+    const deleted = await tx
+      .delete(feedTags)
+      .where(and(inArray(feedTags.id, ids), eq(feedTags.userId, userId)))
+      .returning({ feedId: feedTags.feedId, tagId: feedTags.tagId });
 
-  await db.delete(feedTags).where(and(inArray(feedTags.id, ids), eq(feedTags.userId, userId)));
-
-  // Propagate: remove these tags from all articles of the affected feeds
-  if (toDelete.length > 0) {
-    await removeTagsFromFeedArticles(toDelete, userId);
-  }
+    // Propagate: remove these tags from all articles of the affected feeds
+    if (deleted.length > 0) {
+      await removeTagsFromFeedArticles(tx, deleted, userId);
+    }
+  });
 }
 
 /**
  * Add tags to all existing articles of the given feeds.
- * Uses onConflictDoNothing so already-tagged articles are unaffected.
+ * Single INSERT ... SELECT — IDs are generated server-side via uuidv7() default.
+ * ON CONFLICT DO NOTHING so already-tagged articles are unaffected.
  */
 async function propagateTagsToArticles(
+  tx: PgDatabase<any, any>,
   feedTagPairs: { feedId: string; tagId: string }[],
   userId: string,
 ): Promise<void> {
-  // Get unique feed IDs
-  const feedIds = [...new Set(feedTagPairs.map((ft) => ft.feedId))];
+  // Build a VALUES list of (feed_id, tag_id) pairs for the join
+  const pairsSql = feedTagPairs
+    .map((ft) => sql`(${ft.feedId}::uuid, ${ft.tagId}::uuid)`)
+    .reduce((acc, val) => sql`${acc}, ${val}`);
 
-  // Get all articles for these feeds
-  const feedArticles = await db
-    .select({ id: articles.id, feedId: articles.feedId })
-    .from(articles)
-    .where(and(eq(articles.userId, userId), inArray(articles.feedId, feedIds)));
-
-  if (feedArticles.length === 0) return;
-
-  // Build article-tag pairs: for each article, add the tags that belong to its feed
-  const tagsByFeed = new Map<string, string[]>();
-  for (const ft of feedTagPairs) {
-    const existing = tagsByFeed.get(ft.feedId) ?? [];
-    existing.push(ft.tagId);
-    tagsByFeed.set(ft.feedId, existing);
-  }
-
-  const articleTagValues = feedArticles.flatMap((article) => {
-    const tagIds = tagsByFeed.get(article.feedId!) ?? [];
-    return tagIds.map((tagId) => ({
-      id: createId(),
-      userId,
-      articleId: article.id,
-      tagId,
-    }));
-  });
-
-  if (articleTagValues.length > 0) {
-    await db.insert(articleTags).values(articleTagValues).onConflictDoNothing();
-  }
+  await tx.execute(sql`
+    INSERT INTO article_tags (user_id, article_id, tag_id)
+    SELECT ${userId}, a.id, ft.tag_id
+    FROM articles a
+    JOIN (VALUES ${pairsSql}) AS ft(feed_id, tag_id)
+      ON a.feed_id = ft.feed_id
+    WHERE a.user_id = ${userId}
+    ON CONFLICT DO NOTHING
+  `);
 }
 
 /**
  * Remove tags from all articles that belong to the given feeds.
+ * Single DELETE ... USING to avoid N+1 queries.
  */
 async function removeTagsFromFeedArticles(
+  tx: PgDatabase<any, any>,
   feedTagPairs: { feedId: string; tagId: string }[],
   userId: string,
 ): Promise<void> {
-  // Get unique feed IDs
-  const feedIds = [...new Set(feedTagPairs.map((ft) => ft.feedId))];
+  const pairsSql = feedTagPairs
+    .map((ft) => sql`(${ft.feedId}::uuid, ${ft.tagId}::uuid)`)
+    .reduce((acc, val) => sql`${acc}, ${val}`);
 
-  // Get all articles for these feeds
-  const feedArticles = await db
-    .select({ id: articles.id, feedId: articles.feedId })
-    .from(articles)
-    .where(and(eq(articles.userId, userId), inArray(articles.feedId, feedIds)));
-
-  if (feedArticles.length === 0) return;
-
-  // Build a map of feedId -> tagIds to remove
-  const tagsByFeed = new Map<string, string[]>();
-  for (const ft of feedTagPairs) {
-    const existing = tagsByFeed.get(ft.feedId) ?? [];
-    existing.push(ft.tagId);
-    tagsByFeed.set(ft.feedId, existing);
-  }
-
-  // For each feed, delete article_tags where articleId belongs to that feed and tagId matches
-  for (const [feedId, tagIds] of tagsByFeed) {
-    const articleIds = feedArticles.filter((a) => a.feedId === feedId).map((a) => a.id);
-
-    if (articleIds.length === 0) continue;
-
-    await db
-      .delete(articleTags)
-      .where(
-        and(
-          eq(articleTags.userId, userId),
-          inArray(articleTags.articleId, articleIds),
-          inArray(articleTags.tagId, tagIds),
-        ),
-      );
-  }
+  await tx.execute(sql`
+    DELETE FROM article_tags
+    USING articles a, (VALUES ${pairsSql}) AS ft(feed_id, tag_id)
+    WHERE article_tags.article_id = a.id
+      AND a.feed_id = ft.feed_id
+      AND article_tags.tag_id = ft.tag_id
+      AND article_tags.user_id = ${userId}
+  `);
 }
