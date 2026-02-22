@@ -100,7 +100,10 @@ export function LazyModal(props: LazyModalProps) {
       role="dialog"
       onClick={handleBackdropClick}
     >
-      <div class={twMerge('modal-box border-base-300 border shadow-sm', props.class)}>
+      <div
+        class={twMerge('modal-box border-base-300 border shadow-sm', props.class)}
+        style={{ 'max-height': 'min(var(--modal-vh, 100dvh), 90dvh)' }}
+      >
         <h3 class="mb-4 text-lg font-bold">{props.title}</h3>
         <ErrorBoundary
           fallback={(err) => {
