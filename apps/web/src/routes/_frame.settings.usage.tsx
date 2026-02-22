@@ -29,6 +29,8 @@ function flattenUsage(usage: UserUsage) {
     { label: 'Saved articles', ...usage.savedArticles },
     { label: 'Daily extractions', ...usage.extractions.daily },
     { label: 'Monthly extractions', ...usage.extractions.monthly },
+    { label: 'Daily TTS generations', ...usage.tts.daily },
+    { label: 'Monthly TTS generations', ...usage.tts.monthly },
   ];
 }
 

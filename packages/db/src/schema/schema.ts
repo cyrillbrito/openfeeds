@@ -80,6 +80,8 @@ export const articles = pgTable(
     /** Readable content (extracted on-demand) */
     cleanContent: text('clean_content'),
     contentExtractedAt: timestamp('content_extracted_at'),
+    /** Set when TTS audio is generated for this article */
+    audioGeneratedAt: timestamp('audio_generated_at'),
     createdAt: timestamp('created_at').notNull().defaultNow(),
     updatedAt: timestamp('updated_at')
       .$onUpdate(() => new Date())
