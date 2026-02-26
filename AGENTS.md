@@ -62,7 +62,7 @@ Each package/app owns and validates its own env vars using t3-env in `src/env.ts
 
 ## Version Control (GitButler)
 
-**This repo uses GitButler workspace mode. Delegate ALL git/version control operations to the `@butler` sub-agent.** This includes commits, branches, pushes, PRs, and history editing.
+This repo uses GitButler workspace mode. Use `but` CLI for all version control operations. Load the `but` skill for command reference.
 
 ## Code Quality
 
