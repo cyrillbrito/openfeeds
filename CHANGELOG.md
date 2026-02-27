@@ -1,5 +1,21 @@
 # Changelog
 
+## [0.6.0](https://github.com/cyrillbrito/openfeeds/compare/v0.5.0...v0.6.0) (2026-02-27)
+
+
+### Features
+
+* add discover page with curated feeds and tag management rework ([#116](https://github.com/cyrillbrito/openfeeds/issues/116)) ([41f3127](https://github.com/cyrillbrito/openfeeds/commit/41f31272fc807bdf3608487ea2ed2e6886e37ebb))
+* add free-tier TTS generation limits (5/day, 30/month) ([#114](https://github.com/cyrillbrito/openfeeds/issues/114)) ([53c0bcc](https://github.com/cyrillbrito/openfeeds/commit/53c0bccf9be38ce84037757a78c588aa77b74061))
+* add free-tier usage limits to prevent abuse during beta ([#51](https://github.com/cyrillbrito/openfeeds/issues/51)) ([f46bc3c](https://github.com/cyrillbrito/openfeeds/commit/f46bc3ccfc00281701325d52305f7ff51837a310))
+* migrate user-data table IDs from text/ULID to uuid/UUIDv7 ([#111](https://github.com/cyrillbrito/openfeeds/issues/111)) ([2a6643d](https://github.com/cyrillbrito/openfeeds/commit/2a6643dc6e29e8690793626bccb5e204c2ab83cd))
+
+
+### Bug Fixes
+
+* propagate feed tag changes to all existing articles ([#109](https://github.com/cyrillbrito/openfeeds/issues/109)) ([6d68808](https://github.com/cyrillbrito/openfeeds/commit/6d68808536917452ade9d26371959977a80ae9d3))
+* resolve mobile layout overflow and viewport issues ([#113](https://github.com/cyrillbrito/openfeeds/issues/113)) ([f1c745b](https://github.com/cyrillbrito/openfeeds/commit/f1c745b8b94c0e360d35b91e49f4ea4beda6c253))
+
 ## [0.5.0](https://github.com/cyrillbrito/openfeeds/compare/v0.4.0...v0.5.0) (2026-02-20)
 
 
