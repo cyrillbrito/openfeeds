@@ -1,30 +1,32 @@
 import {
   Apple,
+  Armchair,
+  BookOpen,
   Briefcase,
+  Building2,
   Camera,
   Car,
   Clapperboard,
   Code,
-  Dumbbell,
   FlaskConical,
   Gamepad2,
   Globe,
   Hammer,
+  Landmark,
   Laugh,
+  Medal,
   MonitorSmartphone,
   Music,
   Newspaper,
-  Paintbrush,
   Palette,
   Plane,
   Rocket,
   Rss,
-  Scroll,
   Search,
   Shirt,
   Smartphone,
-  Sofa,
   Sparkles,
+  Telescope,
   Trophy,
   Tv,
   UtensilsCrossed,
@@ -62,44 +64,43 @@ type CuratedCategory = {
 };
 
 // ---------------------------------------------------------------------------
-// Lucide icon overrides for curated categories (test a few, rest keep emoji)
+// Lucide icon resolver — maps icon name strings (from curated-feeds.json) to
+// components. The JSON is the single source of truth for which icon each
+// category uses; this map just resolves names to imports.
 // ---------------------------------------------------------------------------
 
-const CATEGORY_ICONS: Record<string, Component<LucideProps>> = {
-  news: Newspaper,
-  tech: MonitorSmartphone,
-  gaming: Gamepad2,
-  science: FlaskConical,
-  programming: Code,
-  music: Music,
-  movies: Clapperboard,
-  food: UtensilsCrossed,
-  sports: Dumbbell,
-  travel: Plane,
-  photography: Camera,
-  'business-economy': Briefcase,
-  'personal-finance': Wallet,
-  startups: Rocket,
-  apple: Apple,
-  funny: Laugh,
-  space: Sparkles,
-  books: Scroll,
-  diy: Hammer,
-  fashion: Shirt,
-  beauty: Paintbrush,
-  android: Smartphone,
-  'android-development': Smartphone,
-  'ios-development': Smartphone,
-  television: Tv,
-  history: Scroll,
-  'web-development': Globe,
-  'ui-ux': Palette,
-  cars: Car,
-  cricket: Trophy,
-  football: Trophy,
-  tennis: Trophy,
-  'interior-design': Sofa,
-  architecture: Sofa,
+const LUCIDE_ICONS: Record<string, Component<LucideProps>> = {
+  Apple,
+  Armchair,
+  BookOpen,
+  Briefcase,
+  Building2,
+  Camera,
+  Car,
+  Clapperboard,
+  Code,
+  FlaskConical,
+  Gamepad2,
+  Globe,
+  Hammer,
+  Landmark,
+  Laugh,
+  Medal,
+  MonitorSmartphone,
+  Music,
+  Newspaper,
+  Palette,
+  Plane,
+  Rocket,
+  Rss,
+  Shirt,
+  Smartphone,
+  Sparkles,
+  Telescope,
+  Trophy,
+  Tv,
+  UtensilsCrossed,
+  Wallet,
 };
 
 const FEEDS_PER_PAGE = 20;
@@ -217,7 +218,7 @@ export function CuratedFeedsBrowser(props: {
           </button>
           <For each={categories}>
             {(cat) => {
-              const LucideIcon = CATEGORY_ICONS[cat.slug];
+              const LucideIcon = LUCIDE_ICONS[cat.icon];
               const isEmpty = () => categoryMatchCounts()?.get(cat.slug) === 0;
               const isSelected = () => selectedCategory() === cat.slug;
               return (

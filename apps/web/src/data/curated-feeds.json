@@ -2,7 +2,7 @@
   {
     "name": "News",
     "slug": "news",
-    "icon": "📰",
+    "icon": "Newspaper",
     "feedCount": 10,
     "feeds": [
       {
@@ -80,7 +80,7 @@
   {
     "name": "Tech",
     "slug": "tech",
-    "icon": "💻",
+    "icon": "MonitorSmartphone",
     "feedCount": 23,
     "feeds": [
       {
@@ -137,7 +137,7 @@
         "description": "Engadget is a web magazine with obsessive daily coverage of everything new in gadgets and consumer electronics",
         "feedUrl": "https://www.engadget.com/rss.xml",
         "siteUrl": "https://www.engadget.com/",
-        "imageUrl": "https://s.yimg.com/kw/assets/engadget-amp-proposed.png"
+        "imageUrl": null
       },
       {
         "title": "Hacker News",
@@ -249,7 +249,7 @@
   {
     "name": "Science",
     "slug": "science",
-    "icon": "🔬",
+    "icon": "FlaskConical",
     "feedCount": 22,
     "feeds": [
       {
@@ -411,7 +411,7 @@
   {
     "name": "Programming",
     "slug": "programming",
-    "icon": "👨‍💻",
+    "icon": "Code",
     "feedCount": 40,
     "feeds": [
       {
@@ -692,15 +692,15 @@
         "description": "A podcast about what we work on, not what it feels like to be a woman in tech.\nHosted by Edaena Salinas, Software Engineer at Microsoft.\nWebsite: wit.fm",
         "feedUrl": "https://thewomenintechshow.com/category/podcast/feed/",
         "siteUrl": "https://thewomenintechshow.com",
-        "imageUrl": "https://s0.wp.com/_si/?t=eyJpbWciOiJodHRwczpcL1wvc2VjdXJlLmdyYXZhdGFyLmNvbVwvYmxhdmF0YXJcL2I3ZTExMjM0OTQ2NzYyN2QwODZkNTM0NDU1OGY1Nzc2ZmI1OTY5MGRiMjI2NTViNGVkOGU4NDM4ZDQwYjNiNTg_cz0yMDAmdHM9MTc3MTc5MTI1NyIsInR4dCI6IlRoZSBXb21lbiBpbiBUZWNoIFNob3ciLCJ0ZW1wbGF0ZSI6ImVkZ2UiLCJmb250IjoiIiwiYmxvZ19pZCI6MTEyODEzOTI4fQ.MU9_LDrEYfj_091fxbcuxq9nJIqctcdai87i2Oi51wEMQ"
+        "imageUrl": "https://s0.wp.com/_si/?t=eyJpbWciOiJodHRwczpcL1wvc2VjdXJlLmdyYXZhdGFyLmNvbVwvYmxhdmF0YXJcL2I3ZTExMjM0OTQ2NzYyN2QwODZkNTM0NDU1OGY1Nzc2ZmI1OTY5MGRiMjI2NTViNGVkOGU4NDM4ZDQwYjNiNTg_cz0yMDAmdHM9MTc3MjEzNTQ3MiIsInR4dCI6IlRoZSBXb21lbiBpbiBUZWNoIFNob3ciLCJ0ZW1wbGF0ZSI6ImVkZ2UiLCJmb250IjoiIiwiYmxvZ19pZCI6MTEyODEzOTI4fQ.CWyZWkjvVrpr4l75_ltw-_sKz_NPkYYYtjHhZCTH1q8MQ"
       }
     ]
   },
   {
     "name": "Gaming",
     "slug": "gaming",
-    "icon": "🎮",
-    "feedCount": 12,
+    "icon": "Gamepad2",
+    "feedCount": 13,
     "feeds": [
       {
         "title": "Eurogamer.net Latest Articles Feed",
@@ -722,6 +722,13 @@
         "feedUrl": "http://feeds.ign.com/ign/all",
         "siteUrl": "https://www.ign.com/articles",
         "imageUrl": "https://assets1.ignimgs.com/ign/red-dpad.jpg?canvas=1200,630&amp;width=600&amp;height=600"
+      },
+      {
+        "title": "Indie Games Plus",
+        "description": "Creative, Personal, Passionate Digital Experiences",
+        "feedUrl": "https://indiegamesplus.com/feed",
+        "siteUrl": "https://pdg.indiegamesplus.com/",
+        "imageUrl": "https://indiegamesplus.com/wp-content/uploads/2018/08/Website-Fav-Icon.jpg"
       },
       {
         "title": "Makeup and Beauty Blog | Makeup Reviews, Swatches and How-To Makeup",
@@ -770,7 +777,7 @@
         "description": "Veni, Vidi, Scripsi",
         "feedUrl": "http://feeds.feedburner.com/TheAncientGamingNoob",
         "siteUrl": "https://tagn.wordpress.com",
-        "imageUrl": "https://secure.gravatar.com/blavatar/0219a8a6e70c263959dabc45770c61ebbb8e327003d8578c221277c91f72dd8c?s=200&#038;ts=1772135389"
+        "imageUrl": "https://secure.gravatar.com/blavatar/0219a8a6e70c263959dabc45770c61ebbb8e327003d8578c221277c91f72dd8c?s=200&#038;ts=1772223781"
       },
       {
         "title": "The Escapist",
@@ -791,7 +798,7 @@
   {
     "name": "Music",
     "slug": "music",
-    "icon": "🎵",
+    "icon": "Music",
     "feedCount": 5,
     "feeds": [
       {
@@ -834,7 +841,7 @@
   {
     "name": "Movies",
     "slug": "movies",
-    "icon": "🎬",
+    "icon": "Clapperboard",
     "feedCount": 9,
     "feeds": [
       {
@@ -905,7 +912,7 @@
   {
     "name": "Television",
     "slug": "television",
-    "icon": "📺",
+    "icon": "Tv",
     "feedCount": 4,
     "feeds": [
       {
@@ -941,7 +948,7 @@
   {
     "name": "Books",
     "slug": "books",
-    "icon": "📚",
+    "icon": "BookOpen",
     "feedCount": 7,
     "feeds": [
       {
@@ -998,7 +1005,7 @@
   {
     "name": "Funny",
     "slug": "funny",
-    "icon": "😂",
+    "icon": "Laugh",
     "feedCount": 14,
     "feeds": [
       {
@@ -1027,14 +1034,14 @@
         "description": "The internet has generated a huge amount of laughs from cats and FAILS. And we all out of cats.",
         "feedUrl": "http://feeds.feedburner.com/failblog",
         "siteUrl": "https://failblog.cheezburger.com/",
-        "imageUrl": "https://i.chzbgr.com/original/44473605/hF6D7C906/getting-fired-workplace-single-mom-workplace-44473605"
+        "imageUrl": "https://i.chzbgr.com/original/44476677/h9F54CE8E/a-lavish-friend-repeatedly-insists-on-splitting-the-bill-evenly-when-they-go-out-for-group-dinners"
       },
       {
         "title": "I Can Has Cheezburger?",
         "description": "World's largest collection of cat memes and other animals",
         "feedUrl": "http://feeds.feedburner.com/icanhascheezburger",
         "siteUrl": "https://icanhas.cheezburger.com/",
-        "imageUrl": "https://i.chzbgr.com/original/44458245/h271A69D0/24-cat-memes-thumbnail-includes-one-meme-including-what-are-you-passionate-about-me"
+        "imageUrl": "https://i.chzbgr.com/original/44477701/h5425D18A/picture-of-a-woman-and-a-cat-one-picture-of-a-man-and-his-mothers-boyfriend-is-severely-allergic"
       },
       {
         "title": "Penny Arcade",
@@ -1062,7 +1069,7 @@
         "description": "Latest Saturday Morning Breakfast Cereal comics and news",
         "feedUrl": "https://www.smbc-comics.com/comic/rss",
         "siteUrl": "https://www.smbc-comics.com/",
-        "imageUrl": "https://www.smbc-comics.com/comics/1771879428-20260226.png"
+        "imageUrl": "https://www.smbc-comics.com/comics/1772154403-20260227-copy.png"
       },
       {
         "title": "The Bloggess",
@@ -1104,7 +1111,7 @@
   {
     "name": "Sports",
     "slug": "sports",
-    "icon": "🏅",
+    "icon": "Medal",
     "feedCount": 6,
     "feeds": [
       {
@@ -1154,7 +1161,7 @@
   {
     "name": "Football",
     "slug": "football",
-    "icon": "⚽",
+    "icon": "Trophy",
     "feedCount": 3,
     "feeds": [
       {
@@ -1183,7 +1190,7 @@
   {
     "name": "Cricket",
     "slug": "cricket",
-    "icon": "🏏",
+    "icon": "Trophy",
     "feedCount": 20,
     "feeds": [
       {
@@ -1282,7 +1289,7 @@
         "description": "Michael Atherton, Nasser Hussain and some of the cricket world's biggest guests analyse and debate the big stories and talking points from international and domestic cricket.\n-\nWatch every episode of the Sky Sports Cricket Podcast on YouTube here: Sky Sports Cricket Podcast on YouTube\nListen to every episode of the Sky Sports Cricket Podcast here: skysports.com/sky-sports-cricket-podcast\nYou can listen to the Sky Sports Cricket Podcast on your smart speaker by asking it to \"play Sky Sports Cricket Podcast\".\nFor all the latest Cricket news, head to skysports.com/cricket\nFor advertising opportunities or to get in touch with the pod email: skysportspodcasts@sky.uk",
         "feedUrl": "https://www.spreaker.com/show/3387348/episodes/feed",
         "siteUrl": "https://sky-sports-cricket.captivate.fm",
-        "imageUrl": "https://artwork.captivate.fm/0fad9b49-855b-4bab-a701-7e7f8738afbf/63042b88b5fe9ab5bdea57a3d89e61c6-facebook.png?1772135359"
+        "imageUrl": "https://artwork.captivate.fm/0fad9b49-855b-4bab-a701-7e7f8738afbf/63042b88b5fe9ab5bdea57a3d89e61c6-facebook.png?1772223774"
       },
       {
         "title": "Sri Lanka Cricket",
@@ -1331,7 +1338,7 @@
   {
     "name": "Tennis",
     "slug": "tennis",
-    "icon": "🎾",
+    "icon": "Trophy",
     "feedCount": 5,
     "feeds": [
       {
@@ -1374,7 +1381,7 @@
   {
     "name": "Food",
     "slug": "food",
-    "icon": "🍳",
+    "icon": "UtensilsCrossed",
     "feedCount": 18,
     "feeds": [
       {
@@ -1508,7 +1515,7 @@
   {
     "name": "Travel",
     "slug": "travel",
-    "icon": "✈️",
+    "icon": "Plane",
     "feedCount": 5,
     "feeds": [
       {
@@ -1551,7 +1558,7 @@
   {
     "name": "Photography",
     "slug": "photography",
-    "icon": "📷",
+    "icon": "Camera",
     "feedCount": 10,
     "feeds": [
       {
@@ -1629,7 +1636,7 @@
   {
     "name": "Business & Economy",
     "slug": "business-economy",
-    "icon": "💼",
+    "icon": "Briefcase",
     "feedCount": 15,
     "feeds": [
       {
@@ -1742,16 +1749,9 @@
   {
     "name": "Personal finance",
     "slug": "personal-finance",
-    "icon": "💰",
+    "icon": "Wallet",
     "feedCount": 22,
     "feeds": [
-      {
-        "title": "Best Free Online Tax Software & Services of 2026 | Money Crashers",
-        "description": "Turn the Tables on Money",
-        "feedUrl": "https://www.moneycrashers.com/feed/",
-        "siteUrl": "https://www.moneycrashers.com",
-        "imageUrl": "https://www.moneycrashers.com/wp-content/uploads/2025/09/image2.webp"
-      },
       {
         "title": "Budgets Are Sexy",
         "description": "Money | Minimalism | Mohawks",
@@ -1865,6 +1865,13 @@
         "imageUrl": "https://b.thumbs.redditmedia.com/hOn2BgW06eQdpNY-RvF3UGBtbG_CFbr4XkotMYLWhEc.png"
       },
       {
+        "title": "Quicken Business & Personal Review – Business and Personal Finances in One App | Money Crashers",
+        "description": "Turn the Tables on Money",
+        "feedUrl": "https://www.moneycrashers.com/feed/",
+        "siteUrl": "https://www.moneycrashers.com",
+        "imageUrl": "https://www.moneycrashers.com/wp-content/uploads/2025/09/image2.webp"
+      },
+      {
         "title": "SavingAdvice.com Blog",
         "description": "Bridging the gap between saving money and investing",
         "feedUrl": "https://www.savingadvice.com/feed/",
@@ -1904,7 +1911,7 @@
   {
     "name": "Startups",
     "slug": "startups",
-    "icon": "💡",
+    "icon": "Rocket",
     "feedCount": 18,
     "feeds": [
       {
@@ -2038,7 +2045,7 @@
   {
     "name": "Fashion",
     "slug": "fashion",
-    "icon": "👗",
+    "icon": "Shirt",
     "feedCount": 8,
     "feeds": [
       {
@@ -2102,7 +2109,7 @@
   {
     "name": "Beauty",
     "slug": "beauty",
-    "icon": "💄",
+    "icon": "Sparkles",
     "feedCount": 8,
     "feeds": [
       {
@@ -2166,7 +2173,7 @@
   {
     "name": "Apple",
     "slug": "apple",
-    "icon": "🍎",
+    "icon": "Apple",
     "feedCount": 16,
     "feeds": [
       {
@@ -2286,7 +2293,7 @@
   {
     "name": "Android",
     "slug": "android",
-    "icon": "📱",
+    "icon": "Smartphone",
     "feedCount": 16,
     "feeds": [
       {
@@ -2406,7 +2413,7 @@
   {
     "name": "iOS Development",
     "slug": "ios-development",
-    "icon": "📱",
+    "icon": "Smartphone",
     "feedCount": 15,
     "feeds": [
       {
@@ -2519,8 +2526,8 @@
   {
     "name": "Android Development",
     "slug": "android-development",
-    "icon": "📱",
-    "feedCount": 22,
+    "icon": "Smartphone",
+    "feedCount": 21,
     "feeds": [
       {
         "title": "Android Developers",
@@ -2642,13 +2649,6 @@
         "imageUrl": "https://publicobject.com/content/images/2014/Apr/butters_2.jpg"
       },
       {
-        "title": "Saket Narayan",
-        "description": "A wild developer appears. He works at Square. Find him on Twitter and Bluesky.",
-        "feedUrl": "https://saket.me/feed/",
-        "siteUrl": "https://saket.me/",
-        "imageUrl": "https://saket.me/wp-content/uploads/2022/03/cropped-saket-photo-180x180.jpg"
-      },
-      {
         "title": "The Android Arsenal",
         "description": "A categorized directory of libraries and tools for Android",
         "feedUrl": "https://feeds.feedburner.com/Android_Arsenal",
@@ -2681,7 +2681,7 @@
   {
     "name": "Web Development",
     "slug": "web-development",
-    "icon": "🌐",
+    "icon": "Globe",
     "feedCount": 6,
     "feeds": [
       {
@@ -2731,7 +2731,7 @@
   {
     "name": "UI / UX",
     "slug": "ui-ux",
-    "icon": "🎨",
+    "icon": "Palette",
     "feedCount": 7,
     "feeds": [
       {
@@ -2788,7 +2788,7 @@
   {
     "name": "Space",
     "slug": "space",
-    "icon": "🛰️",
+    "icon": "Telescope",
     "feedCount": 7,
     "feeds": [
       {
@@ -2803,7 +2803,7 @@
         "description": "All the latest content from the Space.com team",
         "feedUrl": "https://www.space.com/feeds/all",
         "siteUrl": "https://www.space.com",
-        "imageUrl": "https://vanilla.futurecdn.net/space/1560021/apple-touch-icon.png"
+        "imageUrl": "https://vanilla.futurecdn.net/space/1561711/apple-touch-icon.png"
       },
       {
         "title": "NASA",
@@ -2845,7 +2845,7 @@
   {
     "name": "History",
     "slug": "history",
-    "icon": "📜",
+    "icon": "Landmark",
     "feedCount": 8,
     "feeds": [
       {
@@ -2909,9 +2909,16 @@
   {
     "name": "DIY",
     "slug": "diy",
-    "icon": "🔧",
-    "feedCount": 7,
+    "icon": "Hammer",
+    "feedCount": 8,
     "feeds": [
+      {
+        "title": "Apartment Therapy| Saving the world, one room at a time",
+        "description": "Saving the world, one room at a time",
+        "feedUrl": "https://www.apartmenttherapy.com/projects.rss",
+        "siteUrl": "https://www.apartmenttherapy.com/projects",
+        "imageUrl": "https://cdn.apartmenttherapy.info/image/fetch/f_auto,q_auto:eco,c_fill,g_auto,w_1500,ar_3:2/https%3A%2F%2Fs3.amazonaws.com%2Fpixtruder%2Foriginal_images%2Fb27c3c4c25f0038644ed1615071b00d52bf2025f"
+      },
       {
         "title": "Blog – Hackaday",
         "description": "Fresh hacks every day",
@@ -2966,7 +2973,7 @@
   {
     "name": "Architecture",
     "slug": "architecture",
-    "icon": "🏛️",
+    "icon": "Building2",
     "feedCount": 10,
     "feeds": [
       {
@@ -3044,15 +3051,15 @@
   {
     "name": "Interior design",
     "slug": "interior-design",
-    "icon": "🏠",
-    "feedCount": 19,
+    "icon": "Armchair",
+    "feedCount": 18,
     "feeds": [
       {
         "title": "Apartment Therapy| Saving the world, one room at a time",
         "description": "Saving the world, one room at a time",
         "feedUrl": "https://www.apartmenttherapy.com/design.rss",
         "siteUrl": "https://www.apartmenttherapy.com/design",
-        "imageUrl": null
+        "imageUrl": "https://cdn.apartmenttherapy.info/image/fetch/f_auto,q_auto:eco,c_fill,g_auto,w_1500,ar_3:2/https%3A%2F%2Fs3.amazonaws.com%2Fpixtruder%2Foriginal_images%2Fb27c3c4c25f0038644ed1615071b00d52bf2025f"
       },
       {
         "title": "blog - decor8",
@@ -3132,13 +3139,6 @@
         "imageUrl": "https://cdn.home-designing.com/wp-content/uploads/2024/11/living-room-with-stairs-green-1-600x600.jpg"
       },
       {
-        "title": "Latest from Ideal Home in News",
-        "description": "All the latest news content from the Ideal Home team",
-        "feedUrl": "https://www.idealhome.co.uk/feed",
-        "siteUrl": "https://www.idealhome.co.uk",
-        "imageUrl": "https://cdn.mos.cms.futurecdn.net/flexiimages/bh2huvwcik1648734603.png"
-      },
-      {
         "title": "Liz Marie Blog",
         "description": null,
         "feedUrl": "https://www.lizmarieblog.com/feed/",
@@ -3185,7 +3185,7 @@
   {
     "name": "Cars",
     "slug": "cars",
-    "icon": "🚗",
+    "icon": "Car",
     "feedCount": 14,
     "feeds": [
       {
@@ -3277,7 +3277,7 @@
         "description": "Barn finds, rally cars, and needles in the haystack.",
         "feedUrl": "https://bringatrailer.com/feed/",
         "siteUrl": "https://bringatrailer.com",
-        "imageUrl": "https://bringatrailer.com/wp-content/themes/bringatrailer/assets/img/apple-touch-icon-iphone-60x60.png?v=http://f39f3bc609"
+        "imageUrl": "https://bringatrailer.com/wp-content/themes/bringatrailer/assets/img/apple-touch-icon-iphone-60x60.png?v=http://90cbd23268"
       },
       {
         "title": "TheTruthAboutCars",

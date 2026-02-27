@@ -21,7 +21,7 @@ const OPML_DIR = 'recommended/with_category';
 const OUTPUT_PATH = new URL('../../../apps/web/src/data/curated-feeds.json', import.meta.url)
   .pathname;
 
-const CONCURRENCY = 1;
+const CONCURRENCY = 5;
 const FETCH_TIMEOUT_MS = 15_000;
 const METADATA_TIMEOUT_MS = 10_000;
 
@@ -79,42 +79,43 @@ const CATEGORY_ORDER: string[] = [
   'Cars',
 ];
 
-// Category icons — map category names to emoji
+// Category icons — map category names to Lucide icon component names.
+// These names are resolved to actual Lucide components in CuratedFeedsBrowser.tsx.
 const CATEGORY_ICONS: Record<string, string> = {
-  Android: '📱',
-  'Android Development': '📱',
-  Apple: '🍎',
-  Architecture: '🏛️',
-  Beauty: '💄',
-  Books: '📚',
-  'Business & Economy': '💼',
-  Cars: '🚗',
-  Cricket: '🏏',
-  'Interior design': '🏠',
-  DIY: '🔧',
-  Fashion: '👗',
-  Food: '🍳',
-  Football: '⚽',
-  Funny: '😂',
-  Gaming: '🎮',
-  History: '📜',
-  'iOS Development': '📱',
-  Movies: '🎬',
-  Music: '🎵',
-  News: '📰',
-  'Personal finance': '💰',
-  Photography: '📷',
-  Programming: '👨‍💻',
-  Science: '🔬',
-  Space: '🛰️',
-  Sports: '🏅',
-  Startups: '💡',
-  Tech: '💻',
-  Television: '📺',
-  Tennis: '🎾',
-  Travel: '✈️',
-  'UI / UX': '🎨',
-  'Web Development': '🌐',
+  Android: 'Smartphone',
+  'Android Development': 'Smartphone',
+  Apple: 'Apple',
+  Architecture: 'Building2',
+  Beauty: 'Sparkles',
+  Books: 'BookOpen',
+  'Business & Economy': 'Briefcase',
+  Cars: 'Car',
+  Cricket: 'Trophy',
+  'Interior design': 'Armchair',
+  DIY: 'Hammer',
+  Fashion: 'Shirt',
+  Food: 'UtensilsCrossed',
+  Football: 'Trophy',
+  Funny: 'Laugh',
+  Gaming: 'Gamepad2',
+  History: 'Landmark',
+  'iOS Development': 'Smartphone',
+  Movies: 'Clapperboard',
+  Music: 'Music',
+  News: 'Newspaper',
+  'Personal finance': 'Wallet',
+  Photography: 'Camera',
+  Programming: 'Code',
+  Science: 'FlaskConical',
+  Space: 'Telescope',
+  Sports: 'Medal',
+  Startups: 'Rocket',
+  Tech: 'MonitorSmartphone',
+  Television: 'Tv',
+  Tennis: 'Trophy',
+  Travel: 'Plane',
+  'UI / UX': 'Palette',
+  'Web Development': 'Globe',
 };
 
 // ---------------------------------------------------------------------------
@@ -626,7 +627,7 @@ function buildOutput(feeds: EnrichedFeed[]): CuratedCategory[] {
     categories.push({
       name,
       slug: slugify(name),
-      icon: CATEGORY_ICONS[name] || '📁',
+      icon: CATEGORY_ICONS[name] || 'Rss',
       feedCount: uniqueFeeds.length,
       feeds: uniqueFeeds,
     });
