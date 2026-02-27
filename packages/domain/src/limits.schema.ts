@@ -7,7 +7,7 @@
  */
 export const FREE_TIER_LIMITS = {
   /** Maximum number of feed subscriptions per user */
-  feeds: 1000,
+  feeds: 100,
 
   /** Maximum number of filter rules per user */
   filterRules: 10,
