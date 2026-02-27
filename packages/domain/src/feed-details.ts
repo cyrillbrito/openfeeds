@@ -90,6 +90,30 @@ async function extractSocialMetadata(url: string): Promise<SocialMetadata> {
         }
       },
     })
+    // apple-touch-icon as image fallback (high-res square icon)
+    .on('link[rel="apple-touch-icon"], link[rel="apple-touch-icon-precomposed"]', {
+      element(el) {
+        if (!metadata.image) {
+          const href = el.getAttribute('href');
+          if (href) metadata.image = decodeHtmlEntities(href);
+        }
+      },
+    })
+    // Large favicon (icon with sizes >= 64px) as image fallback
+    .on('link[rel="icon"], link[rel="shortcut icon"]', {
+      element(el) {
+        if (!metadata.image) {
+          const sizes = el.getAttribute('sizes');
+          const href = el.getAttribute('href');
+          if (sizes && href) {
+            const sizeNum = parseInt(sizes, 10);
+            if (sizeNum >= 64) {
+              metadata.image = decodeHtmlEntities(href);
+            }
+          }
+        }
+      },
+    })
     // Fallback to regular meta tags
     .on('meta[name="description"]', {
       element(el) {
@@ -123,18 +147,34 @@ async function extractSocialMetadata(url: string): Promise<SocialMetadata> {
   return metadata;
 }
 
+/** Extract image URL from the RSS/Atom feed XML itself (channel image, logo, icon). */
+function extractFeedImage(feedResult: ParseFeedResult): string | undefined {
+  if (feedResult.format === 'rss') {
+    const feed = feedResult.feed as Record<string, unknown>;
+    const image = feed.image as Record<string, unknown> | undefined;
+    if (image?.url && typeof image.url === 'string') return image.url;
+  }
+  if (feedResult.format === 'atom') {
+    const feed = feedResult.feed as Record<string, unknown>;
+    if (typeof feed.logo === 'string') return feed.logo;
+    if (typeof feed.icon === 'string') return feed.icon;
+  }
+  return undefined;
+}
+
 export async function fetchFeedMetadata(feed: ParseFeedResult): Promise<Partial<Feed>> {
   const websiteUrl = parseWebpageUrl(feed);
+  const feedImage = extractFeedImage(feed);
+
   if (!websiteUrl) {
-    // TODO If not website is found, try to get information from the feed itself
-    return {};
+    // No website link — use whatever we can get from the feed itself
+    return { icon: feedImage };
   }
 
   const metadata = await extractSocialMetadata(websiteUrl);
-  console.log(metadata);
   return {
     url: websiteUrl,
-    icon: metadata.image,
+    icon: metadata.image ?? feedImage,
     title: metadata.title || metadata.siteName,
     description: metadata.description,
   };

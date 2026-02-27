@@ -193,6 +193,7 @@
         "@t3-oss/env-core": "^0.13.10",
         "better-auth": "catalog:",
         "bullmq": "^5.69.2",
+        "feedsmith": "^2.9.0",
         "zod": "catalog:",
       },
       "devDependencies": {

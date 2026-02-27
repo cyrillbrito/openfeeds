@@ -27,7 +27,6 @@ export interface ServerAnalyticsEventMap {
   'feeds:feed_create': {
     feed_id: string;
     feed_url: string;
-    source: 'manual';
   };
   'feeds:feed_delete': {
     feed_id: string;
@@ -61,7 +60,7 @@ export interface ServerAnalyticsEventMap {
 
   // Limit enforcement
   'limits:feeds_limit_hit': {
-    source: 'manual' | 'opml_import';
+    source: 'create' | 'opml_import';
     current_usage: number;
     limit: number;
   };

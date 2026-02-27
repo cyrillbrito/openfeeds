@@ -8,6 +8,6 @@ export const Route = createFileRoute('/')({
   },
   loader: async () => {
     const hasFeeds = await $$hasAnyFeeds();
-    throw redirect({ to: hasFeeds ? '/inbox' : '/feeds' });
+    throw redirect({ to: hasFeeds ? '/inbox' : '/discover' });
   },
 });

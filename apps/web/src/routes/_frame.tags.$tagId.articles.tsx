@@ -1,60 +1,69 @@
 import { eq, useLiveQuery } from '@tanstack/solid-db';
 import { createFileRoute, Link } from '@tanstack/solid-router';
-import { Video } from 'lucide-solid';
+import { Shuffle } from 'lucide-solid';
 import { createSignal, onMount, Show, Suspense } from 'solid-js';
 import { ArticleList, ARTICLES_PER_PAGE } from '~/components/ArticleList';
 import { ArticleListToolbar } from '~/components/ArticleListToolbar';
-import { CommonErrorBoundary } from '~/components/CommonErrorBoundary';
-import { Header } from '~/components/Header';
 import { LazyModal, type ModalController } from '~/components/LazyModal';
 import { CenterLoader } from '~/components/Loader';
 import { MarkAllArchivedButton } from '~/components/MarkAllArchivedButton';
-import { ReadStatusToggle } from '~/components/ReadStatusToggle';
-import { SortToggle } from '~/components/SortToggle';
+import { ReadStatusToggle, type ReadStatus } from '~/components/ReadStatusToggle';
+import { ShuffleButton } from '~/components/ShuffleButton';
+import { articleTagsCollection } from '~/entities/article-tags';
 import { articlesCollection } from '~/entities/articles';
 import { useFeeds } from '~/entities/feeds';
 import { useTags } from '~/entities/tags';
 import { useSessionRead } from '~/providers/session-read';
-import { useToast } from '~/providers/toast';
 import { readStatusFilter } from '~/utils/article-queries';
 import { validateReadStatusSearch } from '~/utils/routing';
 
-export const Route = createFileRoute('/_frame/inbox/')({
+export const Route = createFileRoute('/_frame/tags/$tagId/articles')({
   validateSearch: validateReadStatusSearch,
-  component: Inbox,
+  component: TagArticlesPage,
 });
 
-function Inbox() {
+function TagArticlesPage() {
+  const params = Route.useParams();
   const search = Route.useSearch();
-  const readStatus = () => search()?.readStatus || 'unread';
-  const sortOrder = () => search()?.sort || 'newest';
+  const tagId = () => params()?.tagId;
+  const readStatus = (): ReadStatus => search()?.readStatus || 'unread';
+  const seed = () => search()?.seed;
   const { sessionReadIds, addSessionRead, setViewKey } = useSessionRead();
 
-  onMount(() => setViewKey('inbox'));
+  onMount(() => setViewKey(`tag:${tagId()}`));
 
-  // Pagination state - lifted from ArticleList
+  // Pagination state
   const [visibleCount, setVisibleCount] = createSignal(ARTICLES_PER_PAGE);
 
-  // Query articles with orderBy and limit for pagination
+  const tagsQuery = useTags();
+  const feedsQuery = useFeeds();
+
+  // Query articles with join, orderBy, and limit for pagination
   const articlesQuery = useLiveQuery((q) => {
     let query = q
       .from({ article: articlesCollection })
-      .where(({ article }) => eq(article.isArchived, false));
+      .innerJoin({ articleTag: articleTagsCollection }, ({ article, articleTag }) =>
+        eq(article.id, articleTag.articleId),
+      )
+      .where(({ articleTag }) => eq(articleTag.tagId, tagId()))
+      .select(({ article }) => ({ ...article }));
 
     const filter = readStatusFilter(readStatus(), sessionReadIds());
     if (filter) {
       query = query.where(({ article }) => filter(article));
     }
 
-    const direction = sortOrder() === 'oldest' ? 'asc' : 'desc';
-    return query.orderBy(({ article }) => article.pubDate, direction).limit(visibleCount());
+    return query.orderBy(({ article }) => article.pubDate, 'desc').limit(visibleCount());
   });
 
   // Lightweight count query - only selects id to avoid tracking full article objects
   const totalCountQuery = useLiveQuery((q) => {
     let query = q
       .from({ article: articlesCollection })
-      .where(({ article }) => eq(article.isArchived, false));
+      .innerJoin({ articleTag: articleTagsCollection }, ({ article, articleTag }) =>
+        eq(article.id, articleTag.articleId),
+      )
+      .where(({ articleTag }) => eq(articleTag.tagId, tagId()));
 
     const filter = readStatusFilter(readStatus(), sessionReadIds());
     if (filter) {
@@ -64,17 +73,12 @@ function Inbox() {
     return query.select(({ article }) => ({ id: article.id }));
   });
 
-  const feedsQuery = useFeeds();
-  const tagsQuery = useTags();
-  const { showToast } = useToast();
-
   let markAllModalController!: ModalController;
   const [isMarkingAllArchived, setIsMarkingAllArchived] = createSignal(false);
 
   const handleMarkAllArchived = async () => {
     try {
       setIsMarkingAllArchived(true);
-      // Use totalCountQuery to get ALL article IDs (not just visible)
       const articleIds = (totalCountQuery() || []).map((a) => a.id);
       if (articleIds.length > 0) {
         articlesCollection.update(articleIds, (drafts) => {
@@ -89,36 +93,12 @@ function Inbox() {
     }
   };
 
-  // Articles are already filtered by the live query (including session-read handling)
-  const filteredArticles = () => articlesQuery() || [];
-
-  const totalCount = () => (totalCountQuery() || []).length;
-
-  const handleLoadMore = () => {
-    setVisibleCount((prev) => prev + ARTICLES_PER_PAGE);
-  };
-
   const handleUpdateArticle = (
     articleId: string,
     updates: { isRead?: boolean; isArchived?: boolean },
   ) => {
-    // Track session-read articles
     if (updates.isRead === true) {
       addSessionRead(articleId);
-    }
-
-    // If archiving in the inbox view, show toast with undo
-    if (updates.isArchived === true) {
-      showToast('Article archived', {
-        action: {
-          label: 'Undo',
-          onClick: () => {
-            articlesCollection.update(articleId, (draft) => {
-              draft.isArchived = false;
-            });
-          },
-        },
-      });
     }
 
     articlesCollection.update(articleId, (draft) => {
@@ -127,38 +107,25 @@ function Inbox() {
     });
   };
 
+  const filteredArticles = () => articlesQuery() || [];
+  const totalCount = () => (totalCountQuery() || []).length;
+  const unreadCount = () => filteredArticles().filter((article) => !article.isRead).length;
+
+  const handleLoadMore = () => {
+    setVisibleCount((prev) => prev + ARTICLES_PER_PAGE);
+  };
+
   return (
     <>
-      <Header title="Inbox">
-        <div class="flex flex-wrap gap-2">
-          <Link
-            to="/inbox/shorts"
-            search={{ readStatus: readStatus() }}
-            class="btn btn-accent btn-sm"
-          >
-            <Video size={20} />
-            <span class="hidden sm:inline">Shorts</span>
-          </Link>
-        </div>
-      </Header>
-
-      <div class="mx-auto w-full max-w-2xl px-4 py-3 sm:p-6 xl:max-w-3xl">
-        <p class="text-base-content-gray">Latest articles from all your RSS feeds</p>
-      </div>
-
       <ArticleListToolbar
-        leftContent={
-          <>
-            <ReadStatusToggle currentStatus={readStatus()} />
-            <SortToggle currentSort={sortOrder()} />
-          </>
-        }
+        leftContent={<ReadStatusToggle currentStatus={readStatus()} />}
         rightContent={
           <>
-            <Show when={totalCount() > 0 && readStatus() === 'unread'}>
+            <ShuffleButton currentSeed={seed()} />
+            <Show when={unreadCount() > 0 && readStatus() === 'unread'}>
               <MarkAllArchivedButton
-                totalCount={totalCount()}
-                contextLabel="globally"
+                totalCount={unreadCount()}
+                contextLabel="in this tag"
                 onConfirm={handleMarkAllArchived}
               />
             </Show>
@@ -166,37 +133,48 @@ function Inbox() {
         }
         mobileMenuContent={
           <>
-            <Show when={totalCount() > 0 && readStatus() === 'unread'}>
+            <li>
+              <Link
+                to="."
+                search={(prev: Record<string, any>) =>
+                  prev.seed
+                    ? { ...prev, seed: undefined }
+                    : { ...prev, seed: Math.floor(Math.random() * 9999999999) + 1000000000 }
+                }
+              >
+                <Shuffle size={16} />
+                {seed() ? 'Turn off shuffle' : 'Shuffle'}
+              </Link>
+            </li>
+            <Show when={unreadCount() > 0 && readStatus() === 'unread'}>
               <li>
                 <button onClick={() => markAllModalController.open()}>
-                  Mark All Archived ({totalCount()})
+                  Mark All Archived ({unreadCount()})
                 </button>
               </li>
             </Show>
           </>
         }
-        unreadCount={totalCount()}
+        unreadCount={unreadCount()}
         totalCount={totalCount()}
         readStatus={readStatus()}
       />
 
       <div class="mx-auto w-full max-w-2xl px-4 pb-3 sm:px-6 sm:pb-6 xl:max-w-3xl">
-        <CommonErrorBoundary>
-          <Suspense fallback={<CenterLoader />}>
-            <Show when={feedsQuery() && tagsQuery()}>
-              <ArticleList
-                articles={filteredArticles()}
-                feeds={feedsQuery()!}
-                tags={tagsQuery()!}
-                totalCount={totalCount()}
-                onLoadMore={handleLoadMore}
-                onUpdateArticle={handleUpdateArticle}
-                readStatus={readStatus()}
-                context="inbox"
-              />
-            </Show>
-          </Suspense>
-        </CommonErrorBoundary>
+        <Suspense fallback={<CenterLoader />}>
+          <Show when={feedsQuery() && tagsQuery()}>
+            <ArticleList
+              articles={filteredArticles()}
+              feeds={feedsQuery()!}
+              tags={tagsQuery()!}
+              totalCount={totalCount()}
+              onLoadMore={handleLoadMore}
+              onUpdateArticle={handleUpdateArticle}
+              readStatus={readStatus()}
+              context="tag"
+            />
+          </Show>
+        </Suspense>
       </div>
 
       <LazyModal
@@ -206,15 +184,15 @@ function Inbox() {
       >
         <div class="mb-6">
           <p class="mb-4">
-            Are you sure you want to mark all unarchived articles as archived globally? This action
-            cannot be undone.
+            Are you sure you want to mark all unarchived articles as archived in this tag? This
+            action cannot be undone.
           </p>
 
-          <Show when={totalCount() > 0}>
+          <Show when={unreadCount() > 0}>
             <div class="bg-base-200 rounded-lg p-4">
               <h4 class="text-base-content-gray mb-1 text-sm font-semibold">Articles to mark:</h4>
               <p class="font-medium">
-                {totalCount()} unarchived article{totalCount() !== 1 ? 's' : ''}
+                {unreadCount()} unarchived article{unreadCount() !== 1 ? 's' : ''}
               </p>
             </div>
           </Show>

@@ -7,6 +7,7 @@ export * from './entities/article-tag.schema';
 export * from './entities/feed.schema';
 export * from './entities/feed-tag.schema';
 export * from './entities/filter-rule.schema';
+export * from './follow-feeds.schema';
 export * from './entities/settings.schema';
 export * from './entities/tag.schema';
 export * from './entities/tts.schema';

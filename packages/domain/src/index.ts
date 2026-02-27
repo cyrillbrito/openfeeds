@@ -9,6 +9,7 @@ export * from './entities/tag';
 
 // Non-entity domain logic (operations that span multiple entities or do specialized work)
 export * from './archive';
+export * from './follow-feeds';
 export * from './email';
 export * from './feed-sync';
 export * from './errors';

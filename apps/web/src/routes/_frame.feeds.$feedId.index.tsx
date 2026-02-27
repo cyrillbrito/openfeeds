@@ -58,7 +58,7 @@ function FeedArticles() {
     return query.orderBy(({ article }) => article.pubDate, 'desc').limit(visibleCount());
   });
 
-  // Query for total count (without limit)
+  // Lightweight count query - only selects id to avoid tracking full article objects
   const totalCountQuery = useLiveQuery((q) => {
     let query = q
       .from({ article: articlesCollection })
@@ -69,7 +69,7 @@ function FeedArticles() {
       query = query.where(({ article }) => filter(article));
     }
 
-    return query;
+    return query.select(({ article }) => ({ id: article.id }));
   });
 
   const feedsQuery = useFeeds();
@@ -172,7 +172,7 @@ function FeedArticles() {
         </div>
       </Header>
 
-      <div class="mx-auto w-full max-w-2xl px-2 py-3 sm:p-6 xl:max-w-3xl">
+      <div class="mx-auto w-full max-w-2xl px-4 py-3 sm:p-6 xl:max-w-3xl">
         {/* Sync error notice */}
         <Show
           when={
@@ -345,7 +345,7 @@ function FeedArticles() {
         readStatus={readStatus()}
       />
 
-      <div class="mx-auto w-full max-w-2xl px-2 pb-3 sm:px-6 sm:pb-6 xl:max-w-3xl">
+      <div class="mx-auto w-full max-w-2xl px-4 pb-3 sm:px-6 sm:pb-6 xl:max-w-3xl">
         <Suspense fallback={<CenterLoader />}>
           <Show when={feedsQuery() && tagsQuery()}>
             <ArticleList

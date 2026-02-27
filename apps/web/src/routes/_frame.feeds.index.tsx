@@ -3,7 +3,6 @@ import { debounce } from '@solid-primitives/scheduled';
 import { createFileRoute, Link } from '@tanstack/solid-router';
 import { CircleAlert, CloudDownload, EllipsisVertical, Plus, Search } from 'lucide-solid';
 import { createMemo, createSignal, For, Match, Show, Switch } from 'solid-js';
-import { AddFeedModal } from '~/components/AddFeedModal';
 import { Card } from '~/components/Card';
 import { ColorIndicator } from '~/components/ColorIndicator';
 import { DeleteFeedModal } from '~/components/DeleteFeedModal';
@@ -40,7 +39,6 @@ function FeedsComponent() {
   const search = Route.useSearch();
 
   // Modal controllers
-  let addFeedModalController!: ModalController;
   let importOpmlModalController!: ModalController;
   let deleteFeedModalController!: ModalController;
   let editFeedModalController!: ModalController;
@@ -94,14 +92,14 @@ function FeedsComponent() {
             <CloudDownload size={20} />
             <span class="hidden sm:inline">Import OPML</span>
           </button>
-          <button class="btn btn-primary btn-sm" onClick={() => addFeedModalController.open()}>
+          <Link to="/discover" class="btn btn-primary btn-sm">
             <Plus size={20} />
             <span class="hidden sm:inline">Add Feed</span>
-          </button>
+          </Link>
         </div>
       </Header>
 
-      <div class="mx-auto w-full max-w-2xl px-2 py-3 sm:p-6 xl:max-w-3xl">
+      <div class="mx-auto w-full max-w-2xl px-4 py-3 sm:p-6 xl:max-w-3xl">
         <div class="mb-6">
           <p class="text-base-content-gray mb-4">View and organize your RSS feeds</p>
 
@@ -117,8 +115,6 @@ function FeedsComponent() {
             />
           </label>
         </div>
-
-        <AddFeedModal controller={(controller) => (addFeedModalController = controller)} />
 
         <ImportOpmlModal controller={(controller) => (importOpmlModalController = controller)} />
 
@@ -166,13 +162,10 @@ function FeedsComponent() {
                   <CloudDownload size={20} class="mr-2" />
                   Import OPML
                 </button>
-                <button
-                  class="btn btn-primary btn-lg"
-                  onClick={() => addFeedModalController.open()}
-                >
+                <Link to="/discover" class="btn btn-primary btn-lg">
                   <Plus size={20} class="mr-2" />
                   Add Your First Feed
-                </button>
+                </Link>
               </div>
 
               <div class="text-base-content/50 mt-8 text-sm">

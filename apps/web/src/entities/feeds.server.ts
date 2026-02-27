@@ -1,6 +1,6 @@
 import { db, feeds } from '@repo/db';
 import * as feedsDomain from '@repo/domain';
-import { CreateFeedSchema, UpdateFeedSchema } from '@repo/domain';
+import { CreateFeedSchema, FollowFeedsWithTagsSchema, UpdateFeedSchema } from '@repo/domain';
 import { createServerFn } from '@tanstack/solid-start';
 import { eq } from 'drizzle-orm';
 import { z } from 'zod';
@@ -69,4 +69,11 @@ export const $$getFeedSyncLogs = createServerFn()
   .inputValidator(z.object({ feedId: z.uuidv7() }))
   .handler(({ context, data }) => {
     return feedsDomain.getFeedSyncLogs(context.user.id, data.feedId, 200);
+  });
+
+export const $$followFeedsWithTags = createServerFn({ method: 'POST' })
+  .middleware([authMiddleware])
+  .inputValidator(FollowFeedsWithTagsSchema)
+  .handler(({ context, data }) => {
+    return feedsDomain.followFeedsWithTags(data, context.user.id);
   });
