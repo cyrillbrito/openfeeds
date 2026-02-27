@@ -3,13 +3,15 @@
   "type": "module",
   "scripts": {
     "create-user": "bun --env-file=../../.env src/create-user.ts",
-    "queue-feed-details": "bun --env-file=../../.env src/queue-feed-details.ts"
+    "queue-feed-details": "bun --env-file=../../.env src/queue-feed-details.ts",
+    "generate-curated-feeds": "bun src/generate-curated-feeds.ts"
   },
   "dependencies": {
     "@repo/db": "workspace:*",
     "@t3-oss/env-core": "^0.13.10",
     "better-auth": "catalog:",
     "bullmq": "^5.69.2",
+    "feedsmith": "^2.9.0",
     "zod": "catalog:"
   },
   "devDependencies": {

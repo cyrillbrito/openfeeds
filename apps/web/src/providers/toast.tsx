@@ -49,13 +49,18 @@ export const ToastProvider: ParentComponent = (props) => {
     message: string,
     options?: { variant?: ToastVariant; action?: ToastAction; duration?: number },
   ) => {
+    const variant = options?.variant ?? 'success';
+
+    // Skip duplicate: same message + variant already visible
+    if (toasts().some((t) => t.message === message && t.variant === variant)) return;
+
     const id = Date.now().toString() + Math.random().toString(36).substring(7);
     const duration = options?.duration ?? 6000; // Default 6 seconds
 
     const toast: Toast = {
       id,
       message,
-      variant: options?.variant ?? 'success',
+      variant,
       action: options?.action,
       duration,
     };
@@ -87,13 +92,13 @@ export const ToastProvider: ParentComponent = (props) => {
     <ToastContext.Provider value={value}>
       {props.children}
       {/* Toast container rendered as part of the provider */}
-      <div class="toast toast-end toast-bottom">
-        <For each={toasts()}>
+      <div class="toast toast-end toast-bottom z-50 max-w-md">
+        <For each={toasts().slice(-5)}>
           {(toast) => (
             <div
               class={`alert ${variantClass[toast.variant]} flex items-center justify-between shadow-lg`}
             >
-              <span>{toast.message}</span>
+              <span class="line-clamp-3 break-words">{toast.message}</span>
               <Show when={toast.action}>
                 {(action) => (
                   <button

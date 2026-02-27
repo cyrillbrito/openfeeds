@@ -11,17 +11,6 @@ export * from './tag.schema';
 export async function createTags(data: CreateTag[], userId: string): Promise<Tag[]> {
   if (data.length === 0) return [];
 
-  // Batch case-insensitive duplicate check
-  const lowerNames = data.map((d) => d.name.toLowerCase());
-  const existing = await db
-    .select({ name: tags.name })
-    .from(tags)
-    .where(and(eq(tags.userId, userId), inArray(sql`lower(${tags.name})`, lowerNames)));
-
-  if (existing.length > 0) {
-    throw new ConflictError('Tag name already exists');
-  }
-
   const values = data.map((item) => ({
     id: item.id ?? createId(),
     userId,
@@ -29,7 +18,11 @@ export async function createTags(data: CreateTag[], userId: string): Promise<Tag
     color: item.color ?? null,
   }));
 
-  const inserted = await db.insert(tags).values(values).returning();
+  // NOTE: Duplicates are silently skipped via ON CONFLICT DO NOTHING (case-insensitive
+  // unique index on [userId, name]). The client already prevents creating tags with
+  // duplicate names, so conflicts here are a race-condition safety net. We may want to
+  // revisit this and surface skipped tags to the caller if it causes confusion.
+  const inserted = await db.insert(tags).values(values).onConflictDoNothing().returning();
 
   for (const tag of inserted) {
     trackEvent(userId, 'tags:tag_create', {

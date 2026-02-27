@@ -51,7 +51,7 @@ Tracked via `trackEvent()` in `packages/domain/src/analytics.ts`. Preferred over
 | --------------------------------- | ----------------------------------------- | ----------------------------------------------------------------------- |
 | `auth:account_create`             | `method`                                  | `apps/web/src/server/auth.ts`                                           |
 | `auth:session_create`             | `method`                                  | `apps/web/src/server/auth.ts`                                           |
-| `feeds:feed_create`               | `feed_id`, `feed_url`, `source`           | `packages/domain/src/entities/feed.ts`                                  |
+| `feeds:feed_create`               | `feed_id`, `feed_url`                     | `packages/domain/src/entities/feed.ts`                                  |
 | `feeds:feed_delete`               | `feed_id`                                 | `packages/domain/src/entities/feed.ts`                                  |
 | `feeds:opml_import`               | `feed_count`, `tag_count`, `failed_count` | `packages/domain/src/import.ts`                                         |
 | `tags:tag_create`                 | `tag_id`, `color`                         | `packages/domain/src/entities/tag.ts`                                   |

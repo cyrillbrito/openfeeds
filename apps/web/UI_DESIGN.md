@@ -18,18 +18,40 @@ Uses DaisyUI semantic colors with specific purpose:
 
 The global background is `base-100`. Components only need explicit `bg-base-100` when they must prevent content showing through (e.g., sticky headers, sidebars on mobile overlay).
 
-## Content Width
+## Content Layout
 
-- Main content area: `max-w-2xl` constraint for readability on large screens
-- Full-width on mobile, centered with padding on desktop
-- Pattern: `mx-auto w-full max-w-2xl px-2 py-3 sm:p-6`
-- Article cards, feed lists, and management pages respect this constraint
+The frame layout provides no padding — each page owns its content spacing. This keeps pages flexible: dividers, horizontal scroll areas, and other decorative elements can intentionally reach the screen edge when needed.
+
+**Max width** — `max-w-2xl xl:max-w-3xl`, centered with `mx-auto w-full`. Keeps lines scannable on wide screens without feeling cramped on tablets.
+
+**Content padding** — `px-4` on mobile (16px), `p-6` on sm+ (24px). Enough breathing room for text and touch targets on small screens. The header and toolbar use the same horizontal padding so everything aligns vertically.
+
+**Standard page container:**
+
+```
+mx-auto w-full max-w-2xl px-4 py-3 sm:p-6 xl:max-w-3xl
+```
+
+**List section below a toolbar** (toolbar already provides top spacing):
+
+```
+mx-auto w-full max-w-2xl px-4 pb-3 sm:px-6 sm:pb-6 xl:max-w-3xl
+```
+
+### Edge-bleed elements
+
+Some elements should extend beyond the content padding to reach the screen edge on mobile — horizontal scroll areas (e.g., category pill bars), full-width dividers, etc. Use negative margins to pull them out:
+
+```
+-mx-4 px-4 sm:mx-0 sm:px-0
+```
+
+This cancels the container's `px-4` on mobile so the element spans the full width, then resets at `sm:` where the wider padding already looks fine.
 
 ## Spacing
 
 - Tighter padding for content with visual bulk (images, thumbnails)
 - More breathing room for text-only content
-- Responsive: smaller spacing on mobile (`py-3`), larger on desktop (`md:py-4`)
 
 ## Interactive States
 

@@ -1,0 +1,3291 @@
+[
+  {
+    "name": "News",
+    "slug": "news",
+    "icon": "Newspaper",
+    "feedCount": 10,
+    "feeds": [
+      {
+        "title": "BBC News",
+        "description": "BBC News - World",
+        "feedUrl": "http://feeds.bbci.co.uk/news/world/rss.xml",
+        "siteUrl": "https://www.bbc.co.uk/news/world",
+        "imageUrl": "https://static.files.bbci.co.uk/core/website/assets/static/news/images/metadata/poster-1024x576.5f404a8b8b.png"
+      },
+      {
+        "title": "CNN.com - RSS Channel - World",
+        "description": "CNN.com delivers up-to-the-minute news and information on the latest top stories, weather, entertainment, politics and more.",
+        "feedUrl": "http://rss.cnn.com/rss/edition_world.rss",
+        "siteUrl": "https://www.cnn.com/world/index.html",
+        "imageUrl": "https://media.cnn.com/api/v1/images/cnn/cnn-placeholder-image.jpeg"
+      },
+      {
+        "title": "International: Top News And Analysis",
+        "description": "CNBC International is the world leader for news on business, technology, China, trade, oil prices, the Middle East and markets.",
+        "feedUrl": "https://www.cnbc.com/id/100727362/device/rss/rss.html",
+        "siteUrl": "https://www.cnbc.com/world-top-news/",
+        "imageUrl": "https://fm.cnbc.com/applications/cnbc.com/staticcontent/img/versant/cnbc_share_versant.png?v=1524171804&amp;w=1920&amp;h=1080"
+      },
+      {
+        "title": "NDTV News Search Records Found 1000",
+        "description": "NDTV.com provides the latest information from and in-depth coverage of India and the world. Find breaking news, India news, top stories, elections, politics, business, cricket, movies, lifestyle, health, live TV, videos, photos and more.",
+        "feedUrl": "http://feeds.feedburner.com/ndtvnews-world-news",
+        "siteUrl": "https://www.ndtv.com/",
+        "imageUrl": "https://www.ndtv.com/common/header/images/ndtv_logo_black.gif"
+      },
+      {
+        "title": "NYT > World News",
+        "description": null,
+        "feedUrl": "https://rss.nytimes.com/services/xml/rss/nyt/World.xml",
+        "siteUrl": "https://www.nytimes.com/section/world",
+        "imageUrl": "https://static01.nyt.com/newsgraphics/images/icons/defaultPromoCrop.png"
+      },
+      {
+        "title": "Top stories - Google News",
+        "description": "Google News",
+        "feedUrl": "https://news.google.com/rss",
+        "siteUrl": "https://news.google.com/?hl=en-US&gl=US&ceid=US:en",
+        "imageUrl": "https://lh3.googleusercontent.com/J6_coFbogxhRI9iM864NL_liGXvsQp2AupsKei7z0cNNfDvGUmWUy20nuUhkREQyrpY4bEeIBuc=s0-w300-rw"
+      },
+      {
+        "title": "World",
+        "description": "The Washington Post World section provides information and analysis of breaking world news stories. In addition to our world news and video, Post World News offers discussions and blogs on major international news and economic issues.",
+        "feedUrl": "http://feeds.washingtonpost.com/rss/world",
+        "siteUrl": "https://www.washingtonpost.com",
+        "imageUrl": null
+      },
+      {
+        "title": "World News",
+        "description": "A place for major news from around the world, excluding US-internal news.",
+        "feedUrl": "https://www.reddit.com/r/worldnews/.rss",
+        "siteUrl": "https://www.reddit.com/r/worldnews/",
+        "imageUrl": "https://www.redditstatic.com/icon.png/"
+      },
+      {
+        "title": "World news | The Guardian",
+        "description": "Latest World news news, comment and analysis from the Guardian, the world's leading liberal voice",
+        "feedUrl": "https://www.theguardian.com/world/rss",
+        "siteUrl": "https://www.theguardian.com/world",
+        "imageUrl": "https://assets.guim.co.uk/static/frontend/icons/homescreen/apple-touch-icon.svg"
+      },
+      {
+        "title": "World News, Today World News, Latest International News, World Breaking News, Trending News of World - Times of India",
+        "description": "World News Today: Read the latest world news headlines, Current International breaking news world wide. In depth analysis and top news headlines world wide.",
+        "feedUrl": "https://timesofindia.indiatimes.com/rssfeeds/296589292.cms",
+        "siteUrl": "https://timesofindia.indiatimes.com/world",
+        "imageUrl": "https://static.toiimg.com/photo/47529300.cms"
+      }
+    ]
+  },
+  {
+    "name": "Tech",
+    "slug": "tech",
+    "icon": "MonitorSmartphone",
+    "feedCount": 23,
+    "feeds": [
+      {
+        "title": "Accidental Tech Podcast",
+        "description": "Three nerds discussing tech, Apple, programming, and loosely related matters.",
+        "feedUrl": "https://atp.fm/rss",
+        "siteUrl": "https://atp.fm/",
+        "imageUrl": "https://cdn.atp.fm/images/20231026-favicon-180.png"
+      },
+      {
+        "title": "Analog(ue)",
+        "description": "So many podcasts are about our digital devices. Analog(ue) is a show about how these devices make us feel and how they change our lives for the better, but also for the worse.\n Hosted by Casey Liss and Myke Hurley.",
+        "feedUrl": "https://www.relay.fm/analogue/feed",
+        "siteUrl": "https://www.relay.fm/analogue",
+        "imageUrl": "https://relayfm.s3.amazonaws.com/uploads/broadcast/image/8/broadcast_artwork_analogue_artwork_26a06aaf-4723-45e9-9773-f68d2867c4c5.png"
+      },
+      {
+        "title": "Ars Technica - All content",
+        "description": "All Ars Technica stories",
+        "feedUrl": "http://feeds.arstechnica.com/arstechnica/index",
+        "siteUrl": "https://arstechnica.com",
+        "imageUrl": "https://cdn.arstechnica.net/wp-content/uploads/2016/10/cropped-ars-logo-512_480.png"
+      },
+      {
+        "title": "Clockwise",
+        "description": "Clockwise is a rapid-fire discussion of current technology issues hosted by Dan Moren and Mikah Sargent and featuring two special guests each week. Four people, four topics--and because we're always watching the clock, no episode is longer than 30 minutes. Hosted by Dan Moren and Mikah Sargent.",
+        "feedUrl": "https://www.relay.fm/clockwise/feed",
+        "siteUrl": "https://www.relay.fm/clockwise",
+        "imageUrl": "https://relayfm.s3.amazonaws.com/uploads/broadcast/image/12/broadcast_artwork_clockwise_artwork_0aa07791-c33c-4b43-935a-20700e57fdbf.png"
+      },
+      {
+        "title": "CNET",
+        "description": null,
+        "feedUrl": "https://www.youtube.com/feeds/videos.xml?user=CNETTV",
+        "siteUrl": "https://www.youtube.com/channel/UCOmcA3f_RrH6b9NmcNa4tdg",
+        "imageUrl": "https://yt3.googleusercontent.com/SGoD0SodPuysPRUSFI8jd_eqR-ZCgvxhZk905338O1NUYI5eUqMZ1lQaekFNiDggJh0lA_5kQg=s900-c-k-c0x00ffffff-no-rj"
+      },
+      {
+        "title": "CNET",
+        "description": "CNET news editors and reporters provide top technology news, with investigative reporting and in-depth coverage of tech issues and events.",
+        "feedUrl": "https://www.cnet.com/rss/news/",
+        "siteUrl": "https://www.cnet.com/",
+        "imageUrl": "https://www.cnet.com/a/img/resize/b7236b582bbc1e5e3bbeb4cc2157d35709a1967b/hub/2024/03/22/fd0e95ec-8e61-460f-aae9-1d9b34f02cf8/cnet-promo-image.jpg?auto=webp&amp;fit=crop&amp;height=675&amp;width=1200"
+      },
+      {
+        "title": "Crunch Hype",
+        "description": "Tech Crunch is a free Digital Marketing Site. The main goal of this site is to provide quality tutorials, tips, courses, tools and other resources that allows anyone to work online and master digital marketing based on real case study and deep research.",
+        "feedUrl": "http://feeds.feedburner.com/TechCrunch",
+        "siteUrl": "https://techncruncher.blogspot.com/",
+        "imageUrl": null
+      },
+      {
+        "title": "Engadget is a web magazine with obsessive daily coverage of everything new in gadgets and consumer electronics",
+        "description": "Engadget is a web magazine with obsessive daily coverage of everything new in gadgets and consumer electronics",
+        "feedUrl": "https://www.engadget.com/rss.xml",
+        "siteUrl": "https://www.engadget.com/",
+        "imageUrl": null
+      },
+      {
+        "title": "Hacker News",
+        "description": "Links for the intellectually curious, ranked by readers.",
+        "feedUrl": "https://news.ycombinator.com/rss",
+        "siteUrl": "https://news.ycombinator.com/",
+        "imageUrl": null
+      },
+      {
+        "title": "Lifehacker",
+        "description": "Do everything better.",
+        "feedUrl": "https://lifehacker.com/rss",
+        "siteUrl": "https://lifehacker.com/feed/rss",
+        "imageUrl": null
+      },
+      {
+        "title": "Linus Tech Tips",
+        "description": null,
+        "feedUrl": "https://www.youtube.com/feeds/videos.xml?user=LinusTechTips",
+        "siteUrl": "https://www.youtube.com/channel/UCXuqSBlHAE6Xw-yeJA0Tunw",
+        "imageUrl": "https://yt3.googleusercontent.com/gnvYLhXy8FAlPXZ2RTrkrgj-5kyt0vdE2FUGVOiKGdEZIa-wN5A-7nwZBlWJLzUMmoh1NWAU=s900-c-k-c0x00ffffff-no-rj"
+      },
+      {
+        "title": "Marques Brownlee",
+        "description": null,
+        "feedUrl": "https://www.youtube.com/feeds/videos.xml?user=marquesbrownlee",
+        "siteUrl": "https://www.youtube.com/channel/UCBJycsmduvYEL83R_U4JriQ",
+        "imageUrl": "https://yt3.googleusercontent.com/qu4TmIaYUlS41-dJ9gZ7DUR3nilvmB5_11i6OKSdvNnBNiyOusZP1bMN6ICnuxtjFBb6ioKgRQ=s900-c-k-c0x00ffffff-no-rj"
+      },
+      {
+        "title": "Mashable",
+        "description": "Mashable is a leading source for news, information & resources for the Connected Generation. Mashable reports on the importance of digital\r\ninnovation and how it empowers and inspires people around the world. Mashable's 25 million monthly unique visitors and 10 million social\r\nmedia followers have become one of the most engaged online news communities. Founded in 2005, Mashable is headquartered in New York\r\nCity with an office in San Francisco.",
+        "feedUrl": "http://feeds.mashable.com/Mashable",
+        "siteUrl": "https://mashable.com",
+        "imageUrl": "https://helios-i.mashable.com/imagery/defaults/fallback-thumbnail.fill.size_1200x675.1.png"
+      },
+      {
+        "title": "ReadWrite",
+        "description": "Crypto, Gaming & Emerging Tech News",
+        "feedUrl": "https://readwrite.com/feed/",
+        "siteUrl": "https://readwrite.com/",
+        "imageUrl": "https://readwrite.com/wp-content/uploads/2024/10/cropped-readwrite-favicon-180x180.png"
+      },
+      {
+        "title": "Reply All",
+        "description": "\"'A podcast about the internet' that is actually an unfailingly original exploration of modern life and how to survive it.\" - The Guardian. Hosted by Alex Goldman and Emmanuel Dzotsi from Gimlet.",
+        "feedUrl": "https://feeds.megaphone.fm/replyall",
+        "siteUrl": "http://gimletmedia.com/shows/reply-all",
+        "imageUrl": "https://megaphone.imgix.net/podcasts/05f71746-a825-11e5-aeb5-a7a572df575e/image/uploads_2F1610700524297-f3e2p6fbm79-8b4536488226b56e93a99ce9f7b555b5_2FReplyAll_ShowArt.png?ixlib=rails-4.3.1&max-w=3000&max-h=3000&fit=crop&auto=format,compress"
+      },
+      {
+        "title": "Rocket",
+        "description": "Countdown to excitement! Every week Christina Warren, Brianna Wu and Simone de Rochefort had accelerated geek conversation. Tech, comics, movies, games and books, no galaxy is off limits! Hosted by Christina Warren, Brianna Wu, and Simone De Rochefort.",
+        "feedUrl": "https://www.relay.fm/rocket/feed",
+        "siteUrl": "https://www.relay.fm/rocket",
+        "imageUrl": "https://relayfm.s3.amazonaws.com/uploads/broadcast/image/14/broadcast_artwork_rocket_artwork_aa81682f-768d-4e41-98f1-6ffb58d298ab.png"
+      },
+      {
+        "title": "Stratechery by Ben Thompson",
+        "description": "On the business, strategy, and impact of technology.",
+        "feedUrl": "http://stratechery.com/feed/",
+        "siteUrl": "https://stratechery.com",
+        "imageUrl": "https://s0.wp.com/_si/?t=eyJpbWciOiJodHRwczpcL1wvaTAud3AuY29tXC9zdHJhdGVjaGVyeS5jb21cL3dwLWNvbnRlbnRcL3VwbG9hZHNcLzIwMThcLzAzXC9jcm9wcGVkLWFuZHJvaWQtY2hyb21lLTUxMng1MTItMS5wbmc_Zml0PTUxMiUyQzUxMiZzc2w9MSIsInR4dCI6IlN0cmF0ZWNoZXJ5IGJ5IEJlbiBUaG9tcHNvbiIsInRlbXBsYXRlIjoiZWRnZSIsImZvbnQiOiIiLCJibG9nX2lkIjoxODgwNDM0MTV9.5VWck4PcKPWCTPe_HVznn3n3xsgn-G0b3d2OeiNNC7cMQ"
+      },
+      {
+        "title": "The Keyword",
+        "description": "The Keyword",
+        "feedUrl": "https://www.blog.google/rss/",
+        "siteUrl": "https://blog.google/",
+        "imageUrl": "https://blog.google/static/blogv2/images/google-200x200.png?version=pr20260219-1731"
+      },
+      {
+        "title": "The Verge",
+        "description": null,
+        "feedUrl": "https://www.youtube.com/feeds/videos.xml?user=TheVerge",
+        "siteUrl": "https://www.youtube.com/channel/UCddiUEpeqJcYeBxX1IVBKvQ",
+        "imageUrl": "https://yt3.googleusercontent.com/ZIj_dq7beCkAkhufNqCid_SjWW4mkv4tqIDtv7_AAKzWdhBWI-rpsRXYXB9X3mB0s0zNzNtYdQ=s900-c-k-c0x00ffffff-no-rj"
+      },
+      {
+        "title": "The Verge",
+        "description": "The Verge is about technology and how it makes us feel. Founded in 2011, we offer our audience everything from breaking news to reviews to award-winning features and investigations, on our site, in video, and in podcasts.",
+        "feedUrl": "https://www.theverge.com/rss/index.xml",
+        "siteUrl": "https://www.theverge.com",
+        "imageUrl": "https://platform.theverge.com/wp-content/uploads/sites/2/2024/10/the_verge_social_share.png"
+      },
+      {
+        "title": "The Vergecast",
+        "description": "The Vergecast is the flagship podcast from The Verge about small gadgets, Big Tech, and everything in between. Every Friday, hosts Nilay Patel and David Pierce hang out and make sense of the week’s most important technology news. And every Tuesday, David leads a selection of The Verge’s expert staffers in an exploration of how gadgets and software affect our lives – and which ones you should bring into yours.",
+        "feedUrl": "https://feeds.megaphone.fm/vergecast",
+        "siteUrl": "https://www.theverge.com/the-vergecast",
+        "imageUrl": "https://platform.theverge.com/wp-content/uploads/sites/2/2025/01/verge-placeholder_f212b3.png?quality=90&amp;strip=all&amp;crop=0,0.13712291199202,100,99.725754176016"
+      },
+      {
+        "title": "This Week in Tech (Audio)",
+        "description": "This Week in Tech is the top-ranked flagship tech podcast from TWiT.tv. Every Sunday, Leo Laporte and a roundtable of insiders explore the week's hottest tech news from AI to robots, and PCs to privacy. When it comes to tech, TWiT is IT.\n\nRecords live every Sunday at 5:15pm Eastern / 2:15pm Pacific / 22:15 UTC.",
+        "feedUrl": "https://feeds.twit.tv/twit.xml",
+        "siteUrl": "https://twit.tv/shows/this-week-in-tech",
+        "imageUrl": "https://elroy.twit.tv/sites/default/files/styles/twit_album_art_1400x1400/public/images/shows/This%20Week%20in%20Tech/hero/TWIT_SocialBanner_4K.jpeg"
+      },
+      {
+        "title": "Unbox Therapy",
+        "description": null,
+        "feedUrl": "https://www.youtube.com/feeds/videos.xml?user=unboxtherapy",
+        "siteUrl": "https://www.youtube.com/channel/UCsTcErHg8oDvUnTzoqsYeNw",
+        "imageUrl": "https://yt3.googleusercontent.com/ytc/AIdro_mrdFKrYUtuMEqVUWPmtKSzy0weSdlawiMI2VPqP9yq1ks=s900-c-k-c0x00ffffff-no-rj"
+      }
+    ]
+  },
+  {
+    "name": "Science",
+    "slug": "science",
+    "icon": "FlaskConical",
+    "feedCount": 22,
+    "feeds": [
+      {
+        "title": "60-Second Science",
+        "description": "Tune in every weekday for quick reports and commentaries on the world of science—it'll just take a minute",
+        "feedUrl": "http://rss.sciam.com/sciam/60secsciencepodcast",
+        "siteUrl": "https://www.sciencequickly.com",
+        "imageUrl": "https://static.scientificamerican.com/dam/m/1615d2265b3930a8/original/SQ-Promo-1x1-w-Feltman.jpg?m=1733767800.316"
+      },
+      {
+        "title": "BBC News",
+        "description": "BBC News - Science & Environment",
+        "feedUrl": "http://feeds.bbci.co.uk/news/science_and_environment/rss.xml",
+        "siteUrl": "https://www.bbc.co.uk/news/science_and_environment",
+        "imageUrl": "https://static.files.bbci.co.uk/core/website/assets/static/news/images/metadata/poster-1024x576.5f404a8b8b.png"
+      },
+      {
+        "title": "Discovery",
+        "description": "Explorations in the world of science.",
+        "feedUrl": "https://podcasts.files.bbci.co.uk/p002w557.rss",
+        "siteUrl": "http://www.bbc.co.uk/programmes/p002w557",
+        "imageUrl": "https://ichef.bbci.co.uk/images/ic/1200x675/p0kxnch7.jpg"
+      },
+      {
+        "title": "FlowingData",
+        "description": "Strength in Numbers",
+        "feedUrl": "https://flowingdata.com/feed",
+        "siteUrl": "https://flowingdata.com",
+        "imageUrl": "https://s0.wp.com/_si/?t=eyJpbWciOiJodHRwczpcL1wvZmxvd2luZ2RhdGEuY29tXC93cC1jb250ZW50XC91cGxvYWRzXC8yMDI1XC8wMVwvbG9nby1sb25lLXNxdWFyZTUxMng1MTIucG5nIiwidHh0IjoiRmxvd2luZ0RhdGEiLCJ0ZW1wbGF0ZSI6ImVkZ2UiLCJmb250IjoiIiwiYmxvZ19pZCI6MTkzODg4OX0.UFOEC8c0X-rVB0Xyf5x_xY6LW6d48WxRSUk-Ms57z7wMQ"
+      },
+      {
+        "title": "Gastropod",
+        "description": "Food with a side of science and history. Every other week, co-hosts Cynthia Graber and Nicola Twilley serve up a brand new episode exploring the hidden history and surprising science behind a different food- or farming-related topic, from aquaculture to ancient feasts, from cutlery to chile peppers, and from microbes to Malbec. We interview experts, visit labs, fields, and archaeological digs, and generally have lots of fun while discovering new ways to think about and understand the world through food. Find us online at gastropod.com, follow us on Twitter @gastropodcast, and like us on Facebook at facebook.com/gastropodcast.",
+        "feedUrl": "https://www.omnycontent.com/d/playlist/aaea4e69-af51-495e-afc9-a9760146922b/2a195077-f014-41d2-8313-ab190186b4c2/277bcd5c-0a05-4c14-8ba6-ab190186b4d5/podcast.rss",
+        "siteUrl": "https://gastropod.com/",
+        "imageUrl": "https://megaphone.imgix.net/podcasts/97d6d85e-e320-11eb-be6b-3ff4d7cb8782/image/Gastropod_tile_3000x3000.png?ixlib=rails-4.3.1&max-w=3000&max-h=3000&fit=crop&auto=format,compress"
+      },
+      {
+        "title": "Hidden Brain",
+        "description": "Why do I feel stuck? How can I become more creative? What can I do to improve my relationships? If you’ve ever asked yourself these questions, you’re not alone. On Hidden Brain, we help you understand your own mind — and the minds of the people around you. (We're routinely rated the #1 science podcast in the United States.) Hosted by veteran science journalist Shankar Vedantam.",
+        "feedUrl": "https://feeds.npr.org/510308/podcast.xml",
+        "siteUrl": "https://www.siriusxm.com",
+        "imageUrl": "https://www.siriusxm.com/apple-touch-icon.png"
+      },
+      {
+        "title": "Invisibilia",
+        "description": "Unseeable forces control human behavior and shape our ideas, beliefs, and assumptions. Invisibilia—Latin for invisible things—fuses narrative storytelling with science that will make you see your own life differently.",
+        "feedUrl": "https://feeds.npr.org/510307/podcast.xml",
+        "siteUrl": "https://www.npr.org/podcasts/510307/invisibilia",
+        "imageUrl": "https://media.npr.org/include/images/facebook-default-wide-s1400-c85.jpg"
+      },
+      {
+        "title": "Latest Science News -- ScienceDaily",
+        "description": null,
+        "feedUrl": "https://www.sciencedaily.com/rss/all.xml",
+        "siteUrl": "https://www.sciencedaily.com/news/",
+        "imageUrl": "https://www.sciencedaily.com/images/scidaily-icon.png"
+      },
+      {
+        "title": "Nature",
+        "description": "Nature is the foremost international weekly scientific journal in the world and is the flagship journal for Nature Portfolio. It publishes the finest peer-reviewed research in all fields of science and technology on the basis of its originality, importance, interdisciplinary interest, timeliness, accessibility, elegance and surprising conclusions. Nature publishes landmark papers, award winning news, leading comment and expert opinion on important, topical scientific news and events that enable readers to share the latest discoveries in science and evolve the discussion amongst the global scientific community.",
+        "feedUrl": "https://www.nature.com/nature.rss",
+        "siteUrl": "http://feeds.nature.com/nature/rss/current",
+        "imageUrl": null
+      },
+      {
+        "title": "NYT > Science",
+        "description": null,
+        "feedUrl": "https://rss.nytimes.com/services/xml/rss/nyt/Science.xml",
+        "siteUrl": "https://www.nytimes.com/section/science",
+        "imageUrl": "https://static01.nyt.com/newsgraphics/images/icons/defaultPromoCrop.png"
+      },
+      {
+        "title": "Phys.org - latest science and technology news stories",
+        "description": "Phys.org internet news portal provides the latest news on science including: Physics, Nanotechnology, Life Sciences, Space Science, Earth Science, Environment, Health and Medicine.",
+        "feedUrl": "https://phys.org/rss-feed/",
+        "siteUrl": "https://phys.org/",
+        "imageUrl": null
+      },
+      {
+        "title": "Probably Science",
+        "description": "Professional comedians with so-so STEM pedigrees take you through this week in science. Incompetently. Featuring hosts Matt Kirshen, Andy Wood (and sometimes Jesse Case or Brooks Wheelan) along with a rotating cast of special guests from the worlds of comedy and science.",
+        "feedUrl": "https://probablyscience.libsyn.com/rss",
+        "siteUrl": "http://probablyscience.com",
+        "imageUrl": "http://static1.squarespace.com/static/525f1b95e4b03a1a2c5b4bee/t/525f1c24e4b09ea702abb779/1381964845836/ProbablyScienceSallyArt.jpg?format=1500w"
+      },
+      {
+        "title": "Radiolab",
+        "description": "Radiolab is on a curiosity bender. We ask deep questions and use investigative journalism to get the answers. A given episode might whirl you through science, legal history, and into the home of someone halfway across the world. The show is known for innovative sound design, smashing information into music. It is hosted by Lulu Miller and Latif Nasser.",
+        "feedUrl": "http://feeds.wnyc.org/radiolab",
+        "siteUrl": "https://www.radiolab.org",
+        "imageUrl": "https://radiolab.org/og-default-image.png"
+      },
+      {
+        "title": "Reddit Science",
+        "description": "This community is a place to share and discuss new scientific research. Read about the latest advances in astronomy, biology, medicine, physics, social science, and more. Find and submit new publications and popular science coverage of current research.",
+        "feedUrl": "https://reddit.com/r/science/.rss",
+        "siteUrl": "https://www.reddit.com/r/science/",
+        "imageUrl": "https://b.thumbs.redditmedia.com/qzIP8EKeRG_kef7dVYI5ojcPj_V9kk5xyByof-Fe0eE.png"
+      },
+      {
+        "title": "Sawbones: A Marital Tour of Misguided Medicine",
+        "description": "Join Dr. Sydnee McElroy and her husband Justin McElroy for a tour of all the dumb, bad, gross, weird and wrong ways we've tried to fix people.",
+        "feedUrl": "https://feeds.simplecast.com/y1LF_sn2",
+        "siteUrl": "https://sawbones.simplecast.com",
+        "imageUrl": "https://image.simplecastcdn.com/images/a5445fde-0e70-4659-8f18-442f9aabbaac/f24cf20c-122b-425f-a782-cc2aecad305c/3000x3000/sawbones-logo-final.png?aid=rss_feed"
+      },
+      {
+        "title": "Science Latest",
+        "description": "Channel Description",
+        "feedUrl": "https://www.wired.com/feed/category/science/latest/rss",
+        "siteUrl": "https://www.wired.com",
+        "imageUrl": "https://media.wired.com/photos/615e2b8ce78a8cd913bbaa76/16:9/w_1280,c_limit/wired_bug.jpg"
+      },
+      {
+        "title": "Science-Based Medicine",
+        "description": "Exploring issues and controversies in the relationship between science and medicine",
+        "feedUrl": "https://sciencebasedmedicine.org/feed/",
+        "siteUrl": "https://sciencebasedmedicine.org",
+        "imageUrl": "http://sciencebasedmedicine.org/wp-content/uploads/2017/10/science-based-medicine-logo.png"
+      },
+      {
+        "title": "Scientific American Content: Global",
+        "description": "Scientific American is the essential guide to the most awe-inspiring advances in science and technology, explaining how they change our understanding of the world and shape our lives.",
+        "feedUrl": "http://rss.sciam.com/ScientificAmerican-Global",
+        "siteUrl": "https://www.scientificamerican.com",
+        "imageUrl": "https://www.scientificamerican.com/static/sciam-mark.jpg"
+      },
+      {
+        "title": "Shirtloads of Science",
+        "description": "Dr Karl's a curious optimist – a great combination for a science lover. Join him and his guests for weird facts, amazing conversation and remember, it's never too late for a happy childhood. \nhttps://drkarl.com/",
+        "feedUrl": "https://shirtloadsofscience.libsyn.com/rss",
+        "siteUrl": "http://shirtloadsofscience.libsyn.com/podcast",
+        "imageUrl": "http://assets.libsyn.com/content/13074747?height=250&amp;width=250"
+      },
+      {
+        "title": "TED Talks Daily",
+        "description": "Want TED Talks on the go? Everyday, this feed brings you our latest talks in audio format. Hear thought-provoking ideas on every subject imaginable – from Artificial Intelligence to Zoology, and everything in between – given by the world's leading thinkers and doers. This collection of talks, given at TED and TEDx conferences around the globe, is also available in video format. Hosted on Acast. See acast.com/privacy for more information.",
+        "feedUrl": "https://pa.tedcdn.com/feeds/talks.rss",
+        "siteUrl": "https://www.ted.com",
+        "imageUrl": "https://pa.tedcdn.com/apple-touch-icon.png"
+      },
+      {
+        "title": "The Infinite Monkey Cage",
+        "description": "Professor Brian Cox and Robin Ince host a witty, irreverent look at the world through scientists’ eyes. Joined by a panel of scientists, experts and celebrity science enthusiasts they investigate life, the universe and everything in between on The Infinite Monkey Cage from the BBC. From the smallest building blocks of life to the furthest stars, the curious monkeys pull apart the latest science to reveal fascinating and often bizarre insights into the world around us and what lies beyond. Can trees talk to each other? Can science help you commit the perfect murder? What might aliens look like and the burning question of our time, are strawberries alive or dead? Join them as each episode they put a different scientific topic under the microscope, from aliens, black holes and hedgehogs, to bacteria, poison and the Big Bang.\n \nWith past guests including actors Dame Judi Dench and Sir Patrick Stewart, comedians Steve Martin and Conan O’Brien, astronaut Tim Peake, primatologist Jane Goodall and mathematician Hannah Fry, The Infinite Monkey Cage promises to make you laugh, enrich your knowledge and leave you with a deeper appreciation for the universe that we call home.\n \nWhether you’re a seasoned scientist or someone who nodded off in physics class, listen in to learn all about funny, fascinating and sometimes ridiculous topics – with the occasional monkey business.",
+        "feedUrl": "https://podcasts.files.bbci.co.uk/b00snr0w.rss",
+        "siteUrl": "http://www.bbc.co.uk/programmes/b00snr0w",
+        "imageUrl": "https://ichef.bbci.co.uk/images/ic/1200x675/p0mr5tky.jpg"
+      },
+      {
+        "title": "This Week in Science – The Kickass Science Podcast",
+        "description": "The kickass science and technology radio show that delivers an irreverent look at the week in science and technology.",
+        "feedUrl": "http://www.twis.org/feed/",
+        "siteUrl": "https://www.twis.org/",
+        "imageUrl": "https://www.twis.org/wp-content/uploads/2014/05/cropped-itunes1400x1400-180x180.png"
+      }
+    ]
+  },
+  {
+    "name": "Programming",
+    "slug": "programming",
+    "icon": "Code",
+    "feedCount": 40,
+    "feeds": [
+      {
+        "title": "Better Programming - Medium",
+        "description": "Advice for programmers. - Medium",
+        "feedUrl": "https://medium.com/feed/better-programming",
+        "siteUrl": "https://betterprogramming.pub?source=rss----d0b105d10f0a---4",
+        "imageUrl": "https://cdn-images-1.medium.com/proxy/1*TGH72Nnw24QL3iV9IOm4VA.png"
+      },
+      {
+        "title": "CodeNewbie",
+        "description": "The CodeNewbie podcast was born from CodeNewbie, an organization which fosters a supportive, international community of people learning to code. Each season, host Saron Yitbarek delivers stories and interviews from people of diverse backgrounds and expertise about their coding journeys, as well as beginner friendly discussions about the tech you should know about.",
+        "feedUrl": "http://feeds.codenewbie.org/cnpodcast.xml",
+        "siteUrl": "http://www.codenewbie.org/podcast",
+        "imageUrl": "https://dev-to-uploads.s3.amazonaws.com/uploads/articles/zs1r5a6oswxjg53nfmnb.png"
+      },
+      {
+        "title": "Coding Horror",
+        "description": "programming and human factors",
+        "feedUrl": "https://feeds.feedburner.com/codinghorror",
+        "siteUrl": "https://blog.codinghorror.com/",
+        "imageUrl": "https://blog.codinghorror.com/favicon.png"
+      },
+      {
+        "title": "Developer Tea",
+        "description": "Developer Tea exists to help driven developers connect to their ultimate purpose and excel at their work so that they can positively impact the people they influence.\n\nWith over 17 million downloads to date, Developer Tea  is a short podcast hosted by Jonathan Cutrell, engineering leader with over 15 years of industry experience. We hope you'll take the topics from this podcast and continue the conversation, either online or in person with your peers. Email: developertea@gmail.com",
+        "feedUrl": "https://feeds.simplecast.com/dLRotFGk",
+        "siteUrl": "http://www.developertea.com",
+        "imageUrl": "https://image.simplecastcdn.com/images/c44db111-b60d-436e-ab63-38c7c3402406/367d2e94-5d6b-4efe-bde6-a14687250e56/3000x3000/1471485029-artwork.jpg?aid=rss_feed"
+      },
+      {
+        "title": "Engineering at Meta",
+        "description": "Engineering at Meta Blog",
+        "feedUrl": "https://engineering.fb.com/feed/",
+        "siteUrl": "https://engineering.fb.com/",
+        "imageUrl": "https://s0.wp.com/_si/?t=eyJpbWciOiJodHRwczpcL1wvZW5naW5lZXJpbmcuZmIuY29tXC93cC1jb250ZW50XC90aGVtZXNcL2NvZGUtZmItY29tXC9pbWdcL2RlZmF1bHRfZmVhdHVyZS5qcGciLCJ0eHQiOiJFbmdpbmVlcmluZyBhdCBNZXRhIiwidGVtcGxhdGUiOiJoaWdod2F5IiwiZm9udCI6IiIsImJsb2dfaWQiOjE0Nzk0NTEwOH0.Siqpm3aY6q_ItVXrL7vpSF62370k6aJXvfuBUHR8J_cMQ"
+      },
+      {
+        "title": "Engineering at Slack",
+        "description": "Hear directly from Slack's engineers about what we build, why and how we build it, and how you can use it.",
+        "feedUrl": "https://slack.engineering/feed",
+        "siteUrl": "https://slack.engineering",
+        "imageUrl": "https://slack.engineering/wp-content/uploads/sites/7/2024/11/social-share.jpg"
+      },
+      {
+        "title": "Etsy Engineering | Code as Craft",
+        "description": "The engineers who make Etsy make our living with a craft we love: software. This is where we'll write about our craft and our collective experience building and running the world's most vibrant handmade marketplace.",
+        "feedUrl": "https://codeascraft.com/feed/atom/",
+        "siteUrl": "http://www.etsy.com/codeascraft/rss",
+        "imageUrl": null
+      },
+      {
+        "title": "FLOSS Weekly (Audio)",
+        "description": "We're not talking dentistry here; FLOSS is all about Free Libre Open Source Software. Join host Doc Searls and his rotating panel of co-hosts as they talk with the most interesting and important people in the Open Source and Free Software community.\n\nAlthough the show is no longer in production at TWiT, you can enjoy episodes from our archives.",
+        "feedUrl": "https://feeds.twit.tv/floss.xml",
+        "siteUrl": "https://twit.tv/shows/floss-weekly",
+        "imageUrl": "https://elroy.twit.tv/sites/default/files/styles/twit_album_art_1400x1400/public/images/shows/floss_weekly/hero/floss-jon_doc_shawn.jpg"
+      },
+      {
+        "title": "GitLab",
+        "description": "GitLab Blog RSS feed",
+        "feedUrl": "https://about.gitlab.com/atom.xml",
+        "siteUrl": "https://about.gitlab.com/blog",
+        "imageUrl": "https://res.cloudinary.com/about-gitlab-com/image/upload/v1758207578/whxaklh4tf6nonryosrs.png"
+      },
+      {
+        "title": "Google Developers Blog",
+        "description": "Updates on changes and additions to the Google Developers Blog.",
+        "feedUrl": "http://feeds.feedburner.com/GDBcode",
+        "siteUrl": "https://developers.googleblog.com/rss/",
+        "imageUrl": null
+      },
+      {
+        "title": "Google TechTalks",
+        "description": null,
+        "feedUrl": "https://www.youtube.com/feeds/videos.xml?user=GoogleTechTalks",
+        "siteUrl": "https://www.youtube.com/channel/UCtXKDgv1AVoG88PLl8nGXmw",
+        "imageUrl": "https://yt3.googleusercontent.com/ytc/AIdro_np5QbjchJOQKKpyqO3Uo7sg3YUaFx2EWN1kCQ0N7HRrQ=s900-c-k-c0x00ffffff-no-rj"
+      },
+      {
+        "title": "HackerNoon.com - Medium",
+        "description": "Elijah McClain, George Floyd, Eric Garner, Breonna Taylor, Ahmaud Arbery, Michael Brown, Oscar Grant, Atatiana Jefferson, Tamir Rice, Bettie Jones, Botham Jean - Medium",
+        "feedUrl": "https://medium.com/feed/hackernoon",
+        "siteUrl": "https://medium.com/hackernoon?source=rss----3a8144eabfe3---4",
+        "imageUrl": "https://cdn-images-1.medium.com/proxy/1*TGH72Nnw24QL3iV9IOm4VA.png"
+      },
+      {
+        "title": "Hanselminutes with Scott Hanselman",
+        "description": "Hanselminutes is Fresh Air for Developers. A weekly commute-time podcast that promotes fresh technology and fresh voices. Talk and Tech for Developers, Life-long Learners, and Technologists.",
+        "feedUrl": "https://feeds.simplecast.com/gvtxUiIf",
+        "siteUrl": "https://www.hanselminutes.com",
+        "imageUrl": "https://hanselminutes.com/images/itunes-cover2.jpg"
+      },
+      {
+        "title": "InfoQ",
+        "description": "InfoQ feed",
+        "feedUrl": "https://feed.infoq.com",
+        "siteUrl": "https://www.infoq.com",
+        "imageUrl": "https://cdn.infoq.com/statics_s1_20260212153919/styles/static/images/logo/logo-big.jpg"
+      },
+      {
+        "title": "Java, SQL and jOOQ.",
+        "description": "Best Practices and Lessons Learned from Writing Awesome Java and SQL Code. Get some hands-on insight on what's behind developing jOOQ.",
+        "feedUrl": "https://blog.jooq.org/feed",
+        "siteUrl": "https://blog.jooq.org",
+        "imageUrl": "https://s0.wp.com/_si/?t=eyJpbWciOiJodHRwczpcL1wvaTAud3AuY29tXC9ibG9nLmpvb3Eub3JnXC93cC1jb250ZW50XC91cGxvYWRzXC8yMDE5XC8wNVwvY3JvcHBlZC1qb29xLWxvZ28td2hpdGUtdHJhbnNwYXJlbnQtNzUweDc1MC1wYWRkZWQtMi5wbmc_Zml0PTc1MCUyQzc1MCZzc2w9MSIsInR4dCI6IkphdmEsIFNRTCBhbmQgak9PUS4iLCJ0ZW1wbGF0ZSI6ImVkZ2UiLCJmb250IjoiIiwiYmxvZ19pZCI6MjUzNTI4NzB9.hU9kWcZI5TuUnIUVMNNtGeZHJwUtik_q343GZPVDA9UMQ"
+      },
+      {
+        "title": "Joel on Software",
+        "description": null,
+        "feedUrl": "https://www.joelonsoftware.com/feed/",
+        "siteUrl": "https://www.joelonsoftware.com",
+        "imageUrl": "https://i0.wp.com/www.joelonsoftware.com/wp-content/uploads/2016/12/11969842.jpg?fit=400%2C400&#038;ssl=1"
+      },
+      {
+        "title": "Martin Fowler",
+        "description": "Master feed of news and updates from martinfowler.com",
+        "feedUrl": "https://martinfowler.com/feed.atom",
+        "siteUrl": "https://martinfowler.com",
+        "imageUrl": null
+      },
+      {
+        "title": "Overflow - Buffer Resources",
+        "description": "In-depth ideas and guides to social media & online marketing strategy, published by the team at Buffer",
+        "feedUrl": "https://buffer.com/resources/overflow/rss/",
+        "siteUrl": "https://buffer.com/resources/",
+        "imageUrl": "https://buffer.com/resources/undefined"
+      },
+      {
+        "title": "overreacted — A blog by Dan Abramov",
+        "description": "A blog by Dan Abramov",
+        "feedUrl": "https://overreacted.io/rss.xml",
+        "siteUrl": "https://overreacted.io/",
+        "imageUrl": "https://overreacted.io/opengraph-image?7c3850b1702447d4"
+      },
+      {
+        "title": "Podcast Archives - Software Engineering Daily",
+        "description": null,
+        "feedUrl": "https://softwareengineeringdaily.com/category/podcast/feed",
+        "siteUrl": "http://softwareengineeringdaily.com/category/all-episodes/exclusive-content/podcast/",
+        "imageUrl": "http://softwareengineeringdaily.com/wp-content/uploads/2024/02/sed_logo.png"
+      },
+      {
+        "title": "programming",
+        "description": "Computer Programming",
+        "feedUrl": "https://www.reddit.com/r/programming/.rss",
+        "siteUrl": "https://www.reddit.com/r/programming/",
+        "imageUrl": "https://b.thumbs.redditmedia.com/2rTE46grzsr-Ll3Q.png"
+      },
+      {
+        "title": "Programming Archives - The Crazy Programmer",
+        "description": "Programming, Design and Development",
+        "feedUrl": "https://www.thecrazyprogrammer.com/category/programming/feed",
+        "siteUrl": "https://www.thecrazyprogrammer.com/category/programming",
+        "imageUrl": "https://www.thecrazyprogrammer.com/wp-content/uploads/2016/09/cropped-484916_442860602439830_1518519815_n-180x180.png"
+      },
+      {
+        "title": "Programming Throwdown",
+        "description": "Programming Throwdown educates Computer Scientists and Software Engineers on a cavalcade of programming and tech topics. Every show will cover a new programming language, so listeners will be able to speak intelligently about any programming language.",
+        "feedUrl": "http://feeds.feedburner.com/ProgrammingThrowdown",
+        "siteUrl": "https://www.programmingthrowdown.com/",
+        "imageUrl": "https://img.transistorcdn.com/SrDbTuy3FCVM-LJafLYiFew9_KKNTZKsjw_-VFZc74I/rs:fill:0:0:1/w:1400/h:1400/q:60/mb:500000/aHR0cHM6Ly9pbWct/dXBsb2FkLXByb2R1/Y3Rpb24udHJhbnNp/c3Rvci5mbS9zaG93/LzE5NTAxLzE2MTU5/MDU0MjQtYXJ0d29y/ay5qcGc.jpg"
+      },
+      {
+        "title": "Robert Heaton | Blog",
+        "description": "Software engineer. One-track lover down a two-way lane",
+        "feedUrl": "https://robertheaton.com/feed.xml",
+        "siteUrl": "https://robertheaton.com",
+        "imageUrl": "https://robertheaton.com/images/icon.png"
+      },
+      {
+        "title": "Scott Hanselman's Blog",
+        "description": "Scott Hanselman on Programming, User Experience, The Zen of Computers and Life in General",
+        "feedUrl": "http://feeds.hanselman.com/ScottHanselman",
+        "siteUrl": "https://www.hanselman.com/blog/",
+        "imageUrl": "https://pbs.twimg.com/profile_images/1133122333290291200/xV9gO-D6_400x400.jpg"
+      },
+      {
+        "title": "Scripting News",
+        "description": "Dave Winer, OG blogger, podcaster, developed first apps in many categories. Old enough to know better. It's even worse than it appears.",
+        "feedUrl": "http://scripting.com/rss.xml",
+        "siteUrl": "http://scripting.com/",
+        "imageUrl": "https://imgs.scripting.com/2025/06/04/curly.png"
+      },
+      {
+        "title": "Software Defined Talk",
+        "description": "Get ready for a weekly dose of all things Enterprise Software and Cloud Computing! Join us as we dive into topics including Kubernetes, DevOps, Serverless, Security and Coding. Plus, we’ll keep you entertained with plenty of off-topic banter and nonsense. Don’t worry if you miss the latest industry conference - we’ve got you covered with recaps of all the latest news from AWS, Microsoft Azure, Google Cloud Platform (GCP) and the Cloud Native Computing Foundation (CNCF).",
+        "feedUrl": "https://feeds.fireside.fm/sdt/rss",
+        "siteUrl": "https://www.softwaredefinedtalk.com",
+        "imageUrl": "https://media24.fireside.fm/file/fireside-images-2024/podcasts/images/9/9b74150b-3553-49dc-8332-f89bbbba9f92/cover_medium.jpg"
+      },
+      {
+        "title": "Software Engineering Radio - The Podcast for Professional Software Developers",
+        "description": "Software Engineering Radio is a podcast targeted at the professional software developer. The goal is to be a lasting educational resource, not a newscast. Every 10 days, a new episode is published that covers all topics software engineering. Episodes are either tutorials on a specific topic, or an interview with a well-known character from the software engineering world. All SE Radio episodes are original content — we do not record conferences or talks given in other venues. Each episode comprises two speakers to ensure a lively listening experience. SE Radio is an independent and non-commercial organization. All content is licensed under the Creative Commons 2.5 license.",
+        "feedUrl": "http://feeds.feedburner.com/se-radio",
+        "siteUrl": "https://www.se-radio.net",
+        "imageUrl": "https://se-radio.net/wp-content/uploads/2023/11/cropped-ser-logo-icon-500-180x180.png"
+      },
+      {
+        "title": "SoundCloud Backstage Blog",
+        "description": "SoundCloud's developer blog.",
+        "feedUrl": "https://developers.soundcloud.com/blog/blog.rss",
+        "siteUrl": "https://developers.soundcloud.com/blog",
+        "imageUrl": null
+      },
+      {
+        "title": "Spotify Engineering",
+        "description": "Spotify’s official technology blog",
+        "feedUrl": "https://labs.spotify.com/feed/",
+        "siteUrl": "https://engineering.atspotify.com/",
+        "imageUrl": "https://engineering.atspotify.com/favicon.ico?favicon.adb78628.ico"
+      },
+      {
+        "title": "Stack Abuse",
+        "description": "Learn Python, Java, JavaScript/Node, Machine Learning, and Web Development through articles, code examples, and tutorials for developers of all skill levels.",
+        "feedUrl": "https://stackabuse.com/rss/",
+        "siteUrl": "https://stackabuse.com/",
+        "imageUrl": "https://stackabuse.com/favicon.png"
+      },
+      {
+        "title": "Stack Overflow Blog",
+        "description": "Essays, opinions, and advice on the act of computer programming from Stack Overflow.",
+        "feedUrl": "https://stackoverflow.blog/feed/",
+        "siteUrl": "https://stackoverflow.blog/",
+        "imageUrl": "https://stackoverflow.blog/apple-touch-icon.png"
+      },
+      {
+        "title": "The 6 Figure Developer",
+        "description": "Helping others reach their potential",
+        "feedUrl": "http://6figuredev.com/feed/rss/",
+        "siteUrl": "https://6figuredev.com/",
+        "imageUrl": "https://6figuredev.com/wp-content/uploads/2017/03/6FigurePodcast1400.png"
+      },
+      {
+        "title": "The Airbnb Tech Blog - Medium",
+        "description": "Creative engineers and data scientists building a world where you can belong anywhere. http://airbnb.io - Medium",
+        "feedUrl": "https://medium.com/feed/airbnb-engineering",
+        "siteUrl": "https://medium.com/airbnb-engineering?source=rss----53c7c27702d5---4",
+        "imageUrl": "https://cdn-images-1.medium.com/proxy/1*TGH72Nnw24QL3iV9IOm4VA.png"
+      },
+      {
+        "title": "The Cynical Developer",
+        "description": "A UK based Technology and Software Developer Podcast that helps you to improve your development knowledge and career,\nthrough explaining the latest and greatest in development technology and providing you with what you need to succeed as a developer.",
+        "feedUrl": "https://cynicaldeveloper.com/feed/podcast",
+        "siteUrl": "https://cynical.dev/",
+        "imageUrl": "https://cynicaldeveloper.com/images/the-cynical-developer.jpg"
+      },
+      {
+        "title": "The GitHub Blog",
+        "description": "Updates, ideas, and inspiration from GitHub to help developers build and design software.",
+        "feedUrl": "https://github.blog/feed/",
+        "siteUrl": "https://github.blog/",
+        "imageUrl": "https://github.blog/wp-content/uploads/2024/07/github-logo.png"
+      },
+      {
+        "title": "The JetBrains Blog",
+        "description": "Developer Tools for Professionals and Teams",
+        "feedUrl": "https://blog.jetbrains.com/feed",
+        "siteUrl": "https://blog.jetbrains.com",
+        "imageUrl": "https://resources.jetbrains.com/storage/products/jetbrains/img/meta/preview.png"
+      },
+      {
+        "title": "The PIT Show: Reflections and Interviews in the Tech World",
+        "description": "This is the show where I sit down with people in the tech space and talk about what they are doing and how they get it all done.",
+        "feedUrl": "https://feeds.transistor.fm/productivity-in-tech-podcast",
+        "siteUrl": "https://productivityintech.com",
+        "imageUrl": "https://productivityintech.com/wp-content/uploads/logo.png"
+      },
+      {
+        "title": "The Stack Overflow Podcast",
+        "description": "For more than a dozen years, the Stack Overflow Podcast has been exploring what it means to be a developer and how the art and practice of software programming is changing our world. From Rails to React, from Java to Node.js, we host important conversations and fascinating guests that will help you understand how technology is made and where it’s headed. Hosted by Ben Popper, Cassidy Williams, and Ceora Ford, the Stack Overflow Podcast is your home for all things code.",
+        "feedUrl": "https://feeds.simplecast.com/XA_851k3",
+        "siteUrl": "https://art19.com/shows/the-stack-overflow-podcast",
+        "imageUrl": "https://content.production.cdn.art19.com/images/5d/b6/c1/f8/5db6c1f8-7b52-4b49-9459-4137338a282b/0c0cdbbc701d19e0eca3c9a1b1609f6581d0e02130f1e512661f9b2bbcf4b5b43d03e46810ebc0c90a9142baaa043f7dc67caedab2b71c3f74aea6a843ce6c44.jpeg"
+      },
+      {
+        "title": "The Women in Tech Show: A Technical Podcast",
+        "description": "A podcast about what we work on, not what it feels like to be a woman in tech.\nHosted by Edaena Salinas, Software Engineer at Microsoft.\nWebsite: wit.fm",
+        "feedUrl": "https://thewomenintechshow.com/category/podcast/feed/",
+        "siteUrl": "https://thewomenintechshow.com",
+        "imageUrl": "https://s0.wp.com/_si/?t=eyJpbWciOiJodHRwczpcL1wvc2VjdXJlLmdyYXZhdGFyLmNvbVwvYmxhdmF0YXJcL2I3ZTExMjM0OTQ2NzYyN2QwODZkNTM0NDU1OGY1Nzc2ZmI1OTY5MGRiMjI2NTViNGVkOGU4NDM4ZDQwYjNiNTg_cz0yMDAmdHM9MTc3MjEzNTQ3MiIsInR4dCI6IlRoZSBXb21lbiBpbiBUZWNoIFNob3ciLCJ0ZW1wbGF0ZSI6ImVkZ2UiLCJmb250IjoiIiwiYmxvZ19pZCI6MTEyODEzOTI4fQ.CWyZWkjvVrpr4l75_ltw-_sKz_NPkYYYtjHhZCTH1q8MQ"
+      }
+    ]
+  },
+  {
+    "name": "Gaming",
+    "slug": "gaming",
+    "icon": "Gamepad2",
+    "feedCount": 13,
+    "feeds": [
+      {
+        "title": "Eurogamer.net Latest Articles Feed",
+        "description": "This is a feed of the latest articles from Eurogamer.net.",
+        "feedUrl": "https://www.eurogamer.net/?format=rss",
+        "siteUrl": "https://www.eurogamer.net/feed",
+        "imageUrl": null
+      },
+      {
+        "title": "GameSpot - All Content",
+        "description": "GameSpot's Everything Feed! All the latest from GameSpot",
+        "feedUrl": "https://www.gamespot.com/feeds/mashup/",
+        "siteUrl": "https://www.gamespot.com/feeds/mashup/",
+        "imageUrl": null
+      },
+      {
+        "title": "IGN Articles",
+        "description": "This feed contains the latest 20 articles from IGN",
+        "feedUrl": "http://feeds.ign.com/ign/all",
+        "siteUrl": "https://www.ign.com/articles",
+        "imageUrl": "https://assets1.ignimgs.com/ign/red-dpad.jpg?canvas=1200,630&amp;width=600&amp;height=600"
+      },
+      {
+        "title": "Indie Games Plus",
+        "description": "Creative, Personal, Passionate Digital Experiences",
+        "feedUrl": "https://indiegamesplus.com/feed",
+        "siteUrl": "https://pdg.indiegamesplus.com/",
+        "imageUrl": "https://indiegamesplus.com/wp-content/uploads/2018/08/Website-Fav-Icon.jpg"
+      },
+      {
+        "title": "Makeup and Beauty Blog | Makeup Reviews, Swatches and How-To Makeup",
+        "description": "A beauty blog blooming with fresh makeup reviews, swatches and beauty tips from your friendly neighborhood beauty addict",
+        "feedUrl": "https://www.makeupandbeautyblog.com/feed/",
+        "siteUrl": "https://makeupandbeautyblog.com/",
+        "imageUrl": "https://makeupandbeautyblog.com/wp-content/uploads/2014/04/NARS-Easy-Lover-Swatch-K.jpg"
+      },
+      {
+        "title": "PlayStation.Blog",
+        "description": "Official PlayStation Blog for news and video updates on PlayStation, PS5, PS4, PS VR, PlayStation Plus and more.",
+        "feedUrl": "http://feeds.feedburner.com/psblog",
+        "siteUrl": "https://blog.playstation.com",
+        "imageUrl": "https://blog.playstation.com/tachyon/2021/03/Playstation-logo.jpg"
+      },
+      {
+        "title": "Polygon.com",
+        "description": "Your source for the latest in video games, sci-fi, fantasy, tabletop games, anime, horror, books, and comics.",
+        "feedUrl": "https://www.polygon.com/rss/index.xml",
+        "siteUrl": "https://www.polygon.com",
+        "imageUrl": "https://static0.polygonimages.com/wordpress/wp-content/uploads/social/poly-og-img.png?w=1200&amp;h=675&amp;fit=crop"
+      },
+      {
+        "title": "r/gaming",
+        "description": "The Number One Gaming forum on the Internet.",
+        "feedUrl": "https://www.reddit.com/r/gaming.rss",
+        "siteUrl": "https://www.reddit.com/r/gaming",
+        "imageUrl": "https://b.thumbs.redditmedia.com/j8hkctmLsAxRKhZ4iM-XZdrlGxWYmpm7shNsosXn31o.png"
+      },
+      {
+        "title": "Rock, Paper, Shotgun",
+        "description": "This is a feed of all the latest articles from Rock Paper Shotgun.",
+        "feedUrl": "http://feeds.feedburner.com/RockPaperShotgun",
+        "siteUrl": "https://www.rockpapershotgun.com/feed",
+        "imageUrl": null
+      },
+      {
+        "title": "Steam RSS News Feed",
+        "description": "All Steam news, all the time!",
+        "feedUrl": "https://store.steampowered.com/feeds/news.xml",
+        "siteUrl": "http://www.steampowered.com/",
+        "imageUrl": "https://cdn.fastly.steamstatic.com/store/home/store_home_share.jpg"
+      },
+      {
+        "title": "The Ancient Gaming Noob",
+        "description": "Veni, Vidi, Scripsi",
+        "feedUrl": "http://feeds.feedburner.com/TheAncientGamingNoob",
+        "siteUrl": "https://tagn.wordpress.com",
+        "imageUrl": "https://secure.gravatar.com/blavatar/0219a8a6e70c263959dabc45770c61ebbb8e327003d8578c221277c91f72dd8c?s=200&#038;ts=1772223781"
+      },
+      {
+        "title": "The Escapist",
+        "description": "Everything fun",
+        "feedUrl": "https://www.escapistmagazine.com/v2/feed/",
+        "siteUrl": "https://www.escapistmagazine.com/",
+        "imageUrl": "https://www.escapistmagazine.com/wp-content/uploads/2020/04/cropped-escapist-favicon.jpg?resize=176,176"
+      },
+      {
+        "title": "Xbox Wire",
+        "description": "Your source for news, information, product releases, events, sports, entertainment & exclusive content relating to Xbox",
+        "feedUrl": "https://majornelson.com/feed/",
+        "siteUrl": "https://news.xbox.com/en-us/",
+        "imageUrl": "https://xboxwire.thesourcemediaassets.com/sites/2/2019/12/Nexus_GRN_on_WHT2.png"
+      }
+    ]
+  },
+  {
+    "name": "Music",
+    "slug": "music",
+    "icon": "Music",
+    "feedCount": 5,
+    "feeds": [
+      {
+        "title": "Consequence",
+        "description": "Music, Film, TV and Pop Culture News for the Mainstream and Underground",
+        "feedUrl": "http://consequenceofsound.net/feed",
+        "siteUrl": "https://consequence.net",
+        "imageUrl": "https://consequence.net/wp-content/themes/cosv2/images/apple-touch-icon.png"
+      },
+      {
+        "title": "Metal Injection",
+        "description": "Heavy metal news, metal music videos, tour dates, live footage, exclusive documentaries, funny clips and more.",
+        "feedUrl": "http://feeds.feedburner.com/metalinjection",
+        "siteUrl": "https://metalinjection.net/",
+        "imageUrl": "https://cdn-p.smehost.net/sites/7f9737f2506941499994d771a29ad47a/wp-content/uploads/2019/10/crowd.png"
+      },
+      {
+        "title": "Music Business Worldwide",
+        "description": "News, jobs and analysis for the global music industry",
+        "feedUrl": "https://www.musicbusinessworldwide.com/feed/",
+        "siteUrl": "https://www.musicbusinessworldwide.com",
+        "imageUrl": null
+      },
+      {
+        "title": "RSS: News",
+        "description": "News content RSS feed",
+        "feedUrl": "http://pitchfork.com/rss/news",
+        "siteUrl": "https://pitchfork.com",
+        "imageUrl": "https://media.pitchfork.com/photos/5935a027a28a096fc4292134/16:9/w_1280,c_limit/c53c3aba.jpg"
+      },
+      {
+        "title": "Song Exploder",
+        "description": "A podcast where musicians take apart their songs, and piece by piece, tell the story of how they were made.",
+        "feedUrl": "http://songexploder.net/feed",
+        "siteUrl": "https://songexploder.net/",
+        "imageUrl": "https://songexploder.net/wp-content/uploads/2015/09/songexploder-600px.png"
+      }
+    ]
+  },
+  {
+    "name": "Movies",
+    "slug": "movies",
+    "icon": "Clapperboard",
+    "feedCount": 9,
+    "feeds": [
+      {
+        "title": "/Film",
+        "description": "Movie News and Reviews This feed is for non commercial use. Content Copyright Slashfilm.com.",
+        "feedUrl": "https://feeds2.feedburner.com/slashfilm",
+        "siteUrl": "https://www.slashfilm.com/",
+        "imageUrl": "https://www.slashfilm.com/img/slashfilm-meta-image-1280x720.png"
+      },
+      {
+        "title": "Ain't It Cool News Feed",
+        "description": "The best in movie, TV, DVD and comic book news.",
+        "feedUrl": "https://www.aintitcool.com/node/feed/",
+        "siteUrl": "http://www.aintitcool.com/",
+        "imageUrl": "https://media.aintitcool.com/static/social/facebook-wide-dannie.png"
+      },
+      {
+        "title": "ComingSoon.net – Movie Trailers, TV & Streaming News, and More",
+        "description": "ComingSoon.net features the latest movie trailers and news, TV updates, video game reviews, anime releases, and more.",
+        "feedUrl": "https://www.comingsoon.net/feed",
+        "siteUrl": "https://www.comingsoon.net/",
+        "imageUrl": "https://www.comingsoon.net/wp-content/uploads/sites/3/2022/12/comingsoon-is-coming-soon.png?resize=1200,630"
+      },
+      {
+        "title": "Deadline",
+        "description": "Hollywood Entertainment Breaking News",
+        "feedUrl": "https://deadline.com/feed/",
+        "siteUrl": "https://deadline.com",
+        "imageUrl": "https://s0.wp.com/_si/?t=eyJpbWciOiJodHRwczpcL1wvZGVhZGxpbmUuY29tXC93cC1jb250ZW50XC91cGxvYWRzXC8yMDE5XC8wNFwvY3JvcHBlZC1pY29uLTUxMng1MTIucG5nIiwidHh0IjoiRGVhZGxpbmUiLCJ0ZW1wbGF0ZSI6ImVkZ2UiLCJmb250IjoiIiwiYmxvZ19pZCI6MTc5MjkwMTQ5fQ.IHL7P_bYC7Sr4W2XvHh7kLwSO5arBq8LoHSjTj-l-uAMQ"
+      },
+      {
+        "title": "FirstShowing.net",
+        "description": "Connecting Hollywood with its Audience",
+        "feedUrl": "https://www.firstshowing.net/feed/",
+        "siteUrl": "https://www.firstshowing.net",
+        "imageUrl": "https://media2.firstshowing.net/firstshowing/img/FirstShowingClick22LogoMain2.png"
+      },
+      {
+        "title": "IndieWire",
+        "description": "The Voice of Creative Independence",
+        "feedUrl": "https://www.indiewire.com/feed",
+        "siteUrl": "https://www.indiewire.com",
+        "imageUrl": "https://s0.wp.com/_si/?t=eyJpbWciOiJodHRwczpcL1wvd3d3LmluZGlld2lyZS5jb21cL3dwLWNvbnRlbnRcL3VwbG9hZHNcLzIwMThcLzA0XC9jcm9wcGVkLWl3X2Zhdmljb24ucG5nIiwidHh0IjoiSW5kaWVXaXJlIiwidGVtcGxhdGUiOiJlZGdlIiwiZm9udCI6IiIsImJsb2dfaWQiOjExMjA4NDEwNn0.IleC2A_yt2nEVoIAFKDGbIcMHnbS55PwJqmwTEBAqQ4MQ"
+      },
+      {
+        "title": "Movie News and Discussion",
+        "description": "/r/movies is the world's largest online film community, with over 37,000,000 members. Come on in and talk about movies with us!",
+        "feedUrl": "https://reddit.com/r/movies/.rss",
+        "siteUrl": "https://www.reddit.com/r/movies/",
+        "imageUrl": "https://b.thumbs.redditmedia.com/86fsvFSWKE7feM8yhBOjLAtwj20x5c4ofwcXQWwy1iM.png"
+      },
+      {
+        "title": "Movies",
+        "description": "Comics, Movies, TV, Games",
+        "feedUrl": "https://www.bleedingcool.com/movies/feed/",
+        "siteUrl": "https://bleedingcool.com",
+        "imageUrl": null
+      },
+      {
+        "title": "Variety",
+        "description": "Entertainment news, film reviews, awards, film festivals, box office, entertainment industry conferences",
+        "feedUrl": "https://variety.com/feed/",
+        "siteUrl": "https://variety.com",
+        "imageUrl": "https://s0.wp.com/_si/?t=eyJpbWciOiJodHRwczpcL1wvczAud3AuY29tXC9pXC9ibGFuay5qcGciLCJ0eHQiOiJWYXJpZXR5IiwidGVtcGxhdGUiOiJoaWdod2F5IiwiZm9udCI6IiIsImJsb2dfaWQiOjE3OTMzODYxNn0.48YpzLbhZUYLW9u0F1aejPfigAX4uB-RUBby8Cw5d2QMQ"
+      }
+    ]
+  },
+  {
+    "name": "Television",
+    "slug": "television",
+    "icon": "Tv",
+    "feedCount": 4,
+    "feeds": [
+      {
+        "title": "📺Television News and Discussion",
+        "description": "Subreddit for content primarily about and related to scripted television programming",
+        "feedUrl": "https://reddit.com/r/television/.rss",
+        "siteUrl": "https://www.reddit.com/r/television/",
+        "imageUrl": "https://b.thumbs.redditmedia.com/bh6N6n089qHcmwGnMDIymG04fAalGyWdz1OqaC5WtGM.png"
+      },
+      {
+        "title": "the TV addict",
+        "description": "TV News, Previews, Spoilers and Reviews",
+        "feedUrl": "http://feeds.feedburner.com/thetvaddict/AXob",
+        "siteUrl": "https://www.thetvaddict.com",
+        "imageUrl": "https://www.thetvaddict.com/wp-content/uploads/2022/06/cropped-TVA-Square-32x32.jpg"
+      },
+      {
+        "title": "TV",
+        "description": "Comics, Movies, TV, Games",
+        "feedUrl": "https://www.bleedingcool.com/tv/feed/",
+        "siteUrl": "https://bleedingcool.com",
+        "imageUrl": null
+      },
+      {
+        "title": "TVLine - All TV. No Interference. TV News & Spoilers by TVLine",
+        "description": "Stay up to date with the latest TV news, previews, spoilers, casting updates, interviews, and more from TVLine. Your go-to source for all things TV.",
+        "feedUrl": "https://tvline.com/feed/",
+        "siteUrl": "https://www.tvline.com/",
+        "imageUrl": "https://www.tvline.com/img/TVLine-meta-image-1280x720.png"
+      }
+    ]
+  },
+  {
+    "name": "Books",
+    "slug": "books",
+    "icon": "BookOpen",
+    "feedCount": 7,
+    "feeds": [
+      {
+        "title": "A year of reading the world",
+        "description": "196 countries, countless stories...",
+        "feedUrl": "https://ayearofreadingtheworld.com/feed/",
+        "siteUrl": "https://ayearofreadingtheworld.com",
+        "imageUrl": "https://s0.wp.com/_si/?t=eyJpbWciOiJodHRwczpcL1wvczAud3AuY29tXC9pXC9ibGFuay5qcGciLCJ0eHQiOiJBIHllYXIgb2YgcmVhZGluZyB0aGUgd29ybGQiLCJ0ZW1wbGF0ZSI6ImhpZ2h3YXkiLCJmb250IjoiIiwiYmxvZ19pZCI6Mjg2MjU0MzJ9.Fd1-ioBcW3GM8nM6UUc8S16KDuYzfiMVeNZ_Um9khIoMQ"
+      },
+      {
+        "title": "Aestas Book Blog",
+        "description": "Romance book reviews. Reviews of books that make my heart race, have a beautiful love story, and a happy ending.",
+        "feedUrl": "https://aestasbookblog.com/feed/",
+        "siteUrl": "https://aestasbookblog.com",
+        "imageUrl": null
+      },
+      {
+        "title": "BOOK RIOT",
+        "description": "Book Recommendations and Reviews",
+        "feedUrl": "https://bookriot.com/feed/",
+        "siteUrl": "https://bookriot.com/",
+        "imageUrl": "https://s2982.pcdn.co/wp-content/themes/bookriot/assets/images/favicons/BookRiot_Logo_180.png"
+      },
+      {
+        "title": "Kirkus Reviews",
+        "description": "Latest book reviews from Kirkus Reviews.",
+        "feedUrl": "https://www.kirkusreviews.com/feeds/rss/",
+        "siteUrl": "https://www.kirkusreviews.com/",
+        "imageUrl": "https://d1fd687oe6a92y.cloudfront.net/img/kir_images/header/apple-icon.svg"
+      },
+      {
+        "title": "NewInBooks",
+        "description": "Answering the Age old question - What are you reading?",
+        "feedUrl": "https://www.newinbooks.com/feed/",
+        "siteUrl": "https://www.newinbooks.com",
+        "imageUrl": "https://www.newinbooks.com//wp-content/uploads/2026/02/nib-vector-file-without-tagline-for-web-without-fonts-copy.svg"
+      },
+      {
+        "title": "So many books, so little time",
+        "description": "This is a moderated subreddit. It is our intent and purpose to foster and encourage in-depth discussion about all things related to books, authors, genres, or publishing in a safe, supportive environment. If you're looking for help with a personal book recommendation, consult our Weekly Recommendation Thread, Suggested Reading page, or ask in r/suggestmeabook.",
+        "feedUrl": "https://reddit.com/r/books/.rss",
+        "siteUrl": "https://www.reddit.com/r/books/",
+        "imageUrl": "https://b.thumbs.redditmedia.com/asu3_HVQEKFGKOl1CwjnrgpQqL7IcHZsmDpLqJkJJ5M.png"
+      },
+      {
+        "title": "Wokeread",
+        "description": "Books any time any day.",
+        "feedUrl": "https://wokeread.home.blog/feed/",
+        "siteUrl": "https://wokeread.home.blog",
+        "imageUrl": "https://i0.wp.com/wokeread.home.blog/wp-content/uploads/2019/11/white-ceramic-teacup-with-saucer-near-two-books-above-gray-904616-1.jpg?fit=1200%2C800&#038;ssl=1"
+      }
+    ]
+  },
+  {
+    "name": "Funny",
+    "slug": "funny",
+    "icon": "Laugh",
+    "feedCount": 14,
+    "feeds": [
+      {
+        "title": "AwkwardFamilyPhotos.com",
+        "description": "Spreading the Awkwardness",
+        "feedUrl": "https://awkwardfamilyphotos.com/feed/",
+        "siteUrl": "https://awkwardfamilyphotos.com/",
+        "imageUrl": "https://s3.awkwardfamilyphotos.com/wp-content/uploads/2017/05/22134532/afp-logo-square.jpg"
+      },
+      {
+        "title": "Cracked: All Posts",
+        "description": "Every post that goes up on Cracked.com",
+        "feedUrl": "http://feeds.feedburner.com/CrackedRSS",
+        "siteUrl": "https://www.cracked.com",
+        "imageUrl": "https://ui-seo.crackedcdn.com/build/assets/images/assets/images/favicon/apple-touch-icon.png?v=a962f3ebceaf8f9791d49d4471ab0026"
+      },
+      {
+        "title": "Explosm.net",
+        "description": "Flash Animations, Daily Comics and more!",
+        "feedUrl": "http://feeds.feedburner.com/Explosm",
+        "siteUrl": "http://explosm.net",
+        "imageUrl": "http://explosm.net/apple-touch-icon.png"
+      },
+      {
+        "title": "FAIL Blog",
+        "description": "The internet has generated a huge amount of laughs from cats and FAILS. And we all out of cats.",
+        "feedUrl": "http://feeds.feedburner.com/failblog",
+        "siteUrl": "https://failblog.cheezburger.com/",
+        "imageUrl": "https://i.chzbgr.com/original/44476677/h9F54CE8E/a-lavish-friend-repeatedly-insists-on-splitting-the-bill-evenly-when-they-go-out-for-group-dinners"
+      },
+      {
+        "title": "I Can Has Cheezburger?",
+        "description": "World's largest collection of cat memes and other animals",
+        "feedUrl": "http://feeds.feedburner.com/icanhascheezburger",
+        "siteUrl": "https://icanhas.cheezburger.com/",
+        "imageUrl": "https://i.chzbgr.com/original/44477701/h5425D18A/picture-of-a-woman-and-a-cat-one-picture-of-a-man-and-his-mothers-boyfriend-is-severely-allergic"
+      },
+      {
+        "title": "Penny Arcade",
+        "description": "Penny Arcade comics and news.",
+        "feedUrl": "https://www.penny-arcade.com/feed",
+        "siteUrl": "https://www.penny-arcade.com/",
+        "imageUrl": "https://assets.penny-arcade.com/img/logo_opengraph.jpg"
+      },
+      {
+        "title": "PHD Comics",
+        "description": "Providing global up-to-the-minute procrastination!",
+        "feedUrl": "http://phdcomics.com/gradfeed.php",
+        "siteUrl": "http://www.phdcomics.com",
+        "imageUrl": "http://phdcomics.com/comics/archive/phd011525s.gif"
+      },
+      {
+        "title": "PostSecret",
+        "description": "Discover true secrets that have never been shared. Explore the surprising stories behind the secrets.",
+        "feedUrl": "https://postsecret.com/feed/?alt=rss",
+        "siteUrl": "https://postsecret.com/",
+        "imageUrl": "https://i0.wp.com/postsecret.com/wp-content/uploads/2025/12/ps-logo-large.jpg?fit=1200%2C630&ssl=1"
+      },
+      {
+        "title": "Saturday Morning Breakfast Cereal",
+        "description": "Latest Saturday Morning Breakfast Cereal comics and news",
+        "feedUrl": "https://www.smbc-comics.com/comic/rss",
+        "siteUrl": "https://www.smbc-comics.com/",
+        "imageUrl": "https://www.smbc-comics.com/comics/1772154403-20260227-copy.png"
+      },
+      {
+        "title": "The Bloggess",
+        "description": "Like Mother Teresa, only better.",
+        "feedUrl": "https://thebloggess.com/feed/",
+        "siteUrl": "https://thebloggess.com",
+        "imageUrl": "https://s0.wp.com/_si/?t=eyJpbWciOiJodHRwczpcL1wvaTAud3AuY29tXC90aGVibG9nZ2Vzcy5jb21cL3dwLWNvbnRlbnRcL3VwbG9hZHNcLzIwMjBcLzA4XC9UaGVfQmxvZ2dlc3MuanBnP2ZpdD02NzElMkM0Mzkmc3NsPTEiLCJ0eHQiOiJUaGUgQmxvZ2dlc3MiLCJ0ZW1wbGF0ZSI6ImVkZ2UiLCJmb250IjoiIiwiYmxvZ19pZCI6NTgwMDY2MzZ9.77PfOWBOX9auhwKsfCvcIm0j7rsHt6DKkvli-xFmSjIMQ"
+      },
+      {
+        "title": "The Daily WTF",
+        "description": "Curious Perversions in Information Technology",
+        "feedUrl": "http://syndication.thedailywtf.com/TheDailyWtf",
+        "siteUrl": "http://thedailywtf.com/",
+        "imageUrl": null
+      },
+      {
+        "title": "The Oatmeal - Comics by Matthew Inman",
+        "description": "I make comics about science, cats, social media, and sometimes goats.",
+        "feedUrl": "http://feeds.feedburner.com/oatmealfeed",
+        "siteUrl": "http://theoatmeal.com/",
+        "imageUrl": "https://s3.amazonaws.com/theoatmeal-img/favicons/apple-icon-57x57.png"
+      },
+      {
+        "title": "The Onion",
+        "description": "America’s Finest News Source",
+        "feedUrl": "https://www.theonion.com/rss",
+        "siteUrl": "https://theonion.com/",
+        "imageUrl": "https://theonion.com/wp-content/uploads/2024/08/NRH-Share-Card.png"
+      },
+      {
+        "title": "xkcd.com",
+        "description": "xkcd.com: A webcomic of romance and math humor.",
+        "feedUrl": "https://xkcd.com/rss.xml",
+        "siteUrl": "https://xkcd.com/",
+        "imageUrl": "https://imgs.xkcd.com/comics/little_red_dots_2x.png"
+      }
+    ]
+  },
+  {
+    "name": "Sports",
+    "slug": "sports",
+    "icon": "Medal",
+    "feedCount": 6,
+    "feeds": [
+      {
+        "title": "BBC Sport",
+        "description": "BBC Sport - Sport Front Page",
+        "feedUrl": "http://feeds.bbci.co.uk/sport/rss.xml",
+        "siteUrl": "https://www.bbc.co.uk/sport",
+        "imageUrl": "https://static.files.bbci.co.uk/core/website/assets/static/sport/images/metadata/poster-1024x576.146fae5646.png"
+      },
+      {
+        "title": "Reddit Sports",
+        "description": "Sports News and Highlights from the NFL, NBA, NHL, MLB, MLS, NCAA, F1, and other leagues around the world.",
+        "feedUrl": "https://www.reddit.com/r/sports.rss",
+        "siteUrl": "https://www.reddit.com/r/sports",
+        "imageUrl": "https://a.thumbs.redditmedia.com/OG0cMFwrTOQE6Gj5xW2pwTMpjkegILNnJEzHZukZTW4.png"
+      },
+      {
+        "title": "Sports News - Latest Sports and Football News | Sky News",
+        "description": "The best sports coverage from around the world, covering: Football, Cricket, Golf, Rugby, WWE, Boxing, Tennis and much more.",
+        "feedUrl": "http://feeds.skynews.com/feeds/rss/sports.xml",
+        "siteUrl": "https://news.sky.com/sports",
+        "imageUrl": "https://e3.365dm.com/skynews/logo.png"
+      },
+      {
+        "title": "Sportskeeda",
+        "description": "Latest Sports News & Live Updates",
+        "feedUrl": "https://www.sportskeeda.com/feed",
+        "siteUrl": "https://www.sportskeeda.com",
+        "imageUrl": "https://staticg.sportskeeda.com/logo/brand_logos/sk-featured-image-2.jpg"
+      },
+      {
+        "title": "www.espn.com - TOP",
+        "description": "Latest TOP news from www.espn.com",
+        "feedUrl": "https://www.espn.com/espn/rss/news",
+        "siteUrl": "https://www.espn.com",
+        "imageUrl": "https://a1.espncdn.com/combiner/i?img=%2Fi%2Fespn%2Fespn_logos%2Fespn_red.png"
+      },
+      {
+        "title": "Yahoo! Sports - News, Scores, Standings, Rumors, Fantasy Games",
+        "description": "Yahoo! Sports - Comprehensive news, scores, standings, fantasy games, rumors, and more",
+        "feedUrl": "https://sports.yahoo.com/rss/",
+        "siteUrl": "https://sports.yahoo.com",
+        "imageUrl": "https://s.yimg.com/cv/apiv2/uhlog/uh.png"
+      }
+    ]
+  },
+  {
+    "name": "Football",
+    "slug": "football",
+    "icon": "Trophy",
+    "feedCount": 3,
+    "feeds": [
+      {
+        "title": "EFL Championship",
+        "description": "Home of the EFL Championship on Reddit",
+        "feedUrl": "https://www.reddit.com/r/Championship/.rss?format=xml",
+        "siteUrl": "https://www.reddit.com/r/Championship/?format=xml",
+        "imageUrl": "https://b.thumbs.redditmedia.com/bS1O-J8pConCFwupa_wvC26SdENFIpC3yiQ3o5xvC-k.jpg"
+      },
+      {
+        "title": "Football - The People's Sport",
+        "description": "Home of Football. Official Sponsors of Redditch United. News, Rumours, Analysis, gossip and much more.",
+        "feedUrl": "https://www.reddit.com/r/football/.rss?format=xml",
+        "siteUrl": "https://www.reddit.com/r/football/?format=xml",
+        "imageUrl": "https://www.redditstatic.com/icon.png/"
+      },
+      {
+        "title": "Soccer News",
+        "description": "The Latest Soccer News from around the globe.",
+        "feedUrl": "https://www.soccernews.com/feed",
+        "siteUrl": "https://www.soccernews.com/",
+        "imageUrl": null
+      }
+    ]
+  },
+  {
+    "name": "Cricket",
+    "slug": "cricket",
+    "icon": "Trophy",
+    "feedCount": 20,
+    "feeds": [
+      {
+        "title": "BBC Sport",
+        "description": "BBC Sport - Cricket",
+        "feedUrl": "http://feeds.bbci.co.uk/sport/cricket/rss.xml",
+        "siteUrl": "https://www.bbc.co.uk/sport/cricket",
+        "imageUrl": "https://static.files.bbci.co.uk/core/website/assets/static/sport/images/metadata/poster-1024x576.146fae5646.png"
+      },
+      {
+        "title": "Can't Bowl Can't Throw Cricket Show",
+        "description": "The third season of the Can't Bowl Can't Throw Cricket Show, in which we talk about cricket on a podcast. In a third season.",
+        "feedUrl": "http://feeds.feedburner.com/cantbowlcantthrow",
+        "siteUrl": "https://cantbowlcantthrow.com/",
+        "imageUrl": null
+      },
+      {
+        "title": "Cricbuzz",
+        "description": null,
+        "feedUrl": "https://www.youtube.com/feeds/videos.xml?channel_id=UCSRQXk5yErn4e14vN76upOw",
+        "siteUrl": "https://www.youtube.com/channel/UCSRQXk5yErn4e14vN76upOw",
+        "imageUrl": "https://yt3.googleusercontent.com/MtxkLD_KAf2NEzvGYvmnt824vNvnfaRUgIVmatLMBmKdZ57kREVel6ROhXgCcQo1-Zu0pYtlIA=s900-c-k-c0x00ffffff-no-rj"
+      },
+      {
+        "title": "Cricket",
+        "description": "News, banter and occasional serious discussion on the great game.",
+        "feedUrl": "https://www.reddit.com/r/Cricket/.rss",
+        "siteUrl": "https://www.reddit.com/r/Cricket/",
+        "imageUrl": "https://b.thumbs.redditmedia.com/oBhyNiZBWdEAkW-Sq_QUoO1JcPRhhHY6VlxSO_vPWzU.png"
+      },
+      {
+        "title": "Cricket – The Roar",
+        "description": "Australia's Biggest Sporting Debate",
+        "feedUrl": "https://www.theroar.com.au/cricket/feed/",
+        "siteUrl": "https://www.theroar.com.au",
+        "imageUrl": "https://cdn4.theroar.com.au/wp-content/themes/roar/assets/img/fb-logo.png"
+      },
+      {
+        "title": "Cricket | The Guardian",
+        "description": "Latest news and features from theguardian.com, the world's leading liberal voice",
+        "feedUrl": "https://www.theguardian.com/sport/cricket/rss",
+        "siteUrl": "https://www.theguardian.com/sport/cricket",
+        "imageUrl": "https://assets.guim.co.uk/static/frontend/icons/homescreen/apple-touch-icon.svg"
+      },
+      {
+        "title": "Cricket news from ESPN Cricinfo.com",
+        "description": "Visit Cricinfo.com for up-to-the-minute cricket news, breaking cricket news, live cricket commentary, ball-by-ball commentary, cricket video, cricket audio and features.",
+        "feedUrl": "http://www.espncricinfo.com/rss/content/story/feeds/0.xml",
+        "siteUrl": "https://www.espncricinfo.com/",
+        "imageUrl": "https://i.imgci.com/espncricinfo/espncinew.png"
+      },
+      {
+        "title": "Cricket News: Stories, Features, Interviews, Opinion, Reports | Wisden",
+        "description": "The independent voice of cricket",
+        "feedUrl": "https://www.wisden.com/feed",
+        "siteUrl": "https://www.wisden.com/latest-updates",
+        "imageUrl": "https://www.wisden.com/static-assets/images/default-social-share.jpg?v=23.07"
+      },
+      {
+        "title": "Cricket Unfiltered",
+        "description": "If you love cricket, then Cricket Unfiltered is the podcast for you. Get closer to the game than ever before with the longest-running weekly Australian cricket podcast — winner of the 2024 Radio Today Sports Podcast of the Year.\n\nHosted by Andrew Menczel (aka Menners) alongside former Australian Test spinner Stuart MacGill, Cricket Unfiltered dives into the biggest issues in world cricket with bold opinions, deep insights, and a genuine passion for the game. Together, they bring the perspective of an experienced broadcaster and one of Australia’s most outspoken and insightful former players.\n\nThe show features conversations with top cricket journalists, current players, and legends of the sport — all unfiltered and in-depth — while tackling selection debates, tactics, governance, and the stories that shape the modern game.\n\nCricket Unfiltered has twice been a finalist in the Australian Podcast Awards and has episodes included in the National Film & Sound Archive, recognising its place in Australia’s media landscape.\n\nMenners launched the podcast in 2013 and has interviewed 15 Australian captains along the way. He is also a respected cricket commentator across men’s and women’s matches, and an award-winning podcast producer and interviewer.\n\nStuart MacGill played 44 Tests for Australia, taking 208 wickets, and is widely regarded as one of the country’s finest spin bowlers. Known for his honesty and deep understanding of the game, he brings elite-level insight and a fearless voice to the show.\n\nIf cricket matters to you — this podcast is a must.",
+        "feedUrl": "https://rss.acast.com/cricket-unfiltered",
+        "siteUrl": "https://podcast.sport-social.co.uk/podcast/cricket-unfiltered/",
+        "imageUrl": "https://megaphone.imgix.net/podcasts/fca4262a-e426-11ed-ab41-cb9942954005/image/5246379ee5c32138cff075020ad90b4b.jpg?ixlib=rails-4.3.1&max-w=3000&max-h=3000&fit=crop&auto=format,compress"
+      },
+      {
+        "title": "cricket.com.au",
+        "description": null,
+        "feedUrl": "https://www.youtube.com/feeds/videos.xml?user=cricketaustraliatv",
+        "siteUrl": "https://www.youtube.com/channel/UCkBY0aHJP9BwjZLDYxAQrKg",
+        "imageUrl": "https://yt3.googleusercontent.com/Vh9uFoOoGYoFDVYsUjrFzjUegCQq1PI1lwpHR2EcOVbnqQYMqdMGuw81F0HX5XZN-BgZgzWAJA=s900-c-k-c0x00ffffff-no-rj"
+      },
+      {
+        "title": "England & Wales Cricket Board",
+        "description": null,
+        "feedUrl": "https://www.youtube.com/feeds/videos.xml?user=ecbcricket",
+        "siteUrl": "https://www.youtube.com/channel/UCz1D0n02BR3t51KuBOPmfTQ",
+        "imageUrl": "https://yt3.googleusercontent.com/Kvp63X5q5rUFXpy73Nwj3HYhUnymjVJyZjRGDEhUii26M8Ufr-30l9yekzDPcIj7Hj3bELCSGA=s900-c-k-c0x00ffffff-no-rj"
+      },
+      {
+        "title": "NDTV News Search Records Found 1000",
+        "description": "NDTV.com provides the latest information from and in-depth coverage of India and the world. Find breaking news, India news, top stories, elections, politics, business, cricket, movies, lifestyle, health, live TV, videos, photos and more.",
+        "feedUrl": "http://feeds.feedburner.com/ndtvsports-cricket",
+        "siteUrl": "https://www.ndtv.com/",
+        "imageUrl": "https://www.ndtv.com/common/header/images/ndtv_logo_black.gif"
+      },
+      {
+        "title": "Pakistan Cricket",
+        "description": null,
+        "feedUrl": "https://www.youtube.com/feeds/videos.xml?channel_id=UCiWrjBhlICf_L_RK5y6Vrxw",
+        "siteUrl": "https://www.youtube.com/channel/UCiWrjBhlICf_L_RK5y6Vrxw",
+        "imageUrl": "https://yt3.googleusercontent.com/SCi016U_TA13At3t6r7CRZ-ovubl_fiNgfJxVBX0d41Ylh4S_prklYzcgLrMb6O0enIprVwV=s900-c-k-c0x00ffffff-no-rj"
+      },
+      {
+        "title": "Sky Sports Cricket Podcast",
+        "description": "Michael Atherton, Nasser Hussain and some of the cricket world's biggest guests analyse and debate the big stories and talking points from international and domestic cricket.\n-\nWatch every episode of the Sky Sports Cricket Podcast on YouTube here: Sky Sports Cricket Podcast on YouTube\nListen to every episode of the Sky Sports Cricket Podcast here: skysports.com/sky-sports-cricket-podcast\nYou can listen to the Sky Sports Cricket Podcast on your smart speaker by asking it to \"play Sky Sports Cricket Podcast\".\nFor all the latest Cricket news, head to skysports.com/cricket\nFor advertising opportunities or to get in touch with the pod email: skysportspodcasts@sky.uk",
+        "feedUrl": "https://www.spreaker.com/show/3387348/episodes/feed",
+        "siteUrl": "https://sky-sports-cricket.captivate.fm",
+        "imageUrl": "https://artwork.captivate.fm/0fad9b49-855b-4bab-a701-7e7f8738afbf/63042b88b5fe9ab5bdea57a3d89e61c6-facebook.png?1772223774"
+      },
+      {
+        "title": "Sri Lanka Cricket",
+        "description": null,
+        "feedUrl": "https://www.youtube.com/feeds/videos.xml?user=TheOfficialSLC",
+        "siteUrl": "https://www.youtube.com/channel/UCJA-NQ4MtcRIog66wziD8fA",
+        "imageUrl": "https://yt3.googleusercontent.com/ytc/AIdro_nT-eZ7P-G3mytk4D5EIbm2f9Us2eIfP8B9JbeN0CQ7OPU=s900-c-k-c0x00ffffff-no-rj"
+      },
+      {
+        "title": "Stumped",
+        "description": "The weekly cricket show from BBC Sport in association with ABC and  Akashvani.",
+        "feedUrl": "https://podcasts.files.bbci.co.uk/p02gsrmh.rss",
+        "siteUrl": "http://www.bbc.co.uk/programmes/p02gsrmh",
+        "imageUrl": "https://ichef.bbci.co.uk/images/ic/1200x675/p0fvgsfq.jpg"
+      },
+      {
+        "title": "Switch Hit Podcast",
+        "description": "Lively debate and discussion about the game on and off the field with a focus on English cricket. Featuring ESPNcricinfo's writers and reporters.",
+        "feedUrl": "https://feeds.megaphone.fm/ESP9247246951",
+        "siteUrl": "http://www.espncricinfo.com",
+        "imageUrl": "https://megaphone.imgix.net/podcasts/f502b4ac-6000-11ea-8009-0b1e61d52ba4/image/switch_hit_podcast_1x1.jpg?ixlib=rails-4.3.1&max-w=3000&max-h=3000&fit=crop&auto=format,compress"
+      },
+      {
+        "title": "Tailenders",
+        "description": "Greg James, Jimmy Anderson and Felix White take an alternative (and sometimes musical) look at cricket...",
+        "feedUrl": "https://podcasts.files.bbci.co.uk/p02pcb4w.rss",
+        "siteUrl": "http://www.bbc.co.uk/programmes/p02pcb4w",
+        "imageUrl": "https://ichef.bbci.co.uk/images/ic/1200x675/p0lygcpm.jpg"
+      },
+      {
+        "title": "Test Match Special",
+        "description": "The Test Match Special team bring you the very best cricket reaction, insight & analysis.Plus the No Balls podcast with Kate Cross and Alex Hartley brings a fine balance of nonsense and cricket as they welcome some of the biggest names in the sport.",
+        "feedUrl": "https://podcasts.files.bbci.co.uk/p02nrsl2.rss",
+        "siteUrl": "http://www.bbc.co.uk/programmes/p02nrsl2",
+        "imageUrl": "https://ichef.bbci.co.uk/images/ic/1200x675/p0mtrrfm.jpg"
+      },
+      {
+        "title": "The Analyst Inside Cricket",
+        "description": "Analysis, opinion and great stories from the world of cricket. Presented by  Simon Hughes, aka The Analyst and the BBC's Simon Mann. This is the place where you really find out what happened on the field, and off it, with the two Simons worldwide experiences and their famous guests.\n\n\n\nFind us on the Sport Social website: https://podcast.sport-social.co.uk/podcast/the-analyst-inside-cricket/",
+        "feedUrl": "http://rss.acast.com/theanalystinsidecricket",
+        "siteUrl": "https://podcast.sport-social.co.uk/podcast/the-analyst-inside-cricket/",
+        "imageUrl": "https://megaphone.imgix.net/podcasts/058a077c-88da-11ec-80f3-eb5de9c2de33/image/7a4225a1177f10261b91fbe314809d27.png?ixlib=rails-4.3.1&max-w=3000&max-h=3000&fit=crop&auto=format,compress"
+      }
+    ]
+  },
+  {
+    "name": "Tennis",
+    "slug": "tennis",
+    "icon": "Trophy",
+    "feedCount": 5,
+    "feeds": [
+      {
+        "title": "BBC Sport",
+        "description": "BBC Sport - Tennis",
+        "feedUrl": "http://feeds.bbci.co.uk/sport/tennis/rss.xml",
+        "siteUrl": "https://www.bbc.co.uk/sport/tennis",
+        "imageUrl": "https://static.files.bbci.co.uk/core/website/assets/static/sport/images/metadata/poster-1024x576.146fae5646.png"
+      },
+      {
+        "title": "Essential Tennis Podcast - Instruction, Lessons, Tips",
+        "description": "Improve your tennis with the Essential Tennis Podcast, the very first podcast dedicated to tennis lessons and instruction! Tennis professional Ian Westermann answers listener questions about technique, strategy, mental toughness, and much more.",
+        "feedUrl": "https://feed.podbean.com/essentialtennis/feed.xml",
+        "siteUrl": "https://essentialtennis.podbean.com",
+        "imageUrl": "https://d2bwo9zemjwxh5.cloudfront.net/image-logo/2721732/New-ET-Logo-white-backdrop_1200x628.jpg?s=7d8ca4d1a5f3768d06c9410687e48279&amp;e=png"
+      },
+      {
+        "title": "Perfect Tennis",
+        "description": "Tennis Blog",
+        "feedUrl": "https://www.perfect-tennis.com/feed/",
+        "siteUrl": "https://www.perfect-tennis.com",
+        "imageUrl": "https://www.perfect-tennis.com/wp-content/uploads/2023/02/perfect-tennis-openg.png"
+      },
+      {
+        "title": "Tennis News & Discussion",
+        "description": "Professional tennis discussion. Feel free to visit our sister sub for more information on technique, r/10s.",
+        "feedUrl": "https://www.reddit.com/r/tennis/.rss",
+        "siteUrl": "https://www.reddit.com/r/tennis/",
+        "imageUrl": "https://www.redditstatic.com/icon.png/"
+      },
+      {
+        "title": "www.espn.com - TENNIS",
+        "description": "Latest TENNIS news from www.espn.com",
+        "feedUrl": "https://www.espn.com/espn/rss/tennis/news",
+        "siteUrl": "https://www.espn.com",
+        "imageUrl": "https://a1.espncdn.com/combiner/i?img=%2Fi%2Fespn%2Fespn_logos%2Fespn_red.png"
+      }
+    ]
+  },
+  {
+    "name": "Food",
+    "slug": "food",
+    "icon": "UtensilsCrossed",
+    "feedCount": 18,
+    "feeds": [
+      {
+        "title": "101 Cookbooks",
+        "description": "When you own over 100 cookbooks, it is time to stop buying, and start cooking. This site chronicles a cookbook collection, one recipe at a time.",
+        "feedUrl": "https://www.101cookbooks.com/feed",
+        "siteUrl": "https://www.101cookbooks.com/",
+        "imageUrl": "https://www.101cookbooks.com/wp-content/uploads/2018/05/cropped-101fav-1-180x180.png"
+      },
+      {
+        "title": "Binging with Babish",
+        "description": null,
+        "feedUrl": "https://www.youtube.com/feeds/videos.xml?user=bgfilms",
+        "siteUrl": "https://www.youtube.com/channel/UCJHA_jMfCvEnv-3kRjTCQXw",
+        "imageUrl": "https://yt3.googleusercontent.com/AlCRk3X8JvmNqHC7R3c7yVDQaGyUvMAd3GXY77vTgzGS1Qa_vlVFY0ZNSH56otpeBKDq3gF-yw=s900-c-k-c0x00ffffff-no-rj"
+      },
+      {
+        "title": "Bon Appétit",
+        "description": null,
+        "feedUrl": "https://www.youtube.com/feeds/videos.xml?user=BonAppetitDotCom",
+        "siteUrl": "https://www.youtube.com/channel/UCbpMy0Fg74eXXkvxJrtEn3w",
+        "imageUrl": "https://yt3.googleusercontent.com/cXS_yturdFtxAvqzJRnbMtZRYKCv3CDD7VHqHmhGZ2jgM8PYnOAbAbhZaK-Wb1NWgIrxrUjJiA=s900-c-k-c0x00ffffff-no-rj"
+      },
+      {
+        "title": "Chocolate & Zucchini",
+        "description": "Simple Recipes from my Paris Kitchen",
+        "feedUrl": "https://cnz.to/feed/",
+        "siteUrl": "https://cnz.to/",
+        "imageUrl": "https://cnz.to/wp-content/uploads/2015/11/brocoli.jpg"
+      },
+      {
+        "title": "Food52",
+        "description": "Eat thoughtfully, live joyfully.",
+        "feedUrl": "http://feeds.feedburner.com/food52-TheAandMBlog",
+        "siteUrl": "https://food52.com",
+        "imageUrl": null
+      },
+      {
+        "title": "Green Kitchen Stories",
+        "description": "Healthy Vegetarian Recipes.",
+        "feedUrl": "https://greenkitchenstories.com/feed/",
+        "siteUrl": "https://greenkitchenstories.com/",
+        "imageUrl": "https://greenkitchenstories.com/wp-content/uploads/2019/04/Skärmavbild-2019-04-11-kl.-18.30.05-768x547.png"
+      },
+      {
+        "title": "Joy the Baker",
+        "description": "A baker, photographer, cookbook author and teacher.",
+        "feedUrl": "http://joythebaker.com/feed/",
+        "siteUrl": "https://joythebaker.com/",
+        "imageUrl": "https://joythebaker.com/wp-content/uploads/2024/03/IMG_5759_VSCO-scaled.jpg"
+      },
+      {
+        "title": "Kitchn | Inspiring cooks, nourishing homes",
+        "description": "Inspiring cooks, nourishing homes",
+        "feedUrl": "https://www.thekitchn.com/main.rss",
+        "siteUrl": "https://www.thekitchn.com",
+        "imageUrl": "https://cdn.apartmenttherapy.info/image/upload/f_auto,q_auto:eco,c_fill,g_auto,w_1500,ar_3:2/gen-workflow%2Fthekitchn%2FKitchn-OG-04-05-24"
+      },
+      {
+        "title": "Laura in the Kitchen",
+        "description": null,
+        "feedUrl": "https://www.youtube.com/feeds/videos.xml?user=LauraVitalesKitchen",
+        "siteUrl": "https://www.youtube.com/channel/UCNbngWUqL2eqRw12yAwcICg",
+        "imageUrl": "https://yt3.googleusercontent.com/ytc/AIdro_k4ipJIufsLzz1IQvGCP-A0liCxiXRRepm0yA9NvpIlz1ot=s900-c-k-c0x00ffffff-no-rj"
+      },
+      {
+        "title": "Love and Olive Oil",
+        "description": "Eat to Live. Cook to Love.",
+        "feedUrl": "https://www.loveandoliveoil.com/feed",
+        "siteUrl": "https://www.loveandoliveoil.com",
+        "imageUrl": "https://www.loveandoliveoil.com/apple-touch-icon.png?m=2"
+      },
+      {
+        "title": "NYT > Food",
+        "description": null,
+        "feedUrl": "https://rss.nytimes.com/services/xml/rss/nyt/DiningandWine.xml",
+        "siteUrl": "https://www.nytimes.com/section/food",
+        "imageUrl": "https://static01.nyt.com/newsgraphics/images/icons/defaultPromoCrop.png"
+      },
+      {
+        "title": "Oh She Glows",
+        "description": "Vegan Recipes to Glow From The Inside Out",
+        "feedUrl": "https://ohsheglows.com/feed/",
+        "siteUrl": "https://ohsheglows.com/",
+        "imageUrl": null
+      },
+      {
+        "title": "Serious Eats",
+        "description": null,
+        "feedUrl": "https://www.youtube.com/feeds/videos.xml?user=SeriousEats",
+        "siteUrl": "https://www.youtube.com/channel/UC6S5a3MQtr_PSWZxysXkOCg",
+        "imageUrl": "https://yt3.googleusercontent.com/ytc/AIdro_nPCqqP7XB8egr1llH4AwY-1rCZo-noXu_Ac9fDl9ZaGQ=s900-c-k-c0x00ffffff-no-rj"
+      },
+      {
+        "title": "Serious Eats: Recipes",
+        "description": "Our Favorite Recipes, Curated and Collected",
+        "feedUrl": "http://feeds.feedburner.com/seriouseats/recipes",
+        "siteUrl": "https://www.seriouseats.com/recipes/",
+        "imageUrl": null
+      },
+      {
+        "title": "Shutterbean",
+        "description": "food, photography & creative inspiration",
+        "feedUrl": "http://www.shutterbean.com/feed/",
+        "siteUrl": "https://www.shutterbean.com",
+        "imageUrl": "https://i0.wp.com/www.shutterbean.com/wp-content/uploads/2017/07/cropped-logo.png?fit=180%2C180&#038;ssl=1"
+      },
+      {
+        "title": "Skinnytaste",
+        "description": "Delicious Healthy Recipes Made with Real Food",
+        "feedUrl": "https://www.skinnytaste.com/feed/",
+        "siteUrl": "https://www.skinnytaste.com/",
+        "imageUrl": null
+      },
+      {
+        "title": "smitten kitchen",
+        "description": "Fearless cooking from a tiny NYC kitchen.",
+        "feedUrl": "http://feeds.feedburner.com/smittenkitchen",
+        "siteUrl": "https://smittenkitchen.com",
+        "imageUrl": "https://s0.wp.com/_si/?t=eyJpbWciOiJodHRwczpcL1wvaTAud3AuY29tXC9zbWl0dGVua2l0Y2hlbi5jb21cL3dwLWNvbnRlbnRcL3VwbG9hZHNcL1wvMjAxN1wvMDlcL2Nyb3BwZWQtc21pdHRlbi1raXRjaGVuLWxvZ29fbm9fdGV4dC5qcGc_Zml0PTUxMiUyQzUxMiZzc2w9MSIsInR4dCI6InNtaXR0ZW4ga2l0Y2hlbiIsInRlbXBsYXRlIjoiZWRnZSIsImZvbnQiOiIiLCJibG9nX2lkIjoxNzIwNTI1Nzd9.8iKzn0nlbpOG3QajKMnGrhzdWnbF488eqdCY6A8_3OwMQ"
+      },
+      {
+        "title": "Sprouted Kitchen",
+        "description": null,
+        "feedUrl": "https://www.sproutedkitchen.com/home?format=rss",
+        "siteUrl": "https://www.sproutedkitchen.com/",
+        "imageUrl": "http://static1.squarespace.com/static/55470460e4b0b5d7d7c67dad/t/55b66c8ee4b0cc4be27151e9/1438018706890/sprouted%2Bkitchen%2Blogo.png?format=1500w"
+      }
+    ]
+  },
+  {
+    "name": "Travel",
+    "slug": "travel",
+    "icon": "Plane",
+    "feedCount": 5,
+    "feeds": [
+      {
+        "title": "Atlas Obscura - Latest Articles and Places",
+        "description": "New wonders and curiosities added to the Atlas.",
+        "feedUrl": "https://www.atlasobscura.com/feeds/latest",
+        "siteUrl": "https://www.atlasobscura.com",
+        "imageUrl": null
+      },
+      {
+        "title": "Live Life Travel",
+        "description": "Your travel partner for life",
+        "feedUrl": "https://www.livelifetravel.world/feed/",
+        "siteUrl": "https://www.livelifetravel.world/",
+        "imageUrl": "https://www.livelifetravel.world/wp-content/uploads/elementor/thumbs/Live-Life-Travel_Logo_RGB_glow-pn846o9vnt8qi6z976f7xb4nx1ttvzj26e2uqqqfhe.png"
+      },
+      {
+        "title": "NYT > Travel",
+        "description": null,
+        "feedUrl": "https://rss.nytimes.com/services/xml/rss/nyt/Travel.xml",
+        "siteUrl": "https://www.nytimes.com/section/travel",
+        "imageUrl": "https://static01.nyt.com/newsgraphics/images/icons/defaultPromoCrop.png"
+      },
+      {
+        "title": "Travel | The Guardian",
+        "description": "Latest travel news and reviews on UK and world holidays, travel guides to global destinations, city breaks, hotels and restaurant information from the Guardian, the world's leading liberal voice",
+        "feedUrl": "https://www.theguardian.com/uk/travel/rss",
+        "siteUrl": "https://www.theguardian.com/uk/travel",
+        "imageUrl": "https://assets.guim.co.uk/static/frontend/icons/homescreen/apple-touch-icon.svg"
+      },
+      {
+        "title": "Travel Blog -",
+        "description": "Travel Better, Cheaper, Longer",
+        "feedUrl": "https://www.nomadicmatt.com/travel-blog/feed/",
+        "siteUrl": "https://www.nomadicmatt.com/travel-blog/",
+        "imageUrl": "https://www.nomadicmatt.com/wp-content/uploads/2018/09/nomadicmatt.png"
+      }
+    ]
+  },
+  {
+    "name": "Photography",
+    "slug": "photography",
+    "icon": "Camera",
+    "feedCount": 10,
+    "feeds": [
+      {
+        "title": "500px",
+        "description": null,
+        "feedUrl": "https://iso.500px.com/feed/",
+        "siteUrl": "https://iso.500px.com",
+        "imageUrl": "https://iso.500px.com/wp-content/themes/photoform/fb_screenshot.png"
+      },
+      {
+        "title": "Canon Rumors",
+        "description": "Your Best Source for Canon News, Rumors and More",
+        "feedUrl": "https://www.canonrumors.com/feed/",
+        "siteUrl": "https://www.canonrumors.com/",
+        "imageUrl": "https://www.canonrumors.com/wp-content/uploads/2026/02/The-Canon-EOS-R5-Has-Been-Officially-Discontinued-1536x736.jpg"
+      },
+      {
+        "title": "Digital Photography School",
+        "description": "Digital Photography Tips and Tutorials",
+        "feedUrl": "https://feeds.feedburner.com/DigitalPhotographySchool",
+        "siteUrl": "https://digital-photography-school.com/",
+        "imageUrl": "https://i0.wp.com/digital-photography-school.com/wp-content/uploads/2019/07/dps-fb-placeholder.jpg?fit=601%2C601&ssl=1"
+      },
+      {
+        "title": "Light Stalking",
+        "description": "Illuminating Your Passion",
+        "feedUrl": "https://www.lightstalking.com/feed/",
+        "siteUrl": "https://www.lightstalking.com/",
+        "imageUrl": "https://www.lightstalking.com/wp-content/uploads/logo-emblem-compress.jpg"
+      },
+      {
+        "title": "Lightroom Killer Tips",
+        "description": "The Latest Lightroom Tips, Tricks & Techniques",
+        "feedUrl": "https://lightroomkillertips.com/feed/",
+        "siteUrl": "https://lightroomkillertips.com/",
+        "imageUrl": null
+      },
+      {
+        "title": "One Big Photo",
+        "description": "a Picture is Worth a Thousand Words | Submit Your Photo | World's Best Photography",
+        "feedUrl": "http://feeds.feedburner.com/OneBigPhoto",
+        "siteUrl": "http://onebigphoto.com",
+        "imageUrl": null
+      },
+      {
+        "title": "PetaPixel",
+        "description": "Photography and Camera News, Reviews, and Inspiration",
+        "feedUrl": "https://petapixel.com/feed/",
+        "siteUrl": "https://petapixel.com/",
+        "imageUrl": "https://petapixel.com/assets/uploads/2021/03/petapixelfblogo.jpg"
+      },
+      {
+        "title": "Strobist",
+        "description": "Learn How to Light.",
+        "feedUrl": "http://feeds.feedburner.com/blogspot/WOBq",
+        "siteUrl": "http://strobist.blogspot.com/",
+        "imageUrl": null
+      },
+      {
+        "title": "Stuck in Customs",
+        "description": "Trey Ratcliff's Travel Photography blog with daily inspiration to motivate you!",
+        "feedUrl": "https://stuckincustoms.com/feed/",
+        "siteUrl": "https://stuckincustoms.com/",
+        "imageUrl": "https://stuckincustoms.com/wp-content/uploads/2024/11/SICheader.jpg"
+      },
+      {
+        "title": "The Boston Globe",
+        "description": "The Boston Globe News Feed",
+        "feedUrl": "https://www.bostonglobe.com/rss/bigpicture",
+        "siteUrl": "https://www.bostonglobe.com",
+        "imageUrl": "https://www.bostonglobe.com/pf/resources/images/logo-bg.jpg?d=627"
+      }
+    ]
+  },
+  {
+    "name": "Business & Economy",
+    "slug": "business-economy",
+    "icon": "Briefcase",
+    "feedCount": 15,
+    "feeds": [
+      {
+        "title": "All News",
+        "description": null,
+        "feedUrl": "https://www.investing.com/rss/news.rss",
+        "siteUrl": "https://www.investing.com",
+        "imageUrl": "https://i-invdn-com.investing.com/redesign/images/seo/investing_300X300.png"
+      },
+      {
+        "title": "Bloomberg Originals",
+        "description": null,
+        "feedUrl": "https://www.youtube.com/feeds/videos.xml?user=Bloomberg",
+        "siteUrl": "https://www.youtube.com/channel/UCUMZ7gohGI9HcU9VNsr2FJQ",
+        "imageUrl": "https://yt3.googleusercontent.com/8sL0eqOeU4a1wZBVxn5NOFsug17I2XM0dmCdT7eouq12qE-I-JLCzrzub9Z4SdF0IEt5AzEY=s900-c-k-c0x00ffffff-no-rj"
+      },
+      {
+        "title": "Breaking News on Seeking Alpha",
+        "description": "© seekingalpha.com. Use of this feed is limited to personal, non-commercial use and is governed by Seeking Alpha's Terms of Use (https://about.seekingalpha.com/terms). Publishing this feed for public or commercial use and/or misrepresentation by a third party is prohibited.",
+        "feedUrl": "https://seekingalpha.com/market_currents.xml",
+        "siteUrl": "https://seekingalpha.com/news/all",
+        "imageUrl": "https://seekingalpha.com/samw/static/images/logo-1200.efef80523.jpg"
+      },
+      {
+        "title": "Business Insider",
+        "description": null,
+        "feedUrl": "https://www.youtube.com/feeds/videos.xml?user=businessinsider",
+        "siteUrl": "https://www.youtube.com/channel/UCcyq283he07B7_KUX07mmtA",
+        "imageUrl": "https://yt3.googleusercontent.com/pjDcIrc21oYPCkKpfY1zElDRHhw907VyW4zpuhJP5YCCvZPpyt0de08XM-uECMPQFAsidNK0bw=s900-c-k-c0x00ffffff-no-rj"
+      },
+      {
+        "title": "Economic Times",
+        "description": "The Economic Times: Latest business, finance, markets, stocks, company news from India.",
+        "feedUrl": "https://economictimes.indiatimes.com/rssfeedsdefault.cms",
+        "siteUrl": "https://economictimes.indiatimes.com",
+        "imageUrl": "https://economictimes.indiatimes.com/photo/65498029.cms"
+      },
+      {
+        "title": "Forbes - Business",
+        "description": "Forbes - Business",
+        "feedUrl": "https://www.forbes.com/business/feed/",
+        "siteUrl": "https://www.forbes.com/business/",
+        "imageUrl": "https://imageio.forbes.com/i-forbesimg/media/assets/forbes_1200x1200.jpg?format=jpg&amp;fit=bounds"
+      },
+      {
+        "title": "Fortune | FORTUNE",
+        "description": "Fortune 500 Daily & Breaking Business News",
+        "feedUrl": "https://fortune.com/feed",
+        "siteUrl": "https://fortune.com",
+        "imageUrl": "https://fortune.com/img-assets/wp-content/uploads/2020/01/Digital-Card4.jpg?resize=1200,600"
+      },
+      {
+        "title": "HBR IdeaCast",
+        "description": "A weekly podcast featuring the leading thinkers in business and management.",
+        "feedUrl": "http://feeds.harvardbusiness.org/harvardbusiness/ideacast",
+        "siteUrl": "https://hbr.org/podcasts/ideacast",
+        "imageUrl": "https://hbr.org/resources/images/article_assets/2018/01/wide-ideacast-alt.jpg"
+      },
+      {
+        "title": "How I Built This with Guy Raz",
+        "description": "Guy Raz interviews the world’s best-known entrepreneurs to learn how they built their iconic brands. In each episode, founders reveal deep, intimate moments of doubt and failure, and share insights on their eventual success. How I Built This is a master-class on innovation, creativity, leadership and how to navigate challenges of all kinds.New episodes release on Mondays and Thursdays. Listen to How I Built This on the Wondery App or wherever you listen to your podcasts. You can listen early and ad-free on Wondery+. Join Wondery+ in the Wondery App, Apple Podcasts or Spotify. Start your free trial by visiting wondery.com/links/how-i-built-this now. Get your How I Built This merch at WonderyShop.com/HowIBuiltThis.",
+        "feedUrl": "https://feeds.npr.org/510313/podcast.xml",
+        "siteUrl": "https://wondery.com/shows/how-i-built-this/?utm_source=rss",
+        "imageUrl": "https://content.production.cdn.art19.com/images/56/ae/46/57/56ae4657-2aa7-4cfc-8ddf-9be24410d5ed/0a11c197c45c57a5edd451d3633f22cc18845b6b23bef4c4788a9a21e98f5b407b0f30eb443304c0401e61fea51cba08dd66dbe235547dd3893f0129c360520e.jpeg"
+      },
+      {
+        "title": "Startup Stories - Mixergy",
+        "description": "Business tips for startups by proven entrepreneurs",
+        "feedUrl": "https://feeds.feedburner.com/Mixergy-main-podcast",
+        "siteUrl": "https://mixergy.com/",
+        "imageUrl": "https://mixergy.com/wp-content/uploads/2020/09/mixergy-logo-for-open-graph-social-sharing-facebook-twitter-1200x630-1.png"
+      },
+      {
+        "title": "The Blog of Author Tim Ferriss",
+        "description": "Tim Ferriss is the author of five #1 New York Times bestsellers and host of The Tim Ferriss Show podcast.",
+        "feedUrl": "https://tim.blog/feed/",
+        "siteUrl": "https://tim.blog/",
+        "imageUrl": "https://tim.blog/wp-content/uploads/2025/07/og-main.png"
+      },
+      {
+        "title": "The Duct Tape Marketing Podcast",
+        "description": "Insightful interviews with authors, experts, entrepreneurs, and thought leaders who share valuable marketing tips, growth strategies, and resources. Hosted by John Jantsch, one of America's top small business marketing experts, this show is dedicated to helping you craft effective marketing strategies that will grow your business. Whether you're a small business owner, marketing professional, or marketing agency owner, you'll gain valuable insights and actionable advice on topics such as marketing strategy, consulting, social media marketing, content marketing, SEO, email marketing, lead generation, business management, entrepreneurship and much more. With over 900 episodes since its inception in 2005, The Duct Tape Marketing podcast is your go-to resource for all things marketing or business growth. Join us each week as we dive into the latest marketing trends and strategies that will help you achieve your business goals. Don't miss out on this opportunity to learn from the best in the business. Tune in to The Duct Tape Marketing podcast and start listening today!",
+        "feedUrl": "https://ducttape.libsyn.com/rss",
+        "siteUrl": "https://www.ducttapemarketing.com/about/duct-tape-marketing-podcast/",
+        "imageUrl": "https://ducttapemarketing.com/wp-content/uploads/2024/04/Duct-Tape-Marketing-Podcast-Hosted-by-John-Jantsch-1-1-1-1.png"
+      },
+      {
+        "title": "The Growth Show",
+        "description": "Starting a business has never been easier. But finding success in one has never been harder. Each episode explores the inspiring stories behind how people grow a business, an idea, or a movement. Hosted by Matthew Brown.",
+        "feedUrl": "http://thegrowthshow.hubspot.libsynpro.com/",
+        "siteUrl": "http://www.hubspot.com/podcast",
+        "imageUrl": "https://www.hubspot.com/hubfs/GS18_header-02-1.jpg"
+      },
+      {
+        "title": "US Top News and Analysis",
+        "description": "CNBC is the world leader in business news and real-time financial market coverage. Find fast, actionable information.",
+        "feedUrl": "https://www.cnbc.com/id/100003114/device/rss/rss.html",
+        "siteUrl": "https://www.cnbc.com/us-top-news-and-analysis/",
+        "imageUrl": "https://fm.cnbc.com/applications/cnbc.com/staticcontent/img/versant/cnbc_share_versant.png?v=1524171804&amp;w=1920&amp;h=1080"
+      },
+      {
+        "title": "Yahoo Finance",
+        "description": "At Yahoo Finance, you get free stock quotes, up-to-date news, portfolio management resources, international market data, social interaction and mortgage rates that help you manage your financial life.",
+        "feedUrl": "https://finance.yahoo.com/news/rssindex",
+        "siteUrl": "https://finance.yahoo.com/",
+        "imageUrl": "https://s.yimg.com/zz/nn/lib/metro/g/my/yahoo_en-US_f_p_190x45_2x.png"
+      }
+    ]
+  },
+  {
+    "name": "Personal finance",
+    "slug": "personal-finance",
+    "icon": "Wallet",
+    "feedCount": 22,
+    "feeds": [
+      {
+        "title": "Budgets Are Sexy",
+        "description": "Money | Minimalism | Mohawks",
+        "feedUrl": "https://feeds2.feedburner.com/budgetsaresexy",
+        "siteUrl": "https://budgetsaresexy.com/",
+        "imageUrl": "https://budgetsaresexy.com/images/budgets-are-sexy-SOCIAL-icon.gif"
+      },
+      {
+        "title": "Financial Samurai",
+        "description": "Slicing Through Money's Mysteries",
+        "feedUrl": "https://www.financialsamurai.com/feed/",
+        "siteUrl": "https://www.financialsamurai.com/",
+        "imageUrl": "https://i2.wp.com/financialsamurai.com/wp-content/uploads/2017/02/cropped-FinancialSamurai-Site-Icon-700x700-180x180.png"
+      },
+      {
+        "title": "Frugalwoods",
+        "description": "Financial independence and simple living",
+        "feedUrl": "https://feeds.feedburner.com/Frugalwoods",
+        "siteUrl": "https://frugalwoods.com",
+        "imageUrl": "https://frugalwoods.com/wp-content/uploads/2023/06/fw-fav.png"
+      },
+      {
+        "title": "Get Rich Slowly",
+        "description": "personal finance that makes cents",
+        "feedUrl": "https://www.getrichslowly.org/feed/",
+        "siteUrl": "https://www.getrichslowly.org",
+        "imageUrl": "https://www.getrichslowly.org/wp-content/uploads/grs-social.png"
+      },
+      {
+        "title": "Good Financial Cents®",
+        "description": "Making Cents Of Investing and Financial Planning",
+        "feedUrl": "https://www.goodfinancialcents.com/feed/",
+        "siteUrl": "https://www.goodfinancialcents.com/",
+        "imageUrl": "https://www.goodfinancialcents.com/wp-content/uploads/2020/06/favicon@2x.png"
+      },
+      {
+        "title": "I Will Teach You To Be Rich",
+        "description": "by Ramit Sethi",
+        "feedUrl": "https://www.iwillteachyoutoberich.com/feed/",
+        "siteUrl": "https://www.iwillteachyoutoberich.com",
+        "imageUrl": "https://www.iwillteachyoutoberich.com/wp-content/uploads/2023/03/cropped-RS-1_Credit-Chris-Newhard-Booklight-scaled.jpg"
+      },
+      {
+        "title": "Learn To Trade The Market",
+        "description": "Learn Price Action Trading with Nial Fuller",
+        "feedUrl": "https://www.learntotradethemarket.com/feed",
+        "siteUrl": "https://www.learntotradethemarket.com",
+        "imageUrl": "https://www.learntotradethemarket.com/wp-content/uploads/2019/05/cropped-favicon-1-180x180.png"
+      },
+      {
+        "title": "Making Sense Of Cents",
+        "description": "Learn how to make extra money, how to save money, how to start a blog, and more.",
+        "feedUrl": "https://www.makingsenseofcents.com/feed",
+        "siteUrl": "https://www.makingsenseofcents.com/",
+        "imageUrl": null
+      },
+      {
+        "title": "Millennial Money",
+        "description": "Next Level Personal Finance",
+        "feedUrl": "https://millennialmoney.com/feed/",
+        "siteUrl": "https://millennialmoney.com/",
+        "imageUrl": "https://millennialmoney.com/wp-content/themes/millmoney-theme/images/favicon/apple-touch-icon.png"
+      },
+      {
+        "title": "Money Saving Mom®",
+        "description": "Saving Families Money Since 2007",
+        "feedUrl": "https://moneysavingmom.com/feed/",
+        "siteUrl": "https://moneysavingmom.com/",
+        "imageUrl": "https://moneysavingmom.com/wp-content/uploads/2021/04/favicon.png"
+      },
+      {
+        "title": "Money Under 30",
+        "description": "Just another Word Press site",
+        "feedUrl": "https://www.moneyunder30.com/feed",
+        "siteUrl": "https://www.moneyunder30.com",
+        "imageUrl": "https://www.moneyunder30.com/wp-content/uploads/2023/10/cropped-mue30favicon-180x180.png"
+      },
+      {
+        "title": "MoneyNing",
+        "description": "Sharing insights since 2007 on carefully saving money, investing, frugal living, coupons, promo codes because the little things matter in achieving financial freedom!",
+        "feedUrl": "http://feeds.feedburner.com/MoneyNing",
+        "siteUrl": "https://moneyning.com",
+        "imageUrl": null
+      },
+      {
+        "title": "MyWifeQuitHerJob.com",
+        "description": "Starting An Online Store So Your Spouse Can Quit And Stay At Home With The Kids",
+        "feedUrl": "https://mywifequitherjob.com/feed/",
+        "siteUrl": "https://mywifequitherjob.com",
+        "imageUrl": "https://mywifequitherjob.com/blog/wp-content/uploads/powerpress/PodcastImageV3-168.jpg"
+      },
+      {
+        "title": "NerdWallet",
+        "description": "NerdWallet is a free tool to find you the best credit cards, cd rates, savings, checking accounts, scholarships, healthcare and airlines. Start here to maximize your rewards or minimize your interest rates.",
+        "feedUrl": "https://www.nerdwallet.com/blog/feed/",
+        "siteUrl": "https://www.nerdwallet.com/blog",
+        "imageUrl": "https://www.nerdwallet.com/cdn/img/share/nw-share-image-1200x630.png"
+      },
+      {
+        "title": "Oblivious Investor",
+        "description": "Low-Maintenance Investing with Index Funds and ETFs",
+        "feedUrl": "https://obliviousinvestor.com/feed/",
+        "siteUrl": "https://obliviousinvestor.com",
+        "imageUrl": null
+      },
+      {
+        "title": "Personal Finance",
+        "description": "Learn about budgeting, saving, getting out of debt, credit, investing, and retirement planning. Join our community, read the PF Wiki, and get on top of your finances!",
+        "feedUrl": "https://reddit.com/r/personalfinance/.rss",
+        "siteUrl": "https://www.reddit.com/r/personalfinance/",
+        "imageUrl": "https://b.thumbs.redditmedia.com/hOn2BgW06eQdpNY-RvF3UGBtbG_CFbr4XkotMYLWhEc.png"
+      },
+      {
+        "title": "Quicken Business & Personal Review – Business and Personal Finances in One App | Money Crashers",
+        "description": "Turn the Tables on Money",
+        "feedUrl": "https://www.moneycrashers.com/feed/",
+        "siteUrl": "https://www.moneycrashers.com",
+        "imageUrl": "https://www.moneycrashers.com/wp-content/uploads/2025/09/image2.webp"
+      },
+      {
+        "title": "SavingAdvice.com Blog",
+        "description": "Bridging the gap between saving money and investing",
+        "feedUrl": "https://www.savingadvice.com/feed/",
+        "siteUrl": "https://www.savingadvice.com/",
+        "imageUrl": "https://etyb2wffn3d.exactdn.com/wp-content/uploads/2023/11/149328477_m_normal_none-scaled.jpg"
+      },
+      {
+        "title": "Side Hustle Nation",
+        "description": "Amplify your earning power",
+        "feedUrl": "https://www.sidehustlenation.com/feed",
+        "siteUrl": "https://www.sidehustlenation.com/",
+        "imageUrl": "https://www.sidehustlenation.com/wp-content/uploads/2017/11/will-work-for-freedom-brick-wall-3.jpg"
+      },
+      {
+        "title": "The College Investor",
+        "description": "Navigating Money And Education",
+        "feedUrl": "https://thecollegeinvestor.com/feed/",
+        "siteUrl": "https://thecollegeinvestor.com",
+        "imageUrl": "https://thecollegeinvestor.com/wp-content/uploads/2020/08/cropped-facicon-cap-32x32.png"
+      },
+      {
+        "title": "Well Kept Wallet",
+        "description": "Helping you save money, make money and pay off debt.",
+        "feedUrl": "https://wellkeptwallet.com/feed/",
+        "siteUrl": "https://wellkeptwallet.com/",
+        "imageUrl": "https://wellkeptwallet.com/wp-content/uploads/favicon-1.png"
+      },
+      {
+        "title": "Wise Bread",
+        "description": "Living large on a small budget",
+        "feedUrl": "http://feeds.killeraces.com/wisebread",
+        "siteUrl": "https://www.wisebread.com/secretfbfeed4",
+        "imageUrl": null
+      }
+    ]
+  },
+  {
+    "name": "Startups",
+    "slug": "startups",
+    "icon": "Rocket",
+    "feedCount": 18,
+    "feeds": [
+      {
+        "title": "AVC",
+        "description": "Musings of a VC in NYC",
+        "feedUrl": "https://avc.com/feed/",
+        "siteUrl": "https://avc.com/",
+        "imageUrl": "https://avc.com/content/uploads/2020/01/cropped-avc-eye-180x180.jpg"
+      },
+      {
+        "title": "blog Archives - Feld Thoughts",
+        "description": null,
+        "feedUrl": "https://feld.com/archives/tag/blog/feed",
+        "siteUrl": "https://feld.com/archives/tag/blog/",
+        "imageUrl": "https://i0.wp.com/feld.com/wp-content/uploads/2021/10/favicon-1.png?fit=16%2C16&#038;ssl=1"
+      },
+      {
+        "title": "Entrepreneur – Latest",
+        "description": "The latest small business tips and advice from Entrepreneur",
+        "feedUrl": "http://feeds.feedburner.com/entrepreneur/latest",
+        "siteUrl": "https://www.entrepreneur.comrss-feed/latest/",
+        "imageUrl": "https://www.entrepreneur.com/wp-content/uploads/sites/2/2025/03/cropped-Ent_Logo_Circle_Black_300.png"
+      },
+      {
+        "title": "Feld Thoughts",
+        "description": null,
+        "feedUrl": "https://feld.com/feed",
+        "siteUrl": "https://feld.com/",
+        "imageUrl": "https://i0.wp.com/feld.com/wp-content/uploads/2021/10/favicon-1.png?fit=16%2C16&#038;ssl=1"
+      },
+      {
+        "title": "GaryVee",
+        "description": null,
+        "feedUrl": "https://www.youtube.com/feeds/videos.xml?user=GaryVaynerchuk",
+        "siteUrl": "https://www.youtube.com/channel/UCctXZhXmG-kf3tlIXgVZUlw",
+        "imageUrl": "https://yt3.googleusercontent.com/zKI3aWmfoKkn1zZhwHAxp9KruXKFYKFuzW3jzQInHD34d15RaCZq-JMdjcP5dj9j3MW2horc=s900-c-k-c0x00ffffff-no-rj"
+      },
+      {
+        "title": "Hacker News: Front Page",
+        "description": "Hacker News RSS",
+        "feedUrl": "https://hnrss.org/frontpage",
+        "siteUrl": "https://news.ycombinator.com/",
+        "imageUrl": null
+      },
+      {
+        "title": "Inc.com",
+        "description": "Inc.com, the daily resource for entrepreneurs.",
+        "feedUrl": "https://www.inc.com/rss/",
+        "siteUrl": "",
+        "imageUrl": "https://images.inc.com/rss/inc_com_rss.jpg"
+      },
+      {
+        "title": "Marie Forleo",
+        "description": null,
+        "feedUrl": "https://www.youtube.com/feeds/videos.xml?user=marieforleo",
+        "siteUrl": "https://www.youtube.com/channel/UCuoxrRDDgk3UUnxR4tlkJYQ",
+        "imageUrl": "https://yt3.googleusercontent.com/xMlWRXAKNcyH3IEqpHG4e-uUF2lhb8KdmjVe7SFgqGX9_krJZI09yKiPd6TZ7npuG--eFXkF=s900-c-k-c0x00ffffff-no-rj"
+      },
+      {
+        "title": "Paul Graham: Essays",
+        "description": "Scraped feed provided by aaronsw.com",
+        "feedUrl": "http://www.aaronsw.com/2002/feeds/pgessays.rss",
+        "siteUrl": "http://www.paulgraham.com/",
+        "imageUrl": null
+      },
+      {
+        "title": "Product Hunt — The best new products, every day",
+        "description": null,
+        "feedUrl": "https://www.producthunt.com/feed",
+        "siteUrl": "https://www.producthunt.com",
+        "imageUrl": null
+      },
+      {
+        "title": "Quick Sprout",
+        "description": "Start and Grow Your Business",
+        "feedUrl": "https://www.quicksprout.com/rss",
+        "siteUrl": "https://www.quicksprout.com/",
+        "imageUrl": "https://www.quicksprout.com/wp-content/uploads/2024/04/Quick-Sprout_Homepage_2x-01.webp"
+      },
+      {
+        "title": "Small Business Trends",
+        "description": "Founded in 2003, Small Business Trends is an award-winning online publication for small business owners, entrepreneurs and the people who interact with them. It is one of the most popular independent small business publications on the web.\r\n\r\nTogether with hundreds of expert contributors, Small Business Trends brings you the news, tips, advice and resources you need. \"Small business success... delivered daily.\"",
+        "feedUrl": "https://feeds2.feedburner.com/SmallBusinessTrends",
+        "siteUrl": "https://smallbiztrends.com/",
+        "imageUrl": null
+      },
+      {
+        "title": "Smart Passive Income",
+        "description": "Become the entrepreneur you want to be",
+        "feedUrl": "http://feeds.feedburner.com/smartpassiveincome",
+        "siteUrl": "https://www.smartpassiveincome.com/",
+        "imageUrl": "https://www.smartpassiveincome.com/wp-content/uploads/2024/02/Screenshot-2024-02-01-at-9.03.40 AM.png"
+      },
+      {
+        "title": "Steve Blank",
+        "description": "Innovation and Entrepreneurship",
+        "feedUrl": "https://steveblank.com/feed/",
+        "siteUrl": "https://steveblank.com",
+        "imageUrl": "https://s0.wp.com/_si/?t=eyJpbWciOiJodHRwczpcL1wvczAud3AuY29tXC9pXC9ibGFuay5qcGciLCJ0eHQiOiJTdGV2ZSBCbGFuayIsInRlbXBsYXRlIjoiaGlnaHdheSIsImZvbnQiOiIiLCJibG9nX2lkIjo2NTk5NTg5fQ.-efmxdtN_YlMwMyz4RgR-akCDYfNNsBU6laamcldxGAMQ"
+      },
+      {
+        "title": "The Intercom Blog",
+        "description": "Articles and Podcasts on Customer Service, AI and Automation, Product, and more",
+        "feedUrl": "https://www.intercom.com/blog/feed",
+        "siteUrl": "https://www.intercom.com/blog/",
+        "imageUrl": "https://blog.intercomassets.com/blog/wp-content/uploads/2024/08/Intercom-Blog-Share-Image.jpeg"
+      },
+      {
+        "title": "The Startup Junkies Podcast",
+        "description": "The Startup Junkies podcast is hosted by Jeff Amerine and his team at Startup Junkie Consulting. We’ll cover topics ranging from getting started, planning, growing your business, proving your concept, leadership, marketing, exit strategies and so much more. We’ll interview business owners, entrepreneurs, experts and people we think will bring value to our audience. Subscribe and together we will move your business to the next level.",
+        "feedUrl": "https://startupjunkie.libsyn.com/rss",
+        "siteUrl": "https://www.startupjunkie.org/podcast",
+        "imageUrl": "https://startupjunkie.org/wp-content/uploads/2021/10/ScreenShot2021-10-18at11.23.06AM.png"
+      },
+      {
+        "title": "The Tim Ferriss Show",
+        "description": "Tim Ferriss is a self-experimenter and bestselling author, best known for The 4-Hour Workweek, which has been translated into 40+ languages.  Newsweek calls him \"the world's best human guinea pig,\" and The New York Times calls him \"a cross between Jack Welch and a Buddhist monk.\"  In this show, he deconstructs world-class performers from eclectic areas (investing, chess, pro sports, etc.), digging deep to find the tools, tactics, and tricks that listeners can use.",
+        "feedUrl": "https://rss.art19.com/tim-ferriss-show",
+        "siteUrl": "https://tim.blog/podcast",
+        "imageUrl": "https://tim.blog/wp-content/uploads/2025/07/og-show.png"
+      },
+      {
+        "title": "VentureBeat",
+        "description": "Transformative tech coverage that matters",
+        "feedUrl": "https://feeds.feedburner.com/venturebeat/SZYF",
+        "siteUrl": "https://venturebeat.com/feed/",
+        "imageUrl": null
+      }
+    ]
+  },
+  {
+    "name": "Fashion",
+    "slug": "fashion",
+    "icon": "Shirt",
+    "feedCount": 8,
+    "feeds": [
+      {
+        "title": "Fashion - ELLE",
+        "description": "RSS feed for Fashion - ELLE",
+        "feedUrl": "https://www.elle.com/rss/fashion.xml/",
+        "siteUrl": "https://www.elle.com/fashion/",
+        "imageUrl": "https://www.elle.com/_assets/design-tokens/elle/static/images/apple-touch-icon.0dd915e.png"
+      },
+      {
+        "title": "Fashion | The Guardian",
+        "description": "The latest fashion news, advice and comment from the Guardian",
+        "feedUrl": "https://www.theguardian.com/fashion/rss",
+        "siteUrl": "https://www.theguardian.com/fashion",
+        "imageUrl": "https://assets.guim.co.uk/static/frontend/icons/homescreen/apple-touch-icon.svg"
+      },
+      {
+        "title": "FashionBeans Men's Fashion and Style Feed",
+        "description": "Men's Fashion Tips and Men's Style Guide - Updated Daily",
+        "feedUrl": "https://www.fashionbeans.com/rss-feed/?category=fashion",
+        "siteUrl": "https://www.fashionbeans.com",
+        "imageUrl": "https://www.fashionbeans.com/wp-content/uploads/2022/11/FB_Favicon_48x48.png"
+      },
+      {
+        "title": "Fashionista",
+        "description": "Fashion and Beauty Industry News, Designers, Runway Shows, Style and Shopping Advice",
+        "feedUrl": "https://fashionista.com/.rss/excerpt/",
+        "siteUrl": "https://fashionista.com",
+        "imageUrl": "https://fashionista.com/site/images/apple-touch-icon.png"
+      },
+      {
+        "title": "Latest from Who What Wear",
+        "description": "All the latest content from the Who What Wear team",
+        "feedUrl": "https://www.whowhatwear.com/rss",
+        "siteUrl": "https://www.whowhatwear.com",
+        "imageUrl": "https://cdn.mos.cms.futurecdn.net/flexiimages/qzgqdurjen1667467717.png"
+      },
+      {
+        "title": "NYT > Style",
+        "description": null,
+        "feedUrl": "https://rss.nytimes.com/services/xml/rss/nyt/FashionandStyle.xml",
+        "siteUrl": "https://www.nytimes.com/section/style",
+        "imageUrl": "https://static01.nyt.com/newsgraphics/images/icons/defaultPromoCrop.png"
+      },
+      {
+        "title": "POPSUGAR Fashion",
+        "description": "Top Fashion Stories",
+        "feedUrl": "https://www.popsugar.com/fashion/feed",
+        "siteUrl": "https://www.popsugar.com/fashion/",
+        "imageUrl": "https://assets3.thrillist.com/v1/image/3137068/1200x600/scale;;webp=auto;jpeg_quality=85.jpg"
+      },
+      {
+        "title": "Refinery29",
+        "description": "Refinery29",
+        "feedUrl": "https://www.refinery29.com/fashion/rss.xml",
+        "siteUrl": "https://www.refinery29.com/fashion",
+        "imageUrl": "https://www.refinery29.com/assets/ceca07ea31bccaf0dc283e59c247e70d.jpg"
+      }
+    ]
+  },
+  {
+    "name": "Beauty",
+    "slug": "beauty",
+    "icon": "Sparkles",
+    "feedCount": 8,
+    "feeds": [
+      {
+        "title": "Beauty - ELLE",
+        "description": "RSS feed for Beauty - ELLE",
+        "feedUrl": "https://www.elle.com/rss/beauty.xml/",
+        "siteUrl": "https://www.elle.com/beauty/",
+        "imageUrl": "https://www.elle.com/_assets/design-tokens/elle/static/images/apple-touch-icon.0dd915e.png"
+      },
+      {
+        "title": "Beauty - Fashionista",
+        "description": "Fashion and Beauty Industry News, Designers, Runway Shows, Style and Shopping Advice",
+        "feedUrl": "https://fashionista.com/.rss/excerpt/beauty",
+        "siteUrl": "https://fashionista.com",
+        "imageUrl": "https://fashionista.com/site/images/apple-touch-icon.png"
+      },
+      {
+        "title": "Blog – The Beauty Brains",
+        "description": "Real Cosmetic Chemists answer your beauty questions",
+        "feedUrl": "https://thebeautybrains.com/blog/feed/",
+        "siteUrl": "https://thebeautybrains.com",
+        "imageUrl": null
+      },
+      {
+        "title": "From Head To Toe",
+        "description": "A beauty blog by Korean-American Jen Chae \"From Head To Toe\" @frmheadtotoe that showcases monolid and asian eyes makeup tutorials, fashion, hair, nails, swatches, skincare, beauty, lifestyle and product reviews.",
+        "feedUrl": "http://feeds.feedburner.com/frmheadtotoe",
+        "siteUrl": "http://www.frmheadtotoe.com/feeds/posts/default",
+        "imageUrl": null
+      },
+      {
+        "title": "Into The Gloss - Beauty Tips, Trends, And Product Reviews",
+        "description": "The best in beauty tips, makeup tutorials, product reviews, and techniques from industry leaders worldwide. Into The Gloss is beauty, from the Inside.",
+        "feedUrl": "https://feeds.feedburner.com/intothegloss/oqoU",
+        "siteUrl": "https://intothegloss.com/",
+        "imageUrl": "https://intothegloss.com/images/itg-square.png"
+      },
+      {
+        "title": "POPSUGAR Beauty",
+        "description": "Top Beauty Stories",
+        "feedUrl": "https://www.popsugar.com/beauty/feed",
+        "siteUrl": "https://www.popsugar.com/beauty/",
+        "imageUrl": "https://assets3.thrillist.com/v1/image/3137068/1200x600/scale;;webp=auto;jpeg_quality=85.jpg"
+      },
+      {
+        "title": "Refinery29",
+        "description": "Refinery29",
+        "feedUrl": "https://www.refinery29.com/beauty/rss.xml",
+        "siteUrl": "https://www.refinery29.com/beauty",
+        "imageUrl": "https://www.refinery29.com/assets/ceca07ea31bccaf0dc283e59c247e70d.jpg"
+      },
+      {
+        "title": "The Beauty Look Book",
+        "description": "Beauty Blog, Reviews + Makeup Looks",
+        "feedUrl": "https://thebeautylookbook.com/feed",
+        "siteUrl": "https://thebeautylookbook.com/",
+        "imageUrl": "https://thebeautylookbook.com/wp-content/uploads/2017/01/cropped-TBLB-Favicon-180x180.jpg"
+      }
+    ]
+  },
+  {
+    "name": "Apple",
+    "slug": "apple",
+    "icon": "Apple",
+    "feedCount": 16,
+    "feeds": [
+      {
+        "title": "9to5Mac",
+        "description": "Apple News & Mac Rumors Breaking All Day",
+        "feedUrl": "https://9to5mac.com/feed",
+        "siteUrl": "https://9to5mac.com/",
+        "imageUrl": "https://9to5mac.com/wp-content/uploads/sites/6/2019/10/cropped-cropped-mac1-1.png?w=180"
+      },
+      {
+        "title": "Apple",
+        "description": null,
+        "feedUrl": "https://www.youtube.com/feeds/videos.xml?user=Apple",
+        "siteUrl": "https://www.youtube.com/channel/UCE_M8A5yxnLfW0KghEeajjw",
+        "imageUrl": "https://yt3.googleusercontent.com/s5hlNKKDDQWjFGzYNnh8UeOW2j2w6id-cZGx7GdAA3d5Fu7zEi7ZMXEyslysuQUKigXNxtAB=s900-c-k-c0x00ffffff-no-rj"
+      },
+      {
+        "title": "Apple Newsroom",
+        "description": null,
+        "feedUrl": "https://www.apple.com/newsroom/rss-feed.rss",
+        "siteUrl": "https://www.apple.com/newsroom/rss-feed.rss",
+        "imageUrl": null
+      },
+      {
+        "title": "AppleInsider News",
+        "description": "AppleInsider News Feed",
+        "feedUrl": "https://appleinsider.com/rss/news/",
+        "siteUrl": "https://appleinsider.com/rss/news",
+        "imageUrl": null
+      },
+      {
+        "title": "Cult of Mac",
+        "description": "Your source for the latest Apple news, rumors, analysis, reviews, how-tos and deals.",
+        "feedUrl": "https://www.cultofmac.com/feed",
+        "siteUrl": "https://www.cultofmac.com/",
+        "imageUrl": "https://cdn.cultofmac.com/wp-content/uploads/2011/06/CultofMac-logo3-e1307071315793.jpg"
+      },
+      {
+        "title": "Daring Fireball",
+        "description": "By John Gruber",
+        "feedUrl": "https://daringfireball.net/feeds/main",
+        "siteUrl": "https://daringfireball.net/",
+        "imageUrl": "https://daringfireball.net/graphics/df-wide-card.png"
+      },
+      {
+        "title": "iMore - The #1 iPhone, iPad, and iPod touch blog",
+        "description": "More news and rumors, more help and how-tos, more app and accessory reviews, more iPhone and iPad and iPod touch. More of everything you love. iMore.",
+        "feedUrl": "http://feeds.feedburner.com/TheiPhoneBlog",
+        "siteUrl": "https://www.imore.com",
+        "imageUrl": "https://cdn.mos.cms.futurecdn.net/flexiimages/99m2rw3pzf1649746644.png"
+      },
+      {
+        "title": "MacRumors",
+        "description": null,
+        "feedUrl": "https://www.youtube.com/feeds/videos.xml?user=macrumors",
+        "siteUrl": "https://www.youtube.com/channel/UCaFGDBmGK_jw66u3av2Ysjw",
+        "imageUrl": "https://yt3.googleusercontent.com/vfFcyv0_vz0Li2sRXziJAiHe9yYKKBhHlcTI2wiLT7Pl2F0bhMnKYoFo3_cHrLoV0jYswt9BYg=s900-c-k-c0x00ffffff-no-rj"
+      },
+      {
+        "title": "MacRumors: Mac News and Rumors - Mac Blog",
+        "description": "Apple, iPhone, iPad, Mac News and Rumors",
+        "feedUrl": "http://feeds.macrumors.com/MacRumors-Mac",
+        "siteUrl": "https://www.macrumors.com",
+        "imageUrl": "https://images.macrumors.com/article-new/2021/06/macrumors-share.jpg"
+      },
+      {
+        "title": "MacStories",
+        "description": "Apple news, app reviews, and stories by Federico Viticci and friends.",
+        "feedUrl": "https://www.macstories.net/feed",
+        "siteUrl": "https://www.macstories.net/",
+        "imageUrl": "https://www.macstories.net/wp-content/themes/macstories4/images/ms-opengraph.png"
+      },
+      {
+        "title": "Macworld",
+        "description": "Macworld is your best source for all things Apple. We give you the scoop on what's new, what's best and how to make the most out of the products you love.",
+        "feedUrl": "https://www.macworld.com/index.rss",
+        "siteUrl": "https://www.macworld.com",
+        "imageUrl": "https://www.macworld.com/wp-content/uploads/2021/03/cropped-macworld-favicon.png?w=180"
+      },
+      {
+        "title": "Marco.org",
+        "description": "I’m Marco Arment, creator of Overcast, technology podcaster and writer, and coffee enthusiast.",
+        "feedUrl": "https://marco.org/rss",
+        "siteUrl": "https://marco.org/",
+        "imageUrl": "https://marco.org/apple-touch-icon.png"
+      },
+      {
+        "title": "OS X Daily",
+        "description": "News, tips, software, reviews, and more for Mac OS X, iPhone, iPad",
+        "feedUrl": "http://feeds.feedburner.com/osxdaily",
+        "siteUrl": "https://osxdaily.com",
+        "imageUrl": "https://cdn.osxdaily.com/wp-content/uploads/2019/09/cropped-apple-touch-icon-104.png"
+      },
+      {
+        "title": "r/Apple: Unofficial Apple Community",
+        "description": "An unofficial community about Apple and all of its devices and software.",
+        "feedUrl": "https://www.reddit.com/r/apple/.rss",
+        "siteUrl": "https://www.reddit.com/r/apple/",
+        "imageUrl": "https://b.thumbs.redditmedia.com/K_Qtc09EwZKKUbzY.png"
+      },
+      {
+        "title": "r/iPhone",
+        "description": "Reddit’s little corner for iPhone lovers (and some people who just mildly enjoy it…)",
+        "feedUrl": "https://www.reddit.com/r/iphone/.rss",
+        "siteUrl": "https://www.reddit.com/r/iphone/",
+        "imageUrl": "https://www.redditstatic.com/icon.png/"
+      },
+      {
+        "title": "The Loop",
+        "description": "Making Sense of Technology",
+        "feedUrl": "https://www.loopinsight.com/feed",
+        "siteUrl": "https://www.loopinsight.com",
+        "imageUrl": null
+      }
+    ]
+  },
+  {
+    "name": "Android",
+    "slug": "android",
+    "icon": "Smartphone",
+    "feedCount": 16,
+    "feeds": [
+      {
+        "title": "All About Android (Audio)",
+        "description": "All About Android delivers everything you want to know about Android each week--the biggest news, freshest hardware, best apps and geekiest how-tos--with Android enthusiasts Jason Howell, Ron Richards, Huyen Tue Dao, and a variety of special guests along the way.\n\nAlthough the show is no longer in production, you can enjoy over a decade of Android in our archives.",
+        "feedUrl": "https://feeds.twit.tv/aaa.xml",
+        "siteUrl": "https://twit.tv/shows/all-about-android",
+        "imageUrl": "https://elroy.twit.tv/sites/default/files/styles/twit_album_art_1400x1400/public/images/shows/All%20About%20Android/hero/aaa_may23_websitehero_0.png"
+      },
+      {
+        "title": "Android",
+        "description": "Android",
+        "feedUrl": "https://blog.google/products/android/rss",
+        "siteUrl": "https://blog.google/products-and-platforms/platforms/android/",
+        "imageUrl": "https://storage.googleapis.com/gweb-uniblog-publish-prod/images/3D_DROID_HEAD_200x200.max-1440x810.jpg"
+      },
+      {
+        "title": "Android",
+        "description": "Android news, reviews, tips, and discussions about rooting, tutorials, and apps. General discussion about devices is welcome. Please direct technical support, upgrade questions, buy/sell, app recommendations, and carrier-related issues to other subreddits.",
+        "feedUrl": "https://www.reddit.com/r/android/.rss",
+        "siteUrl": "https://www.reddit.com/r/android/",
+        "imageUrl": "https://www.redditstatic.com/icon.png/"
+      },
+      {
+        "title": "Android Authority",
+        "description": "Android News, Reviews, How To",
+        "feedUrl": "https://www.androidauthority.com/feed",
+        "siteUrl": "https://www.androidauthority.com/",
+        "imageUrl": null
+      },
+      {
+        "title": "Android Authority",
+        "description": null,
+        "feedUrl": "https://www.youtube.com/feeds/videos.xml?user=AndroidAuthority",
+        "siteUrl": "https://www.youtube.com/channel/UCgyqtNWZmIxTx3b6OxTSALw",
+        "imageUrl": "https://yt3.googleusercontent.com/1EiH0cEXTu1pTOf_EFtXYgjWV5OgmlBUvDh1ghWBJ8wP1H6_EHvDgOwFNXXEZiyJa1FPYbo25A=s900-c-k-c0x00ffffff-no-rj"
+      },
+      {
+        "title": "Android Authority Podcast",
+        "description": "The Android Authority Podcast – discussing topics in Android every week.\n\nThe Android Authority Podcast brings you all the top stories and features based on your favorite mobile operating system: Android. We help make Android more accessible to all, and dive deeper into the details when we can, there's something in here for everyone.\n\nCheck out androidauthority.com for all the best news and reviews for your favorite phones and tablets, then join our community forums to join in on the discussion. Don't forget to hit our YouTube channel for even more.",
+        "feedUrl": "https://androidauthority.libsyn.com/rss",
+        "siteUrl": "http://www.androidauthority.com/podcast",
+        "imageUrl": "https://static.libsyn.com/p/assets/3/a/e/a/3aea54f506f92979/1400px_-_Margin_FullBG.png"
+      },
+      {
+        "title": "Android Central Podcast",
+        "description": "The Android and Google Podcast for Everyone. Hosted by Daniel Bader.",
+        "feedUrl": "http://feeds.feedburner.com/AndroidCentralPodcast",
+        "siteUrl": "http://www.androidcentral.com",
+        "imageUrl": "https://cdn.mos.cms.futurecdn.net/flexiimages/m3uyybbdos1632303243.png"
+      },
+      {
+        "title": "Android Community",
+        "description": "Android News, Reviews, and Apps",
+        "feedUrl": "https://androidcommunity.com/feed/",
+        "siteUrl": "https://androidcommunity.com",
+        "imageUrl": null
+      },
+      {
+        "title": "Android Police",
+        "description": "All the latest mobile tech news, deals, reviews, guides, editorials, and more. Embracing the green bubble since 2009.",
+        "feedUrl": "http://feeds.feedburner.com/AndroidPolice",
+        "siteUrl": "https://www.androidpolice.com",
+        "imageUrl": "https://static0.anpoimages.com/wordpress/wp-content/uploads/social/ap-og-img.png?w=1200&amp;h=675&amp;fit=crop"
+      },
+      {
+        "title": "Cult of Android",
+        "description": "Breaking news for Android fans",
+        "feedUrl": "https://www.cultofandroid.com/feed",
+        "siteUrl": "https://www.cultofandroid.com/",
+        "imageUrl": null
+      },
+      {
+        "title": "Cyanogen Mods",
+        "description": "GCam APK | LineageOS | AI Mods",
+        "feedUrl": "https://www.cyanogenmods.org/feed",
+        "siteUrl": "https://cyanogenmods.org",
+        "imageUrl": "https://cyanogenmods.org/wp-content/uploads/2018/09/gcam-for-all.jpg"
+      },
+      {
+        "title": "Droid Life | Opinionated Android news.",
+        "description": "Opinionated Android news.",
+        "feedUrl": "https://www.droid-life.com/feed",
+        "siteUrl": "https://www.droid-life.com/",
+        "imageUrl": "https://www.droid-life.com/wp-content/uploads/2020/05/DL-AMP-Something-1200x628-cropped.jpg"
+      },
+      {
+        "title": "GSMArena.com - Latest articles",
+        "description": "GSMArena.com is the ultimate resource for GSM handset information. This feed contains the latest articles (news and reviews) in chronological order.",
+        "feedUrl": "https://www.gsmarena.com/rss-news-reviews.php3",
+        "siteUrl": "https://www.gsmarena.com/",
+        "imageUrl": "https://cdn2.gsmarena.com/w/css/logo-gsmarena-com.gif"
+      },
+      {
+        "title": "Latest from Android Central",
+        "description": "All the latest content from the Android Central team",
+        "feedUrl": "http://feeds.androidcentral.com/androidcentral",
+        "siteUrl": "https://www.androidcentral.com",
+        "imageUrl": "https://cdn.mos.cms.futurecdn.net/flexiimages/m3uyybbdos1632303243.png"
+      },
+      {
+        "title": "Phandroid",
+        "description": "Android Phone News, Rumors, Reviews, Apps, Forums & More!",
+        "feedUrl": "http://feeds2.feedburner.com/AndroidPhoneFans",
+        "siteUrl": "https://phandroid.com/",
+        "imageUrl": "https://phandroid.com/wp-content/uploads/2021/03/s10LgrPt-350x350.jpg"
+      },
+      {
+        "title": "TalkAndroid",
+        "description": "The latest in android news, rumours, and updates, including device news and apps!",
+        "feedUrl": "http://feeds.feedburner.com/AndroidNewsGoogleAndroidForums",
+        "siteUrl": "https://www.talkandroid.com",
+        "imageUrl": "https://www.talkandroid.com/wp-content/uploads/2023/12/cropped-Asset-7@2x-8-1-32x32.png"
+      }
+    ]
+  },
+  {
+    "name": "iOS Development",
+    "slug": "ios-development",
+    "icon": "Smartphone",
+    "feedCount": 15,
+    "feeds": [
+      {
+        "title": "Alberto De Bortoli",
+        "description": "Principal Software Engineer @ Just Eat Takeaway, London.",
+        "feedUrl": "https://albertodebortoli.com/rss/",
+        "siteUrl": "https://albertodebortoli.com/",
+        "imageUrl": "https://albertodebortoli.com/content/images/size/w1200/2024/02/joshua-fuller-N2q8hRVzEg8-unsplash.jpg"
+      },
+      {
+        "title": "Augmented Code",
+        "description": "Performant, sleek and elegant.",
+        "feedUrl": "https://augmentedcode.io/feed/",
+        "siteUrl": "https://augmentedcode.io",
+        "imageUrl": "https://augmentedcode.io/wp-content/uploads/2017/11/site-icon.png?w=200"
+      },
+      {
+        "title": "Benoit Pasquier",
+        "description": "Recent content on Benoit Pasquier",
+        "feedUrl": "https://benoitpasquier.com/index.xml",
+        "siteUrl": "https://benoitpasquier.com/",
+        "imageUrl": null
+      },
+      {
+        "title": "Bruno Rocha",
+        "description": "SwiftRocks is Bruno Rocha's blog about Swift / iOS and the software engineering industry.",
+        "feedUrl": "https://swiftrocks.com/rss.xml",
+        "siteUrl": "https://swiftrocks.com",
+        "imageUrl": "https://swiftrocks.com/images/thumbs/thumb_dark.jpg"
+      },
+      {
+        "title": "inessential.com",
+        "description": "Brent Simmons's weblog.",
+        "feedUrl": "https://inessential.com/xml/rss.xml",
+        "siteUrl": "https://inessential.com/",
+        "imageUrl": null
+      },
+      {
+        "title": "Latest News - Apple Developer",
+        "description": null,
+        "feedUrl": "https://developer.apple.com/news/rss/news.rss",
+        "siteUrl": "https://developer.apple.com/news/",
+        "imageUrl": "https://developer.apple.com/news/images/og/apple-developer-og.png"
+      },
+      {
+        "title": "Mobile A11y",
+        "description": "Recent content on Mobile A11y",
+        "feedUrl": "https://mobilea11y.com/index.xml",
+        "siteUrl": "https://mobilea11y.com/",
+        "imageUrl": "https://mobilea11y.com/apple-touch-icon.png"
+      },
+      {
+        "title": "Ole Begemann",
+        "description": null,
+        "feedUrl": "https://oleb.net/blog/atom.xml",
+        "siteUrl": "https://oleb.net/blog/",
+        "imageUrl": null
+      },
+      {
+        "title": "Swift by Sundell",
+        "description": "Weekly Swift articles, podcasts and tips by John Sundell",
+        "feedUrl": "https://www.swiftbysundell.com/feed.rss",
+        "siteUrl": "https://www.swiftbysundell.com",
+        "imageUrl": "https://www.swiftbysundell.com/images/social.png"
+      },
+      {
+        "title": "Swift by Sundell",
+        "description": "Weekly Swift articles, podcasts and tips by John Sundell",
+        "feedUrl": "https://swiftbysundell.com/feed.rss",
+        "siteUrl": "https://www.swiftbysundell.com",
+        "imageUrl": "https://www.swiftbysundell.com/images/social.png"
+      },
+      {
+        "title": "The Atomic Birdhouse",
+        "description": "Recent content on The Atomic Birdhouse",
+        "feedUrl": "https://atomicbird.com/index.xml",
+        "siteUrl": "https://atomicbird.com/",
+        "imageUrl": "https://atomicbird.com/apple-touch-icon-144-precomposed.png"
+      },
+      {
+        "title": "The One And Only Blog Of Joe Fabisevich",
+        "description": "The personal website of the one and only Joe Fabisevich, and indie developer building Red Panda Club Inc. Formerly an iOS developer working on civic integrity, societal health, misinformation, and other wild things @Twitter.",
+        "feedUrl": "https://www.fabisevi.ch/feed.xml",
+        "siteUrl": "https://fabisevi.ch",
+        "imageUrl": "https://fabisevi.ch/images/og-image.png"
+      },
+      {
+        "title": "tyler.io",
+        "description": "mostly nonsense",
+        "feedUrl": "https://tyler.io/feed/",
+        "siteUrl": "https://tyler.io",
+        "imageUrl": "https://cdn.tyler.io/wp-content/uploads/2025/12/cropped-pixel-180x180.png"
+      },
+      {
+        "title": "Under the Radar",
+        "description": "From development and design to marketing and support, Under the Radar was all about independent app development. It was rarely longer than 30 minutes.  Hosted by Marco Arment and David Smith.",
+        "feedUrl": "https://www.relay.fm/radar/feed",
+        "siteUrl": "https://www.relay.fm/radar",
+        "imageUrl": "https://relayfm.s3.amazonaws.com/uploads/broadcast/image/23/broadcast_artwork_radar_artwork_06e0e2c2-772f-48d8-b56e-77b1227bb76c.png"
+      },
+      {
+        "title": "Use Your Loaf - iOS Development News & Tips",
+        "description": "Recent content on Use Your Loaf - iOS Development News & Tips",
+        "feedUrl": "https://useyourloaf.com/blog/rss.xml",
+        "siteUrl": "https://useyourloaf.com/blog/",
+        "imageUrl": "https://useyourloaf.com/assets/images/banner.png"
+      }
+    ]
+  },
+  {
+    "name": "Android Development",
+    "slug": "android-development",
+    "icon": "Smartphone",
+    "feedCount": 21,
+    "feeds": [
+      {
+        "title": "Android Developers",
+        "description": null,
+        "feedUrl": "https://www.youtube.com/feeds/videos.xml?user=androiddevelopers",
+        "siteUrl": "https://www.youtube.com/channel/UCVHFbqXqoYvEWM1Ddxl0QDg",
+        "imageUrl": "https://yt3.googleusercontent.com/fjw60Nq0hc88DeKQKjCoHwcixNWxWdJEHawLdWf-sE2HKsltUdnAyiu5xczwYuVyiWNsFs8U=s900-c-k-c0x00ffffff-no-rj"
+      },
+      {
+        "title": "Android Developers - Medium",
+        "description": "Articles on modern tools and resources to help you build experiences that people love, faster and easier, across every Android device. - Medium",
+        "feedUrl": "https://medium.com/feed/androiddevelopers",
+        "siteUrl": "https://medium.com/androiddevelopers?source=rss----95b274b437c2---4",
+        "imageUrl": "https://cdn-images-1.medium.com/proxy/1*TGH72Nnw24QL3iV9IOm4VA.png"
+      },
+      {
+        "title": "Android Developers Backstage",
+        "description": "Android Backstage, a podcast by and for Android developers. Hosted by developers from the Android engineering team, this show covers topics of interest to Android programmers, with in-depth discussions and interviews with engineers on the Android team at Google.\n\nSubscribe to Android Developers YouTube → https://goo.gle/AndroidDevs",
+        "feedUrl": "http://feeds.feedburner.com/blogspot/androiddevelopersbackstage",
+        "siteUrl": "http://androidbackstage.blogspot.com/",
+        "imageUrl": "https://static.libsyn.com/p/assets/c/9/e/0/c9e07a90cf263f3b40be95ea3302a6a1/Android_Devs_Backstage_Thumb_v2.png"
+      },
+      {
+        "title": "Android Developers Blog",
+        "description": "An Open Handset Alliance Project.",
+        "feedUrl": "http://feeds.feedburner.com/blogspot/hsDu",
+        "siteUrl": "http://android-developers.googleblog.com/feeds/posts/default",
+        "imageUrl": null
+      },
+      {
+        "title": "Android in MindOrks on Medium",
+        "description": "Latest stories tagged with Android in MindOrks on Medium",
+        "feedUrl": "https://medium.com/feed/mindorks/tagged/android",
+        "siteUrl": "https://medium.com/mindorks/tagged/android?source=rss----f1a763fc7443--android",
+        "imageUrl": "https://cdn-images-1.medium.com/proxy/1*TGH72Nnw24QL3iV9IOm4VA.png"
+      },
+      {
+        "title": "Android in The Airbnb Tech Blog on Medium",
+        "description": "Latest stories tagged with Android in The Airbnb Tech Blog on Medium",
+        "feedUrl": "https://medium.com/feed/airbnb-engineering/tagged/android",
+        "siteUrl": "https://medium.com/airbnb-engineering/tagged/android?source=rss----53c7c27702d5--android",
+        "imageUrl": "https://cdn-images-1.medium.com/proxy/1*TGH72Nnw24QL3iV9IOm4VA.png"
+      },
+      {
+        "title": "Chris Keenan Codes",
+        "description": "Software Development Blog",
+        "feedUrl": "https://chrynan.codes/rss/",
+        "siteUrl": "https://chrynan.codes/",
+        "imageUrl": "https://chrynan.codes/favicon.png"
+      },
+      {
+        "title": "Company | The JetBrains Blog",
+        "description": "Developer Tools for Professionals and Teams",
+        "feedUrl": "https://blog.jetbrains.com/blog/feed",
+        "siteUrl": "https://blog.jetbrains.com",
+        "imageUrl": "https://resources.jetbrains.com/storage/products/jetbrains/img/meta/preview.png"
+      },
+      {
+        "title": "Dan Lew Codes",
+        "description": "Thoughts on life, the universe and the mystery of it all; but actually mostly just code.",
+        "feedUrl": "https://blog.danlew.net/rss/",
+        "siteUrl": "https://blog.danlew.net/",
+        "imageUrl": "https://blog.danlew.net/favicon.png"
+      },
+      {
+        "title": "Developing Android Apps",
+        "description": "News for Android developers with the who, what, where, when and how of the Android community. News / Articles / Talks / Tools / Open source!",
+        "feedUrl": "https://reddit.com/r/androiddev.rss",
+        "siteUrl": "https://www.reddit.com/r/androiddev",
+        "imageUrl": "https://www.redditstatic.com/icon.png/"
+      },
+      {
+        "title": "droidcon SF",
+        "description": null,
+        "feedUrl": "https://www.youtube.com/feeds/videos.xml?channel_id=UCKubKoe1CBw_-n_GXetEQbg",
+        "siteUrl": "https://www.youtube.com/channel/UCKubKoe1CBw_-n_GXetEQbg",
+        "imageUrl": "https://yt3.googleusercontent.com/Wh4zSn_wMf5S2WRPEOE_AXYxmh4YMZTbka5vCw0aNU_n2RthmFHZTsTCatC49TluPL8r8XFS=s900-c-k-c0x00ffffff-no-rj"
+      },
+      {
+        "title": "Fragmented - AI Developer Podcast",
+        "description": "Fragmented is an AI developer podcast for engineers who want to go beyond vibe coding and ship real software.\n\nWe cover AI-assisted development the way working engineers actually use it: prompting strategies, code review, testing, debugging, workflows, and building production-grade software with AI tools. No hype. No \"I shipped a SaaS in a weekend\" stories. Just tactics that work.\n\nHosted by Kaushik Gopal and Iury Souza — software engineers using AI daily to build and ship real products.\n\nFrom vibe coding to software engineering — one episode at a time. Our goal: help you use AI to become a better engineer, not be replaced by one.",
+        "feedUrl": "https://feeds.simplecast.com/LpAGSLnY",
+        "siteUrl": "https://fragmentedpodcast.com/",
+        "imageUrl": "https://fragmentedpodcast.com//images/branding/logo-3000x3000-dark.webp"
+      },
+      {
+        "title": "Handstand Sam",
+        "description": "Sam Edwards - Handstands, Travel, Android & Web",
+        "feedUrl": "https://handstandsam.com/feed/",
+        "siteUrl": "https://handstandsam.com",
+        "imageUrl": null
+      },
+      {
+        "title": "Jake Wharton",
+        "description": null,
+        "feedUrl": "https://jakewharton.com/atom.xml",
+        "siteUrl": "https://jakewharton.com/",
+        "imageUrl": "http://www.gravatar.com/avatar/e68309f117985270285ade8082f4877d?s=200"
+      },
+      {
+        "title": "Joe Birch",
+        "description": "Speaker, Educator and GDE for Android",
+        "feedUrl": "https://joebirch.co/feed",
+        "siteUrl": "https://joebirch.co",
+        "imageUrl": null
+      },
+      {
+        "title": "Kotlin",
+        "description": null,
+        "feedUrl": "https://www.youtube.com/feeds/videos.xml?playlist_id=PLQ176FUIyIUa6SChjajjVc-LMzxWiz6dy",
+        "siteUrl": "http://www.youtube.com/feeds/videos.xml?playlist_id=PLQ176FUIyIUa6SChjajjVc-LMzxWiz6dy",
+        "imageUrl": null
+      },
+      {
+        "title": "Public Object",
+        "description": "Jesse Wilson on programming.",
+        "feedUrl": "https://publicobject.com/rss/",
+        "siteUrl": "https://publicobject.com/",
+        "imageUrl": "https://publicobject.com/content/images/2014/Apr/butters_2.jpg"
+      },
+      {
+        "title": "The Android Arsenal",
+        "description": "A categorized directory of libraries and tools for Android",
+        "feedUrl": "https://feeds.feedburner.com/Android_Arsenal",
+        "siteUrl": "https://android-arsenal.com/rss.xml",
+        "imageUrl": null
+      },
+      {
+        "title": "Zac Sweers",
+        "description": "Musings on Kotlin, mobile, open source, and building good things.",
+        "feedUrl": "https://www.zacsweers.dev/rss/",
+        "siteUrl": "https://www.zacsweers.dev/",
+        "imageUrl": "https://www.zacsweers.dev/favicon.png"
+      },
+      {
+        "title": "Zarah Dominguez",
+        "description": "An Android Love Affair",
+        "feedUrl": "https://zarah.dev/feed.xml",
+        "siteUrl": "https://zarah.dev/",
+        "imageUrl": "https://zarah.dev/assets/images/apple-touch-icon.png"
+      },
+      {
+        "title": "zsmb.co",
+        "description": "Recent content on zsmb.co",
+        "feedUrl": "https://zsmb.co/index.xml",
+        "siteUrl": "https://zsmb.co/",
+        "imageUrl": null
+      }
+    ]
+  },
+  {
+    "name": "Web Development",
+    "slug": "web-development",
+    "icon": "Globe",
+    "feedCount": 6,
+    "feeds": [
+      {
+        "title": "A List Apart: The Full Feed",
+        "description": "Articles for people who make web sites.",
+        "feedUrl": "https://alistapart.com/main/feed/",
+        "siteUrl": "https://alistapart.com",
+        "imageUrl": "https://s0.wp.com/_si/?t=eyJpbWciOiJodHRwczpcL1wvaTAud3AuY29tXC9hbGlzdGFwYXJ0LmNvbVwvd3AtY29udGVudFwvdXBsb2Fkc1wvMjAxOVwvMDNcL2Nyb3BwZWQtaWNvbl9uYXZpZ2F0aW9uLWxhdXJlbC01MTIuanBnP2ZpdD01MTIlMkM1MTImc3NsPTEiLCJ0eHQiOiJBIExpc3QgQXBhcnQiLCJ0ZW1wbGF0ZSI6ImVkZ2UiLCJmb250IjoiIiwiYmxvZ19pZCI6MTU4MDk0NzI2fQ.newTojEDtdGzV9hV6wY9Zx7WZCMjPNGV0-ORSKXaGUYMQ"
+      },
+      {
+        "title": "Code Wall",
+        "description": "Web Development & Programming",
+        "feedUrl": "https://www.codewall.co.uk/feed/",
+        "siteUrl": "https://www.codewall.co.uk/",
+        "imageUrl": "https://www.codewall.co.uk/wp-content/uploads/2025/06/cropped-favicon-180x180.png"
+      },
+      {
+        "title": "CSS-Tricks",
+        "description": "Tips, Tricks, and Techniques on using Cascading Style Sheets.",
+        "feedUrl": "https://css-tricks.com/feed/",
+        "siteUrl": "https://css-tricks.com",
+        "imageUrl": "https://i0.wp.com/css-tricks.com/wp-content/uploads/2021/12/default-social-css-tricks.png"
+      },
+      {
+        "title": "David Walsh Blog",
+        "description": "A blog featuring tutorials about JavaScript, HTML5, AJAX, PHP, CSS, WordPress, and everything else development.",
+        "feedUrl": "https://davidwalsh.name/feed",
+        "siteUrl": "https://davidwalsh.name",
+        "imageUrl": "https://davidwalsh.name/wp-content/themes/punky/images/logo.png"
+      },
+      {
+        "title": "Mozilla Hacks – the Web developer blog",
+        "description": "hacks.mozilla.org",
+        "feedUrl": "https://hacks.mozilla.org/feed/",
+        "siteUrl": "https://hacks.mozilla.org/",
+        "imageUrl": "https://hacks.mozilla.org/wp-content/themes/Hax/img/hacks-meta-image.jpg"
+      },
+      {
+        "title": "Sink In - Tech Learnings",
+        "description": "Sink In - Tech Learnings (Shah Code Exporters - FZCO)",
+        "feedUrl": "https://gosink.in/rss/",
+        "siteUrl": "https://gosink.in/",
+        "imageUrl": "https://gosink.in/content/images/size/w1200/2019/08/website-cover.jpeg"
+      }
+    ]
+  },
+  {
+    "name": "UI / UX",
+    "slug": "ui-ux",
+    "icon": "Palette",
+    "feedCount": 7,
+    "feeds": [
+      {
+        "title": "Articles on Smashing Magazine — For Web Designers And Developers",
+        "description": "Recent content in Articles on Smashing Magazine — For Web Designers And Developers",
+        "feedUrl": "https://www.smashingmagazine.com/feed",
+        "siteUrl": "https://www.smashingmagazine.com/",
+        "imageUrl": "https://smashingmagazine.com/images/smashing-homepage.png"
+      },
+      {
+        "title": "Boxes and Arrows",
+        "description": "The design behind the design",
+        "feedUrl": "http://boxesandarrows.com/rss/",
+        "siteUrl": "https://boxesandarrows.com/",
+        "imageUrl": "https://boxesandarrows.com/wp-content/uploads/2021/07/bandasocial.png"
+      },
+      {
+        "title": "JUST™ Creative",
+        "description": "Logo Designer, Graphic Designer, Graphic Design Portfolio, Logo Design, Logo, Graphic, Design, Graphic Design, Brand Strategy, Branding",
+        "feedUrl": "https://feeds.feedburner.com/JustCreativeDesignBlog",
+        "siteUrl": "https://justcreative.com",
+        "imageUrl": "https://justcreative.com/wp-content/uploads/2020/02/JustCreative-OpenGraph-3.png"
+      },
+      {
+        "title": "NN/g latest articles and announcements",
+        "description": "The latest articles and announcements from Nielsen Norman Group",
+        "feedUrl": "https://www.nngroup.com/feed/rss/",
+        "siteUrl": "https://www.nngroup.com/feed/rss/",
+        "imageUrl": null
+      },
+      {
+        "title": "User Experience",
+        "description": "A community where professionals, enthusiasts, and individuals interested in the field of user experience can share knowledge, ask questions, and engage in discussions about various UX-related topics.",
+        "feedUrl": "https://www.reddit.com/r/userexperience/.rss",
+        "siteUrl": "https://www.reddit.com/r/userexperience/",
+        "imageUrl": "https://www.redditstatic.com/icon.png/"
+      },
+      {
+        "title": "UX Collective - Medium",
+        "description": "We believe designers are thinkers as much as they are makers. https://linktr.ee/uxc - Medium",
+        "feedUrl": "https://uxdesign.cc/feed",
+        "siteUrl": "https://uxdesign.cc?source=rss----138adf9c44c---4",
+        "imageUrl": "https://cdn-images-1.medium.com/proxy/1*TGH72Nnw24QL3iV9IOm4VA.png"
+      },
+      {
+        "title": "UX Movement",
+        "description": null,
+        "feedUrl": "https://uxmovement.com/feed/",
+        "siteUrl": "https://uxmovement.com",
+        "imageUrl": "https://uxmovement.com/wp-content/uploads/2019/02/social-meta-uxmovement.png"
+      }
+    ]
+  },
+  {
+    "name": "Space",
+    "slug": "space",
+    "icon": "Telescope",
+    "feedCount": 7,
+    "feeds": [
+      {
+        "title": "/r/space: news, articles and discussion",
+        "description": "Share & discuss informative content on: * Astrophysics * Cosmology * Space Exploration * Planetary Science * Astrobiology",
+        "feedUrl": "https://www.reddit.com/r/space/.rss?format=xml",
+        "siteUrl": "https://www.reddit.com/r/space/?format=xml",
+        "imageUrl": "https://b.thumbs.redditmedia.com/IAwKmOeqFVhESKmRzhOT9juNzwkuUqCTXhKX3BVGouY.png"
+      },
+      {
+        "title": "Latest from Space.com",
+        "description": "All the latest content from the Space.com team",
+        "feedUrl": "https://www.space.com/feeds/all",
+        "siteUrl": "https://www.space.com",
+        "imageUrl": "https://vanilla.futurecdn.net/space/1561711/apple-touch-icon.png"
+      },
+      {
+        "title": "NASA",
+        "description": "Official National Aeronautics and Space Administration Website",
+        "feedUrl": "https://www.nasa.gov/rss/dyn/breaking_news.rss",
+        "siteUrl": "https://www.nasa.gov",
+        "imageUrl": "https://www.nasa.gov/wp-content/uploads/2018/07/174116main_2006_01777_highres.jpg"
+      },
+      {
+        "title": "New Scientist - Space",
+        "description": "New Scientist - Space",
+        "feedUrl": "https://www.newscientist.com/subject/space/feed/",
+        "siteUrl": "https://www.newscientist.com/",
+        "imageUrl": "https://www.newscientist.com/build/images/meta/new-scientist-social-meta-image.8f44ae95.png"
+      },
+      {
+        "title": "Sky & Telescope",
+        "description": "Explore the universe with Sky & Telescope - your ultimate source for stargazing, celestial events, and the latest astronomy news",
+        "feedUrl": "https://www.skyandtelescope.com/feed/",
+        "siteUrl": "https://skyandtelescope.org/",
+        "imageUrl": "https://dq0hsqwjhea1.cloudfront.net/theme/src/img/apple-touch-icon.png"
+      },
+      {
+        "title": "Space | The Guardian",
+        "description": "Latest news and features from theguardian.com, the world's leading liberal voice",
+        "feedUrl": "https://www.theguardian.com/science/space/rss",
+        "siteUrl": "https://www.theguardian.com/science/space",
+        "imageUrl": "https://assets.guim.co.uk/static/frontend/icons/homescreen/apple-touch-icon.svg"
+      },
+      {
+        "title": "SpaceX",
+        "description": null,
+        "feedUrl": "https://www.youtube.com/feeds/videos.xml?user=spacexchannel",
+        "siteUrl": "https://www.youtube.com/channel/UCtI0Hodo5o5dUb67FeUjDeA",
+        "imageUrl": "https://yt3.googleusercontent.com/rLvyemnqcLYQSsoPj1pPuWoqmICy_A2MoVfUgytiUcpcmvfV4hNHQRNlWa8FMDcIY9Ps_RiD=s900-c-k-c0x00ffffff-no-rj"
+      }
+    ]
+  },
+  {
+    "name": "History",
+    "slug": "history",
+    "icon": "Landmark",
+    "feedCount": 8,
+    "feeds": [
+      {
+        "title": "30 for 30 Podcasts",
+        "description": "Original audio documentaries from the makers of the acclaimed 30 for 30 film series, featuring stories from the world of sports and beyond. 30 for 30 offers captivating storytelling for sports fans and general interest listeners alike, going beyond the field to explore how sports, competition, athleticism and adventure affect our lives and our world. Sports stories like you've never heard before.",
+        "feedUrl": "https://feeds.megaphone.fm/ESP5765452710",
+        "siteUrl": "http://espnradio.espn.com/espnradio/index",
+        "imageUrl": "https://megaphone.imgix.net/podcasts/5d7d7e80-5fdf-11ea-9cb6-d35079938f3e/image/3dea5707912726b4a40e922c0f726e2d.jpg?ixlib=rails-4.3.1&max-w=3000&max-h=3000&fit=crop&auto=format,compress"
+      },
+      {
+        "title": "Dan Carlin's Hardcore History",
+        "description": "In \"Hardcore History\" journalist and broadcaster Dan Carlin takes his \"Martian\", unorthodox way of thinking and applies it to the past. Was Alexander the Great as bad a person as Adolf Hitler? What would Apaches with modern weapons be like? Will our modern civilization ever fall like civilizations from past eras? This isn't academic history (and Carlin isn't a historian) but the podcast's unique blend of high drama, masterful narration and Twilight Zone-style twists has entertained millions of listeners.",
+        "feedUrl": "https://feeds.feedburner.com/dancarlin/history?format=xml",
+        "siteUrl": "http://www.dancarlin.com",
+        "imageUrl": "https://www.dancarlin.com/wp-content/themes/dan-carlin/assets/img/favicon.jpg"
+      },
+      {
+        "title": "History in 28-minutes",
+        "description": "We create a variety of exclusive modern international and American history content! We create free history audio podcasts as part of History in 28-minutes, a magazine called History is Now, and books as part of Required History. Our works explain some of history's most important events concisely and quickly.",
+        "feedUrl": "https://www.historyisnowmagazine.com/blog?format=RSS",
+        "siteUrl": "http://www.historyisnowmagazine.com/blog/",
+        "imageUrl": null
+      },
+      {
+        "title": "HistoryNet",
+        "description": "The most comprehensive and authoritative history site on the Internet.",
+        "feedUrl": "http://www.historynet.com/feed",
+        "siteUrl": "https://historynet.com/",
+        "imageUrl": "https://historynet.com/wp-content/uploads/2023/08/napoleon-battle-friedland-1807-mh-autumn-2023-1024x884.jpg"
+      },
+      {
+        "title": "The History Reader",
+        "description": "A History Blog from St. Martin’s Press",
+        "feedUrl": "https://www.thehistoryreader.com/feed/",
+        "siteUrl": "https://www.thehistoryreader.com/",
+        "imageUrl": "https://www.thehistoryreader.com/wp-content/uploads/2023/03/favicon.png"
+      },
+      {
+        "title": "the memory palace",
+        "description": "the memory palace",
+        "feedUrl": "http://feeds.thememorypalace.us/thememorypalace",
+        "siteUrl": "http://thememorypalace.us",
+        "imageUrl": "https://thememorypalace.us/app/uploads/2020/07/facebook-banner.png"
+      },
+      {
+        "title": "Throughline",
+        "description": "Throughline is a time machine. Each episode, we travel beyond the headlines to answer the question, \"How did we get here?\" We use sound and stories to bring history to life and put you into the middle of it. From ancient civilizations to forgotten figures, we take you directly to the moments that shaped our world. Throughline is hosted by Peabody Award-winning journalists Rund Abdelfatah and Ramtin Arablouei.Subscribe to Throughline+. You'll be supporting the history-reframing, perspective-shifting, time-warping stories you can't get enough of - and you'll unlock access bonus episodes and sponsor-free listening. Learn more at plus.npr.org/throughline",
+        "feedUrl": "https://feeds.npr.org/510333/podcast.xml",
+        "siteUrl": "https://www.npr.org/podcasts/510333/throughline",
+        "imageUrl": "https://media.npr.org/include/images/facebook-default-wide-s1400-c85.jpg"
+      },
+      {
+        "title": "You Must Remember This",
+        "description": "You Must Remember This is a storytelling podcast exploring the secret and/or forgotten histories of Hollywood’s first century. It’s the brainchild and passion project of Karina Longworth (founder of Cinematical.com, former film critic for LA Weekly), who writes, narrates, records and edits each episode. It is a heavily-researched work of creative nonfiction: navigating through conflicting reports, mythology, and institutionalized spin, Karina tries to sort out what really happened behind the films, stars and scandals of the 20th century.",
+        "feedUrl": "https://feeds.megaphone.fm/YMRT7068253588",
+        "siteUrl": "http://youmustrememberthispodcast.com/",
+        "imageUrl": "https://megaphone.imgix.net/podcasts/9da5743e-d296-11ea-b5e1-0f0c0fb63e47/image/649ed8f67b6c2e83c8de840b9bc776df.jpg?ixlib=rails-4.3.1&max-w=3000&max-h=3000&fit=crop&auto=format,compress"
+      }
+    ]
+  },
+  {
+    "name": "DIY",
+    "slug": "diy",
+    "icon": "Hammer",
+    "feedCount": 8,
+    "feeds": [
+      {
+        "title": "Apartment Therapy| Saving the world, one room at a time",
+        "description": "Saving the world, one room at a time",
+        "feedUrl": "https://www.apartmenttherapy.com/projects.rss",
+        "siteUrl": "https://www.apartmenttherapy.com/projects",
+        "imageUrl": "https://cdn.apartmenttherapy.info/image/fetch/f_auto,q_auto:eco,c_fill,g_auto,w_1500,ar_3:2/https%3A%2F%2Fs3.amazonaws.com%2Fpixtruder%2Foriginal_images%2Fb27c3c4c25f0038644ed1615071b00d52bf2025f"
+      },
+      {
+        "title": "Blog – Hackaday",
+        "description": "Fresh hacks every day",
+        "feedUrl": "https://hackaday.com/blog/feed/",
+        "siteUrl": "https://hackaday.com",
+        "imageUrl": "https://s0.wp.com/_si/?t=eyJpbWciOiJodHRwczpcL1wvaGFja2FkYXkuY29tXC93cC1jb250ZW50XC91cGxvYWRzXC8yMDIwXC8wN1wvaGFja2FkYXktbG9nby13aXRoLXRleHQtb3BlbmdyYXBoLWRlZmF1bHQtaW1hZ2UuanBnIiwidHh0IjoiSGFja2FkYXkiLCJ0ZW1wbGF0ZSI6ImhpZ2h3YXkiLCJmb250IjoiIiwiYmxvZ19pZCI6MTU2NjcwMTc3fQ.kVPxWrsIQyGdD1cPoxYvzP1mD56qtpkNpW1nAFiZiIgMQ"
+      },
+      {
+        "title": "Doityourself.com",
+        "description": "Do it yourself home improvement and diy repair at Doityourself.com. Includes home improvement projects, home repair, kitchen remodeling, plumbing, electrical, painting, real estate, and decorating.",
+        "feedUrl": "https://www.doityourself.com/feed",
+        "siteUrl": "https://www.doityourself.com",
+        "imageUrl": "https://assets.doityourself.com/apple-touch-icon.png"
+      },
+      {
+        "title": "How-To Geek",
+        "description": "We explain technology. Learn more with our articles, reviews, tips, and the best answers to your most pressing tech questions.",
+        "feedUrl": "https://www.howtogeek.com/feed/",
+        "siteUrl": "https://www.howtogeek.com",
+        "imageUrl": "https://static0.howtogeekimages.com/wordpress/wp-content/uploads/social/htg-og-img.png?w=1200&amp;h=675&amp;fit=crop"
+      },
+      {
+        "title": "IKEA Hackers",
+        "description": "Clever ideas and hacks for your IKEA Furniture",
+        "feedUrl": "https://www.ikeahackers.net/feed",
+        "siteUrl": "https://ikeahackers.net",
+        "imageUrl": "https://ikeahackers.net/wp-content/uploads/2022/09/27164008_10156073641051779_7478401628012061462_o.jpg"
+      },
+      {
+        "title": "MakeUseOf",
+        "description": "MUO is your guide to modern tech. Learn how to make use of the tech and gadgets around you, and discover cool stuff on the internet.",
+        "feedUrl": "https://www.makeuseof.com/feed/",
+        "siteUrl": "https://www.makeuseof.com",
+        "imageUrl": "https://static0.makeuseofimages.com/wordpress/wp-content/uploads/social/muo-og-img.png?w=1200&amp;h=675&amp;fit=crop"
+      },
+      {
+        "title": "Oh Happy Day!",
+        "description": "Oh Happy Day is a party and lifestyle blog based in San Francisco. We love to throw parties and make things!",
+        "feedUrl": "http://ohhappyday.com/feed/",
+        "siteUrl": "https://ohhappyday.com",
+        "imageUrl": "https://ohhappyday.com/wp-content/themes/ohd/apple-icon-touch.png"
+      },
+      {
+        "title": "WonderHowTo",
+        "description": "Wonder How To is your guide to free how to videos on the Web. Search, Browse and Discover the best how to videos across the web using the largest how to video index on the web. Watch the best online video instructions, tutorials, & How-Tos for free. Have your own how to videos? Submit them to share with the world.",
+        "feedUrl": "https://www.wonderhowto.com/rss.xml",
+        "siteUrl": "https://www.wonderhowto.com/",
+        "imageUrl": "https://assets.content.technologyadvice.com/wonderhowto_favicon_920b4b43ef.webp"
+      }
+    ]
+  },
+  {
+    "name": "Architecture",
+    "slug": "architecture",
+    "icon": "Building2",
+    "feedCount": 10,
+    "feeds": [
+      {
+        "title": "A Weekly Dose of Architecture Books",
+        "description": "This blog wrapped in early 2024, though it continues as a Substack newsletter with the same name: archidose.substack.com",
+        "feedUrl": "http://feeds.feedburner.com/archidose",
+        "siteUrl": "http://archidose.blogspot.com/feeds/posts/default",
+        "imageUrl": null
+      },
+      {
+        "title": "ArchDaily Global",
+        "description": "ArchDaily | Broadcasting Architecture Worldwide",
+        "feedUrl": "http://feeds.feedburner.com/Archdaily",
+        "siteUrl": "https://www.archdaily.com/",
+        "imageUrl": "http://assets.adsttc.com/og/flat/og.png"
+      },
+      {
+        "title": "Architectural Digest",
+        "description": "The latest from www.architecturaldigest.com",
+        "feedUrl": "https://www.architecturaldigest.com/feed/rss",
+        "siteUrl": "https://www.architecturaldigest.com",
+        "imageUrl": "https://media.architecturaldigest.com/photos/6851555b25a657b35089f7c7/16:9/w_1280,c_limit/meta-image-ad.png"
+      },
+      {
+        "title": "Architectural Digest",
+        "description": null,
+        "feedUrl": "https://www.youtube.com/feeds/videos.xml?user=ArchitecturalDigest",
+        "siteUrl": "https://www.youtube.com/channel/UC0k238zFx-Z8xFH0sxCrPJg",
+        "imageUrl": "https://yt3.googleusercontent.com/eT4jNc3KJebg3bFbKPMlG-4XhOKIs5_3lv13S8kShhkD6S2SPTbITVOsqJAEekL_ep4w8JFtyg=s900-c-k-c0x00ffffff-no-rj"
+      },
+      {
+        "title": "Architecture",
+        "description": "A community for students, professionals, and lovers of architecture.",
+        "feedUrl": "https://www.reddit.com/r/architecture/.rss",
+        "siteUrl": "https://www.reddit.com/r/architecture/",
+        "imageUrl": "https://e.thumbs.redditmedia.com/ei2Fy2djp4ijIxhp.png"
+      },
+      {
+        "title": "architecture archives | designboom | architecture & design magazine",
+        "description": "designboom magazine | your first source for architecture, design & art news",
+        "feedUrl": "https://www.designboom.com/architecture/feed/",
+        "siteUrl": "https://www.designboom.com/architecture/",
+        "imageUrl": null
+      },
+      {
+        "title": "Architecture news and projects | Dezeen",
+        "description": "architecture and design magazine",
+        "feedUrl": "https://www.dezeen.com/architecture/feed/",
+        "siteUrl": "http://www.dezeen.com/architecture/",
+        "imageUrl": null
+      },
+      {
+        "title": "Design MilkArchitecture, Architectural Designs, and House Designs | Design Milk",
+        "description": "Dedicated to modern design",
+        "feedUrl": "https://design-milk.com/category/architecture/feed/",
+        "siteUrl": "https://design-milk.com/category/architecture/",
+        "imageUrl": "https://design-milk.com/img/favicon/apple-touch-icon-precomposed.png"
+      },
+      {
+        "title": "Journal",
+        "description": "Inspiration and Tools for Architects",
+        "feedUrl": "https://architizer.wpengine.com/feed/",
+        "siteUrl": "https://architizer.com/blog/",
+        "imageUrl": "https://blog.architizer.com/wp-content/uploads/facebook-default-thumb.jpg"
+      },
+      {
+        "title": "Living Big In A Tiny House",
+        "description": null,
+        "feedUrl": "https://www.youtube.com/feeds/videos.xml?user=livingbigtinyhouse",
+        "siteUrl": "https://www.youtube.com/channel/UCoNTMWgGuXtGPLv9UeJZwBw",
+        "imageUrl": "https://yt3.googleusercontent.com/ytc/AIdro_nB5HIHJnyy-UGXDoJdgIp7GY-WhACs_tSeJlaXFewbpvA=s900-c-k-c0x00ffffff-no-rj"
+      }
+    ]
+  },
+  {
+    "name": "Interior design",
+    "slug": "interior-design",
+    "icon": "Armchair",
+    "feedCount": 18,
+    "feeds": [
+      {
+        "title": "Apartment Therapy| Saving the world, one room at a time",
+        "description": "Saving the world, one room at a time",
+        "feedUrl": "https://www.apartmenttherapy.com/design.rss",
+        "siteUrl": "https://www.apartmenttherapy.com/design",
+        "imageUrl": "https://cdn.apartmenttherapy.info/image/fetch/f_auto,q_auto:eco,c_fill,g_auto,w_1500,ar_3:2/https%3A%2F%2Fs3.amazonaws.com%2Fpixtruder%2Foriginal_images%2Fb27c3c4c25f0038644ed1615071b00d52bf2025f"
+      },
+      {
+        "title": "blog - decor8",
+        "description": "An expertly curated guide for stylish home and living. Holly Becker helps you to find your personal style, pull it all together, and create a space that you love.",
+        "feedUrl": "https://www.decor8blog.com/blog?format=rss",
+        "siteUrl": "https://www.decor8blog.com/blog/",
+        "imageUrl": "http://static1.squarespace.com/static/58b56e5cd2b857960a275c83/t/67a256c8f7e86b0a395c047a/1738692302420/haute-stock-photography-subscription-lounge-collecton-final-5.jpg?format=1500w"
+      },
+      {
+        "title": "Core77",
+        "description": "Launched in 1995, Core77 serves a devoted global audience of design professionals, corporations, students, enthusiasts and fans.",
+        "feedUrl": "http://feeds.feedburner.com/core77/blog",
+        "siteUrl": "http://core77.com/home/rss",
+        "imageUrl": "https://s3files.core77.com/images/core77_icon_big.png"
+      },
+      {
+        "title": "decoist",
+        "description": "Obsessed with the cult of beauty",
+        "feedUrl": "https://www.decoist.com/feed/",
+        "siteUrl": "https://www.decoist.com/",
+        "imageUrl": "https://www.decoist.com/wp-content/uploads/sites/48/fbrfg/apple-touch-icon.png"
+      },
+      {
+        "title": "design archives | designboom | architecture & design magazine",
+        "description": "designboom magazine | your first source for architecture, design & art news",
+        "feedUrl": "https://www.designboom.com/design/feed",
+        "siteUrl": "https://www.designboom.com/design/",
+        "imageUrl": null
+      },
+      {
+        "title": "Design MilkInterior Design Ideas for Your Modern Home | Design Milk",
+        "description": "Dedicated to modern design",
+        "feedUrl": "https://design-milk.com/category/interior-design/feed/",
+        "siteUrl": "https://design-milk.com/category/interior-design/",
+        "imageUrl": "https://design-milk.com/img/favicon/apple-touch-icon-precomposed.png"
+      },
+      {
+        "title": "Fubiz Media",
+        "description": "The latest creative news from Fubiz about art, design and pop-culture.",
+        "feedUrl": "http://feeds.feedburner.com/fubiz",
+        "siteUrl": "https://www.fubiz.net",
+        "imageUrl": "https://www.fubiz.net/wp-content/themes/fubiz/images/site.jpg"
+      },
+      {
+        "title": "In My Own Style",
+        "description": "Top Budget DIY Home Decorating Blog and Creative Lifestyle Ideas",
+        "feedUrl": "https://inmyownstyle.com/feed",
+        "siteUrl": "https://inmyownstyle.com/",
+        "imageUrl": "https://inmyownstyle.com/wp-content/uploads/2021/07/Decorating-with-large-wall-mirrrors-in-a-living-room-0888.jpg"
+      },
+      {
+        "title": "Interior Design",
+        "description": "The leading authority for the Architecture & Design community",
+        "feedUrl": "https://www.interiordesign.net/rss/",
+        "siteUrl": "https://interiordesign.net/",
+        "imageUrl": "https://interiordesign.net/wp-content/uploads/2021/08/idx210801_rs04.jpg"
+      },
+      {
+        "title": "Interior Design (Interior Architecture)",
+        "description": "A Design community managed by indema | Business and project management software for interior designers. Getindema.com. Interior Design is the art and science of understanding people's behavior to create functional spaces within a building. It is a multi-faceted profession in which creative and technical solutions are applied within a structure to achieve a built interior environment.",
+        "feedUrl": "https://www.reddit.com/r/InteriorDesign/.rss",
+        "siteUrl": "https://www.reddit.com/r/InteriorDesign/",
+        "imageUrl": "https://www.redditstatic.com/icon.png/"
+      },
+      {
+        "title": "Interior design | Dezeen",
+        "description": "architecture and design magazine",
+        "feedUrl": "https://www.dezeen.com/interiors/feed/",
+        "siteUrl": "http://InteriordesignstoriesfromDezeenmagazine",
+        "imageUrl": null
+      },
+      {
+        "title": "Interior Design Ideas",
+        "description": "Inspirational Interior Design Ideas",
+        "feedUrl": "http://www.home-designing.com/feed",
+        "siteUrl": "https://www.home-designing.com",
+        "imageUrl": "https://cdn.home-designing.com/wp-content/uploads/2024/11/living-room-with-stairs-green-1-600x600.jpg"
+      },
+      {
+        "title": "Liz Marie Blog",
+        "description": null,
+        "feedUrl": "https://www.lizmarieblog.com/feed/",
+        "siteUrl": "https://www.lizmarieblog.com",
+        "imageUrl": "https://www.lizmarieblog.com/wp-content/uploads/2017/06/LMB-BlogLogo.jpg"
+      },
+      {
+        "title": "The Inspired Room",
+        "description": "Voted Readers' Favorite Top Decorating Blog Better Homes and Gardens, Decorating Ideas, How to Organize, How to Decorate, Interior Design Blog",
+        "feedUrl": "https://theinspiredroom.net/feed/",
+        "siteUrl": "https://theinspiredroom.net",
+        "imageUrl": "https://theinspiredroom.net/wp-content/uploads/2025/05/Southern-Living-Idea-House-Tour.jpg"
+      },
+      {
+        "title": "Thrifty Decor Chick | Thrifty DIY, Decor and Organizing",
+        "description": "Thrifty decorating blog with easy DIY, decor, entertaining and organizing ideas. Make your home beautiful for less.",
+        "feedUrl": "http://feeds.feedburner.com/blogspot/ZBcZ",
+        "siteUrl": "https://www.thriftydecorchick.com/",
+        "imageUrl": null
+      },
+      {
+        "title": "Trendir",
+        "description": "The Latest Trends in Modern House Design and Decorating",
+        "feedUrl": "https://www.trendir.com/feed/",
+        "siteUrl": "https://www.trendir.com/",
+        "imageUrl": null
+      },
+      {
+        "title": "Yanko Design",
+        "description": "Modern Industrial Design News",
+        "feedUrl": "http://feeds.feedburner.com/yankodesign",
+        "siteUrl": "https://www.yankodesign.com",
+        "imageUrl": "https://www.yankodesign.com/images/design_news/2015/06/home/oppermann_fullwidth.jpg"
+      },
+      {
+        "title": "Young House Love",
+        "description": "Home Decorating & DIY Tutorials",
+        "feedUrl": "https://www.younghouselove.com/feed/",
+        "siteUrl": "https://www.younghouselove.com/",
+        "imageUrl": "https://www.younghouselove.com/wp-content/uploads/2023/01/Sherry-John-In-Kind-Bed-Laughing-With-Penny.jpg"
+      }
+    ]
+  },
+  {
+    "name": "Cars",
+    "slug": "cars",
+    "icon": "Car",
+    "feedCount": 14,
+    "feeds": [
+      {
+        "title": "Autocar India - Bike Reviews",
+        "description": "All bike reviews from Autocar India.",
+        "feedUrl": "https://www.autocarindia.com/RSS/rss.ashx?type=all_bikes",
+        "siteUrl": "https://www.autocarindia.com",
+        "imageUrl": "https://www.autocarindia.com/logos/autocar-logo-v2.png"
+      },
+      {
+        "title": "Autocar India - Car Reviews",
+        "description": "All car reviews from Autocar India.",
+        "feedUrl": "https://www.autocarindia.com/RSS/rss.ashx?type=all_cars",
+        "siteUrl": "https://www.autocarindia.com",
+        "imageUrl": "https://www.autocarindia.com/logos/autocar-logo-v2.png"
+      },
+      {
+        "title": "Autocar India - News",
+        "description": "Latest automotive news from Autocar India.",
+        "feedUrl": "https://www.autocarindia.com/RSS/rss.ashx?type=News",
+        "siteUrl": "https://www.autocarindia.com",
+        "imageUrl": "https://www.autocarindia.com/logos/autocar-logo-v2.png"
+      },
+      {
+        "title": "Autocar RSS Feed",
+        "description": "Welcome to nirvana for car enthusiasts. You have just entered the online home of the world's oldest car magazine, and the only place on the internet where you can find Autocar's unique mix of up-to-the-minute news, red hot car reviews, conclusive road test verdicts, and a lot more besides.",
+        "feedUrl": "https://www.autocar.co.uk/rss",
+        "siteUrl": "https://www.autocar.co.uk/",
+        "imageUrl": null
+      },
+      {
+        "title": "BikeEXIF",
+        "description": "Latest updates from BikeEXIF",
+        "feedUrl": "https://www.bikeexif.com/feed",
+        "siteUrl": "https://www.bikeexif.com/",
+        "imageUrl": "https://images.bikeexif.com/_1200x630_fit_center-center_82_none/bex-seo.jpg?mtime=1756835807"
+      },
+      {
+        "title": "BMW BLOG",
+        "description": "Latest BMW News, Reviews and New Models",
+        "feedUrl": "https://feeds.feedburner.com/BmwBlog",
+        "siteUrl": "https://www.bmwblog.com/",
+        "imageUrl": "https://cdn.bmwblog.com/wp-content/uploads/2025/02/bmwblog-logo-1200x674-1.jpg"
+      },
+      {
+        "title": "Car Body Design",
+        "description": "Car Design Resources, News and Tutorials",
+        "feedUrl": "https://www.carbodydesign.com/feed/",
+        "siteUrl": "https://www.carbodydesign.com",
+        "imageUrl": "https://www.carbodydesign.com/admin/wordpress/wp-content/themes/carbodydesign/images/custom-icon.png"
+      },
+      {
+        "title": "Carscoops",
+        "description": "Breaking Car News, Scoops & Reviews",
+        "feedUrl": "https://www.carscoops.com/feed/",
+        "siteUrl": "https://www.carscoops.com/",
+        "imageUrl": "https://www.carscoops.com/wp-content/uploads/2022/12/apple-icon-152x152-1.png"
+      },
+      {
+        "title": "Formula 1",
+        "description": "Welcome to r/Formula1, the best independent online Formula 1 community! Tap \"See more\" for useful info 👇",
+        "feedUrl": "https://www.reddit.com/r/formula1/.rss",
+        "siteUrl": "https://www.reddit.com/r/formula1/",
+        "imageUrl": "https://b.thumbs.redditmedia.com/bfj6051x5t6R3awBCSySha1L-V4lkbdw2XM4BOXdA-I.png"
+      },
+      {
+        "title": "Jalopnik - Obsessed with the culture of cars",
+        "description": "From cars to motorcycles, Jalopnik is your go-to site covering everything with an engine—including automotive news, buying guides, and expert commentary from our staff.",
+        "feedUrl": "https://jalopnik.com/rss",
+        "siteUrl": "https://www.jalopnik.com/",
+        "imageUrl": "https://www.jalopnik.com/img/jalopnik-meta-image-1280x720.png"
+      },
+      {
+        "title": "Latest Content - Car and Driver",
+        "description": "RSS feed for Latest Content - Car and Driver",
+        "feedUrl": "https://www.caranddriver.com/rss/all.xml/",
+        "siteUrl": "https://www.caranddriver.com/",
+        "imageUrl": "https://www.caranddriver.com/_assets/design-tokens/caranddriver/static/images/apple-touch-icon.57b92b6.png"
+      },
+      {
+        "title": "Speedhunters",
+        "description": "Global Car Culture Since 2008",
+        "feedUrl": "http://feeds.feedburner.com/speedhunters",
+        "siteUrl": "https://www.speedhunters.com",
+        "imageUrl": null
+      },
+      {
+        "title": "The best vintage and classic cars for sale online | Bring a Trailer",
+        "description": "Barn finds, rally cars, and needles in the haystack.",
+        "feedUrl": "https://bringatrailer.com/feed/",
+        "siteUrl": "https://bringatrailer.com",
+        "imageUrl": "https://bringatrailer.com/wp-content/themes/bringatrailer/assets/img/apple-touch-icon-iphone-60x60.png?v=http://90cbd23268"
+      },
+      {
+        "title": "TheTruthAboutCars",
+        "description": "TheTruthAboutCars RSS feed",
+        "feedUrl": "https://www.thetruthaboutcars.com/feed/",
+        "siteUrl": "https://www.thetruthaboutcars.com",
+        "imageUrl": "https://cdn-fastly.thetruthaboutcars.com/resources/themes/ttac/imgs-responsive/ttac-og-image.png"
+      }
+    ]
+  }
+]

@@ -1,12 +1,10 @@
 import { ClientOnly, createFileRoute, Link, Outlet, useLocation } from '@tanstack/solid-router';
-import { BookmarkPlus, Inbox, Library, Plus, Search } from 'lucide-solid';
+import { Compass, Inbox, Library, Plus } from 'lucide-solid';
 import posthog from 'posthog-js';
 import { createEffect, For, on, onMount, Suspense } from 'solid-js';
-import { AddFeedModal } from '~/components/AddFeedModal';
 import { ColorIndicator } from '~/components/ColorIndicator';
 import type { ModalController } from '~/components/LazyModal';
 import { CenterLoader, Loader } from '~/components/Loader';
-import { SaveArticleModal } from '~/components/SaveArticleModal';
 import { TagModal } from '~/components/TagModal';
 import { UserMenu } from '~/components/UserMenu';
 import { useTags } from '~/entities/tags';
@@ -22,8 +20,6 @@ export const Route = createFileRoute('/_frame')({
 });
 
 function FrameLayout() {
-  let addFeedModalController!: ModalController;
-  let saveArticleModalController!: ModalController;
   const location = useLocation();
   const session = authClient.useSession();
 
@@ -55,9 +51,6 @@ function FrameLayout() {
 
   return (
     <>
-      <AddFeedModal controller={(controller) => (addFeedModalController = controller)} />
-      <SaveArticleModal controller={(controller) => (saveArticleModalController = controller)} />
-
       <div class="drawer lg:drawer-open">
         <input id="my-drawer" type="checkbox" class="drawer-toggle" />
         {/* min-h-dvh instead of min-h-screen to handle mobile browser UI (address bar) correctly on rotation */}
@@ -87,6 +80,16 @@ function FrameLayout() {
                 <ul class="mb-6 space-y-1">
                   <li>
                     <Link
+                      to="/discover"
+                      class="flex items-center gap-3"
+                      activeProps={{ class: 'menu-active' }}
+                    >
+                      <Compass size={20} />
+                      Discover
+                    </Link>
+                  </li>
+                  <li>
+                    <Link
                       to="/inbox"
                       class="flex items-center gap-3"
                       activeProps={{ class: 'menu-active' }}
@@ -94,24 +97,6 @@ function FrameLayout() {
                       <Inbox size={20} />
                       Inbox
                     </Link>
-                  </li>
-                  <li>
-                    <button
-                      class="hover:bg-base-200 flex w-full items-center gap-3 rounded-lg px-3 py-2 text-left transition-colors"
-                      onClick={() => addFeedModalController.open()}
-                    >
-                      <Search size={20} />
-                      Discover
-                    </button>
-                  </li>
-                  <li>
-                    <button
-                      class="hover:bg-base-200 flex w-full items-center gap-3 rounded-lg px-3 py-2 text-left transition-colors"
-                      onClick={() => saveArticleModalController.open()}
-                    >
-                      <BookmarkPlus size={20} />
-                      Save Article
-                    </button>
                   </li>
                   <li>
                     <Link

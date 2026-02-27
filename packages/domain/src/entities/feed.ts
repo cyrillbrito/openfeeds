@@ -3,7 +3,7 @@ import { discoverFeeds } from '@repo/discovery/server';
 import { createId } from '@repo/shared/utils';
 import { and, eq, inArray } from 'drizzle-orm';
 import { trackEvent } from '../analytics';
-import { BadRequestError, ConflictError, LimitExceededError, NotFoundError } from '../errors';
+import { BadRequestError, LimitExceededError, NotFoundError } from '../errors';
 import { countUserFeeds, FREE_TIER_LIMITS } from '../limits';
 import { enqueueFeedDetail, enqueueFeedSync } from '../queues';
 import type { CreateFeed, DiscoveredFeed, Feed, UpdateFeed } from './feed.schema';
@@ -47,7 +47,7 @@ export async function createFeeds(data: CreateFeed[], userId: string): Promise<F
   const currentCount = await countUserFeeds(userId);
   if (currentCount + data.length > FREE_TIER_LIMITS.feeds) {
     trackEvent(userId, 'limits:feeds_limit_hit', {
-      source: 'manual',
+      source: 'create',
       current_usage: currentCount,
       limit: FREE_TIER_LIMITS.feeds,
     });
@@ -65,20 +65,15 @@ export async function createFeeds(data: CreateFeed[], userId: string): Promise<F
     createdAt: undefined,
   }));
 
+  // NOTE: Duplicates are silently skipped via ON CONFLICT DO NOTHING.
+  // The client already prevents following feeds the user already has, so conflicts
+  // here are a race-condition safety net. We may want to revisit this and surface
+  // skipped feeds to the caller if it causes confusion down the line.
   const inserted = await db
     .insert(feeds)
     .values(values)
     .onConflictDoNothing({ target: [feeds.userId, feeds.feedUrl] })
     .returning();
-
-  // Check if any were skipped due to conflict
-  if (inserted.length < data.length) {
-    const insertedUrls = new Set(inserted.map((f) => f.feedUrl));
-    const conflicting = data.filter((d) => !insertedUrls.has(d.url));
-    if (conflicting.length > 0) {
-      throw new ConflictError('Feed with this URL already exists');
-    }
-  }
 
   // Enqueue workers for all newly created feeds
   await Promise.all(
@@ -93,7 +88,6 @@ export async function createFeeds(data: CreateFeed[], userId: string): Promise<F
     trackEvent(userId, 'feeds:feed_create', {
       feed_id: feed.id,
       feed_url: feed.feedUrl,
-      source: 'manual',
     });
   }
 

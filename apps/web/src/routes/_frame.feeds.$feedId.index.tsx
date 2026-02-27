@@ -58,7 +58,7 @@ function FeedArticles() {
     return query.orderBy(({ article }) => article.pubDate, 'desc').limit(visibleCount());
   });
 
-  // Query for total count (without limit)
+  // Lightweight count query - only selects id to avoid tracking full article objects
   const totalCountQuery = useLiveQuery((q) => {
     let query = q
       .from({ article: articlesCollection })
@@ -69,7 +69,7 @@ function FeedArticles() {
       query = query.where(({ article }) => filter(article));
     }
 
-    return query;
+    return query.select(({ article }) => ({ id: article.id }));
   });
 
   const feedsQuery = useFeeds();
