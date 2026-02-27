@@ -28,5 +28,15 @@ export default defineConfig({
   },
   server: {
     allowedHosts: true,
+    // Permissive CORS in dev for browser-based tools like MCP Inspector.
+    // Vite's built-in CORS middleware runs before Nitro's proxy, which also
+    // prevents Nitro from crashing on OPTIONS preflight requests.
+    cors: {
+      origin: '*',
+      methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+      allowedHeaders: ['Content-Type', 'Authorization', 'Mcp-Session-Id', 'Mcp-Protocol-Version'],
+      exposedHeaders: ['Mcp-Session-Id', 'Mcp-Protocol-Version'],
+      maxAge: 86400,
+    },
   },
 });
