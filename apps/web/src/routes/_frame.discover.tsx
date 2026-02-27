@@ -1,92 +1,35 @@
 import type { DiscoveredFeed, FollowFeedsWithTags } from '@repo/domain/client';
 import { createId } from '@repo/shared/utils';
-import { createOptimisticAction } from '@tanstack/solid-db';
 import { createFileRoute } from '@tanstack/solid-router';
 import {
-  Apple,
   BookmarkPlus,
-  Briefcase,
-  Camera,
-  Car,
   CircleAlert,
-  Clapperboard,
-  Code,
-  Dumbbell,
   FileUp,
-  FlaskConical,
-  Gamepad2,
   Globe,
-  Hammer,
-  Laugh,
   Mail,
-  MonitorSmartphone,
-  Music,
-  Newspaper,
-  Paintbrush,
-  Palette,
-  Plane,
   Podcast,
-  Rocket,
   Rss,
-  Scroll,
   Search,
-  Shirt,
-  Smartphone,
-  Sofa,
-  Sparkles,
-  Trophy,
-  Tv,
-  UtensilsCrossed,
-  Wallet,
   X,
-  type LucideProps,
 } from 'lucide-solid';
-import {
-  createEffect,
-  createMemo,
-  createResource,
-  createSignal,
-  For,
-  on,
-  Show,
-  type Component,
-  type JSX,
-} from 'solid-js';
+import { createEffect, createMemo, createResource, createSignal, For, on, Show } from 'solid-js';
 import { Card } from '~/components/Card';
+import {
+  CuratedFeedsBrowser,
+  type CuratedFeedWithCategory,
+} from '~/components/CuratedFeedsBrowser';
 import { Header } from '~/components/Header';
 import { ImportOpmlModal } from '~/components/ImportOpmlModal';
 import type { ModalController } from '~/components/LazyModal';
 import { MultiSelectTag } from '~/components/MultiSelectTag';
 import { RedditIcon } from '~/components/RedditIcon';
 import { YouTubeIcon } from '~/components/YouTubeIcon';
-import curatedCategories from '~/data/curated-feeds.json';
 import { articleTagsCollection } from '~/entities/article-tags';
 import { articlesCollection } from '~/entities/articles';
-import { feedTagsCollection } from '~/entities/feed-tags';
-import { feedsCollection, useFeeds } from '~/entities/feeds';
-import { $$discoverFeeds, $$followFeedsWithTags } from '~/entities/feeds.server';
-import { tagsCollection, useTags } from '~/entities/tags';
-
-type CuratedFeed = {
-  title: string;
-  description: string | null;
-  feedUrl: string;
-  siteUrl: string;
-  imageUrl: string | null;
-};
-
-type CuratedFeedWithCategory = CuratedFeed & {
-  categoryName: string;
-  categoryIcon: string;
-};
-
-type CuratedCategory = {
-  name: string;
-  slug: string;
-  icon: string;
-  feedCount: number;
-  feeds: CuratedFeed[];
-};
+import { useFeeds } from '~/entities/feeds';
+import { $$discoverFeeds } from '~/entities/feeds.server';
+import { buildFollowVars, followFeedsAction } from '~/entities/follow-feeds';
+import { useTags } from '~/entities/tags';
 
 export const Route = createFileRoute('/_frame/discover')({
   component: DiscoverPage,
@@ -96,138 +39,6 @@ export const Route = createFileRoute('/_frame/discover')({
     };
   },
 });
-
-// ---------------------------------------------------------------------------
-// Optimistic action: follow feeds + tags in one transaction
-// ---------------------------------------------------------------------------
-
-const followFeedsAction = createOptimisticAction<FollowFeedsWithTags>({
-  onMutate: (vars) => {
-    const now = new Date().toISOString();
-
-    for (const feed of vars.feeds) {
-      feedsCollection.insert({
-        id: feed.id,
-        userId: '',
-        url: feed.url,
-        feedUrl: feed.url,
-        title: feed.url,
-        description: null,
-        icon: null,
-        createdAt: now,
-        updatedAt: now,
-        lastSyncAt: null,
-        syncStatus: 'ok',
-        syncError: null,
-      });
-    }
-
-    for (const tag of vars.newTags) {
-      tagsCollection.insert({
-        id: tag.id,
-        userId: '',
-        name: tag.name,
-        color: null,
-        createdAt: now,
-        updatedAt: now,
-      });
-    }
-
-    for (const ft of vars.feedTags) {
-      feedTagsCollection.insert({
-        id: ft.id,
-        userId: '',
-        feedId: ft.feedId,
-        tagId: ft.tagId,
-      });
-    }
-  },
-  mutationFn: async (vars) => {
-    await $$followFeedsWithTags({ data: vars });
-  },
-});
-
-/**
- * Build FollowFeedsWithTags vars for feeds that should be auto-tagged by category.
- * Resolves existing tags (case-insensitive) or creates new ones.
- */
-function buildFollowVars(
-  feeds: Array<{ feedUrl: string; categoryName: string }>,
-  existingTags: Array<{ id: string; name: string }>,
-): FollowFeedsWithTags {
-  const feedEntries: FollowFeedsWithTags['feeds'] = [];
-  const newTagsMap = new Map<string, { id: string; name: string }>();
-  const feedTagEntries: FollowFeedsWithTags['feedTags'] = [];
-
-  const tagByName = new Map<string, string>();
-  for (const t of existingTags) {
-    tagByName.set(t.name.toLowerCase(), t.id);
-  }
-
-  for (const feed of feeds) {
-    const feedId = createId();
-    feedEntries.push({ id: feedId, url: feed.feedUrl });
-
-    const catLower = feed.categoryName.toLowerCase();
-    let tagId = tagByName.get(catLower);
-
-    if (!tagId) {
-      const pending = newTagsMap.get(catLower);
-      if (pending) {
-        tagId = pending.id;
-      } else {
-        tagId = createId();
-        newTagsMap.set(catLower, { id: tagId, name: feed.categoryName });
-        tagByName.set(catLower, tagId);
-      }
-    }
-
-    feedTagEntries.push({ id: createId(), feedId, tagId });
-  }
-
-  return {
-    feeds: feedEntries,
-    newTags: Array.from(newTagsMap.values()),
-    feedTags: feedTagEntries,
-  };
-}
-
-const EXAMPLE_HINTS: {
-  label: string;
-  description: string;
-  example: string;
-  url: string;
-  icon: () => JSX.Element;
-}[] = [
-  {
-    label: 'YouTube',
-    description: 'Follow any channel to get new videos.',
-    example: 'youtube.com/@mkbhd',
-    url: 'https://youtube.com/@mkbhd',
-    icon: () => <YouTubeIcon class="h-4 w-4" />,
-  },
-  {
-    label: 'Reddit',
-    description: 'Follow subreddits without an account.',
-    example: 'reddit.com/r/movies',
-    url: 'https://www.reddit.com/r/movies.rss',
-    icon: () => <RedditIcon class="h-4 w-4" />,
-  },
-  {
-    label: 'Podcasts',
-    description: 'Get notified when new episodes drop.',
-    example: 'feeds.npr.org/510289/...',
-    url: 'https://feeds.npr.org/510289/podcast.xml',
-    icon: () => <Podcast size={16} />,
-  },
-  {
-    label: 'Newsletters',
-    description: 'Read without giving out your email.',
-    example: 'seths.blog',
-    url: 'https://seths.blog',
-    icon: () => <Mail size={16} />,
-  },
-];
 
 const OPML_DISMISSED_KEY = 'discover:opml-dismissed';
 
@@ -623,22 +434,62 @@ function DiscoverPage() {
               <span class="text-base-content font-medium">not just blogs</span>.
             </p>
             <div class="grid grid-cols-2 gap-2 sm:gap-3">
-              <For each={EXAMPLE_HINTS}>
-                {(hint) => (
-                  <button
-                    type="button"
-                    class="bg-base-200 hover:bg-base-300 rounded-xl px-3 py-2.5 text-left transition-colors sm:px-4 sm:py-3"
-                    onClick={() => handleExampleClick(hint.url)}
-                  >
-                    <div class="flex items-center gap-2">
-                      <div class="flex-shrink-0">{hint.icon()}</div>
-                      <p class="text-sm font-medium">{hint.label}</p>
-                    </div>
-                    <p class="text-base-content/60 mt-1 text-xs leading-snug">{hint.description}</p>
-                    <p class="text-base-content/40 mt-1 truncate text-xs">{hint.example}</p>
-                  </button>
-                )}
-              </For>
+              <button
+                type="button"
+                class="bg-base-200 hover:bg-base-300 rounded-xl px-3 py-2.5 text-left transition-colors sm:px-4 sm:py-3"
+                onClick={() => handleExampleClick('https://youtube.com/@mkbhd')}
+              >
+                <div class="flex items-center gap-2">
+                  <YouTubeIcon class="h-4 w-4 flex-shrink-0" />
+                  <p class="text-sm font-medium">YouTube</p>
+                </div>
+                <p class="text-base-content/60 mt-1 text-xs leading-snug">
+                  Follow any channel to get new videos.
+                </p>
+                <p class="text-base-content/40 mt-1 truncate text-xs">youtube.com/@mkbhd</p>
+              </button>
+              <button
+                type="button"
+                class="bg-base-200 hover:bg-base-300 rounded-xl px-3 py-2.5 text-left transition-colors sm:px-4 sm:py-3"
+                onClick={() => handleExampleClick('https://www.reddit.com/r/movies.rss')}
+              >
+                <div class="flex items-center gap-2">
+                  <RedditIcon class="h-4 w-4 flex-shrink-0" />
+                  <p class="text-sm font-medium">Reddit</p>
+                </div>
+                <p class="text-base-content/60 mt-1 text-xs leading-snug">
+                  Follow subreddits without an account.
+                </p>
+                <p class="text-base-content/40 mt-1 truncate text-xs">reddit.com/r/movies</p>
+              </button>
+              <button
+                type="button"
+                class="bg-base-200 hover:bg-base-300 rounded-xl px-3 py-2.5 text-left transition-colors sm:px-4 sm:py-3"
+                onClick={() => handleExampleClick('https://feeds.npr.org/510289/podcast.xml')}
+              >
+                <div class="flex items-center gap-2">
+                  <Podcast size={16} class="flex-shrink-0" />
+                  <p class="text-sm font-medium">Podcasts</p>
+                </div>
+                <p class="text-base-content/60 mt-1 text-xs leading-snug">
+                  Get notified when new episodes drop.
+                </p>
+                <p class="text-base-content/40 mt-1 truncate text-xs">feeds.npr.org/510289/...</p>
+              </button>
+              <button
+                type="button"
+                class="bg-base-200 hover:bg-base-300 rounded-xl px-3 py-2.5 text-left transition-colors sm:px-4 sm:py-3"
+                onClick={() => handleExampleClick('https://seths.blog')}
+              >
+                <div class="flex items-center gap-2">
+                  <Mail size={16} class="flex-shrink-0" />
+                  <p class="text-sm font-medium">Newsletters</p>
+                </div>
+                <p class="text-base-content/60 mt-1 text-xs leading-snug">
+                  Read without giving out your email.
+                </p>
+                <p class="text-base-content/40 mt-1 truncate text-xs">seths.blog</p>
+              </button>
             </div>
           </div>
 
@@ -652,286 +503,6 @@ function DiscoverPage() {
       </div>
 
       <ImportOpmlModal controller={(c) => (importOpmlModalController = c)} />
-    </>
-  );
-}
-
-// ---------------------------------------------------------------------------
-// Lucide icon overrides for curated categories (test a few, rest keep emoji)
-// ---------------------------------------------------------------------------
-
-const CATEGORY_ICONS: Record<string, Component<LucideProps>> = {
-  news: Newspaper,
-  tech: MonitorSmartphone,
-  gaming: Gamepad2,
-  science: FlaskConical,
-  programming: Code,
-  music: Music,
-  movies: Clapperboard,
-  food: UtensilsCrossed,
-  sports: Dumbbell,
-  travel: Plane,
-  photography: Camera,
-  'business-economy': Briefcase,
-  'personal-finance': Wallet,
-  startups: Rocket,
-  apple: Apple,
-  funny: Laugh,
-  space: Sparkles,
-  books: Scroll,
-  diy: Hammer,
-  fashion: Shirt,
-  beauty: Paintbrush,
-  android: Smartphone,
-  'android-development': Smartphone,
-  'ios-development': Smartphone,
-  television: Tv,
-  history: Scroll,
-  'web-development': Globe,
-  'ui-ux': Palette,
-  cars: Car,
-  cricket: Trophy,
-  football: Trophy,
-  tennis: Trophy,
-  'interior-design': Sofa,
-  architecture: Sofa,
-};
-
-const FEEDS_PER_PAGE = 20;
-
-function CuratedFeedsBrowser(props: {
-  existingFeedUrls: Set<string>;
-  addedFeeds: Set<string>;
-  onFollow: (feed: CuratedFeedWithCategory) => void;
-  onFollowAll: (feeds: CuratedFeedWithCategory[]) => void;
-}) {
-  const [searchQuery, setSearchQuery] = createSignal('');
-  const [selectedCategory, setSelectedCategory] = createSignal<string | null>(null);
-  const [visibleCount, setVisibleCount] = createSignal(FEEDS_PER_PAGE);
-
-  const categories = curatedCategories as CuratedCategory[];
-
-  // Count matching feeds per category for the current search query (ignoring selected category)
-  const categoryMatchCounts = createMemo(() => {
-    const query = searchQuery().toLowerCase().trim();
-    if (!query) return null; // no search — all categories are "active"
-
-    const counts = new Map<string, number>();
-    for (const cat of categories) {
-      let count = 0;
-      for (const feed of cat.feeds) {
-        const titleMatch = feed.title.toLowerCase().includes(query);
-        const descMatch = feed.description?.toLowerCase().includes(query) ?? false;
-        if (titleMatch || descMatch) count++;
-      }
-      counts.set(cat.slug, count);
-    }
-    return counts;
-  });
-
-  const filteredFeeds = createMemo(() => {
-    const query = searchQuery().toLowerCase().trim();
-    const catSlug = selectedCategory();
-
-    let sourceCats = categories;
-    if (catSlug) {
-      sourceCats = categories.filter((c) => c.slug === catSlug);
-    }
-
-    const results: CuratedFeedWithCategory[] = [];
-    for (const cat of sourceCats) {
-      for (const feed of cat.feeds) {
-        if (query) {
-          const titleMatch = feed.title.toLowerCase().includes(query);
-          const descMatch = feed.description?.toLowerCase().includes(query) ?? false;
-          if (!titleMatch && !descMatch) continue;
-        }
-        results.push({ ...feed, categoryName: cat.name, categoryIcon: cat.icon });
-      }
-    }
-    return results;
-  });
-
-  const visibleFeeds = createMemo(() => filteredFeeds().slice(0, visibleCount()));
-  const hasMore = createMemo(() => visibleCount() < filteredFeeds().length);
-
-  // Reset visible count when filters change
-  const handleSearch = (value: string) => {
-    setSearchQuery(value);
-    setVisibleCount(FEEDS_PER_PAGE);
-  };
-
-  const handleCategorySelect = (slug: string | null) => {
-    setSelectedCategory(slug);
-    setVisibleCount(FEEDS_PER_PAGE);
-  };
-
-  return (
-    <>
-      <div class="divider sm:my-8">or</div>
-
-      <div>
-        <h3 class="mb-4 text-lg font-semibold sm:mb-5">Popular Feeds</h3>
-
-        <label class="input input-bordered input-sm mb-4 flex items-center gap-2 sm:mb-5">
-          <Search size={14} class="opacity-50" />
-          <input
-            type="text"
-            placeholder="Filter feeds..."
-            class="grow"
-            value={searchQuery()}
-            onInput={(e) => handleSearch(e.currentTarget.value)}
-          />
-          <Show when={searchQuery()}>
-            <button
-              type="button"
-              class="btn btn-ghost btn-xs btn-circle"
-              onClick={() => handleSearch('')}
-            >
-              <X size={14} />
-            </button>
-          </Show>
-        </label>
-
-        {/* Category pills — horizontal scroll */}
-        <div class="scrollbar-none sm:scrollbar-thin -mx-4 mb-4 flex gap-2 overflow-x-auto px-4 pb-2 sm:-mx-6 sm:mb-5 sm:px-6">
-          <button
-            type="button"
-            class="btn btn-sm shrink-0 rounded-full"
-            classList={{
-              'btn-primary': selectedCategory() === null,
-              'btn-outline': selectedCategory() !== null,
-            }}
-            onClick={() => handleCategorySelect(null)}
-          >
-            All
-          </button>
-          <For each={categories}>
-            {(cat) => {
-              const LucideIcon = CATEGORY_ICONS[cat.slug];
-              const isEmpty = () => categoryMatchCounts()?.get(cat.slug) === 0;
-              const isSelected = () => selectedCategory() === cat.slug;
-              return (
-                <button
-                  type="button"
-                  class="btn btn-sm shrink-0 gap-1.5 rounded-full"
-                  classList={{
-                    'btn-primary': isSelected(),
-                    'btn-outline': !isSelected(),
-                    'btn-disabled opacity-40': isEmpty() && !isSelected(),
-                  }}
-                  onClick={() => handleCategorySelect(isSelected() ? null : cat.slug)}
-                >
-                  <Show when={LucideIcon} keyed fallback={<span class="text-sm">{cat.icon}</span>}>
-                    {(Icon) => <Icon size={14} strokeWidth={2.5} />}
-                  </Show>
-                  {cat.name}
-                </button>
-              );
-            }}
-          </For>
-        </div>
-
-        {/* Results count + Follow all */}
-        <div class="mb-3 flex items-center justify-between sm:mb-4">
-          <p class="text-base-content/50 text-sm">
-            {filteredFeeds().length} {filteredFeeds().length === 1 ? 'feed' : 'feeds'}
-            <Show when={selectedCategory()}>
-              {' '}
-              in {categories.find((c) => c.slug === selectedCategory())?.name}
-            </Show>
-            <Show when={searchQuery()}> matching "{searchQuery()}"</Show>
-          </p>
-          <Show when={selectedCategory() && filteredFeeds().length > 0}>
-            <button
-              type="button"
-              class="btn btn-ghost btn-xs"
-              onClick={() => props.onFollowAll(filteredFeeds())}
-            >
-              Follow all
-            </button>
-          </Show>
-        </div>
-
-        {/* Feed cards */}
-        <div class="grid gap-3 sm:gap-4">
-          <For each={visibleFeeds()}>
-            {(feed) => {
-              const isAdded = () =>
-                props.addedFeeds.has(feed.feedUrl) || props.existingFeedUrls.has(feed.feedUrl);
-
-              return (
-                <Card>
-                  <div class="flex items-start gap-3">
-                    {/* Image or fallback icon */}
-                    <Show
-                      when={feed.imageUrl}
-                      fallback={
-                        <div class="bg-base-200 flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-lg">
-                          <Rss size={20} class="text-base-content/50" />
-                        </div>
-                      }
-                    >
-                      <img
-                        src={feed.imageUrl!}
-                        alt=""
-                        class="bg-base-200 h-10 w-10 flex-shrink-0 rounded-lg object-cover"
-                        loading="lazy"
-                        onError={(e) => {
-                          e.currentTarget.style.display = 'none';
-                        }}
-                      />
-                    </Show>
-
-                    <div class="min-w-0 flex-1">
-                      <div class="font-medium">{feed.title}</div>
-                      <Show when={feed.description}>
-                        <div class="text-base-content/60 mt-0.5 line-clamp-2 text-sm">
-                          {feed.description}
-                        </div>
-                      </Show>
-                      <div class="text-base-content/40 mt-1 truncate text-xs">{feed.siteUrl}</div>
-                    </div>
-
-                    <Show
-                      when={!isAdded()}
-                      fallback={<span class="badge badge-success gap-1">Following</span>}
-                    >
-                      <button
-                        type="button"
-                        class="btn btn-primary btn-sm flex-shrink-0"
-                        onClick={() => props.onFollow(feed)}
-                      >
-                        Follow
-                      </button>
-                    </Show>
-                  </div>
-                </Card>
-              );
-            }}
-          </For>
-        </div>
-
-        {/* Load more */}
-        <Show when={hasMore()}>
-          <div class="mt-4 text-center">
-            <button
-              type="button"
-              class="btn btn-outline btn-sm"
-              onClick={() => setVisibleCount((prev) => prev + FEEDS_PER_PAGE)}
-            >
-              Show more ({filteredFeeds().length - visibleCount()} remaining)
-            </button>
-          </div>
-        </Show>
-
-        {/* No results */}
-        <Show when={filteredFeeds().length === 0}>
-          <div class="text-base-content/40 py-8 text-center text-sm">
-            No feeds found. Try a different search or category.
-          </div>
-        </Show>
-      </div>
     </>
   );
 }
