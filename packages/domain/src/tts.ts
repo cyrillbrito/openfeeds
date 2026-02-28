@@ -278,7 +278,6 @@ export async function generateArticleAudio(
   await db.update(articles).set({ audioGeneratedAt: new Date() }).where(eq(articles.id, articleId));
 
   trackEvent(userId, 'tts:audio_generate', {
-    article_id: articleId,
     duration_ms: Math.round(duration * 1000),
   });
 

@@ -30,7 +30,7 @@ export async function createTags(
 
   for (const tag of inserted) {
     trackEvent(userId, 'tags:tag_create', {
-      tag_id: tag.id,
+      tag_name: tag.name,
       color: tag.color ?? 'default',
     });
   }
@@ -88,7 +88,5 @@ export async function deleteTags(
 
   await conn.delete(tags).where(and(inArray(tags.id, ids), eq(tags.userId, userId)));
 
-  for (const id of ids) {
-    trackEvent(userId, 'tags:tag_delete', { tag_id: id });
-  }
+  trackEvent(userId, 'tags:tag_delete', { count: ids.length });
 }

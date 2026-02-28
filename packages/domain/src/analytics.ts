@@ -9,10 +9,11 @@ import { getAppVersion } from './version';
  * - object: noun (feed, tag, article, rule, opml)
  * - action: present-tense verb (create, delete, update, import, generate)
  *
- * Property naming:
- * - snake_case: `feed_id`, `article_count`
+ * Property naming (object_adjective pattern):
+ * - snake_case: `feed_url`, `article_count`
  * - is_/has_ prefix for booleans: `is_bulk`, `has_content`
  * - _at suffix for timestamps: `created_at`
+ * - No internal IDs — use human-readable values you can filter/group by
  */
 export interface ServerAnalyticsEventMap {
   // Authentication
@@ -25,11 +26,11 @@ export interface ServerAnalyticsEventMap {
 
   // Feed Management
   'feeds:feed_create': {
-    feed_id: string;
     feed_url: string;
+    feed_domain: string;
   };
   'feeds:feed_delete': {
-    feed_id: string;
+    count: number;
   };
   'feeds:opml_import': {
     feed_count: number;
@@ -39,22 +40,25 @@ export interface ServerAnalyticsEventMap {
 
   // Tag Management
   'tags:tag_create': {
-    tag_id: string;
+    tag_name: string;
     color: string;
   };
   'tags:tag_delete': {
-    tag_id: string;
+    count: number;
+  };
+
+  // Article Management
+  'articles:article_create': {
+    article_url: string;
   };
 
   // Filter Rules
   'filters:rule_create': {
-    feed_id: string;
     operator: string;
   };
 
   // Audio/TTS
   'tts:audio_generate': {
-    article_id: string;
     duration_ms?: number;
   };
 
@@ -82,6 +86,15 @@ export interface ServerAnalyticsEventMap {
     current_usage: number;
     limit: number;
   };
+}
+
+/** Extract domain from a URL for analytics (non-identifying). */
+export function getDomain(url: string): string {
+  try {
+    return new URL(url).hostname;
+  } catch {
+    return 'unknown';
+  }
 }
 
 /**
