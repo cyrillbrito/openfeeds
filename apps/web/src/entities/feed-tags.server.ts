@@ -1,3 +1,4 @@
+import { db, getTxId } from '@repo/db';
 import * as feedTagsDomain from '@repo/domain';
 import { CreateFeedTagSchema } from '@repo/domain';
 import { createServerFn } from '@tanstack/solid-start';
@@ -13,13 +14,19 @@ export const $$getAllFeedTags = createServerFn({ method: 'GET' })
 export const $$createFeedTags = createServerFn({ method: 'POST' })
   .middleware([authMiddleware])
   .inputValidator(z.array(CreateFeedTagSchema))
-  .handler(({ context, data }) => {
-    return feedTagsDomain.createFeedTags(data, context.user.id);
+  .handler(async ({ context, data }) => {
+    return await db.transaction(async (tx) => {
+      await feedTagsDomain.createFeedTags(data, context.user.id, tx);
+      return { txid: await getTxId(tx) };
+    });
   });
 
 export const $$deleteFeedTags = createServerFn({ method: 'POST' })
   .middleware([authMiddleware])
   .inputValidator(z.array(z.uuidv7()))
-  .handler(({ context, data: ids }) => {
-    return feedTagsDomain.deleteFeedTags(ids, context.user.id);
+  .handler(async ({ context, data: ids }) => {
+    return await db.transaction(async (tx) => {
+      await feedTagsDomain.deleteFeedTags(ids, context.user.id, tx);
+      return { txid: await getTxId(tx) };
+    });
   });

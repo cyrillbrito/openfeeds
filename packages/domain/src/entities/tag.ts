@@ -1,4 +1,4 @@
-import { db, tags } from '@repo/db';
+import { tags, type Db, type Transaction } from '@repo/db';
 import { createId } from '@repo/shared/utils';
 import { and, eq, inArray, sql } from 'drizzle-orm';
 import { trackEvent } from '../analytics';
@@ -8,7 +8,11 @@ import type { CreateTag, Tag, UpdateTag } from './tag.schema';
 // Re-export schemas and types from schema file
 export * from './tag.schema';
 
-export async function createTags(data: CreateTag[], userId: string): Promise<Tag[]> {
+export async function createTags(
+  data: CreateTag[],
+  userId: string,
+  conn: Db | Transaction,
+): Promise<Tag[]> {
   if (data.length === 0) return [];
 
   const values = data.map((item) => ({
@@ -22,7 +26,7 @@ export async function createTags(data: CreateTag[], userId: string): Promise<Tag
   // unique index on [userId, name]). The client already prevents creating tags with
   // duplicate names, so conflicts here are a race-condition safety net. We may want to
   // revisit this and surface skipped tags to the caller if it causes confusion.
-  const inserted = await db.insert(tags).values(values).onConflictDoNothing().returning();
+  const inserted = await conn.insert(tags).values(values).onConflictDoNothing().returning();
 
   for (const tag of inserted) {
     trackEvent(userId, 'tags:tag_create', {
@@ -41,10 +45,14 @@ export async function createTags(data: CreateTag[], userId: string): Promise<Tag
   }));
 }
 
-export async function updateTags(data: UpdateTag[], userId: string): Promise<void> {
+export async function updateTags(
+  data: UpdateTag[],
+  userId: string,
+  conn: Db | Transaction,
+): Promise<void> {
   if (data.length === 0) return;
 
-  await db.transaction(async (tx) => {
+  await conn.transaction(async (tx) => {
     for (const { id, ...updates } of data) {
       // Check if new name already exists for this user (excluding current tag) - case-insensitive
       if (updates.name) {
@@ -71,10 +79,14 @@ export async function updateTags(data: UpdateTag[], userId: string): Promise<voi
   });
 }
 
-export async function deleteTags(ids: string[], userId: string): Promise<void> {
+export async function deleteTags(
+  ids: string[],
+  userId: string,
+  conn: Db | Transaction,
+): Promise<void> {
   if (ids.length === 0) return;
 
-  await db.delete(tags).where(and(inArray(tags.id, ids), eq(tags.userId, userId)));
+  await conn.delete(tags).where(and(inArray(tags.id, ids), eq(tags.userId, userId)));
 
   for (const id of ids) {
     trackEvent(userId, 'tags:tag_delete', { tag_id: id });

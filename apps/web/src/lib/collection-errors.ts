@@ -6,14 +6,15 @@ function sanitizeErrorMessage(error: unknown): string {
   if (!(error instanceof Error)) return 'Something went wrong';
 
   const msg = error.message;
+  const msgLower = msg.toLowerCase();
 
   // Hide raw SQL statements — show generic sync error instead
   if (
-    msg.includes('insert into') ||
-    msg.includes('update ') ||
-    msg.includes('delete from') ||
-    msg.includes('select ') ||
-    msg.includes('values (')
+    msgLower.includes('insert into') ||
+    msgLower.includes('update ') ||
+    msgLower.includes('delete from') ||
+    msgLower.includes('select ') ||
+    msgLower.includes('values (')
   ) {
     return 'Something went wrong while syncing. Please try again.';
   }
@@ -29,14 +30,15 @@ function sanitizeErrorMessage(error: unknown): string {
 /**
  * Wraps a collection mutation handler with error handling.
  * Catches errors, shows a toast, reports to PostHog, then re-throws so TanStack DB rolls back optimistic state.
+ * Passes through the return value from the wrapped function (e.g., `{ txid }` for Electric sync).
  */
-export function collectionErrorHandler<TArgs extends unknown[]>(
+export function collectionErrorHandler<TArgs extends unknown[], TReturn>(
   context: string,
-  fn: (...args: TArgs) => Promise<void>,
-): (...args: TArgs) => Promise<void> {
+  fn: (...args: TArgs) => Promise<TReturn>,
+): (...args: TArgs) => Promise<TReturn> {
   return async (...args: TArgs) => {
     try {
-      await fn(...args);
+      return await fn(...args);
     } catch (error) {
       const message = sanitizeErrorMessage(error);
       toastService.error(message);

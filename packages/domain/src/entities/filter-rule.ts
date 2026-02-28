@@ -1,4 +1,4 @@
-import { db, filterRules } from '@repo/db';
+import { filterRules, type Db, type Transaction } from '@repo/db';
 import { createId } from '@repo/shared/utils';
 import { and, eq, inArray } from 'drizzle-orm';
 import { trackEvent } from '../analytics';
@@ -9,11 +9,15 @@ import type { CreateFilterRule, UpdateFilterRule } from './filter-rule.schema';
 // Re-export schemas and types from schema file
 export * from './filter-rule.schema';
 
-export async function createFilterRules(data: CreateFilterRule[], userId: string): Promise<void> {
+export async function createFilterRules(
+  data: CreateFilterRule[],
+  userId: string,
+  conn: Db | Transaction,
+): Promise<void> {
   if (data.length === 0) return;
 
   // Check free-tier filter rule limit
-  const currentCount = await countUserFilterRules(userId);
+  const currentCount = await countUserFilterRules(userId, conn);
   if (currentCount + data.length > FREE_TIER_LIMITS.filterRules) {
     trackEvent(userId, 'limits:filter_rules_limit_hit', {
       current_usage: currentCount,
@@ -31,7 +35,7 @@ export async function createFilterRules(data: CreateFilterRule[], userId: string
     isActive: item.isActive,
   }));
 
-  const inserted = await db.insert(filterRules).values(values).returning();
+  const inserted = await conn.insert(filterRules).values(values).returning();
 
   for (const rule of inserted) {
     trackEvent(userId, 'filters:rule_create', {
@@ -41,10 +45,14 @@ export async function createFilterRules(data: CreateFilterRule[], userId: string
   }
 }
 
-export async function updateFilterRules(data: UpdateFilterRule[], userId: string): Promise<void> {
+export async function updateFilterRules(
+  data: UpdateFilterRule[],
+  userId: string,
+  conn: Db | Transaction,
+): Promise<void> {
   if (data.length === 0) return;
 
-  await db.transaction(async (tx) => {
+  await conn.transaction(async (tx) => {
     for (const { id, ...updates } of data) {
       const ruleUpdateData: Partial<typeof filterRules.$inferInsert> = {};
 
@@ -62,10 +70,14 @@ export async function updateFilterRules(data: UpdateFilterRule[], userId: string
   });
 }
 
-export async function deleteFilterRules(ids: string[], userId: string): Promise<void> {
+export async function deleteFilterRules(
+  ids: string[],
+  userId: string,
+  conn: Db | Transaction,
+): Promise<void> {
   if (ids.length === 0) return;
 
-  await db
+  await conn
     .delete(filterRules)
     .where(and(inArray(filterRules.id, ids), eq(filterRules.userId, userId)));
 }

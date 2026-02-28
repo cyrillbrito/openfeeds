@@ -1,3 +1,4 @@
+import { db, getTxId } from '@repo/db';
 import {
   getSettings as domainGetSettings,
   getUserUsage as domainGetUserUsage,
@@ -12,16 +13,19 @@ import { authMiddleware } from '~/server/middleware/auth';
 export const $$getSettings = createServerFn({ method: 'GET' })
   .middleware([authMiddleware])
   .handler(({ context }) => {
-    return domainGetSettings(context.user.id);
+    return domainGetSettings(context.user.id, db);
   });
 
 export const $$updateSettings = createServerFn({ method: 'POST' })
   .middleware([authMiddleware])
   .inputValidator(z.array(UpdateSettingsSchema))
-  .handler(({ context, data }) => {
+  .handler(async ({ context, data }) => {
     // Settings is a singleton, so we just take the first update
     const updates = data[0] || {};
-    return domainUpdateSettings(context.user.id, updates);
+    return await db.transaction(async (tx) => {
+      await domainUpdateSettings(context.user.id, updates, tx);
+      return { txid: await getTxId(tx) };
+    });
   });
 
 export const $$triggerAutoArchive = createServerFn({ method: 'POST' })

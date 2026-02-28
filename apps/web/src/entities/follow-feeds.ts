@@ -52,7 +52,15 @@ export const followFeedsAction = createOptimisticAction<FollowFeedsWithTags>({
     }
   },
   mutationFn: async (vars) => {
-    await $$followFeedsWithTags({ data: vars });
+    const { txid } = await $$followFeedsWithTags({ data: vars });
+
+    // createOptimisticAction doesn't auto-wire txid like electricCollectionOptions,
+    // so we must explicitly await sync confirmation on each touched collection.
+    // This keeps the optimistic overlay active until Electric confirms the mutation.
+    const awaitPromises = [feedsCollection.utils.awaitTxId(txid)];
+    if (vars.newTags.length > 0) awaitPromises.push(tagsCollection.utils.awaitTxId(txid));
+    if (vars.feedTags.length > 0) awaitPromises.push(feedTagsCollection.utils.awaitTxId(txid));
+    await Promise.all(awaitPromises);
   },
 });
 

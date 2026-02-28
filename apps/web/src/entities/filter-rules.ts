@@ -35,7 +35,7 @@ export const filterRulesCollection = createCollection(
           isActive: rule.isActive,
         };
       });
-      await $$createFilterRules({ data: rules });
+      return await $$createFilterRules({ data: rules });
     }),
 
     onUpdate: collectionErrorHandler('filterRules.onUpdate', async ({ transaction }) => {
@@ -43,12 +43,12 @@ export const filterRulesCollection = createCollection(
         id: mutation.key as string,
         ...mutation.changes,
       }));
-      await $$updateFilterRules({ data: updates });
+      return await $$updateFilterRules({ data: updates });
     }),
 
     onDelete: collectionErrorHandler('filterRules.onDelete', async ({ transaction }) => {
       const ids = transaction.mutations.map((mutation) => mutation.key as string);
-      await $$deleteFilterRules({ data: ids });
+      return await $$deleteFilterRules({ data: ids });
     }),
   }),
 );

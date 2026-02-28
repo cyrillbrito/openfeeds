@@ -1,4 +1,4 @@
-import { db, feeds } from '@repo/db';
+import { db, feeds, getTxId } from '@repo/db';
 import * as feedsDomain from '@repo/domain';
 import { CreateFeedSchema, FollowFeedsWithTagsSchema, UpdateFeedSchema } from '@repo/domain';
 import { createServerFn } from '@tanstack/solid-start';
@@ -39,22 +39,31 @@ export const $$hasAnyFeeds = createServerFn()
 export const $$createFeeds = createServerFn({ method: 'POST' })
   .middleware([authMiddleware])
   .inputValidator(z.array(CreateFeedSchema))
-  .handler(({ context, data }) => {
-    return feedsDomain.createFeeds(data, context.user.id);
+  .handler(async ({ context, data }) => {
+    return await db.transaction(async (tx) => {
+      await feedsDomain.createFeeds(data, context.user.id, tx);
+      return { txid: await getTxId(tx) };
+    });
   });
 
 export const $$updateFeeds = createServerFn({ method: 'POST' })
   .middleware([authMiddleware])
   .inputValidator(z.array(UpdateFeedSchema))
-  .handler(({ context, data }) => {
-    return feedsDomain.updateFeeds(data, context.user.id);
+  .handler(async ({ context, data }) => {
+    return await db.transaction(async (tx) => {
+      await feedsDomain.updateFeeds(data, context.user.id, tx);
+      return { txid: await getTxId(tx) };
+    });
   });
 
 export const $$deleteFeeds = createServerFn({ method: 'POST' })
   .middleware([authMiddleware])
   .inputValidator(z.array(z.uuidv7()))
-  .handler(({ context, data: ids }) => {
-    return feedsDomain.deleteFeeds(ids, context.user.id);
+  .handler(async ({ context, data: ids }) => {
+    return await db.transaction(async (tx) => {
+      await feedsDomain.deleteFeeds(ids, context.user.id, tx);
+      return { txid: await getTxId(tx) };
+    });
   });
 
 export const $$retryFeed = createServerFn({ method: 'POST' })
@@ -74,6 +83,9 @@ export const $$getFeedSyncLogs = createServerFn()
 export const $$followFeedsWithTags = createServerFn({ method: 'POST' })
   .middleware([authMiddleware])
   .inputValidator(FollowFeedsWithTagsSchema)
-  .handler(({ context, data }) => {
-    return feedsDomain.followFeedsWithTags(data, context.user.id);
+  .handler(async ({ context, data }) => {
+    return await db.transaction(async (tx) => {
+      await feedsDomain.followFeedsWithTags(data, context.user.id, tx);
+      return { txid: await getTxId(tx) };
+    });
   });
