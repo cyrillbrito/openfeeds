@@ -20,6 +20,24 @@ html {
   background: var(--color-base-100);
 }
 
+@utility content-container {
+  width: calc(100% - 2rem);
+  margin-inline: 1rem;
+  max-width: 42rem;
+
+  @media (min-width: 640px) {
+    width: calc(100% - 3rem);
+    margin-inline: 1.5rem;
+  }
+  @media (min-width: 768px) {
+    width: 100%;
+    margin-inline: auto;
+  }
+  @media (min-width: 1280px) {
+    max-width: 48rem;
+  }
+}
+
 @utility scrollbar-none {
   scrollbar-width: none;
   &::-webkit-scrollbar {

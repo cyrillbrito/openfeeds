@@ -9,10 +9,10 @@ import { ColorIndicator } from '~/components/ColorIndicator';
 import { DeleteFeedModal } from '~/components/DeleteFeedModal';
 import { Dropdown } from '~/components/Dropdown';
 import { EditFeedModal } from '~/components/EditFeedModal';
-import { Header } from '~/components/Header';
 import { LazyModal, type ModalController } from '~/components/LazyModal';
 import { CenterLoader } from '~/components/Loader';
 import { MarkAllArchivedButton } from '~/components/MarkAllArchivedButton';
+import { PageLayout } from '~/components/PageLayout';
 import { ReadStatusToggle, type ReadStatus } from '~/components/ReadStatusToggle';
 import { ShuffleButton } from '~/components/ShuffleButton';
 import { SyncLogsModal } from '~/components/SyncLogsModal';
@@ -135,8 +135,9 @@ function FeedArticles() {
   };
 
   return (
-    <>
-      <Header title="Feed Articles">
+    <PageLayout
+      title="Feed Articles"
+      headerActions={
         <div class="flex flex-wrap gap-2">
           <Link
             to="/feeds/$feedId/shorts"
@@ -170,137 +171,135 @@ function FeedArticles() {
             </Dropdown>
           </Show>
         </div>
-      </Header>
-
-      <div class="mx-auto w-full max-w-2xl px-2 py-3 sm:p-6 xl:max-w-3xl">
-        {/* Sync error notice */}
-        <Show
-          when={
-            (currentFeed()?.syncStatus === 'failing' || currentFeed()?.syncStatus === 'broken') &&
-            currentFeed()
-          }
-        >
-          {(feed) => (
-            <div class="border-base-300 bg-base-200 mb-4 rounded-lg border p-4">
-              <div class="flex items-start gap-3">
-                <TriangleAlert
-                  size={18}
-                  class={`mt-0.5 shrink-0 ${feed().syncStatus === 'broken' ? 'text-error' : 'text-warning'}`}
-                />
-                <div class="min-w-0 flex-1">
-                  <p class="text-sm font-medium">
-                    {feed().syncStatus === 'broken'
-                      ? 'Feed sync is broken'
-                      : 'Feed is experiencing sync issues'}
-                  </p>
-                  <Show when={feed().syncError}>
-                    <p class="text-base-content/60 mt-1 text-xs">{feed().syncError}</p>
-                  </Show>
-                  <div class="mt-3 flex gap-2">
-                    <button
-                      class="btn btn-outline btn-sm"
-                      onClick={async () => {
-                        feedsCollection.update(feed().id, (draft) => {
-                          draft.syncStatus = 'ok';
-                          draft.syncError = null;
-                        });
-                        await $$retryFeed({ data: { id: feed().id } });
-                      }}
-                    >
-                      Retry sync
-                    </button>
-                    <button
-                      class="btn btn-ghost btn-sm text-error"
-                      onClick={() => {
-                        setFeedToDelete(feed());
-                        deleteFeedModalController.open();
-                      }}
-                    >
-                      Delete feed
-                    </button>
-                  </div>
-                </div>
-              </div>
-            </div>
-          )}
-        </Show>
-
-        <Show when={currentFeed()}>
-          {(feed) => (
-            <div class="mb-4 flex items-start gap-4 sm:gap-5">
-              <Show when={feed().icon}>
-                <div class="bg-base-300 flex h-20 w-20 shrink-0 items-center justify-center rounded-xl shadow-sm sm:h-24 sm:w-24 sm:rounded-2xl md:h-28 md:w-28">
-                  <img
-                    src={feed().icon!}
-                    alt={`${feed().title} icon`}
-                    class="h-20 w-20 rounded-xl object-cover sm:h-24 sm:w-24 sm:rounded-2xl md:h-28 md:w-28"
-                    loading="lazy"
-                    onError={(e) => {
-                      e.currentTarget.style.display = 'none';
-                    }}
-                  />
-                </div>
-              </Show>
+      }
+    >
+      {/* Sync error notice */}
+      <Show
+        when={
+          (currentFeed()?.syncStatus === 'failing' || currentFeed()?.syncStatus === 'broken') &&
+          currentFeed()
+        }
+      >
+        {(feed) => (
+          <div class="border-base-300 bg-base-200 mb-4 rounded-lg border p-4">
+            <div class="flex items-start gap-3">
+              <TriangleAlert
+                size={18}
+                class={`mt-0.5 shrink-0 ${feed().syncStatus === 'broken' ? 'text-error' : 'text-warning'}`}
+              />
               <div class="min-w-0 flex-1">
-                <h2 class="mb-1.5 text-lg font-semibold sm:text-2xl">{feed().title}</h2>
-                <p class="text-base-content/70 mb-3 line-clamp-3 text-sm leading-relaxed">
-                  {feed().description || 'No description found'}
+                <p class="text-sm font-medium">
+                  {feed().syncStatus === 'broken'
+                    ? 'Feed sync is broken'
+                    : 'Feed is experiencing sync issues'}
                 </p>
-
-                {/* Tags */}
-                {(() => {
-                  const feedTagIds = () =>
-                    (feedTagsQuery() ?? [])
-                      .filter((ft) => ft.feedId === feed().id)
-                      .map((ft) => ft.tagId);
-                  return (
-                    <Show when={feedTagIds().length > 0}>
-                      <div class="mb-3 flex flex-wrap gap-1.5">
-                        <For each={feedTagIds()}>
-                          {(tagId) => {
-                            const tag = tagsQuery()?.find((t) => t.id === tagId);
-                            if (tag) {
-                              return (
-                                <Link to="/tags/$tagId" params={{ tagId: tag.id.toString() }}>
-                                  <div class="badge badge-sm gap-1.5 transition-all hover:brightness-90">
-                                    <ColorIndicator class={getTagDotColor(tag.color)} />
-                                    <span>{tag.name}</span>
-                                  </div>
-                                </Link>
-                              );
-                            } else {
-                              return <></>;
-                            }
-                          }}
-                        </For>
-                      </div>
-                    </Show>
-                  );
-                })()}
-
-                <div class="flex flex-wrap gap-3 text-xs">
-                  <a
-                    href={feed().url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    class="link link-primary font-medium"
+                <Show when={feed().syncError}>
+                  <p class="text-base-content/60 mt-1 text-xs">{feed().syncError}</p>
+                </Show>
+                <div class="mt-3 flex gap-2">
+                  <button
+                    class="btn btn-outline btn-sm"
+                    onClick={async () => {
+                      feedsCollection.update(feed().id, (draft) => {
+                        draft.syncStatus = 'ok';
+                        draft.syncError = null;
+                      });
+                      await $$retryFeed({ data: { id: feed().id } });
+                    }}
                   >
-                    Website
-                  </a>
-                  <a
-                    href={feed().feedUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    class="link link-primary font-medium"
+                    Retry sync
+                  </button>
+                  <button
+                    class="btn btn-ghost btn-sm text-error"
+                    onClick={() => {
+                      setFeedToDelete(feed());
+                      deleteFeedModalController.open();
+                    }}
                   >
-                    Feed URL
-                  </a>
+                    Delete feed
+                  </button>
                 </div>
               </div>
             </div>
-          )}
-        </Show>
-      </div>
+          </div>
+        )}
+      </Show>
+
+      <Show when={currentFeed()}>
+        {(feed) => (
+          <div class="mb-4 flex items-start gap-4 sm:gap-5">
+            <Show when={feed().icon}>
+              <div class="bg-base-300 flex h-20 w-20 shrink-0 items-center justify-center rounded-xl shadow-sm sm:h-24 sm:w-24 sm:rounded-2xl md:h-28 md:w-28">
+                <img
+                  src={feed().icon!}
+                  alt={`${feed().title} icon`}
+                  class="h-20 w-20 rounded-xl object-cover sm:h-24 sm:w-24 sm:rounded-2xl md:h-28 md:w-28"
+                  loading="lazy"
+                  onError={(e) => {
+                    e.currentTarget.style.display = 'none';
+                  }}
+                />
+              </div>
+            </Show>
+            <div class="min-w-0 flex-1">
+              <h2 class="mb-1.5 text-lg font-semibold sm:text-2xl">{feed().title}</h2>
+              <p class="text-base-content/70 mb-3 line-clamp-3 text-sm leading-relaxed">
+                {feed().description || 'No description found'}
+              </p>
+
+              {/* Tags */}
+              {(() => {
+                const feedTagIds = () =>
+                  (feedTagsQuery() ?? [])
+                    .filter((ft) => ft.feedId === feed().id)
+                    .map((ft) => ft.tagId);
+                return (
+                  <Show when={feedTagIds().length > 0}>
+                    <div class="mb-3 flex flex-wrap gap-1.5">
+                      <For each={feedTagIds()}>
+                        {(tagId) => {
+                          const tag = tagsQuery()?.find((t) => t.id === tagId);
+                          if (tag) {
+                            return (
+                              <Link to="/tags/$tagId" params={{ tagId: tag.id.toString() }}>
+                                <div class="badge badge-sm gap-1.5 transition-all hover:brightness-90">
+                                  <ColorIndicator class={getTagDotColor(tag.color)} />
+                                  <span>{tag.name}</span>
+                                </div>
+                              </Link>
+                            );
+                          } else {
+                            return <></>;
+                          }
+                        }}
+                      </For>
+                    </div>
+                  </Show>
+                );
+              })()}
+
+              <div class="flex flex-wrap gap-3 text-xs">
+                <a
+                  href={feed().url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  class="link link-primary font-medium"
+                >
+                  Website
+                </a>
+                <a
+                  href={feed().feedUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  class="link link-primary font-medium"
+                >
+                  Feed URL
+                </a>
+              </div>
+            </div>
+          </div>
+        )}
+      </Show>
 
       <ArticleListToolbar
         leftContent={<ReadStatusToggle currentStatus={readStatus()} />}
@@ -345,22 +344,20 @@ function FeedArticles() {
         readStatus={readStatus()}
       />
 
-      <div class="mx-auto w-full max-w-2xl px-2 pb-3 sm:px-6 sm:pb-6 xl:max-w-3xl">
-        <Suspense fallback={<CenterLoader />}>
-          <Show when={feedsQuery() && tagsQuery()}>
-            <ArticleList
-              articles={filteredArticles()}
-              feeds={feedsQuery()!}
-              tags={tagsQuery()!}
-              totalCount={totalCount()}
-              onLoadMore={handleLoadMore}
-              onUpdateArticle={handleUpdateArticle}
-              readStatus={readStatus()}
-              context="feed"
-            />
-          </Show>
-        </Suspense>
-      </div>
+      <Suspense fallback={<CenterLoader />}>
+        <Show when={feedsQuery() && tagsQuery()}>
+          <ArticleList
+            articles={filteredArticles()}
+            feeds={feedsQuery()!}
+            tags={tagsQuery()!}
+            totalCount={totalCount()}
+            onLoadMore={handleLoadMore}
+            onUpdateArticle={handleUpdateArticle}
+            readStatus={readStatus()}
+            context="feed"
+          />
+        </Show>
+      </Suspense>
 
       <EditFeedModal
         controller={(controller) => (editFeedModalController = controller)}
@@ -419,6 +416,6 @@ function FeedArticles() {
           </button>
         </div>
       </LazyModal>
-    </>
+    </PageLayout>
   );
 }

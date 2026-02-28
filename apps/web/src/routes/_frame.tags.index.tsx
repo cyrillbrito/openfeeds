@@ -5,10 +5,10 @@ import { createSignal, For, Show, Suspense } from 'solid-js';
 import { ColorIndicator } from '~/components/ColorIndicator';
 import { DeleteTagModal } from '~/components/DeleteTagModal';
 import { Dropdown } from '~/components/Dropdown';
-import { Header } from '~/components/Header';
 import { TagsIllustration } from '~/components/Icons';
 import type { ModalController } from '~/components/LazyModal';
 import { CenterLoader } from '~/components/Loader';
+import { PageLayout } from '~/components/PageLayout';
 import { TagModal } from '~/components/TagModal';
 import { TimeAgo } from '~/components/TimeAgo';
 import { useTags } from '~/entities/tags';
@@ -42,96 +42,95 @@ function TagsComponent() {
   };
 
   return (
-    <>
-      <Header title="Manage Tags">
+    <PageLayout
+      title="Manage Tags"
+      headerActions={
         <button class="btn btn-primary btn-sm" onClick={handleCreateTag}>
           <Plus size={20} />
           <span class="hidden sm:inline">Create Tag</span>
         </button>
-      </Header>
+      }
+    >
+      <div class="mb-6">
+        <p class="text-base-content-gray">Organize your feeds with custom tags and colors</p>
+      </div>
 
-      <div class="mx-auto w-full max-w-2xl px-4 py-3 sm:p-6 xl:max-w-3xl">
-        <div class="mb-6">
-          <p class="text-base-content-gray">Organize your feeds with custom tags and colors</p>
-        </div>
+      <TagModal
+        controller={(controller) => (tagModalController = controller)}
+        editTag={editingTag()}
+        onEditComplete={() => setEditingTag(null)}
+      />
 
-        <TagModal
-          controller={(controller) => (tagModalController = controller)}
-          editTag={editingTag()}
-          onEditComplete={() => setEditingTag(null)}
-        />
-
-        <DeleteTagModal
-          controller={(controller) => (deleteModalController = controller)}
-          tag={tagToDelete()}
-          onDeleteComplete={() => setTagToDelete(null)}
-          onClose={() => setTagToDelete(null)}
-        />
-        <Suspense fallback={<CenterLoader />}>
-          <Show
-            when={tagsQuery() && tagsQuery()!.length > 0}
-            fallback={
-              <div class="py-16 text-center">
-                <div class="mb-8 flex justify-center">
-                  <TagsIllustration />
-                </div>
-
-                <h2 class="mb-4 text-3xl font-bold">No Tags Yet</h2>
-                <p class="text-base-content-gray mx-auto mb-8 max-w-md">
-                  Create tags to organize and categorize your RSS feeds. Tags help you quickly find
-                  and filter related content.
-                </p>
-
-                <button class="btn btn-primary btn-lg" onClick={() => tagModalController.open()}>
-                  <Plus size={20} class="mr-2" />
-                  Create Your First Tag
-                </button>
+      <DeleteTagModal
+        controller={(controller) => (deleteModalController = controller)}
+        tag={tagToDelete()}
+        onDeleteComplete={() => setTagToDelete(null)}
+        onClose={() => setTagToDelete(null)}
+      />
+      <Suspense fallback={<CenterLoader />}>
+        <Show
+          when={tagsQuery() && tagsQuery()!.length > 0}
+          fallback={
+            <div class="py-16 text-center">
+              <div class="mb-8 flex justify-center">
+                <TagsIllustration />
               </div>
-            }
-          >
-            <div class="grid grid-cols-2 gap-3">
-              <For each={tagsQuery()!}>
-                {(tag) => (
-                  <div class="border-base-300 bg-base-100 flex items-center justify-between gap-2 rounded-lg border px-3 py-3 shadow-sm">
-                    <div class="min-w-0">
-                      <div class="flex items-center gap-2">
-                        <ColorIndicator class={getTagDotColor(tag.color)} />
-                        <span class="truncate font-medium">{tag.name}</span>
-                      </div>
-                      <div class="text-base-content-gray mt-1 text-xs">
-                        Created <TimeAgo date={tag.createdAt} />
-                      </div>
-                    </div>
 
-                    <div onClick={(e) => e.stopPropagation()}>
-                      <Dropdown
-                        end
-                        btnClasses="btn-circle btn-ghost btn-sm"
-                        btnContent={<EllipsisVertical size={16} />}
-                      >
-                        <li>
-                          <button onClick={() => handleEditTag(tag)}>Edit</button>
-                        </li>
-                        <li>
-                          <button
-                            class="text-error"
-                            onClick={() => {
-                              setTagToDelete(tag);
-                              deleteModalController.open();
-                            }}
-                          >
-                            Delete
-                          </button>
-                        </li>
-                      </Dropdown>
+              <h2 class="mb-4 text-3xl font-bold">No Tags Yet</h2>
+              <p class="text-base-content-gray mx-auto mb-8 max-w-md">
+                Create tags to organize and categorize your RSS feeds. Tags help you quickly find
+                and filter related content.
+              </p>
+
+              <button class="btn btn-primary btn-lg" onClick={() => tagModalController.open()}>
+                <Plus size={20} class="mr-2" />
+                Create Your First Tag
+              </button>
+            </div>
+          }
+        >
+          <div class="grid grid-cols-2 gap-3">
+            <For each={tagsQuery()!}>
+              {(tag) => (
+                <div class="border-base-300 bg-base-100 flex items-center justify-between gap-2 rounded-lg border px-3 py-3 shadow-sm">
+                  <div class="min-w-0">
+                    <div class="flex items-center gap-2">
+                      <ColorIndicator class={getTagDotColor(tag.color)} />
+                      <span class="truncate font-medium">{tag.name}</span>
+                    </div>
+                    <div class="text-base-content-gray mt-1 text-xs">
+                      Created <TimeAgo date={tag.createdAt} />
                     </div>
                   </div>
-                )}
-              </For>
-            </div>
-          </Show>
-        </Suspense>
-      </div>
-    </>
+
+                  <div onClick={(e) => e.stopPropagation()}>
+                    <Dropdown
+                      end
+                      btnClasses="btn-circle btn-ghost btn-sm"
+                      btnContent={<EllipsisVertical size={16} />}
+                    >
+                      <li>
+                        <button onClick={() => handleEditTag(tag)}>Edit</button>
+                      </li>
+                      <li>
+                        <button
+                          class="text-error"
+                          onClick={() => {
+                            setTagToDelete(tag);
+                            deleteModalController.open();
+                          }}
+                        >
+                          Delete
+                        </button>
+                      </li>
+                    </Dropdown>
+                  </div>
+                </div>
+              )}
+            </For>
+          </div>
+        </Show>
+      </Suspense>
+    </PageLayout>
   );
 }

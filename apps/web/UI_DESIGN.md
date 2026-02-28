@@ -20,33 +20,42 @@ The global background is `base-100`. Components only need explicit `bg-base-100`
 
 ## Content Layout
 
-The frame layout provides no padding — each page owns its content spacing. This keeps pages flexible: dividers, horizontal scroll areas, and other decorative elements can intentionally reach the screen edge when needed.
+The frame layout provides no padding — each page owns its content spacing.
 
-**Max width** — `max-w-2xl xl:max-w-3xl`, centered with `mx-auto w-full`. Keeps lines scannable on wide screens without feeling cramped on tablets.
+### `content-container` utility
 
-**Content padding** — `px-4` on mobile (16px), `p-6` on sm+ (24px). Enough breathing room for text and touch targets on small screens. The header and toolbar use the same horizontal padding so everything aligns vertically.
+All page content, headers, and toolbars use the `content-container` CSS utility class (defined in `app.css`). It handles horizontal margin, max-width, and centering in one place:
+
+- Mobile: 16px margin from viewport edge (`mx-4`)
+- `sm` (640px): 24px margin (`mx-6`)
+- `md` (768px+): auto-centered (`mx-auto`) — `max-w-2xl` (672px) is narrower than the viewport
+- `xl` (1280px+): widens to `max-w-3xl` (768px)
+
+Content inside the container fills its full width — important for media like YouTube iframes that need maximum width. Vertical padding is added per-use since it varies by page.
 
 **Standard page container:**
 
 ```
-mx-auto w-full max-w-2xl px-4 py-3 sm:p-6 xl:max-w-3xl
+content-container py-3 sm:py-6
 ```
 
 **List section below a toolbar** (toolbar already provides top spacing):
 
 ```
-mx-auto w-full max-w-2xl px-4 pb-3 sm:px-6 sm:pb-6 xl:max-w-3xl
+content-container pb-3 sm:pb-6
 ```
 
-### Edge-bleed elements
+### `PageLayout` component
 
-Some elements should extend beyond the content padding to reach the screen edge on mobile — horizontal scroll areas (e.g., category pill bars), full-width dividers, etc. Use negative margins to pull them out:
+For simple pages (Header + single content area), use `PageLayout` instead of manually composing Header + container:
 
+```tsx
+<PageLayout title="Settings" headerActions={<button>...</button>}>
+  ...content...
+</PageLayout>
 ```
--mx-4 px-4 sm:mx-0 sm:px-0
-```
 
-This cancels the container's `px-4` on mobile so the element spans the full width, then resets at `sm:` where the wider padding already looks fine.
+For complex pages (multiple container sections, conditional rendering, toolbars between sections), use `<Header>` and `content-container` directly.
 
 ## Spacing
 

@@ -5,10 +5,10 @@ import { createSignal, onMount, Show, Suspense } from 'solid-js';
 import { ArticleList, ARTICLES_PER_PAGE } from '~/components/ArticleList';
 import { ArticleListToolbar } from '~/components/ArticleListToolbar';
 import { CommonErrorBoundary } from '~/components/CommonErrorBoundary';
-import { Header } from '~/components/Header';
 import { LazyModal, type ModalController } from '~/components/LazyModal';
 import { CenterLoader } from '~/components/Loader';
 import { MarkAllArchivedButton } from '~/components/MarkAllArchivedButton';
+import { PageLayout } from '~/components/PageLayout';
 import { ReadStatusToggle } from '~/components/ReadStatusToggle';
 import { SortToggle } from '~/components/SortToggle';
 import { articlesCollection } from '~/entities/articles';
@@ -128,8 +128,9 @@ function Inbox() {
   };
 
   return (
-    <>
-      <Header title="Inbox">
+    <PageLayout
+      title="Inbox"
+      headerActions={
         <div class="flex flex-wrap gap-2">
           <Link
             to="/inbox/shorts"
@@ -140,11 +141,9 @@ function Inbox() {
             <span class="hidden sm:inline">Shorts</span>
           </Link>
         </div>
-      </Header>
-
-      <div class="mx-auto w-full max-w-2xl px-2 py-3 sm:p-6 xl:max-w-3xl">
-        <p class="text-base-content-gray">Latest articles from all your RSS feeds</p>
-      </div>
+      }
+    >
+      <p class="text-base-content-gray mb-4">Latest articles from all your RSS feeds</p>
 
       <ArticleListToolbar
         leftContent={
@@ -180,24 +179,22 @@ function Inbox() {
         readStatus={readStatus()}
       />
 
-      <div class="mx-auto w-full max-w-2xl px-2 pb-3 sm:px-6 sm:pb-6 xl:max-w-3xl">
-        <CommonErrorBoundary>
-          <Suspense fallback={<CenterLoader />}>
-            <Show when={feedsQuery() && tagsQuery()}>
-              <ArticleList
-                articles={filteredArticles()}
-                feeds={feedsQuery()!}
-                tags={tagsQuery()!}
-                totalCount={totalCount()}
-                onLoadMore={handleLoadMore}
-                onUpdateArticle={handleUpdateArticle}
-                readStatus={readStatus()}
-                context="inbox"
-              />
-            </Show>
-          </Suspense>
-        </CommonErrorBoundary>
-      </div>
+      <CommonErrorBoundary>
+        <Suspense fallback={<CenterLoader />}>
+          <Show when={feedsQuery() && tagsQuery()}>
+            <ArticleList
+              articles={filteredArticles()}
+              feeds={feedsQuery()!}
+              tags={tagsQuery()!}
+              totalCount={totalCount()}
+              onLoadMore={handleLoadMore}
+              onUpdateArticle={handleUpdateArticle}
+              readStatus={readStatus()}
+              context="inbox"
+            />
+          </Show>
+        </Suspense>
+      </CommonErrorBoundary>
 
       <LazyModal
         controller={(controller) => (markAllModalController = controller)}
@@ -240,6 +237,6 @@ function Inbox() {
           </button>
         </div>
       </LazyModal>
-    </>
+    </PageLayout>
   );
 }

@@ -39,7 +39,7 @@ export function TagFeedsTab(props: TagFeedsTabProps) {
   };
 
   return (
-    <div class="mx-auto w-full max-w-2xl px-4 pb-3 sm:px-6 sm:pb-6 xl:max-w-3xl">
+    <>
       {/* Assigned feeds list */}
       <div class="space-y-1">
         <For each={assignedFeeds()}>
@@ -78,7 +78,7 @@ export function TagFeedsTab(props: TagFeedsTabProps) {
       <Show when={unassignedFeeds().length > 0}>
         <AddFeedsSection feeds={unassignedFeeds()} onAddFeed={handleAddFeed} />
       </Show>
-    </div>
+    </>
   );
 }
 
@@ -100,26 +100,24 @@ export function TagEmptyState(props: TagEmptyStateProps) {
   };
 
   return (
-    <div class="mx-auto w-full max-w-2xl px-4 py-3 sm:p-6 xl:max-w-3xl">
-      <div class="py-16 text-center">
-        <div class="mb-4 flex justify-center">
-          <TagsIllustration />
-        </div>
-        <h2 class="mb-2 text-2xl font-semibold">Nothing Here Yet</h2>
-        <p class="text-base-content/60 mb-6">
-          Assign feeds to this tag so their articles appear here.
-        </p>
-        <Show
-          when={props.feeds.length > 0}
-          fallback={
-            <p class="text-base-content/40 text-sm">
-              You don't have any feeds yet. Add some RSS feeds first.
-            </p>
-          }
-        >
-          <AddFeedsSection feeds={props.feeds} onAddFeed={handleAddFeed} />
-        </Show>
+    <div class="py-16 text-center">
+      <div class="mb-4 flex justify-center">
+        <TagsIllustration />
       </div>
+      <h2 class="mb-2 text-2xl font-semibold">Nothing Here Yet</h2>
+      <p class="text-base-content/60 mb-6">
+        Assign feeds to this tag so their articles appear here.
+      </p>
+      <Show
+        when={props.feeds.length > 0}
+        fallback={
+          <p class="text-base-content/40 text-sm">
+            You don't have any feeds yet. Add some RSS feeds first.
+          </p>
+        }
+      >
+        <AddFeedsSection feeds={props.feeds} onAddFeed={handleAddFeed} />
+      </Show>
     </div>
   );
 }
