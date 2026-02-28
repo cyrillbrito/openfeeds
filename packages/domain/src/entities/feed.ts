@@ -2,7 +2,7 @@ import { db, feeds, type Db, type DbFeed, type DbInsertFeed, type Transaction } 
 import { discoverFeeds } from '@repo/discovery/server';
 import { createId } from '@repo/shared/utils';
 import { and, eq, inArray } from 'drizzle-orm';
-import { trackEvent } from '../analytics';
+import { getDomain, trackEvent } from '../analytics';
 import { BadRequestError, LimitExceededError, NotFoundError } from '../errors';
 import { countUserFeeds, FREE_TIER_LIMITS } from '../limits';
 import { enqueueFeedDetail, enqueueFeedSync } from '../queues';
@@ -91,8 +91,8 @@ export async function createFeeds(
   // Track feed creations
   for (const feed of inserted) {
     trackEvent(userId, 'feeds:feed_create', {
-      feed_id: feed.id,
       feed_url: feed.feedUrl,
+      feed_domain: getDomain(feed.feedUrl),
     });
   }
 
@@ -133,9 +133,7 @@ export async function deleteFeeds(
 
   await conn.delete(feeds).where(and(inArray(feeds.id, ids), eq(feeds.userId, userId)));
 
-  for (const id of ids) {
-    trackEvent(userId, 'feeds:feed_delete', { feed_id: id });
-  }
+  trackEvent(userId, 'feeds:feed_delete', { count: ids.length });
 }
 
 /**

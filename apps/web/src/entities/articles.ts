@@ -4,7 +4,7 @@ import { electricCollectionOptions } from '@tanstack/electric-db-collection';
 import { createCollection } from '@tanstack/solid-db';
 import { collectionErrorHandler, shapeErrorHandler } from '~/lib/collection-errors';
 import { getShapeUrl, timestampParser } from '~/lib/electric-client';
-import { $$createArticle, $$updateArticles } from './articles.server';
+import { $$createArticles, $$updateArticles } from './articles.server';
 
 // Articles Collection - Electric-powered real-time sync
 export const articlesCollection = createCollection(
@@ -21,38 +21,23 @@ export const articlesCollection = createCollection(
     },
 
     onInsert: collectionErrorHandler('articles.onInsert', async ({ transaction }) => {
-      const txids: number[] = [];
+      const articles = transaction.mutations
+        .filter((mutation) => mutation.modified.feedId === null && mutation.modified.url)
+        .map((mutation) => ({
+          id: mutation.key as string,
+          url: mutation.modified.url!,
+        }));
 
-      await Promise.all(
-        transaction.mutations.map(async (mutation) => {
-          const data = mutation.modified;
-          // Only call server for articles created from URL (no feedId)
-          if (data.feedId === null && data.url) {
-            const { txid } = await $$createArticle({
-              data: {
-                id: mutation.key as string,
-                url: data.url,
-              },
-            });
-            txids.push(txid);
-          }
-        }),
-      );
-
-      if (txids.length > 0) {
-        return { txid: txids };
-      }
+      if (articles.length === 0) return;
+      return await $$createArticles({ data: articles });
     }),
 
-    // Handle client-side updates (isRead, isArchived)
     onUpdate: collectionErrorHandler('articles.onUpdate', async ({ transaction }) => {
-      const updates = transaction.mutations.map((mutation) => {
-        return {
-          id: mutation.key as string,
-          isRead: mutation.changes.isRead ?? undefined,
-          isArchived: mutation.changes.isArchived ?? undefined,
-        };
-      });
+      const updates = transaction.mutations.map((mutation) => ({
+        id: mutation.key as string,
+        isRead: mutation.changes.isRead ?? undefined,
+        isArchived: mutation.changes.isArchived ?? undefined,
+      }));
       return await $$updateArticles({ data: updates });
     }),
 

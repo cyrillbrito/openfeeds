@@ -3,7 +3,7 @@ import { fetchArticleContent } from '@repo/readability/server';
 import { createId } from '@repo/shared/utils';
 import { and, eq } from 'drizzle-orm';
 import { trackEvent } from '../analytics';
-import { assert, LimitExceededError, NotFoundError } from '../errors';
+import { LimitExceededError, NotFoundError } from '../errors';
 import {
   countDailyExtractions,
   countMonthlyExtractions,
@@ -159,14 +159,16 @@ export async function updateArticles(
   });
 }
 
-export async function createArticle(
-  data: CreateArticleFromUrl,
+export async function createArticles(
+  data: CreateArticleFromUrl[],
   userId: string,
   conn: Db | Transaction,
-): Promise<Article> {
+): Promise<void> {
+  if (data.length === 0) return;
+
   // Check free-tier saved article limit (only user-created articles, not feed-synced)
   const currentCount = await countUserSavedArticles(userId, conn);
-  if (currentCount >= FREE_TIER_LIMITS.savedArticles) {
+  if (currentCount + data.length > FREE_TIER_LIMITS.savedArticles) {
     trackEvent(userId, 'limits:saved_articles_limit_hit', {
       current_usage: currentCount,
       limit: FREE_TIER_LIMITS.savedArticles,
@@ -174,49 +176,40 @@ export async function createArticle(
     throw new LimitExceededError('saved articles', FREE_TIER_LIMITS.savedArticles);
   }
 
-  const articleId = data.id ?? createId();
+  // Fetch content for all articles in parallel
+  const extracted = await Promise.all(
+    data.map(async (item) => {
+      try {
+        const result = await fetchArticleContent(item.url);
+        return { url: item.url, id: item.id, ...result };
+      } catch {
+        return { url: item.url, id: item.id, title: null, excerpt: null, content: null };
+      }
+    }),
+  );
+
   const now = new Date();
 
-  const {
-    title: extractedTitle,
-    excerpt,
-    content: cleanContent,
-  } = await fetchArticleContent(data.url);
+  const values = extracted.map((item) => ({
+    id: item.id ?? createId(),
+    userId,
+    feedId: null,
+    title: item.title || item.url,
+    description: item.excerpt ?? null,
+    url: item.url,
+    pubDate: now,
+    createdAt: now,
+    isRead: false,
+    isArchived: false,
+    cleanContent: item.content ?? null,
+    contentExtractedAt: item.content !== null ? now : null,
+  }));
 
-  const dbResult = await conn
-    .insert(articles)
-    .values({
-      id: articleId,
-      userId,
-      feedId: null,
-      title: extractedTitle || data.url,
-      description: excerpt,
-      url: data.url,
-      pubDate: now,
-      createdAt: now,
-      isRead: false,
-      isArchived: false,
-      cleanContent,
-    })
-    .returning();
+  await conn.insert(articles).values(values);
 
-  const row = dbResult[0];
-  assert(row, 'Created article must exist');
-
-  return {
-    id: row.id,
-    userId: row.userId,
-    feedId: row.feedId,
-    title: row.title,
-    url: row.url,
-    description: row.description,
-    content: row.content,
-    author: row.author,
-    pubDate: row.pubDate?.toISOString() ?? null,
-    isRead: row.isRead,
-    isArchived: row.isArchived,
-    cleanContent: row.cleanContent ?? null,
-    contentExtractedAt: row.contentExtractedAt?.toISOString() ?? null,
-    createdAt: row.createdAt.toISOString(),
-  };
+  for (const item of data) {
+    trackEvent(userId, 'articles:article_create', {
+      article_url: item.url,
+    });
+  }
 }

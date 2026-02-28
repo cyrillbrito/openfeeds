@@ -39,7 +39,6 @@ export async function createFilterRules(
 
   for (const rule of inserted) {
     trackEvent(userId, 'filters:rule_create', {
-      feed_id: rule.feedId,
       operator: rule.operator,
     });
   }
