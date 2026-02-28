@@ -1,9 +1,4 @@
-import {
-  DEFAULT_AUTO_ARCHIVE_DAYS,
-  getEffectiveAutoArchiveDays,
-  isAutoArchiveDaysDefault,
-  type ArchiveResult,
-} from '@repo/domain/client';
+import { getEffectiveAutoArchiveDays, type ArchiveResult } from '@repo/domain/client';
 import { createFileRoute } from '@tanstack/solid-router';
 import { createSignal, Show } from 'solid-js';
 import { Card } from '~/components/Card';
@@ -17,15 +12,32 @@ export const Route = createFileRoute('/_frame/settings/general')({
 
 function SettingsGeneralPage() {
   const settings = useSettings();
-  const [editMode, setEditMode] = createSignal(false);
-  const [formData, setFormData] = createSignal<{
-    autoArchiveDays?: number | null;
-  }>({});
   let archiveResultModalController!: ModalController;
   const [archiveResult, setArchiveResult] = createSignal<ArchiveResult | null>(null);
   const [isArchiving, setIsArchiving] = createSignal(false);
   const [archiveError, setArchiveError] = createSignal<string | null>(null);
   const [isExporting, setIsExporting] = createSignal(false);
+
+  const handleAutoArchiveDaysChange = (value: string) => {
+    const currentSettings = settings();
+    if (!currentSettings) return;
+
+    const parsed = parseInt(value);
+    if (isNaN(parsed) || parsed < 1 || parsed > 365) return;
+
+    settingsCollection.update(currentSettings.userId, (draft) => {
+      draft.autoArchiveDays = parsed;
+    });
+  };
+
+  const handleResetAutoArchiveDays = () => {
+    const currentSettings = settings();
+    if (!currentSettings) return;
+
+    settingsCollection.update(currentSettings.userId, (draft) => {
+      draft.autoArchiveDays = null;
+    });
+  };
 
   const handleExportOpml = async () => {
     try {
@@ -43,22 +55,6 @@ function SettingsGeneralPage() {
     } finally {
       setIsExporting(false);
     }
-  };
-
-  const handleUpdate = () => {
-    const currentSettings = settings();
-    if (!currentSettings) return;
-
-    const changes = formData();
-    const { autoArchiveDays } = changes;
-    if (autoArchiveDays !== undefined) {
-      settingsCollection.update(currentSettings.userId, (draft) => {
-        draft.autoArchiveDays = autoArchiveDays;
-      });
-    }
-
-    setEditMode(false);
-    setFormData({});
   };
 
   const handleTriggerAutoArchive = async () => {
@@ -92,145 +88,100 @@ function SettingsGeneralPage() {
       </Show>
 
       <Show when={settings() && !settings.isLoading}>
-        <div class="space-y-6">
-          <Card>
-            <Show when={!editMode()}>
-              <div class="mb-4 flex items-center justify-between">
-                <h2 class="text-base-content font-semibold">Application Settings</h2>
-                <button
-                  class="btn btn-primary btn-sm"
-                  onClick={() => {
-                    setFormData({
-                      autoArchiveDays: settings()?.autoArchiveDays,
-                    });
-                    setEditMode(true);
-                  }}
-                >
-                  Edit
-                </button>
-              </div>
-
-              <div class="space-y-3 text-sm">
-                <div class="flex justify-between">
-                  <span class="text-base-content-gray">Auto-archive after</span>
-                  <span>
-                    {getEffectiveAutoArchiveDays(settings()!)} days
-                    <Show when={isAutoArchiveDaysDefault(settings()!)}>
-                      <span class="text-base-content-gray ml-1">(default)</span>
-                    </Show>
-                  </span>
-                </div>
-              </div>
-            </Show>
-
-            <Show when={editMode()}>
-              <div class="mb-4 flex items-center justify-between">
-                <h2 class="text-base-content font-semibold">Edit Settings</h2>
-                <div class="space-x-2">
-                  <button
-                    class="btn btn-ghost btn-sm"
-                    onClick={() => {
-                      setEditMode(false);
-                      setFormData({});
-                    }}
-                  >
-                    Cancel
-                  </button>
-                  <button class="btn btn-primary btn-sm" onClick={handleUpdate}>
-                    Save
-                  </button>
-                </div>
-              </div>
-
-              <div class="space-y-4">
-                <div class="form-control">
-                  <label class="label">
-                    <span class="label-text font-medium">Auto-archive after (days)</span>
-                  </label>
-                  <input
-                    type="number"
-                    class="input input-bordered w-full"
-                    min="1"
-                    max="365"
-                    value={formData().autoArchiveDays ?? getEffectiveAutoArchiveDays(settings()!)}
-                    onInput={(e) =>
-                      setFormData({
-                        ...formData(),
-                        autoArchiveDays: parseInt(e.target.value),
-                      })
-                    }
-                  />
-                  <label class="label">
-                    <span class="label-text-alt text-base-content-gray">
-                      Articles older than this will be automatically archived (default:{' '}
-                      {DEFAULT_AUTO_ARCHIVE_DAYS} days).{' '}
+        <div class="space-y-8">
+          {/* Preferences */}
+          <section>
+            <h2 class="text-base-content mb-3 text-sm font-semibold tracking-wide uppercase opacity-60">
+              Preferences
+            </h2>
+            <Card>
+              <div class="flex items-center justify-between gap-4">
+                <div class="min-w-0">
+                  <p class="text-base-content text-sm font-medium">Auto-archive articles</p>
+                  <p class="text-base-content-gray text-xs">
+                    Articles older than this are automatically archived.
+                    <Show when={settings()!.autoArchiveDays !== null}>
+                      {' '}
                       <button
                         type="button"
                         class="link link-primary"
-                        onClick={() => setFormData({ ...formData(), autoArchiveDays: null })}
+                        onClick={handleResetAutoArchiveDays}
                       >
                         Reset to default
                       </button>
-                    </span>
-                  </label>
+                    </Show>
+                  </p>
+                </div>
+                <div class="flex shrink-0 items-center gap-2">
+                  <input
+                    type="number"
+                    class="input input-bordered input-sm w-20 text-center"
+                    min="1"
+                    max="365"
+                    value={getEffectiveAutoArchiveDays(settings()!)}
+                    onChange={(e) => handleAutoArchiveDaysChange(e.target.value)}
+                  />
+                  <span class="text-base-content-gray text-sm">days</span>
                 </div>
               </div>
-            </Show>
-          </Card>
+            </Card>
+          </section>
 
-          <Card>
-            <div class="flex items-center justify-between">
-              <div>
-                <h3 class="font-semibold">Export Feeds</h3>
-                <p class="text-base-content-gray text-sm">Download your feeds as OPML</p>
-              </div>
-              <button
-                class="btn btn-primary btn-sm"
-                onClick={handleExportOpml}
-                disabled={isExporting()}
-              >
-                <Show when={isExporting()}>
-                  <span class="loading loading-spinner loading-xs mr-2"></span>
-                </Show>
-                Export
-              </button>
-            </div>
-          </Card>
+          {/* Data */}
+          <section>
+            <h2 class="text-base-content mb-3 text-sm font-semibold tracking-wide uppercase opacity-60">
+              Data
+            </h2>
+            <Card>
+              <div class="divide-base-300 divide-y">
+                <div class="flex items-center justify-between gap-4 pb-4">
+                  <div class="min-w-0">
+                    <p class="text-base-content text-sm font-medium">Export feeds</p>
+                    <p class="text-base-content-gray text-xs">
+                      Download all your feeds as an OPML file.
+                    </p>
+                  </div>
+                  <button
+                    class="btn btn-primary btn-sm shrink-0"
+                    onClick={handleExportOpml}
+                    disabled={isExporting()}
+                  >
+                    <Show when={isExporting()}>
+                      <span class="loading loading-spinner loading-xs mr-2"></span>
+                    </Show>
+                    Export OPML
+                  </button>
+                </div>
 
-          <Card>
-            <div class="flex items-center justify-between">
-              <div>
-                <h3 class="font-semibold">Archive Old Articles</h3>
-                <p class="text-base-content-gray text-sm">
-                  Archive articles older than {getEffectiveAutoArchiveDays(settings()!)} days
-                </p>
+                <div class="pt-4">
+                  <div class="flex items-center justify-between gap-4">
+                    <div class="min-w-0">
+                      <p class="text-base-content text-sm font-medium">Archive old articles</p>
+                      <p class="text-base-content-gray text-xs">
+                        Manually archive articles older than{' '}
+                        {getEffectiveAutoArchiveDays(settings()!)} days.
+                      </p>
+                    </div>
+                    <button
+                      class="btn btn-warning btn-sm shrink-0"
+                      onClick={handleTriggerAutoArchive}
+                      disabled={isArchiving()}
+                    >
+                      <Show when={isArchiving()}>
+                        <span class="loading loading-spinner loading-xs mr-2"></span>
+                      </Show>
+                      Archive now
+                    </button>
+                  </div>
+                  <Show when={archiveError()}>
+                    <div class="alert alert-error alert-sm mt-3">
+                      <span class="text-xs">Error: {archiveError()}</span>
+                    </div>
+                  </Show>
+                </div>
               </div>
-              <button
-                class="btn btn-warning btn-sm"
-                onClick={handleTriggerAutoArchive}
-                disabled={isArchiving()}
-              >
-                <Show when={isArchiving()}>
-                  <span class="loading loading-spinner loading-xs mr-2"></span>
-                </Show>
-                Archive
-              </button>
-            </div>
-            <Show when={archiveError()}>
-              <div class="alert alert-error alert-sm mt-2">
-                <span class="text-xs">Error: {archiveError()}</span>
-              </div>
-            </Show>
-          </Card>
-
-          <Card>
-            <h3 class="mb-2 font-semibold">Debug Information</h3>
-            <div class="bg-neutral overflow-auto rounded p-3">
-              <pre class="text-neutral-content text-xs whitespace-pre-wrap">
-                {JSON.stringify(settings(), null, 2)}
-              </pre>
-            </div>
-          </Card>
+            </Card>
+          </section>
         </div>
       </Show>
 
