@@ -1,8 +1,8 @@
 import { createFileRoute, Link, Outlet, useLocation, useNavigate } from '@tanstack/solid-router';
 import { createEffect, createMemo, on, Show, Suspense } from 'solid-js';
 import { ColorIndicator } from '~/components/ColorIndicator';
-import { Header } from '~/components/Header';
 import { CenterLoader } from '~/components/Loader';
+import { PageLayout } from '~/components/PageLayout';
 import { TagEmptyState } from '~/components/TagFeedManager';
 import { useFeedTags } from '~/entities/feed-tags';
 import { useFeeds } from '~/entities/feeds';
@@ -50,20 +50,18 @@ function TagLayout() {
   );
 
   return (
-    <>
-      <Header
-        title={
-          tag() ? (
-            <div class="flex items-center gap-2.5">
-              <ColorIndicator class={getTagDotColor(tag()!.color)} />
-              <span>{tag()!.name}</span>
-            </div>
-          ) : (
-            'Tag'
-          )
-        }
-      />
-
+    <PageLayout
+      title={
+        tag() ? (
+          <div class="flex items-center gap-2.5">
+            <ColorIndicator class={getTagDotColor(tag()!.color)} />
+            <span>{tag()!.name}</span>
+          </div>
+        ) : (
+          'Tag'
+        )
+      }
+    >
       <Show
         when={hasTaggedFeeds()}
         fallback={
@@ -72,26 +70,24 @@ function TagLayout() {
           </Show>
         }
       >
-        <div class="mx-auto w-full max-w-2xl px-4 py-3 sm:p-6 xl:max-w-3xl">
-          <div role="tablist" class="tabs tabs-border">
-            {TABS.map((tab) => (
-              <Link
-                to={tab.to}
-                params={{ tagId: tagId() }}
-                role="tab"
-                class="tab"
-                activeProps={{ class: 'tab tab-active' }}
-              >
-                {tab.label}
-              </Link>
-            ))}
-          </div>
+        <div role="tablist" class="tabs tabs-border mb-4">
+          {TABS.map((tab) => (
+            <Link
+              to={tab.to}
+              params={{ tagId: tagId() }}
+              role="tab"
+              class="tab"
+              activeProps={{ class: 'tab tab-active' }}
+            >
+              {tab.label}
+            </Link>
+          ))}
         </div>
 
         <Suspense fallback={<CenterLoader />}>
           <Outlet />
         </Suspense>
       </Show>
-    </>
+    </PageLayout>
   );
 }

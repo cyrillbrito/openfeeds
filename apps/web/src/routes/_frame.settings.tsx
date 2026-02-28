@@ -1,7 +1,7 @@
 import { createFileRoute, Link, Outlet, redirect } from '@tanstack/solid-router';
 import { Suspense } from 'solid-js';
-import { Header } from '~/components/Header';
 import { CenterLoader } from '~/components/Loader';
+import { PageLayout } from '~/components/PageLayout';
 
 export const Route = createFileRoute('/_frame/settings')({
   component: SettingsLayout,
@@ -20,22 +20,18 @@ const TABS = [
 
 function SettingsLayout() {
   return (
-    <>
-      <Header title="Settings" />
-
-      <div class="mx-auto w-full max-w-2xl px-4 py-3 sm:p-6 xl:max-w-3xl">
-        <div role="tablist" class="tabs tabs-border mb-6">
-          {TABS.map((tab) => (
-            <Link to={tab.to} role="tab" class="tab" activeProps={{ class: 'tab tab-active' }}>
-              {tab.label}
-            </Link>
-          ))}
-        </div>
-
-        <Suspense fallback={<CenterLoader />}>
-          <Outlet />
-        </Suspense>
+    <PageLayout title="Settings">
+      <div role="tablist" class="tabs tabs-border mb-6">
+        {TABS.map((tab) => (
+          <Link to={tab.to} role="tab" class="tab" activeProps={{ class: 'tab tab-active' }}>
+            {tab.label}
+          </Link>
+        ))}
       </div>
-    </>
+
+      <Suspense fallback={<CenterLoader />}>
+        <Outlet />
+      </Suspense>
+    </PageLayout>
   );
 }
