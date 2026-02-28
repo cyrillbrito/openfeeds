@@ -1,5 +1,18 @@
 # Changelog
 
+## [0.7.0](https://github.com/cyrillbrito/openfeeds/compare/v0.6.0...v0.7.0) (2026-02-28)
+
+
+### Features
+
+* add transaction ID (txid) sync to eliminate optimistic UI flicker ([#119](https://github.com/cyrillbrito/openfeeds/issues/119)) ([e8c4604](https://github.com/cyrillbrito/openfeeds/commit/e8c4604ace759c48416c5bf95d21d19ac2ae0d02))
+
+
+### Bug Fixes
+
+* **web:** clean up general settings page ([#122](https://github.com/cyrillbrito/openfeeds/issues/122)) ([db7d2b1](https://github.com/cyrillbrito/openfeeds/commit/db7d2b19292b743922c0e65574ee5e7cebe734f7))
+* **web:** pre-create /data dir with correct ownership in Dockerfile ([#117](https://github.com/cyrillbrito/openfeeds/issues/117)) ([6920e9d](https://github.com/cyrillbrito/openfeeds/commit/6920e9d1fa4bc30d19a4c6c410359233ab1ef5bd))
+
 ## [0.6.0](https://github.com/cyrillbrito/openfeeds/compare/v0.5.0...v0.6.0) (2026-02-27)
 
 
