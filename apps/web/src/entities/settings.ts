@@ -25,7 +25,7 @@ export const settingsCollection = createCollection(
       const updates = transaction.mutations.map(
         (mutation) => mutation.changes as Partial<Settings>,
       );
-      await $$updateSettings({ data: updates });
+      return await $$updateSettings({ data: updates });
     }),
 
     // Settings cannot be inserted or deleted by clients

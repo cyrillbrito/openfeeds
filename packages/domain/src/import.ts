@@ -66,7 +66,7 @@ export async function importOpmlFeeds(opmlContent: string, userId: string): Prom
   const feedsToImport = getFeedsFromOutlines(parsedOpml.body?.outlines || []);
 
   // Check free-tier feed limit: count existing feeds, deduplicate against OPML, and verify the new ones fit
-  const currentFeedCount = await countUserFeeds(userId);
+  const currentFeedCount = await countUserFeeds(userId, db);
 
   const opmlUrls = feedsToImport.map((f) => f.xmlUrl);
   const existingFeedUrls = new Set(

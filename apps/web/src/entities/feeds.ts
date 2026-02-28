@@ -25,7 +25,7 @@ export const feedsCollection = createCollection(
         const feed = mutation.modified;
         return { id: mutation.key as string, url: feed.url };
       });
-      await $$createFeeds({ data: feeds });
+      return await $$createFeeds({ data: feeds });
     }),
 
     onUpdate: collectionErrorHandler('feeds.onUpdate', async ({ transaction }) => {
@@ -33,12 +33,12 @@ export const feedsCollection = createCollection(
         id: mutation.key as string,
         ...mutation.changes,
       }));
-      await $$updateFeeds({ data: updates });
+      return await $$updateFeeds({ data: updates });
     }),
 
     onDelete: collectionErrorHandler('feeds.onDelete', async ({ transaction }) => {
       const ids = transaction.mutations.map((mutation) => mutation.key as string);
-      await $$deleteFeeds({ data: ids });
+      return await $$deleteFeeds({ data: ids });
     }),
   }),
 );

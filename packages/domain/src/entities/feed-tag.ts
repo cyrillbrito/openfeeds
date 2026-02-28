@@ -1,4 +1,4 @@
-import { db, feedTags, type Transaction } from '@repo/db';
+import { db, feedTags, type Db, type Transaction } from '@repo/db';
 import { and, eq, inArray, sql } from 'drizzle-orm';
 import type { CreateFeedTag, FeedTag } from './feed-tag.schema';
 
@@ -18,7 +18,11 @@ export async function getAllFeedTags(userId: string): Promise<FeedTag[]> {
     .where(eq(feedTags.userId, userId));
 }
 
-export async function createFeedTags(data: CreateFeedTag[], userId: string): Promise<FeedTag[]> {
+export async function createFeedTags(
+  data: CreateFeedTag[],
+  userId: string,
+  conn: Db | Transaction,
+): Promise<FeedTag[]> {
   if (data.length === 0) return [];
 
   const newTags = data.map((item) => ({
@@ -28,7 +32,7 @@ export async function createFeedTags(data: CreateFeedTag[], userId: string): Pro
     tagId: item.tagId,
   }));
 
-  return db.transaction(async (tx) => {
+  return conn.transaction(async (tx) => {
     const inserted = await tx.insert(feedTags).values(newTags).onConflictDoNothing().returning();
 
     // Propagate: add these tags to all existing articles of the affected feeds
@@ -40,10 +44,14 @@ export async function createFeedTags(data: CreateFeedTag[], userId: string): Pro
   });
 }
 
-export async function deleteFeedTags(ids: string[], userId: string): Promise<void> {
+export async function deleteFeedTags(
+  ids: string[],
+  userId: string,
+  conn: Db | Transaction,
+): Promise<void> {
   if (ids.length === 0) return;
 
-  await db.transaction(async (tx) => {
+  await conn.transaction(async (tx) => {
     // Single DELETE ... RETURNING to get the pairs and remove in one query
     const deleted = await tx
       .delete(feedTags)

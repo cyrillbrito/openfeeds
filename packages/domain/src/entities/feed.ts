@@ -1,4 +1,4 @@
-import { db, feeds, type DbFeed, type DbInsertFeed } from '@repo/db';
+import { db, feeds, type Db, type DbFeed, type DbInsertFeed, type Transaction } from '@repo/db';
 import { discoverFeeds } from '@repo/discovery/server';
 import { createId } from '@repo/shared/utils';
 import { and, eq, inArray } from 'drizzle-orm';
@@ -40,11 +40,15 @@ async function assertFeedExists(id: string, userId: string): Promise<void> {
   }
 }
 
-export async function createFeeds(data: CreateFeed[], userId: string): Promise<Feed[]> {
+export async function createFeeds(
+  data: CreateFeed[],
+  userId: string,
+  conn: Db | Transaction,
+): Promise<Feed[]> {
   if (data.length === 0) return [];
 
   // Check free-tier feed limit
-  const currentCount = await countUserFeeds(userId);
+  const currentCount = await countUserFeeds(userId, conn);
   if (currentCount + data.length > FREE_TIER_LIMITS.feeds) {
     trackEvent(userId, 'limits:feeds_limit_hit', {
       source: 'create',
@@ -69,13 +73,14 @@ export async function createFeeds(data: CreateFeed[], userId: string): Promise<F
   // The client already prevents following feeds the user already has, so conflicts
   // here are a race-condition safety net. We may want to revisit this and surface
   // skipped feeds to the caller if it causes confusion down the line.
-  const inserted = await db
+  const inserted = await conn
     .insert(feeds)
     .values(values)
     .onConflictDoNothing({ target: [feeds.userId, feeds.feedUrl] })
     .returning();
 
   // Enqueue workers for all newly created feeds
+  // TODO: move side effects post-commit (enqueue can fire before transaction commits)
   await Promise.all(
     inserted.map(async (feed) => {
       await enqueueFeedDetail(userId, feed.id);
@@ -94,10 +99,14 @@ export async function createFeeds(data: CreateFeed[], userId: string): Promise<F
   return inserted.map(toApiFeed);
 }
 
-export async function updateFeeds(data: UpdateFeed[], userId: string): Promise<void> {
+export async function updateFeeds(
+  data: UpdateFeed[],
+  userId: string,
+  conn: Db | Transaction,
+): Promise<void> {
   if (data.length === 0) return;
 
-  await db.transaction(async (tx) => {
+  await conn.transaction(async (tx) => {
     for (const { id, ...updates } of data) {
       const feedUpdateData: Record<string, unknown> = {};
       if (updates.title !== undefined) feedUpdateData.title = updates.title;
@@ -115,10 +124,14 @@ export async function updateFeeds(data: UpdateFeed[], userId: string): Promise<v
   });
 }
 
-export async function deleteFeeds(ids: string[], userId: string): Promise<void> {
+export async function deleteFeeds(
+  ids: string[],
+  userId: string,
+  conn: Db | Transaction,
+): Promise<void> {
   if (ids.length === 0) return;
 
-  await db.delete(feeds).where(and(inArray(feeds.id, ids), eq(feeds.userId, userId)));
+  await conn.delete(feeds).where(and(inArray(feeds.id, ids), eq(feeds.userId, userId)));
 
   for (const id of ids) {
     trackEvent(userId, 'feeds:feed_delete', { feed_id: id });

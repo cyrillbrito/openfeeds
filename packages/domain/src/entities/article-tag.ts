@@ -1,4 +1,4 @@
-import { articleTags, db } from '@repo/db';
+import { articleTags, db, type Db, type Transaction } from '@repo/db';
 import { createId } from '@repo/shared/utils';
 import { and, eq, inArray } from 'drizzle-orm';
 import type { ArticleTag, CreateArticleTag } from './article-tag.schema';
@@ -22,6 +22,7 @@ export async function getAllArticleTags(userId: string): Promise<ArticleTag[]> {
 export async function createArticleTags(
   data: CreateArticleTag[],
   userId: string,
+  conn: Db | Transaction,
 ): Promise<ArticleTag[]> {
   if (data.length === 0) return [];
 
@@ -32,13 +33,17 @@ export async function createArticleTags(
     tagId: item.tagId,
   }));
 
-  return db.insert(articleTags).values(newTags).onConflictDoNothing().returning();
+  return conn.insert(articleTags).values(newTags).onConflictDoNothing().returning();
 }
 
-export async function deleteArticleTags(ids: string[], userId: string): Promise<void> {
+export async function deleteArticleTags(
+  ids: string[],
+  userId: string,
+  conn: Db | Transaction,
+): Promise<void> {
   if (ids.length === 0) return;
 
-  await db
+  await conn
     .delete(articleTags)
     .where(and(inArray(articleTags.id, ids), eq(articleTags.userId, userId)));
 }

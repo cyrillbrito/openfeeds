@@ -1,3 +1,4 @@
+import { db } from '@repo/db';
 import * as feedsDomain from '@repo/domain';
 import { createFileRoute } from '@tanstack/solid-router';
 import { auth } from '~/server/auth';
@@ -47,7 +48,7 @@ export const Route = createFileRoute('/api/feeds')({
         }
 
         try {
-          const [feed] = await feedsDomain.createFeeds([{ url: body.url }], session.user.id);
+          const [feed] = await feedsDomain.createFeeds([{ url: body.url }], session.user.id, db);
           return Response.json(feed, { status: 201, headers });
         } catch (error) {
           if (error instanceof feedsDomain.LimitExceededError) {

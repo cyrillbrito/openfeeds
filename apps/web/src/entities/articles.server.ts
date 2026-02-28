@@ -1,3 +1,4 @@
+import { db, getTxId } from '@repo/db';
 import * as articlesDomain from '@repo/domain';
 import { CreateArticleFromUrlSchema, UpdateArticleSchema } from '@repo/domain';
 import { createServerFn } from '@tanstack/solid-start';
@@ -7,15 +8,21 @@ import { authMiddleware } from '~/server/middleware/auth';
 export const $$updateArticles = createServerFn({ method: 'POST' })
   .middleware([authMiddleware])
   .inputValidator(z.array(UpdateArticleSchema))
-  .handler(({ context, data }) => {
-    return articlesDomain.updateArticles(data, context.user.id);
+  .handler(async ({ context, data }) => {
+    return await db.transaction(async (tx) => {
+      await articlesDomain.updateArticles(data, context.user.id, tx);
+      return { txid: await getTxId(tx) };
+    });
   });
 
 export const $$createArticle = createServerFn({ method: 'POST' })
   .middleware([authMiddleware])
   .inputValidator(CreateArticleFromUrlSchema)
-  .handler(({ context, data }) => {
-    return articlesDomain.createArticle(data, context.user.id);
+  .handler(async ({ context, data }) => {
+    return await db.transaction(async (tx) => {
+      await articlesDomain.createArticle(data, context.user.id, tx);
+      return { txid: await getTxId(tx) };
+    });
   });
 
 export const $$extractArticleContent = createServerFn({ method: 'POST' })

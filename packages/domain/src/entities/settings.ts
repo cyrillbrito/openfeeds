@@ -1,4 +1,4 @@
-import { db, settings as settingsTable } from '@repo/db';
+import { db, settings as settingsTable, type Db, type Transaction } from '@repo/db';
 import { eq } from 'drizzle-orm';
 import { assert } from '../errors';
 import { getEffectiveAutoArchiveDays, type Settings } from './settings.schema';
@@ -18,8 +18,8 @@ export async function createSettings(userId: string): Promise<void> {
  * Gets the user's settings.
  * Returns default values if no row exists.
  */
-export async function getSettings(userId: string): Promise<Settings> {
-  const settings = await db.query.settings.findFirst({
+export async function getSettings(userId: string, conn: Db | Transaction): Promise<Settings> {
+  const settings = await conn.query.settings.findFirst({
     where: eq(settingsTable.userId, userId),
   });
 
@@ -47,8 +47,9 @@ export async function getSettings(userId: string): Promise<Settings> {
 export async function updateSettings(
   userId: string,
   updates: Partial<Omit<Settings, 'userId'>>,
+  conn: Db | Transaction,
 ): Promise<Settings> {
-  const currentSettings = await getSettings(userId);
+  const currentSettings = await getSettings(userId, conn);
 
   // Merge updates - undefined means "don't change"
   const theme = updates.theme !== undefined ? updates.theme : currentSettings.theme;
@@ -57,7 +58,7 @@ export async function updateSettings(
       ? updates.autoArchiveDays
       : currentSettings.autoArchiveDays;
 
-  const [row] = await db
+  const [row] = await conn
     .insert(settingsTable)
     .values({
       userId,
@@ -87,7 +88,7 @@ export async function updateSettings(
  * Gets the cutoff date for auto-archiving articles based on settings.
  */
 export async function getAutoArchiveCutoffDate(userId: string): Promise<Date> {
-  const settings = await getSettings(userId);
+  const settings = await getSettings(userId, db);
   const days = getEffectiveAutoArchiveDays(settings);
   return new Date(Date.now() - days * 24 * 60 * 60 * 1000);
 }

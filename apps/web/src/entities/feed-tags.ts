@@ -24,12 +24,12 @@ export const feedTagsCollection = createCollection(
         const tag = mutation.modified;
         return { id: mutation.key as string, feedId: tag.feedId, tagId: tag.tagId };
       });
-      await $$createFeedTags({ data: tags });
+      return await $$createFeedTags({ data: tags });
     }),
 
     onDelete: collectionErrorHandler('feedTags.onDelete', async ({ transaction }) => {
       const ids = transaction.mutations.map((mutation) => mutation.key as string);
-      await $$deleteFeedTags({ data: ids });
+      return await $$deleteFeedTags({ data: ids });
     }),
   }),
 );

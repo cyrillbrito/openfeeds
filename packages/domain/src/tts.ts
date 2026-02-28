@@ -145,7 +145,10 @@ function stripHtml(html: string): string {
 async function getTtsLimitWindow(
   userId: string,
 ): Promise<{ window: 'daily' | 'monthly'; current_usage: number; limit: number } | null> {
-  const [daily, monthly] = await Promise.all([countDailyTts(userId), countMonthlyTts(userId)]);
+  const [daily, monthly] = await Promise.all([
+    countDailyTts(userId, db),
+    countMonthlyTts(userId, db),
+  ]);
 
   if (daily >= FREE_TIER_LIMITS.ttsPerDay) {
     return { window: 'daily', current_usage: daily, limit: FREE_TIER_LIMITS.ttsPerDay };

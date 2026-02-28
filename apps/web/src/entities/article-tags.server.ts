@@ -1,3 +1,4 @@
+import { db, getTxId } from '@repo/db';
 import * as articleTagsDomain from '@repo/domain';
 import { CreateArticleTagSchema } from '@repo/domain';
 import { createServerFn } from '@tanstack/solid-start';
@@ -13,13 +14,19 @@ export const $$getAllArticleTags = createServerFn({ method: 'GET' })
 export const $$createArticleTags = createServerFn({ method: 'POST' })
   .middleware([authMiddleware])
   .inputValidator(z.array(CreateArticleTagSchema))
-  .handler(({ context, data }) => {
-    return articleTagsDomain.createArticleTags(data, context.user.id);
+  .handler(async ({ context, data }) => {
+    return await db.transaction(async (tx) => {
+      await articleTagsDomain.createArticleTags(data, context.user.id, tx);
+      return { txid: await getTxId(tx) };
+    });
   });
 
 export const $$deleteArticleTags = createServerFn({ method: 'POST' })
   .middleware([authMiddleware])
   .inputValidator(z.array(z.uuidv7()))
-  .handler(({ context, data: ids }) => {
-    return articleTagsDomain.deleteArticleTags(ids, context.user.id);
+  .handler(async ({ context, data: ids }) => {
+    return await db.transaction(async (tx) => {
+      await articleTagsDomain.deleteArticleTags(ids, context.user.id, tx);
+      return { txid: await getTxId(tx) };
+    });
   });

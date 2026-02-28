@@ -1,4 +1,4 @@
-import { articles, db } from '@repo/db';
+import { articles, db, type Db, type Transaction } from '@repo/db';
 import { fetchArticleContent } from '@repo/readability/server';
 import { createId } from '@repo/shared/utils';
 import { and, eq } from 'drizzle-orm';
@@ -61,8 +61,8 @@ async function getExtractionLimitWindow(
   userId: string,
 ): Promise<{ window: 'daily' | 'monthly'; current_usage: number; limit: number } | null> {
   const [daily, monthly] = await Promise.all([
-    countDailyExtractions(userId),
-    countMonthlyExtractions(userId),
+    countDailyExtractions(userId, db),
+    countMonthlyExtractions(userId, db),
   ]);
 
   // Check daily first (more likely to be hit in normal use)
@@ -140,10 +140,14 @@ export async function extractArticleContent(id: string, userId: string): Promise
   }
 }
 
-export async function updateArticles(data: UpdateArticle[], userId: string): Promise<void> {
+export async function updateArticles(
+  data: UpdateArticle[],
+  userId: string,
+  conn: Db | Transaction,
+): Promise<void> {
   if (data.length === 0) return;
 
-  await db.transaction(async (tx) => {
+  await conn.transaction(async (tx) => {
     for (const { id, ...updates } of data) {
       if (Object.keys(updates).length === 0) continue;
 
@@ -155,9 +159,13 @@ export async function updateArticles(data: UpdateArticle[], userId: string): Pro
   });
 }
 
-export async function createArticle(data: CreateArticleFromUrl, userId: string): Promise<Article> {
+export async function createArticle(
+  data: CreateArticleFromUrl,
+  userId: string,
+  conn: Db | Transaction,
+): Promise<Article> {
   // Check free-tier saved article limit (only user-created articles, not feed-synced)
-  const currentCount = await countUserSavedArticles(userId);
+  const currentCount = await countUserSavedArticles(userId, conn);
   if (currentCount >= FREE_TIER_LIMITS.savedArticles) {
     trackEvent(userId, 'limits:saved_articles_limit_hit', {
       current_usage: currentCount,
@@ -175,7 +183,7 @@ export async function createArticle(data: CreateArticleFromUrl, userId: string):
     content: cleanContent,
   } = await fetchArticleContent(data.url);
 
-  const dbResult = await db
+  const dbResult = await conn
     .insert(articles)
     .values({
       id: articleId,
