@@ -1,6 +1,6 @@
 import type { Article, Feed } from '@repo/domain/client';
 import { Link } from '@tanstack/solid-router';
-import { ArrowLeft, ChevronLeft, ChevronRight, EllipsisVertical, Shuffle, X } from 'lucide-solid';
+import { ArrowLeft, ChevronLeft, ChevronRight, EllipsisVertical, X } from 'lucide-solid';
 import posthog from 'posthog-js';
 import {
   createEffect,
@@ -14,7 +14,6 @@ import {
 import { Dropdown } from './Dropdown';
 import { ReadIconButton } from './ReadIconButton';
 import { ReadStatusToggle, type ReadStatus } from './ReadStatusToggle';
-import { ShuffleButton } from './ShuffleButton';
 import { TimeAgo } from './TimeAgo';
 import { YouTubeShortsEmbed } from './YouTubeShortsEmbed';
 
@@ -26,7 +25,6 @@ interface BackLinkConfig {
 
 interface ShortsViewerProps {
   readStatus: ReadStatus;
-  seed: number | undefined;
 
   /** Needs to pass the accessor to make sure the suspense and error boundary work */
   shortsAccessor: Accessor<Article[]>;
@@ -165,7 +163,6 @@ export function ShortsViewer(props: ShortsViewerProps) {
           {/* Desktop: Show buttons directly */}
           <div class="hidden gap-2 sm:flex">
             <ReadStatusToggle currentStatus={props.readStatus} />
-            <ShuffleButton currentSeed={props.seed} />
           </div>
 
           {/* Mobile: Ellipsis dropdown */}
@@ -175,20 +172,6 @@ export function ShortsViewer(props: ShortsViewerProps) {
               btnClasses="btn-sm btn-ghost btn-circle text-white"
               btnContent={<EllipsisVertical size={20} />}
             >
-              <li>
-                <Link
-                  to="."
-                  search={(prev: Record<string, any>) =>
-                    prev.seed
-                      ? { ...prev, seed: undefined }
-                      : { ...prev, seed: Math.floor(Math.random() * 9999999999) + 1000000000 }
-                  }
-                  class="flex items-center gap-2"
-                >
-                  <Shuffle size={16} />
-                  {props.seed ? 'Turn off shuffle' : 'Shuffle'}
-                </Link>
-              </li>
               <Show
                 when={props.readStatus === 'unread'}
                 fallback={

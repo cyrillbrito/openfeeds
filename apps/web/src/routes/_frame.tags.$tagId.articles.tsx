@@ -1,6 +1,5 @@
 import { eq, useLiveQuery } from '@tanstack/solid-db';
-import { createFileRoute, Link } from '@tanstack/solid-router';
-import { Shuffle } from 'lucide-solid';
+import { createFileRoute } from '@tanstack/solid-router';
 import { createSignal, onMount, Show, Suspense } from 'solid-js';
 import { ArticleList, ARTICLES_PER_PAGE } from '~/components/ArticleList';
 import { ArticleListToolbar } from '~/components/ArticleListToolbar';
@@ -8,7 +7,6 @@ import { LazyModal, type ModalController } from '~/components/LazyModal';
 import { CenterLoader } from '~/components/Loader';
 import { MarkAllArchivedButton } from '~/components/MarkAllArchivedButton';
 import { ReadStatusToggle, type ReadStatus } from '~/components/ReadStatusToggle';
-import { ShuffleButton } from '~/components/ShuffleButton';
 import { articleTagsCollection } from '~/entities/article-tags';
 import { articlesCollection } from '~/entities/articles';
 import { useFeeds } from '~/entities/feeds';
@@ -27,7 +25,6 @@ function TagArticlesPage() {
   const search = Route.useSearch();
   const tagId = () => params()?.tagId;
   const readStatus = (): ReadStatus => search()?.readStatus || 'unread';
-  const seed = () => search()?.seed;
   const { sessionReadIds, addSessionRead, setViewKey } = useSessionRead();
 
   onMount(() => setViewKey(`tag:${tagId()}`));
@@ -120,40 +117,22 @@ function TagArticlesPage() {
       <ArticleListToolbar
         leftContent={<ReadStatusToggle currentStatus={readStatus()} />}
         rightContent={
-          <>
-            <ShuffleButton currentSeed={seed()} />
-            <Show when={unreadCount() > 0 && readStatus() === 'unread'}>
-              <MarkAllArchivedButton
-                totalCount={unreadCount()}
-                contextLabel="in this tag"
-                onConfirm={handleMarkAllArchived}
-              />
-            </Show>
-          </>
+          <Show when={unreadCount() > 0 && readStatus() === 'unread'}>
+            <MarkAllArchivedButton
+              totalCount={unreadCount()}
+              contextLabel="in this tag"
+              onConfirm={handleMarkAllArchived}
+            />
+          </Show>
         }
         mobileMenuContent={
-          <>
+          <Show when={unreadCount() > 0 && readStatus() === 'unread'}>
             <li>
-              <Link
-                to="."
-                search={(prev: Record<string, any>) =>
-                  prev.seed
-                    ? { ...prev, seed: undefined }
-                    : { ...prev, seed: Math.floor(Math.random() * 9999999999) + 1000000000 }
-                }
-              >
-                <Shuffle size={16} />
-                {seed() ? 'Turn off shuffle' : 'Shuffle'}
-              </Link>
+              <button onClick={() => markAllModalController.open()}>
+                Mark All Archived ({unreadCount()})
+              </button>
             </li>
-            <Show when={unreadCount() > 0 && readStatus() === 'unread'}>
-              <li>
-                <button onClick={() => markAllModalController.open()}>
-                  Mark All Archived ({unreadCount()})
-                </button>
-              </li>
-            </Show>
-          </>
+          </Show>
         }
         unreadCount={unreadCount()}
         totalCount={totalCount()}

@@ -1,8 +1,8 @@
-import type { Feed } from '@repo/domain/client';
+import type { Feed, FeedTag, Tag } from '@repo/domain/client';
 import { eq, useLiveQuery } from '@tanstack/solid-db';
 import { createFileRoute, Link } from '@tanstack/solid-router';
-import { MoreVertical, Shuffle, TriangleAlert, Video } from 'lucide-solid';
-import { createSignal, For, onMount, Show, Suspense } from 'solid-js';
+import { MoreVertical, TriangleAlert, Video } from 'lucide-solid';
+import { createSignal, For, onMount, Show, Suspense, type Accessor } from 'solid-js';
 import { ArticleList, ARTICLES_PER_PAGE } from '~/components/ArticleList';
 import { ArticleListToolbar } from '~/components/ArticleListToolbar';
 import { ColorIndicator } from '~/components/ColorIndicator';
@@ -14,7 +14,6 @@ import { CenterLoader } from '~/components/Loader';
 import { MarkAllArchivedButton } from '~/components/MarkAllArchivedButton';
 import { PageLayout } from '~/components/PageLayout';
 import { ReadStatusToggle, type ReadStatus } from '~/components/ReadStatusToggle';
-import { ShuffleButton } from '~/components/ShuffleButton';
 import { SyncLogsModal } from '~/components/SyncLogsModal';
 import { articlesCollection } from '~/entities/articles';
 import { useFeedTags } from '~/entities/feed-tags';
@@ -36,7 +35,6 @@ function FeedArticles() {
   const search = Route.useSearch();
   const feedId = () => params()?.feedId;
   const readStatus = (): ReadStatus => search()?.readStatus || 'unread';
-  const seed = () => search()?.seed;
   const { sessionReadIds, addSessionRead, setViewKey } = useSessionRead();
 
   onMount(() => setViewKey(`feed:${feedId()}`));
@@ -248,35 +246,7 @@ function FeedArticles() {
               </p>
 
               {/* Tags */}
-              {(() => {
-                const feedTagIds = () =>
-                  (feedTagsQuery() ?? [])
-                    .filter((ft) => ft.feedId === feed().id)
-                    .map((ft) => ft.tagId);
-                return (
-                  <Show when={feedTagIds().length > 0}>
-                    <div class="mb-3 flex flex-wrap gap-1.5">
-                      <For each={feedTagIds()}>
-                        {(tagId) => {
-                          const tag = tagsQuery()?.find((t) => t.id === tagId);
-                          if (tag) {
-                            return (
-                              <Link to="/tags/$tagId" params={{ tagId: tag.id.toString() }}>
-                                <div class="badge badge-sm gap-1.5 transition-all hover:brightness-90">
-                                  <ColorIndicator class={getTagDotColor(tag.color)} />
-                                  <span>{tag.name}</span>
-                                </div>
-                              </Link>
-                            );
-                          } else {
-                            return <></>;
-                          }
-                        }}
-                      </For>
-                    </div>
-                  </Show>
-                );
-              })()}
+              <FeedTags feedId={feed().id} feedTagsQuery={feedTagsQuery} tagsQuery={tagsQuery} />
 
               <div class="flex flex-wrap gap-3 text-xs">
                 <a
@@ -304,40 +274,22 @@ function FeedArticles() {
       <ArticleListToolbar
         leftContent={<ReadStatusToggle currentStatus={readStatus()} />}
         rightContent={
-          <>
-            <ShuffleButton currentSeed={seed()} />
-            <Show when={unreadCount() > 0 && readStatus() === 'unread'}>
-              <MarkAllArchivedButton
-                totalCount={unreadCount()}
-                contextLabel="in this feed"
-                onConfirm={handleMarkAllArchived}
-              />
-            </Show>
-          </>
+          <Show when={unreadCount() > 0 && readStatus() === 'unread'}>
+            <MarkAllArchivedButton
+              totalCount={unreadCount()}
+              contextLabel="in this feed"
+              onConfirm={handleMarkAllArchived}
+            />
+          </Show>
         }
         mobileMenuContent={
-          <>
+          <Show when={unreadCount() > 0 && readStatus() === 'unread'}>
             <li>
-              <Link
-                to="."
-                search={(prev: Record<string, any>) =>
-                  prev.seed
-                    ? { ...prev, seed: undefined }
-                    : { ...prev, seed: Math.floor(Math.random() * 9999999999) + 1000000000 }
-                }
-              >
-                <Shuffle size={16} />
-                {seed() ? 'Turn off shuffle' : 'Shuffle'}
-              </Link>
+              <button onClick={() => markAllModalController.open()}>
+                Mark All Archived ({unreadCount()})
+              </button>
             </li>
-            <Show when={unreadCount() > 0 && readStatus() === 'unread'}>
-              <li>
-                <button onClick={() => markAllModalController.open()}>
-                  Mark All Archived ({unreadCount()})
-                </button>
-              </li>
-            </Show>
-          </>
+          </Show>
         }
         unreadCount={unreadCount()}
         totalCount={totalCount()}
@@ -417,5 +369,37 @@ function FeedArticles() {
         </div>
       </LazyModal>
     </PageLayout>
+  );
+}
+
+function FeedTags(props: {
+  feedId: string;
+  feedTagsQuery: Accessor<FeedTag[] | undefined>;
+  tagsQuery: Accessor<Tag[] | undefined>;
+}) {
+  const feedTagIds = () =>
+    (props.feedTagsQuery() ?? []).filter((ft) => ft.feedId === props.feedId).map((ft) => ft.tagId);
+
+  return (
+    <Show when={feedTagIds().length > 0}>
+      <div class="mb-3 flex flex-wrap gap-1.5">
+        <For each={feedTagIds()}>
+          {(tagId) => {
+            const tag = props.tagsQuery()?.find((t) => t.id === tagId);
+            if (tag) {
+              return (
+                <Link to="/tags/$tagId" params={{ tagId: tag.id.toString() }}>
+                  <div class="badge badge-sm gap-1.5 transition-all hover:brightness-90">
+                    <ColorIndicator class={getTagDotColor(tag.color)} />
+                    <span>{tag.name}</span>
+                  </div>
+                </Link>
+              );
+            }
+            return <></>;
+          }}
+        </For>
+      </div>
+    </Show>
   );
 }
