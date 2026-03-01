@@ -14,7 +14,8 @@ function getResend(): Resend | null {
   return _resend;
 }
 
-const FROM_EMAIL = 'OpenFeeds <noreply@mail.openfeeds.app>';
+const FROM_EMAIL = 'OpenFeeds <hello@mail.openfeeds.app>';
+const REPLY_TO = 'hello@openfeeds.app';
 
 export async function sendVerificationEmail(email: string, url: string) {
   const resend = getResend();
@@ -26,6 +27,7 @@ export async function sendVerificationEmail(email: string, url: string) {
 
   await resend.emails.send({
     from: FROM_EMAIL,
+    replyTo: REPLY_TO,
     to: email,
     subject: 'Verify your email address',
     react: VerifyEmail({ verificationUrl: url }),
@@ -42,6 +44,7 @@ export async function sendPasswordResetEmail(email: string, url: string) {
 
   await resend.emails.send({
     from: FROM_EMAIL,
+    replyTo: REPLY_TO,
     to: email,
     subject: 'Reset your password',
     react: ResetPassword({ resetUrl: url }),

@@ -32,18 +32,53 @@ import { ResetPassword } from '@repo/emails';
 
 // With Resend - pass React element directly (Resend handles rendering)
 await resend.emails.send({
-  from: 'OpenFeeds <noreply@mail.openfeeds.app>',
+  from: 'OpenFeeds <hello@mail.openfeeds.app>',
   to: email,
   subject: 'Reset your password',
   react: ResetPassword({ resetUrl: '...' }),
 });
 ```
 
-## Adding New Templates
+## Template Types
+
+### Transactional (app-triggered)
+
+Used by `@repo/domain` for user actions (verification, password reset). These are exported from `emails/index.ts` and sent programmatically.
 
 1. Create template in `emails/my-template.tsx`
 2. Export from `emails/index.ts`
 3. Run `bun build` to compile
+
+### Broadcast (manually-triggered)
+
+Marketing/announcement emails sent to Resend segments. These are **not** exported from `index.ts` — they're used by the `send-broadcast` script in `packages/scripts/`.
+
+1. Create template in `emails/my-template.tsx`
+2. Export a `subject` string from the template
+3. Preview with `bun dev` (localhost:3002)
+4. Create draft: `bun create-broadcast <email-name>`, then review and send from the Resend dashboard
+
+Broadcast templates should:
+
+- Pass `showUnsubscribe` to `EmailFrame` (unsubscribe URL is handled internally via Resend's `{{{RESEND_UNSUBSCRIBE_URL}}}` placeholder)
+- Include UTM parameters on CTA links (`utm_source=email&utm_medium=broadcast&utm_campaign=<name>`)
+
+Example:
+
+```tsx
+export const subject = 'My broadcast subject line';
+
+export default function MyBroadcast() {
+  return (
+    <EmailFrame preview="..." showUnsubscribe>
+      {/* content */}
+      <Button href="https://openfeeds.app?utm_source=email&utm_medium=broadcast&utm_campaign=my_campaign">
+        CTA
+      </Button>
+    </EmailFrame>
+  );
+}
+```
 
 ## Static Assets
 
