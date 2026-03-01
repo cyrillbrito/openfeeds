@@ -177,32 +177,33 @@ function FeedArticles() {
           (currentFeed()?.syncStatus === 'failing' || currentFeed()?.syncStatus === 'broken') &&
           currentFeed()
         }
+        keyed
       >
         {(feed) => (
           <div class="border-base-300 bg-base-200 mb-4 rounded-lg border p-4">
             <div class="flex items-start gap-3">
               <TriangleAlert
                 size={18}
-                class={`mt-0.5 shrink-0 ${feed().syncStatus === 'broken' ? 'text-error' : 'text-warning'}`}
+                class={`mt-0.5 shrink-0 ${feed.syncStatus === 'broken' ? 'text-error' : 'text-warning'}`}
               />
               <div class="min-w-0 flex-1">
                 <p class="text-sm font-medium">
-                  {feed().syncStatus === 'broken'
+                  {feed.syncStatus === 'broken'
                     ? 'Feed sync is broken'
                     : 'Feed is experiencing sync issues'}
                 </p>
-                <Show when={feed().syncError}>
-                  <p class="text-base-content/60 mt-1 text-xs">{feed().syncError}</p>
+                <Show when={feed.syncError}>
+                  <p class="text-base-content/60 mt-1 text-xs">{feed.syncError}</p>
                 </Show>
                 <div class="mt-3 flex gap-2">
                   <button
                     class="btn btn-outline btn-sm"
                     onClick={async () => {
-                      feedsCollection.update(feed().id, (draft) => {
+                      feedsCollection.update(feed.id, (draft) => {
                         draft.syncStatus = 'ok';
                         draft.syncError = null;
                       });
-                      await $$retryFeed({ data: { id: feed().id } });
+                      await $$retryFeed({ data: { id: feed.id } });
                     }}
                   >
                     Retry sync
@@ -210,7 +211,7 @@ function FeedArticles() {
                   <button
                     class="btn btn-ghost btn-sm text-error"
                     onClick={() => {
-                      setFeedToDelete(feed());
+                      setFeedToDelete(feed);
                       deleteFeedModalController.open();
                     }}
                   >
@@ -223,52 +224,8 @@ function FeedArticles() {
         )}
       </Show>
 
-      <Show when={currentFeed()}>
-        {(feed) => (
-          <div class="mb-4 flex items-start gap-4 sm:gap-5">
-            <Show when={feed().icon}>
-              <div class="bg-base-300 flex h-20 w-20 shrink-0 items-center justify-center rounded-xl shadow-sm sm:h-24 sm:w-24 sm:rounded-2xl md:h-28 md:w-28">
-                <img
-                  src={feed().icon!}
-                  alt={`${feed().title} icon`}
-                  class="h-20 w-20 rounded-xl object-cover sm:h-24 sm:w-24 sm:rounded-2xl md:h-28 md:w-28"
-                  loading="lazy"
-                  onError={(e) => {
-                    e.currentTarget.style.display = 'none';
-                  }}
-                />
-              </div>
-            </Show>
-            <div class="min-w-0 flex-1">
-              <h2 class="mb-1.5 text-lg font-semibold sm:text-2xl">{feed().title}</h2>
-              <p class="text-base-content/70 mb-3 line-clamp-3 text-sm leading-relaxed">
-                {feed().description || 'No description found'}
-              </p>
-
-              {/* Tags */}
-              <FeedTags feedId={feed().id} feedTagsQuery={feedTagsQuery} tagsQuery={tagsQuery} />
-
-              <div class="flex flex-wrap gap-3 text-xs">
-                <a
-                  href={feed().url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  class="link link-primary font-medium"
-                >
-                  Website
-                </a>
-                <a
-                  href={feed().feedUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  class="link link-primary font-medium"
-                >
-                  Feed URL
-                </a>
-              </div>
-            </div>
-          </div>
-        )}
+      <Show when={currentFeed()} keyed>
+        {(feed) => <FeedHeader feed={feed} feedTagsQuery={feedTagsQuery} tagsQuery={tagsQuery} />}
       </Show>
 
       <ArticleListToolbar
@@ -363,7 +320,9 @@ function FeedArticles() {
             onClick={handleMarkAllArchived}
             disabled={isMarkingAllArchived()}
           >
-            {isMarkingAllArchived() && <span class="loading loading-spinner loading-sm"></span>}
+            <Show when={isMarkingAllArchived()}>
+              <span class="loading loading-spinner loading-sm"></span>
+            </Show>
             {isMarkingAllArchived() ? 'Archiving...' : 'Mark All Archived'}
           </button>
         </div>
@@ -372,34 +331,77 @@ function FeedArticles() {
   );
 }
 
-function FeedTags(props: {
-  feedId: string;
+function FeedHeader(props: {
+  feed: Feed;
   feedTagsQuery: Accessor<FeedTag[] | undefined>;
   tagsQuery: Accessor<Tag[] | undefined>;
 }) {
   const feedTagIds = () =>
-    (props.feedTagsQuery() ?? []).filter((ft) => ft.feedId === props.feedId).map((ft) => ft.tagId);
+    (props.feedTagsQuery() ?? []).filter((ft) => ft.feedId === props.feed.id).map((ft) => ft.tagId);
 
   return (
-    <Show when={feedTagIds().length > 0}>
-      <div class="mb-3 flex flex-wrap gap-1.5">
-        <For each={feedTagIds()}>
-          {(tagId) => {
-            const tag = props.tagsQuery()?.find((t) => t.id === tagId);
-            if (tag) {
-              return (
-                <Link to="/tags/$tagId" params={{ tagId: tag.id.toString() }}>
-                  <div class="badge badge-sm gap-1.5 transition-all hover:brightness-90">
-                    <ColorIndicator class={getTagDotColor(tag.color)} />
-                    <span>{tag.name}</span>
-                  </div>
-                </Link>
-              );
-            }
-            return <></>;
-          }}
-        </For>
+    <div class="mb-4 flex items-start gap-4 sm:gap-5">
+      <Show when={props.feed.icon}>
+        <div class="bg-base-300 flex h-20 w-20 shrink-0 items-center justify-center rounded-xl shadow-sm sm:h-24 sm:w-24 sm:rounded-2xl md:h-28 md:w-28">
+          <img
+            src={props.feed.icon!}
+            alt={`${props.feed.title} icon`}
+            class="h-20 w-20 rounded-xl object-cover sm:h-24 sm:w-24 sm:rounded-2xl md:h-28 md:w-28"
+            loading="lazy"
+            onError={(e) => {
+              e.currentTarget.style.display = 'none';
+            }}
+          />
+        </div>
+      </Show>
+      <div class="min-w-0 flex-1">
+        <h2 class="mb-1.5 text-lg font-semibold sm:text-2xl">{props.feed.title}</h2>
+        <p class="text-base-content/70 mb-3 line-clamp-3 text-sm leading-relaxed">
+          {props.feed.description || 'No description found'}
+        </p>
+
+        {/* Tags */}
+        <Show when={feedTagIds().length > 0}>
+          <div class="mb-3 flex flex-wrap gap-1.5">
+            <For each={feedTagIds()}>
+              {(tagId) => {
+                const tag = () => props.tagsQuery()?.find((t) => t.id === tagId);
+                return (
+                  <Show when={tag()}>
+                    {(t) => (
+                      <Link to="/tags/$tagId" params={{ tagId: t().id.toString() }}>
+                        <div class="badge badge-sm gap-1.5 transition-all hover:brightness-90">
+                          <ColorIndicator class={getTagDotColor(t().color)} />
+                          <span>{t().name}</span>
+                        </div>
+                      </Link>
+                    )}
+                  </Show>
+                );
+              }}
+            </For>
+          </div>
+        </Show>
+
+        <div class="flex flex-wrap gap-3 text-xs">
+          <a
+            href={props.feed.url}
+            target="_blank"
+            rel="noopener noreferrer"
+            class="link link-primary font-medium"
+          >
+            Website
+          </a>
+          <a
+            href={props.feed.feedUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            class="link link-primary font-medium"
+          >
+            Feed URL
+          </a>
+        </div>
       </div>
-    </Show>
+    </div>
   );
 }
