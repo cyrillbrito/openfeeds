@@ -4,7 +4,7 @@ import { electricCollectionOptions } from '@tanstack/electric-db-collection';
 import { createCollection, useLiveQuery } from '@tanstack/solid-db';
 import { collectionErrorHandler, shapeErrorHandler } from '~/lib/collection-errors';
 import { getShapeUrl } from '~/lib/electric-client';
-import { $$createArticleTags, $$deleteArticleTags } from './article-tags.server';
+import { $$createArticleTags, $$deleteArticleTags } from './article-tags.functions';
 
 // Article Tags Collection (junction table for local-first joins) - Electric-powered real-time sync
 export const articleTagsCollection = createCollection(

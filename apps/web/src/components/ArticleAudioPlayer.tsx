@@ -5,7 +5,7 @@ import {
   $$generateArticleAudio,
   $$getArticleAudio,
   $$isTtsAvailable,
-} from '~/entities/article-audio.server';
+} from '~/entities/article-audio.functions';
 import { useArticleAudio } from './ArticleAudioContext';
 
 interface ArticleAudioPlayerProps {

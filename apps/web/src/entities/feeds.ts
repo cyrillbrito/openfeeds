@@ -4,7 +4,7 @@ import { electricCollectionOptions } from '@tanstack/electric-db-collection';
 import { createCollection, useLiveQuery } from '@tanstack/solid-db';
 import { collectionErrorHandler, shapeErrorHandler } from '~/lib/collection-errors';
 import { getShapeUrl, timestampParser } from '~/lib/electric-client';
-import { $$createFeeds, $$deleteFeeds, $$updateFeeds } from './feeds.server';
+import { $$createFeeds, $$deleteFeeds, $$updateFeeds } from './feeds.functions';
 
 // Feeds Collection - Electric-powered real-time sync
 export const feedsCollection = createCollection(

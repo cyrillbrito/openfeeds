@@ -4,7 +4,7 @@ import { electricCollectionOptions } from '@tanstack/electric-db-collection';
 import { createCollection, useLiveQuery } from '@tanstack/solid-db';
 import { collectionErrorHandler, shapeErrorHandler } from '~/lib/collection-errors';
 import { getShapeUrl, timestampParser } from '~/lib/electric-client';
-import { $$triggerAutoArchive, $$updateSettings } from './settings.server';
+import { $$triggerAutoArchive, $$updateSettings } from './settings.functions';
 
 // Settings Collection - Electric-powered real-time sync
 // One row per user, userId is the primary key

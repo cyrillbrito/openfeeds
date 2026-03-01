@@ -16,7 +16,7 @@ import { PageLayout } from '~/components/PageLayout';
 import { SyncLogsModal } from '~/components/SyncLogsModal';
 import { useFeedTags } from '~/entities/feed-tags';
 import { feedsCollection, useFeeds } from '~/entities/feeds';
-import { $$retryFeed } from '~/entities/feeds.server';
+import { $$retryFeed } from '~/entities/feeds.functions';
 import { useTags } from '~/entities/tags';
 import { getTagDotColor } from '~/utils/tagColors';
 

@@ -4,7 +4,7 @@ import { electricCollectionOptions } from '@tanstack/electric-db-collection';
 import { createCollection } from '@tanstack/solid-db';
 import { collectionErrorHandler, shapeErrorHandler } from '~/lib/collection-errors';
 import { getShapeUrl, timestampParser } from '~/lib/electric-client';
-import { $$createArticles, $$updateArticles } from './articles.server';
+import { $$createArticles, $$updateArticles } from './articles.functions';
 
 // Articles Collection - Electric-powered real-time sync
 export const articlesCollection = createCollection(

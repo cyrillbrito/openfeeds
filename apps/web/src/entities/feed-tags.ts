@@ -4,7 +4,7 @@ import { electricCollectionOptions } from '@tanstack/electric-db-collection';
 import { createCollection, useLiveQuery } from '@tanstack/solid-db';
 import { collectionErrorHandler, shapeErrorHandler } from '~/lib/collection-errors';
 import { getShapeUrl } from '~/lib/electric-client';
-import { $$createFeedTags, $$deleteFeedTags } from './feed-tags.server';
+import { $$createFeedTags, $$deleteFeedTags } from './feed-tags.functions';
 
 // Feed Tags Collection (junction table for local-first joins) - Electric-powered real-time sync
 export const feedTagsCollection = createCollection(

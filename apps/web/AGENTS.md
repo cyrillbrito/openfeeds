@@ -18,10 +18,10 @@ src/
   components/       # UI components (client-side only)
   entities/         # Local-first collections + server functions
     *.ts            # Client-side collection definitions
-    *.server.ts     # Server functions for entities
+    *.functions.ts  # Server functions (createServerFn wrappers, safe to import from client)
   lib/              # Configured third-party clients
   providers/        # Context providers (theme, toast, session)
-  server/           # Server-only code (auth, middleware)
+  server/           # Server-only code (auth, middleware) — blocked from client imports
   utils/            # Pure utility functions
   routes/           # File-based routing
     api/            # API routes for external consumers
@@ -30,10 +30,16 @@ src/
   env.ts            # Environment variables (t3-env)
 ```
 
+**Import protection** (TanStack Start plugin, enabled in `vite.config.ts`):
+
+- `*.server.*` files and `src/server/` directory are **blocked from client imports**
+- `*.functions.ts` files export `createServerFn` wrappers — safe to import from client (compiler rewrites to RPC stubs)
+- `*.client.*` files are blocked from server imports
+
 **Server code locations**
 
-- `src/server/` — auth config, middleware
-- `src/entities/*.server.ts` — entity server functions
+- `src/server/` — auth config, middleware (server-only, cannot be imported from client code)
+- `src/entities/*.functions.ts` — entity server functions (safe for client import)
 - `src/routes/` — route loaders and API routes
 
 **Imports:** `~/` for cross-folder, `./` for same-folder. Never use `../`.
@@ -43,7 +49,7 @@ src/
 Each entity in `src/entities/` is split into two files:
 
 - **`entity.ts`** — Client-side collection (`createCollection` + `electricCollectionOptions`) with `useLiveQuery` hooks
-- **`entity.server.ts`** — Server functions using `createServerFn` with `authMiddleware`
+- **`entity.functions.ts`** — Server functions using `createServerFn` with `authMiddleware` (safe to import from client)
 
 **Import rule:**
 
