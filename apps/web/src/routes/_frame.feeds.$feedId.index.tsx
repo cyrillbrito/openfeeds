@@ -19,7 +19,7 @@ import { SyncLogsModal } from '~/components/SyncLogsModal';
 import { articlesCollection } from '~/entities/articles';
 import { useFeedTags } from '~/entities/feed-tags';
 import { feedsCollection, useFeeds } from '~/entities/feeds';
-import { $$retryFeed } from '~/entities/feeds.server';
+import { $$retryFeed } from '~/entities/feeds.functions';
 import { useTags } from '~/entities/tags';
 import { useSessionRead } from '~/providers/session-read';
 import { readStatusFilter } from '~/utils/article-queries';

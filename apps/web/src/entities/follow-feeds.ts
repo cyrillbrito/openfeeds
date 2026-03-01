@@ -3,7 +3,7 @@ import { createId } from '@repo/shared/utils';
 import { createOptimisticAction } from '@tanstack/solid-db';
 import { feedTagsCollection } from '~/entities/feed-tags';
 import { feedsCollection } from '~/entities/feeds';
-import { $$followFeedsWithTags } from '~/entities/feeds.server';
+import { $$followFeedsWithTags } from '~/entities/feeds.functions';
 import { tagsCollection } from '~/entities/tags';
 
 // ---------------------------------------------------------------------------

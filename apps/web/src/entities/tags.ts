@@ -4,7 +4,7 @@ import { electricCollectionOptions } from '@tanstack/electric-db-collection';
 import { createCollection, useLiveQuery } from '@tanstack/solid-db';
 import { collectionErrorHandler, shapeErrorHandler } from '~/lib/collection-errors';
 import { getShapeUrl, timestampParser } from '~/lib/electric-client';
-import { $$createTags, $$deleteTags, $$updateTags } from './tags.server';
+import { $$createTags, $$deleteTags, $$updateTags } from './tags.functions';
 
 // Tags Collection - Electric-powered real-time sync
 export const tagsCollection = createCollection(

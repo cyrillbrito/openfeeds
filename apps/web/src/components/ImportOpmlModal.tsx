@@ -1,6 +1,6 @@
 import { Check, CircleAlert, CircleMinus, FileWarning, Plus, TriangleAlert, X } from 'lucide-solid';
 import { createSignal, For, Match, Show, Switch } from 'solid-js';
-import { $$importOpml } from '~/entities/feeds.server';
+import { $$importOpml } from '~/entities/feeds.functions';
 import { LazyModal, type ModalController } from './LazyModal';
 
 interface ImportOpmlModalProps {

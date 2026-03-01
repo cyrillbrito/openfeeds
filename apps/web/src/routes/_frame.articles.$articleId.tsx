@@ -13,7 +13,7 @@ import { PageLayout } from '~/components/PageLayout';
 import { ReadIconButton } from '~/components/ReadIconButton';
 import { TimeAgo } from '~/components/TimeAgo';
 import { articlesCollection } from '~/entities/articles';
-import { $$extractArticleContent } from '~/entities/articles.server';
+import { $$extractArticleContent } from '~/entities/articles.functions';
 import { useFeeds } from '~/entities/feeds';
 import { useTags } from '~/entities/tags';
 import { containsHtml, downshiftHeadings } from '~/utils/html';

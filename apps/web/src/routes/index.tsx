@@ -1,5 +1,5 @@
 import { createFileRoute, redirect } from '@tanstack/solid-router';
-import { $$hasAnyFeeds } from '~/entities/feeds.server';
+import { $$hasAnyFeeds } from '~/entities/feeds.functions';
 import { authGuard } from '~/lib/guards';
 
 export const Route = createFileRoute('/')({

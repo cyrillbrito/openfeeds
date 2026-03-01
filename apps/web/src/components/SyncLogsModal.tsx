@@ -1,6 +1,6 @@
 import type { Feed } from '@repo/domain/client';
 import { createResource, For, Match, Show, Switch } from 'solid-js';
-import { $$getFeedSyncLogs } from '~/entities/feeds.server';
+import { $$getFeedSyncLogs } from '~/entities/feeds.functions';
 import { LazyModal, type ModalController } from './LazyModal';
 import { TimeAgo } from './TimeAgo';
 

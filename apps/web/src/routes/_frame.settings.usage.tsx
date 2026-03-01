@@ -2,7 +2,7 @@ import type { UserUsage } from '@repo/domain/client';
 import { createFileRoute } from '@tanstack/solid-router';
 import { createResource, For, Show } from 'solid-js';
 import { Card } from '~/components/Card';
-import { $$getUserUsage } from '~/entities/settings.server';
+import { $$getUserUsage } from '~/entities/settings.functions';
 
 export const Route = createFileRoute('/_frame/settings/usage')({
   component: UsagePage,

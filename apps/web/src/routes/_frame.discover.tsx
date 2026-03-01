@@ -27,7 +27,7 @@ import { YouTubeIcon } from '~/components/YouTubeIcon';
 import { articleTagsCollection } from '~/entities/article-tags';
 import { articlesCollection } from '~/entities/articles';
 import { useFeeds } from '~/entities/feeds';
-import { $$discoverFeeds } from '~/entities/feeds.server';
+import { $$discoverFeeds } from '~/entities/feeds.functions';
 import { buildFollowVars, followFeedsAction } from '~/entities/follow-feeds';
 import { useTags } from '~/entities/tags';
 

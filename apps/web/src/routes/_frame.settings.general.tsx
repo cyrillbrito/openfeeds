@@ -3,7 +3,7 @@ import { createFileRoute } from '@tanstack/solid-router';
 import { createSignal, Show } from 'solid-js';
 import { Card } from '~/components/Card';
 import { LazyModal, type ModalController } from '~/components/LazyModal';
-import { $$exportOpml } from '~/entities/feeds.server';
+import { $$exportOpml } from '~/entities/feeds.functions';
 import { settingsCollection, triggerAutoArchive, useSettings } from '~/entities/settings';
 
 export const Route = createFileRoute('/_frame/settings/general')({

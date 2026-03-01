@@ -8,7 +8,7 @@ import { ThemeScript } from '~/components/ThemeScript';
 import { SessionReadProvider } from '~/providers/session-read';
 import { ThemeProvider } from '~/providers/theme';
 import { ToastProvider } from '~/providers/toast';
-import { $$getPublicConfig } from '~/server/public-config';
+import { $$getPublicConfig } from '~/server/public-config.functions';
 import appCss from '~/styles/app.css?url';
 
 let publicConfigCache: Awaited<ReturnType<typeof $$getPublicConfig>> | undefined;

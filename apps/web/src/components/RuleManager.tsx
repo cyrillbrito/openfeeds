@@ -1,6 +1,6 @@
 import { CircleAlert } from 'lucide-solid';
 import { createSignal, For, Show } from 'solid-js';
-import { $$applyFilterRules } from '~/entities/actions.server';
+import { $$applyFilterRules } from '~/entities/actions.functions';
 import { useFilterRules } from '~/entities/filter-rules';
 import { AddRuleForm } from './AddRuleForm';
 import { RuleItem } from './RuleItem';

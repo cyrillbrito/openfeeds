@@ -14,12 +14,14 @@ export default defineConfig({
   plugins: [
     lucidePreprocess(),
     devtools(),
-    nitro(),
+    nitro({
+      rollupConfig: {
+        external: ['uuid', 'msgpackr'],
+      },
+    }),
     viteTsConfigPaths({ projects: ['./tsconfig.json'] }),
     tailwindcss(),
-    tanstackStart({
-      importProtection: { enabled: false },
-    }),
+    tanstackStart(),
     solidPlugin({ ssr: true }),
   ],
   define: {

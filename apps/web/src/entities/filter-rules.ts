@@ -8,7 +8,7 @@ import {
   $$createFilterRules,
   $$deleteFilterRules,
   $$updateFilterRules,
-} from './filter-rules.server';
+} from './filter-rules.functions';
 
 // Filter Rules Collection - Electric-powered real-time sync
 export const filterRulesCollection = createCollection(
