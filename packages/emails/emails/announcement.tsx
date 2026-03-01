@@ -2,43 +2,48 @@ import { Button, Heading, Section, Text } from '@react-email/components';
 import { EmailFrame } from './components/email-frame';
 import { button, buttonContainer, textLeft, textSmall } from './styles';
 
-export const Announcement = () => (
-  <EmailFrame
-    preview="OpenFeeds is now live - Your early access is ready"
-    footerText="OpenFeeds · Built for readers who value their time"
-    showUnsubscribe
-  >
-    <Section style={badge}>
-      <Text style={badgeText}>Early Access</Text>
-    </Section>
-    <Heading style={h1}>We're live!</Heading>
-    <Text style={textLeft}>Hey there,</Text>
-    <Text style={textLeft}>
-      Thanks for your interest in OpenFeeds. We're excited to announce that our early access is now
-      open!
-    </Text>
-    <Text style={textLeft}>
-      OpenFeeds is a modern RSS reader that helps you stay on top of your favorite content without
-      the noise. No algorithms, no ads — just the content you care about.
-    </Text>
-    <Section style={features}>
-      <Text style={featureItem}>RSS, YouTube, newsletters & more</Text>
-      <Text style={featureItem}>Smart tagging & organization</Text>
-      <Text style={featureItem}>Fast & clean reading experience</Text>
-    </Section>
-    <Section style={buttonContainer}>
-      <Button style={button} href="https://openfeeds.app">
-        Get Started
-      </Button>
-    </Section>
-    <Text style={textSmall}>
-      As an early user, your feedback is invaluable. Reply to this email anytime — we read
-      everything.
-    </Text>
-  </EmailFrame>
-);
+export const subject = 'OpenFeeds is now live — Your early access is ready';
 
-export default Announcement;
+export default function Announcement() {
+  return (
+    <EmailFrame
+      preview="OpenFeeds is now live - Your early access is ready"
+      footerText="OpenFeeds · Built for readers who value their time"
+      showUnsubscribe
+    >
+      <Section style={badge}>
+        <Text style={badgeText}>Early Access</Text>
+      </Section>
+      <Heading style={h1}>We're live!</Heading>
+      <Text style={textLeft}>Hey there,</Text>
+      <Text style={textLeft}>
+        Thanks for your interest in OpenFeeds. We're excited to announce that our early access is
+        now open!
+      </Text>
+      <Text style={textLeft}>
+        OpenFeeds is a modern RSS reader that helps you stay on top of your favorite content without
+        the noise. No algorithms, no ads — just the content you care about.
+      </Text>
+      <Section style={features}>
+        <Text style={featureItem}>RSS, YouTube, newsletters & more</Text>
+        <Text style={featureItem}>Smart tagging & organization</Text>
+        <Text style={featureItem}>Fast & clean reading experience</Text>
+      </Section>
+      <Section style={buttonContainer}>
+        <Button
+          style={button}
+          href="https://openfeeds.app?utm_source=email&utm_medium=broadcast&utm_campaign=beta_launch"
+        >
+          Get Started
+        </Button>
+      </Section>
+      <Text style={textSmall}>
+        As an early user, your feedback is invaluable. Reply to this email anytime — we read
+        everything.
+      </Text>
+    </EmailFrame>
+  );
+}
 
 const badge = {
   textAlign: 'center' as const,
