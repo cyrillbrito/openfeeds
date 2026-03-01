@@ -1,3 +1,4 @@
+import { drizzleAdapter } from '@better-auth/drizzle-adapter';
 import { oauthProvider } from '@better-auth/oauth-provider';
 import { db } from '@repo/db';
 import {
@@ -7,7 +8,6 @@ import {
   trackEvent,
 } from '@repo/domain';
 import { betterAuth } from 'better-auth';
-import { drizzleAdapter } from 'better-auth/adapters/drizzle';
 import { createAuthMiddleware } from 'better-auth/api';
 import { jwt, lastLoginMethod } from 'better-auth/plugins';
 import { tanstackStartCookies } from 'better-auth/tanstack-start/solid';

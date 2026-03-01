@@ -55,10 +55,10 @@ function ConsentContent() {
       return;
     }
 
-    // The consent endpoint returns { redirect: boolean, uri: string }
-    // Navigate to the returned URI to continue the OAuth flow
-    if (result.data?.uri) {
-      window.location.href = result.data.uri;
+    // The consent endpoint returns { redirect: boolean, url: string }
+    // Navigate to the returned URL to continue the OAuth flow
+    if (result.data?.url) {
+      window.location.href = result.data.url;
     }
   };
 

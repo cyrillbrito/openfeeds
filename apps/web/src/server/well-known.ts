@@ -5,6 +5,7 @@ import {
 import { oauthProviderResourceClient } from '@better-auth/oauth-provider/resource-client';
 import { NotFoundError } from '@repo/domain';
 import { createAuthClient } from 'better-auth/client';
+import type { Auth } from 'better-auth/types';
 import { env } from '~/env';
 import { auth } from './auth';
 
@@ -12,7 +13,7 @@ const handleOpenIdConfig = oauthProviderOpenIdConfigMetadata(auth);
 const handleAuthServer = oauthProviderAuthServerMetadata(auth);
 
 const protectedResourceClient = createAuthClient({
-  plugins: [oauthProviderResourceClient(auth)],
+  plugins: [oauthProviderResourceClient(auth as unknown as Auth)],
 });
 
 async function handleProtectedResource(_request: Request): Promise<Response> {
