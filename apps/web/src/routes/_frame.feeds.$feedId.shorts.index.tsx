@@ -60,7 +60,6 @@ function FocusedShorts() {
   return (
     <ShortsViewer
       readStatus={readStatus()}
-      seed={undefined}
       shortsAccessor={shorts}
       feedsAccessor={() => feedsQuery() || []}
       backLink={{

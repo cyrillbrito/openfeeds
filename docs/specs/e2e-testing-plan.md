@@ -189,7 +189,7 @@ This document outlines a comprehensive end-to-end testing plan for OpenFeeds. Th
 - Article count per tag
 - Read status filtering within tag view
 - Article actions (read/unread, archive, tag management)
-- List controls (shuffle, mark all read)
+- List controls (mark all read)
 - Navigate to tag management
 
 **Current Status:** ⏳ Not implemented

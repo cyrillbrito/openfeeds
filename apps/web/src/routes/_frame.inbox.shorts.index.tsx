@@ -58,7 +58,6 @@ function InboxShorts() {
   return (
     <ShortsViewer
       readStatus={readStatus()}
-      seed={undefined}
       shortsAccessor={allShorts}
       feedsAccessor={() => feedsQuery() || []}
       backLink={{
