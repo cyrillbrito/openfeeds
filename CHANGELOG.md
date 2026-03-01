@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.7.1](https://github.com/cyrillbrito/openfeeds/compare/v0.7.0...v0.7.1) (2026-03-01)
+
+
+### Bug Fixes
+
+* **emails:** improve email deliverability ([#125](https://github.com/cyrillbrito/openfeeds/issues/125)) ([6bf9d12](https://github.com/cyrillbrito/openfeeds/commit/6bf9d12d1f360eeaedc05ad5aedd3949e6b85ffa))
+* **web:** fix stale Show accessor crash on feed view navigation ([#130](https://github.com/cyrillbrito/openfeeds/issues/130)) ([17ca948](https://github.com/cyrillbrito/openfeeds/commit/17ca948d878d1d0abae22df3d869a1aab40f4a7b))
+
 ## [0.7.0](https://github.com/cyrillbrito/openfeeds/compare/v0.6.0...v0.7.0) (2026-02-28)
 
 
