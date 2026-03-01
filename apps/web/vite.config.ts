@@ -17,7 +17,9 @@ export default defineConfig({
     nitro(),
     viteTsConfigPaths({ projects: ['./tsconfig.json'] }),
     tailwindcss(),
-    tanstackStart(),
+    tanstackStart({
+      importProtection: { enabled: false },
+    }),
     solidPlugin({ ssr: true }),
   ],
   define: {

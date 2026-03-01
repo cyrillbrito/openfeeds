@@ -3,18 +3,10 @@
   "version": "0.7.0",
   "private": true,
   "type": "module",
-  "workspaces": {
-    "packages": [
-      "apps/*",
-      "packages/*"
-    ],
-    "catalog": {
-      "better-auth": "1.4.18",
-      "drizzle-orm": "^0.45.1",
-      "zod": "^4.1.13",
-      "typescript": "^5"
-    }
-  },
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
   "scripts": {
     "dev": "turbo dev --filter=@repo/web --filter=@repo/worker",
     "build": "turbo build",
@@ -32,10 +24,10 @@
   "devDependencies": {
     "@ianvs/prettier-plugin-sort-imports": "^4.7.1",
     "@types/bun": "^1.3.9",
-    "oxlint": "^1.47.0",
+    "oxlint": "^1.50.0",
     "prettier": "^3.8.1",
     "prettier-plugin-tailwindcss": "^0.7.2",
-    "turbo": "^2.8.9"
+    "turbo": "^2.8.12"
   },
-  "packageManager": "bun@1.3.0"
+  "packageManager": "bun@1.3.10"
 }
