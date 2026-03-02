@@ -34,7 +34,14 @@ export async function followFeedsWithTags(
   await conn.transaction(async (tx) => {
     // 1. Create feeds (handles limits, skips duplicates, enqueues jobs, tracks analytics)
     const insertedFeeds = await createFeeds(
-      data.feeds.map((f) => ({ id: f.id, url: f.url })),
+      data.feeds.map((f) => ({
+        id: f.id,
+        url: f.url,
+        feedUrl: f.feedUrl,
+        title: f.title,
+        description: f.description,
+        icon: f.icon,
+      })),
       userId,
       tx,
     );

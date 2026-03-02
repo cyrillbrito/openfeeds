@@ -18,11 +18,11 @@ export const followFeedsAction = createOptimisticAction<FollowFeedsWithTags>({
       feedsCollection.insert({
         id: feed.id,
         userId: '',
-        url: feed.url,
-        feedUrl: feed.url,
-        title: feed.url,
-        description: null,
-        icon: null,
+        url: feed.url ?? feed.feedUrl,
+        feedUrl: feed.feedUrl,
+        title: feed.title ?? 'Unknown',
+        description: feed.description ?? '',
+        icon: feed.icon ?? null,
         createdAt: now,
         updatedAt: now,
         lastSyncAt: null,
@@ -69,7 +69,14 @@ export const followFeedsAction = createOptimisticAction<FollowFeedsWithTags>({
  * Resolves existing tags (case-insensitive) or creates new ones.
  */
 export function buildFollowVars(
-  feeds: Array<{ feedUrl: string; categoryName: string }>,
+  feeds: Array<{
+    feedUrl: string;
+    categoryName: string;
+    url?: string;
+    title?: string;
+    description?: string | null;
+    icon?: string | null;
+  }>,
   existingTags: Array<{ id: string; name: string }>,
 ): FollowFeedsWithTags {
   const feedEntries: FollowFeedsWithTags['feeds'] = [];
@@ -83,7 +90,14 @@ export function buildFollowVars(
 
   for (const feed of feeds) {
     const feedId = createId();
-    feedEntries.push({ id: feedId, url: feed.feedUrl });
+    feedEntries.push({
+      id: feedId,
+      feedUrl: feed.feedUrl,
+      url: feed.url || undefined,
+      title: feed.title || undefined,
+      description: feed.description || undefined,
+      icon: feed.icon || undefined,
+    });
 
     const catLower = feed.categoryName.toLowerCase();
     let tagId = tagByName.get(catLower);

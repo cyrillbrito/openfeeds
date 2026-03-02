@@ -46,8 +46,8 @@ type CuratedFeed = {
   title: string;
   description: string | null;
   feedUrl: string;
-  siteUrl: string;
-  imageUrl: string | null;
+  url: string;
+  icon: string | null;
 };
 
 export type CuratedFeedWithCategory = CuratedFeed & {
@@ -275,7 +275,7 @@ export function CuratedFeedsBrowser(props: {
                   <div class="flex items-start gap-3">
                     {/* Image or fallback icon */}
                     <Show
-                      when={feed.imageUrl}
+                      when={feed.icon}
                       fallback={
                         <div class="bg-base-200 flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-lg">
                           <Rss size={20} class="text-base-content/50" />
@@ -283,7 +283,7 @@ export function CuratedFeedsBrowser(props: {
                       }
                     >
                       <img
-                        src={feed.imageUrl!}
+                        src={feed.icon!}
                         alt=""
                         class="bg-base-200 h-10 w-10 flex-shrink-0 rounded-lg object-cover"
                         loading="lazy"
@@ -300,7 +300,7 @@ export function CuratedFeedsBrowser(props: {
                           {feed.description}
                         </div>
                       </Show>
-                      <div class="text-base-content/40 mt-1 truncate text-xs">{feed.siteUrl}</div>
+                      <div class="text-base-content/40 mt-1 truncate text-xs">{feed.url}</div>
                     </div>
 
                     <Show

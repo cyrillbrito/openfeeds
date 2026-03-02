@@ -126,8 +126,8 @@ interface CuratedFeed {
   title: string;
   description: string | null;
   feedUrl: string;
-  siteUrl: string;
-  imageUrl: string | null;
+  url: string;
+  icon: string | null;
 }
 
 interface CuratedCategory {
@@ -616,8 +616,8 @@ function buildOutput(feeds: EnrichedFeed[]): CuratedCategory[] {
         title: f.title,
         description: f.description,
         feedUrl: f.feedUrl,
-        siteUrl: f.siteUrl,
-        imageUrl: f.imageUrl,
+        url: f.siteUrl,
+        icon: f.imageUrl,
       });
     }
 

@@ -23,7 +23,7 @@ export const feedsCollection = createCollection(
     onInsert: collectionErrorHandler('feeds.onInsert', async ({ transaction }) => {
       const feeds = transaction.mutations.map((mutation) => {
         const feed = mutation.modified;
-        return { id: mutation.key as string, url: feed.url };
+        return { id: mutation.key as string, feedUrl: feed.feedUrl };
       });
       return await $$createFeeds({ data: feeds });
     }),
