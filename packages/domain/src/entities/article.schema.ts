@@ -27,7 +27,7 @@ export type CreateArticleFromUrl = z.infer<typeof CreateArticleFromUrlSchema>;
 
 export const UpdateArticleSchema = z.object({
   id: z.uuidv7(),
-  isRead: z.boolean().optional(),
-  isArchived: z.boolean().optional(),
+  isRead: z.boolean().nullable().optional(),
+  isArchived: z.boolean().nullable().optional(),
 });
 export type UpdateArticle = z.infer<typeof UpdateArticleSchema>;

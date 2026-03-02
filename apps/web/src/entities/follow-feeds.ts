@@ -93,10 +93,10 @@ export function buildFollowVars(
     feedEntries.push({
       id: feedId,
       feedUrl: feed.feedUrl,
-      url: feed.url || undefined,
-      title: feed.title || undefined,
-      description: feed.description || undefined,
-      icon: feed.icon || undefined,
+      url: feed.url,
+      title: feed.title,
+      description: feed.description,
+      icon: feed.icon,
     });
 
     const catLower = feed.categoryName.toLowerCase();

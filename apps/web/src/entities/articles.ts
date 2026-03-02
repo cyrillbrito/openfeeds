@@ -35,8 +35,8 @@ export const articlesCollection = createCollection(
     onUpdate: collectionErrorHandler('articles.onUpdate', async ({ transaction }) => {
       const updates = transaction.mutations.map((mutation) => ({
         id: mutation.key as string,
-        isRead: mutation.changes.isRead ?? undefined,
-        isArchived: mutation.changes.isArchived ?? undefined,
+        isRead: mutation.changes.isRead,
+        isArchived: mutation.changes.isArchived,
       }));
       return await $$updateArticles({ data: updates });
     }),

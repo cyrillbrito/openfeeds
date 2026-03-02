@@ -22,12 +22,12 @@ export type Feed = z.infer<typeof FeedSchema>;
 export const CreateFeedSchema = z.object({
   id: z.uuidv7().optional(),
   /** Website URL — if omitted, defaults to feedUrl until the feed-detail worker enriches it */
-  url: z.url().optional(),
+  url: z.url().nullable().optional(),
   /** RSS/Atom feed URL (required) */
   feedUrl: z.url(),
-  title: z.string().optional(),
-  description: z.string().optional(),
-  icon: z.url().optional(),
+  title: z.string().nullable().optional(),
+  description: z.string().nullable().optional(),
+  icon: z.url().nullable().optional(),
 });
 export type CreateFeed = z.infer<typeof CreateFeedSchema>;
 
