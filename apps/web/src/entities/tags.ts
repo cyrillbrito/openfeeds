@@ -44,5 +44,7 @@ export const tagsCollection = createCollection(
 );
 
 export function useTags() {
-  return useLiveQuery((q) => q.from({ tag: tagsCollection }));
+  return useLiveQuery((q) =>
+    q.from({ tag: tagsCollection }).orderBy(({ tag }) => tag.order, 'asc'),
+  );
 }

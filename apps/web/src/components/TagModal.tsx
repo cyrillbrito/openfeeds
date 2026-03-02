@@ -85,6 +85,7 @@ function TagForm(props: TagFormProps) {
         userId: '', // Will be set by server
         name,
         color: tagColor(),
+        order: 0,
         createdAt: now,
         updatedAt: now,
       });

@@ -37,6 +37,7 @@ export const followFeedsAction = createOptimisticAction<FollowFeedsWithTags>({
         userId: '',
         name: tag.name,
         color: null,
+        order: 0,
         createdAt: now,
         updatedAt: now,
       });

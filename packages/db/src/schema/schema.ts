@@ -107,6 +107,8 @@ export const tags = pgTable(
     name: text('name').notNull(),
     /** Tailwind color name - validated at API layer */
     color: text('color'),
+    /** Display order for manual sorting (lower = first) */
+    order: integer('order').notNull().default(0),
     createdAt: timestamp('created_at').notNull().defaultNow(),
     updatedAt: timestamp('updated_at')
       .$onUpdate(() => new Date())

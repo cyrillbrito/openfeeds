@@ -13,6 +13,8 @@
   "dependencies": {
     "@better-auth/drizzle-adapter": "^1.5.0",
     "@better-auth/oauth-provider": "^1.5.0",
+    "@dnd-kit/helpers": "^0.3.2",
+    "@dnd-kit/solid": "^0.3.2",
     "@electric-sql/client": "^1.5.9",
     "@modelcontextprotocol/sdk": "^1.27.1",
     "@repo/db": "workspace:*",

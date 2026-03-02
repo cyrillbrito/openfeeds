@@ -1,9 +1,10 @@
 import { tags, type Db, type Transaction } from '@repo/db';
 import { createId } from '@repo/shared/utils';
 import { and, eq, inArray, sql } from 'drizzle-orm';
+import type { z } from 'zod';
 import { trackEvent } from '../analytics';
 import { ConflictError } from '../errors';
-import type { CreateTag, Tag, UpdateTag } from './tag.schema';
+import type { CreateTag, ReorderTagsSchema, Tag, UpdateTag } from './tag.schema';
 
 // Re-export schemas and types from schema file
 export * from './tag.schema';
@@ -20,6 +21,7 @@ export async function createTags(
     userId,
     name: item.name,
     color: item.color ?? null,
+    ...(item.order !== undefined ? { order: item.order } : {}),
   }));
 
   // NOTE: Duplicates are silently skipped via ON CONFLICT DO NOTHING (case-insensitive
@@ -40,6 +42,7 @@ export async function createTags(
     userId: t.userId,
     name: t.name,
     color: t.color as Tag['color'],
+    order: t.order,
     createdAt: t.createdAt.toISOString(),
     updatedAt: t.updatedAt.toISOString(),
   }));
@@ -65,9 +68,10 @@ export async function updateTags(
         }
       }
 
-      const updateData: { name?: string; color?: string | null } = {};
+      const updateData: { name?: string; color?: string | null; order?: number } = {};
       if (updates.name !== undefined) updateData.name = updates.name;
       if (updates.color !== undefined) updateData.color = updates.color;
+      if (updates.order !== undefined) updateData.order = updates.order;
 
       if (Object.keys(updateData).length > 0) {
         await tx
@@ -89,4 +93,30 @@ export async function deleteTags(
   await conn.delete(tags).where(and(inArray(tags.id, ids), eq(tags.userId, userId)));
 
   trackEvent(userId, 'tags:tag_delete', { count: ids.length });
+}
+
+export async function reorderTags(
+  data: z.infer<typeof ReorderTagsSchema>,
+  userId: string,
+  conn: Db | Transaction,
+): Promise<void> {
+  if (data.length === 0) return;
+
+  // Bulk update order values in a single query using CASE
+  const cases = data.map((item) => sql`WHEN ${item.id}::uuid THEN ${item.order}`);
+
+  await conn
+    .update(tags)
+    .set({
+      order: sql`CASE ${tags.id} ${sql.join(cases, sql` `)} END`,
+    })
+    .where(
+      and(
+        eq(tags.userId, userId),
+        inArray(
+          tags.id,
+          data.map((item) => item.id),
+        ),
+      ),
+    );
 }
