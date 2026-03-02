@@ -48,11 +48,4 @@ export const UpdateTagSchema = z.object({
   color: TagColorSchema.optional(),
   order: z.number().optional(),
 });
-
-export const ReorderTagsSchema = z.array(
-  z.object({
-    id: z.uuidv7(),
-    order: z.number(),
-  }),
-);
 export type UpdateTag = z.infer<typeof UpdateTagSchema>;

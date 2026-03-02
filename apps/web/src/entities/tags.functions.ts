@@ -1,6 +1,6 @@
 import { db, getTxId } from '@repo/db';
 import * as tagsDomain from '@repo/domain';
-import { CreateTagSchema, ReorderTagsSchema, UpdateTagSchema } from '@repo/domain';
+import { CreateTagSchema, UpdateTagSchema } from '@repo/domain';
 import { createServerFn } from '@tanstack/solid-start';
 import { z } from 'zod';
 import { authMiddleware } from '~/server/middleware/auth';
@@ -31,16 +31,6 @@ export const $$deleteTags = createServerFn({ method: 'POST' })
   .handler(async ({ context, data: ids }) => {
     return await db.transaction(async (tx) => {
       await tagsDomain.deleteTags(ids, context.user.id, tx);
-      return { txid: await getTxId(tx) };
-    });
-  });
-
-export const $$reorderTags = createServerFn({ method: 'POST' })
-  .middleware([authMiddleware])
-  .inputValidator(ReorderTagsSchema)
-  .handler(async ({ context, data }) => {
-    return await db.transaction(async (tx) => {
-      await tagsDomain.reorderTags(data, context.user.id, tx);
       return { txid: await getTxId(tx) };
     });
   });

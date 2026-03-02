@@ -1,10 +1,9 @@
 import { tags, type Db, type Transaction } from '@repo/db';
 import { createId } from '@repo/shared/utils';
 import { and, eq, inArray, sql } from 'drizzle-orm';
-import type { z } from 'zod';
 import { trackEvent } from '../analytics';
 import { ConflictError } from '../errors';
-import type { CreateTag, ReorderTagsSchema, Tag, UpdateTag } from './tag.schema';
+import type { CreateTag, Tag, UpdateTag } from './tag.schema';
 
 // Re-export schemas and types from schema file
 export * from './tag.schema';
@@ -105,30 +104,4 @@ export async function deleteTags(
   await conn.delete(tags).where(and(inArray(tags.id, ids), eq(tags.userId, userId)));
 
   trackEvent(userId, 'tags:tag_delete', { count: ids.length });
-}
-
-export async function reorderTags(
-  data: z.infer<typeof ReorderTagsSchema>,
-  userId: string,
-  conn: Db | Transaction,
-): Promise<void> {
-  if (data.length === 0) return;
-
-  // Bulk update order values in a single query using CASE
-  const cases = data.map((item) => sql`WHEN ${item.id}::uuid THEN ${item.order}`);
-
-  await conn
-    .update(tags)
-    .set({
-      order: sql`CASE ${tags.id} ${sql.join(cases, sql` `)} END`,
-    })
-    .where(
-      and(
-        eq(tags.userId, userId),
-        inArray(
-          tags.id,
-          data.map((item) => item.id),
-        ),
-      ),
-    );
 }
