@@ -61,10 +61,11 @@ export async function createFeeds(
   const values: DbInsertFeed[] = data.map((item) => ({
     id: item.id ?? createId(),
     userId,
-    title: 'Unknown',
-    description: '',
-    url: item.url,
-    feedUrl: item.url,
+    title: item.title ?? 'Unknown',
+    description: item.description ?? '',
+    url: item.url ?? item.feedUrl,
+    feedUrl: item.feedUrl,
+    icon: item.icon ?? null,
     lastSyncAt: null,
     createdAt: undefined,
   }));

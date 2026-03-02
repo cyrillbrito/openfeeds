@@ -4,7 +4,13 @@ export const FollowFeedsWithTagsSchema = z.object({
   feeds: z.array(
     z.object({
       id: z.uuidv7(),
-      url: z.url(),
+      /** Website URL */
+      url: z.url().nullable().optional(),
+      /** RSS/Atom feed URL */
+      feedUrl: z.url(),
+      title: z.string().nullable().optional(),
+      description: z.string().nullable().optional(),
+      icon: z.url().nullable().optional(),
     }),
   ),
   newTags: z.array(

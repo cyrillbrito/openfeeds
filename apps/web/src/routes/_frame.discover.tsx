@@ -112,7 +112,7 @@ function DiscoverPage() {
     const feedId = createId();
 
     const vars: FollowFeedsWithTags = {
-      feeds: [{ id: feedId, url: feed.url }],
+      feeds: [{ id: feedId, feedUrl: feed.url }],
       newTags: [],
       feedTags: selectedTagIds.map((tagId) => ({ id: createId(), feedId, tagId })),
     };
@@ -126,7 +126,7 @@ function DiscoverPage() {
     const feedId = createId();
 
     const vars: FollowFeedsWithTags = {
-      feeds: [{ id: feedId, url: inputUrl }],
+      feeds: [{ id: feedId, feedUrl: inputUrl }],
       newTags: [],
       feedTags: [],
     };
@@ -173,7 +173,16 @@ function DiscoverPage() {
 
   const handleFollowCurated = (feed: CuratedFeedWithCategory) => {
     const vars = buildFollowVars(
-      [{ feedUrl: feed.feedUrl, categoryName: feed.categoryName }],
+      [
+        {
+          feedUrl: feed.feedUrl,
+          categoryName: feed.categoryName,
+          url: feed.url,
+          title: feed.title,
+          description: feed.description,
+          icon: feed.icon,
+        },
+      ],
       tagsQuery() ?? [],
     );
     followFeedsAction(vars);
@@ -187,7 +196,14 @@ function DiscoverPage() {
     if (toFollow.length === 0) return;
 
     const vars = buildFollowVars(
-      toFollow.map((f) => ({ feedUrl: f.feedUrl, categoryName: f.categoryName })),
+      toFollow.map((f) => ({
+        feedUrl: f.feedUrl,
+        categoryName: f.categoryName,
+        url: f.url,
+        title: f.title,
+        description: f.description,
+        icon: f.icon,
+      })),
       tagsQuery() ?? [],
     );
     followFeedsAction(vars);
