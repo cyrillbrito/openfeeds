@@ -16,12 +16,24 @@ export async function createTags(
 ): Promise<Tag[]> {
   if (data.length === 0) return [];
 
+  // Determine the next order value for tags without an explicit order
+  const needsAutoOrder = data.some((item) => item.order === undefined);
+  let nextOrder = 0;
+
+  if (needsAutoOrder) {
+    const result = await conn
+      .select({ maxOrder: sql<number>`coalesce(max(${tags.order}), -1)` })
+      .from(tags)
+      .where(eq(tags.userId, userId));
+    nextOrder = (result[0]?.maxOrder ?? -1) + 1;
+  }
+
   const values = data.map((item) => ({
     id: item.id ?? createId(),
     userId,
     name: item.name,
     color: item.color ?? null,
-    ...(item.order !== undefined ? { order: item.order } : {}),
+    order: item.order ?? nextOrder++,
   }));
 
   // NOTE: Duplicates are silently skipped via ON CONFLICT DO NOTHING (case-insensitive

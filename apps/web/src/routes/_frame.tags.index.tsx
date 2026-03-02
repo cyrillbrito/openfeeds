@@ -14,8 +14,7 @@ import { CenterLoader } from '~/components/Loader';
 import { PageLayout } from '~/components/PageLayout';
 import { TagModal } from '~/components/TagModal';
 import { TimeAgo } from '~/components/TimeAgo';
-import { useTags } from '~/entities/tags';
-import { $$reorderTags } from '~/entities/tags.functions';
+import { tagsCollection, useTags } from '~/entities/tags';
 import { getTagDotColor } from '~/utils/tagColors';
 
 export const Route = createFileRoute('/_frame/tags/')({
@@ -50,10 +49,10 @@ function SortableTagItem(props: {
     >
       <button
         ref={handleRef}
-        class="text-base-content/40 hover:text-base-content/70 shrink-0 cursor-grab touch-none active:cursor-grabbing"
+        class="text-base-content/50 hover:text-base-content/80 shrink-0 cursor-grab touch-none p-1 active:cursor-grabbing"
         aria-label="Drag to reorder"
       >
-        <GripVertical size={16} />
+        <GripVertical size={20} />
       </button>
 
       <div class="min-w-0 flex-1">
@@ -170,12 +169,15 @@ function TagsComponent() {
               const updated = move(tags, event);
               if (updated === tags) return;
 
-              // Persist new order to server
-              const reorderData = updated.map((tag, index) => ({
-                id: tag.id,
-                order: index,
-              }));
-              $$reorderTags({ data: reorderData });
+              // Optimistically update order via the collection so local-first sync works
+              for (let i = 0; i < updated.length; i++) {
+                const tag = updated[i];
+                if (tag.order !== i) {
+                  tagsCollection.update(tag.id, (draft) => {
+                    draft.order = i;
+                  });
+                }
+              }
             }}
           >
             <div class="flex flex-col gap-2">
