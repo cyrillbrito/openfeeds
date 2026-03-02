@@ -22,7 +22,11 @@ export function ShortsButton(props: ShortsButtonProps) {
   onMount(() => requestAnimationFrame(() => setReady(true)));
 
   const shortsExistQuery = useLiveQuery((q) => {
-    if (!ready()) return q.from({ article: articlesCollection }).limit(0);
+    if (!ready())
+      return q
+        .from({ article: articlesCollection })
+        .orderBy(({ article }) => article.id, 'desc')
+        .limit(0);
 
     let query = q
       .from({ article: articlesCollection })
@@ -32,7 +36,10 @@ export function ShortsButton(props: ShortsButtonProps) {
       query = query.where(({ article }) => props.where!(article));
     }
 
-    return query.select(({ article }) => ({ id: article.id })).limit(1);
+    return query
+      .select(({ article }) => ({ id: article.id }))
+      .orderBy(({ article }) => article.id, 'desc')
+      .limit(1);
   });
 
   const hasShorts = () => ready() && (shortsExistQuery()?.length ?? 0) > 0;
