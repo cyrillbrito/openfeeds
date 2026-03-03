@@ -72,3 +72,65 @@ html {
 .modal .modal-box {
   max-height: var(--modal-vh, 100dvh);
 }
+
+/* ── Print styles ── */
+@media print {
+  /* Hide everything except the article content */
+  .drawer-side,
+  .drawer-overlay,
+  .drawer-toggle {
+    display: none !important;
+  }
+
+  /* Reset drawer layout so content is full-width */
+  .drawer {
+    display: block !important;
+  }
+
+  .drawer-content {
+    min-height: auto !important;
+  }
+
+  /* Clean typography for print */
+  article {
+    max-width: 100% !important;
+    font-size: 12pt;
+    line-height: 1.6;
+    color: black !important;
+  }
+
+  article * {
+    color: black !important;
+  }
+
+  article a {
+    text-decoration: underline !important;
+  }
+
+  /* Images should fit within page */
+  article img {
+    max-width: 100% !important;
+    height: auto !important;
+    break-inside: avoid;
+  }
+
+  /* Prevent awkward page breaks */
+  article h1,
+  article h2,
+  article h3,
+  article h4 {
+    break-after: avoid;
+  }
+
+  article pre,
+  article blockquote,
+  article figure {
+    break-inside: avoid;
+  }
+
+  /* Remove background colors */
+  * {
+    background: white !important;
+    box-shadow: none !important;
+  }
+}

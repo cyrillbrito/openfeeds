@@ -24,7 +24,7 @@ export function PageLayout(props: PageLayoutProps) {
   return (
     <>
       <header
-        class="bg-base-100 border-base-300 sticky top-0 z-10 border-b shadow"
+        class="bg-base-100 border-base-300 sticky top-0 z-10 border-b shadow print:hidden"
         classList={{ 'lg:hidden': props.mobileOnlyTitle }}
       >
         <div class="content-container flex items-center justify-between py-3">

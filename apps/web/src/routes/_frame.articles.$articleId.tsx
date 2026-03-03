@@ -10,6 +10,7 @@ import { ArticleTagManager } from '~/components/ArticleTagManager';
 import { HighlightedArticleContent } from '~/components/HighlightedArticleContent';
 import { Loader } from '~/components/Loader';
 import { PageLayout } from '~/components/PageLayout';
+import { PrintIconButton } from '~/components/PrintIconButton';
 import { ReadIconButton } from '~/components/ReadIconButton';
 import { TimeAgo } from '~/components/TimeAgo';
 import { articlesCollection } from '~/entities/articles';
@@ -156,7 +157,8 @@ function ArticleView() {
                   <h1 class="text-base-content flex-1 text-2xl leading-tight font-bold md:text-3xl">
                     {art().title}
                   </h1>
-                  <div class="flex shrink-0 gap-2">
+                  <div class="flex shrink-0 gap-2 print:hidden">
+                    <PrintIconButton />
                     <ArchiveIconButton
                       read={art().isRead || false}
                       archived={art().isArchived || false}
@@ -181,9 +183,9 @@ function ArticleView() {
                   <div class="flex items-center gap-1">
                     <Show
                       when={art().isArchived}
-                      fallback={<Inbox size={16} class="text-base-content/40" />}
+                      fallback={<Inbox size={16} class="text-base-content/40 print:hidden" />}
                     >
-                      <Archive size={16} class="text-base-content/40" />
+                      <Archive size={16} class="text-base-content/40 print:hidden" />
                     </Show>
                     <Show
                       when={feed()}
@@ -228,7 +230,7 @@ function ArticleView() {
 
                 {/* Article Tags */}
                 <Show when={tagsQuery()}>
-                  <div class="mt-4">
+                  <div class="mt-4 print:hidden">
                     <ArticleTagManager articleId={art().id} tags={tagsQuery()!} />
                   </div>
                 </Show>

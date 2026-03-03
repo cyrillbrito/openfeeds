@@ -168,7 +168,7 @@ export function ArticleAudioPlayer(props: ArticleAudioPlayerProps) {
   return (
     <Show when={!ttsAvailable.loading && isTtsAvailable()}>
       <div
-        class="border-base-300 bg-base-200 mb-6 rounded-lg border p-4 transition-all"
+        class="border-base-300 bg-base-200 mb-6 rounded-lg border p-4 transition-all print:hidden"
         classList={{
           'sticky top-18 z-10 shadow-md': isSticky(),
         }}
