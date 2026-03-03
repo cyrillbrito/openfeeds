@@ -1,6 +1,5 @@
 import { eq, useLiveQuery } from '@tanstack/solid-db';
-import { createFileRoute, Link } from '@tanstack/solid-router';
-import { Video } from 'lucide-solid';
+import { createFileRoute } from '@tanstack/solid-router';
 import { createSignal, onMount, Show, Suspense } from 'solid-js';
 import { ArticleList, ARTICLES_PER_PAGE } from '~/components/ArticleList';
 import { ArticleListToolbar } from '~/components/ArticleListToolbar';
@@ -10,6 +9,7 @@ import { CenterLoader } from '~/components/Loader';
 import { MarkAllArchivedButton } from '~/components/MarkAllArchivedButton';
 import { PageLayout } from '~/components/PageLayout';
 import { ReadStatusToggle } from '~/components/ReadStatusToggle';
+import { ShortsButton } from '~/components/ShortsButton';
 import { SortToggle } from '~/components/SortToggle';
 import { articlesCollection } from '~/entities/articles';
 import { useFeeds } from '~/entities/feeds';
@@ -132,14 +132,10 @@ function Inbox() {
       title="Inbox"
       headerActions={
         <div class="flex flex-wrap gap-2">
-          <Link
-            to="/inbox/shorts"
-            search={{ readStatus: readStatus() }}
-            class="btn btn-accent btn-sm"
-          >
-            <Video size={20} />
-            <span class="hidden sm:inline">Shorts</span>
-          </Link>
+          <ShortsButton
+            where={(article) => eq(article.isArchived, false)}
+            linkProps={{ to: '/inbox/shorts', search: { readStatus: readStatus() } }}
+          />
         </div>
       }
     >

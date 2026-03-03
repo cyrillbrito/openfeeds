@@ -1,7 +1,7 @@
 import type { Feed, FeedTag, Tag } from '@repo/domain/client';
 import { eq, useLiveQuery } from '@tanstack/solid-db';
 import { createFileRoute, Link } from '@tanstack/solid-router';
-import { MoreVertical, TriangleAlert, Video } from 'lucide-solid';
+import { MoreVertical, TriangleAlert } from 'lucide-solid';
 import { createSignal, For, onMount, Show, Suspense, type Accessor } from 'solid-js';
 import { ArticleList, ARTICLES_PER_PAGE } from '~/components/ArticleList';
 import { ArticleListToolbar } from '~/components/ArticleListToolbar';
@@ -14,6 +14,7 @@ import { CenterLoader } from '~/components/Loader';
 import { MarkAllArchivedButton } from '~/components/MarkAllArchivedButton';
 import { PageLayout } from '~/components/PageLayout';
 import { ReadStatusToggle, type ReadStatus } from '~/components/ReadStatusToggle';
+import { ShortsButton } from '~/components/ShortsButton';
 import { SyncLogsModal } from '~/components/SyncLogsModal';
 import { articlesCollection } from '~/entities/articles';
 import { useFeedTags } from '~/entities/feed-tags';
@@ -137,15 +138,14 @@ function FeedArticles() {
       title="Feed Articles"
       headerActions={
         <div class="flex flex-wrap gap-2">
-          <Link
-            to="/feeds/$feedId/shorts"
-            params={{ feedId: feedId().toString() }}
-            search={{ readStatus: readStatus() }}
-            class="btn btn-accent btn-sm"
-          >
-            <Video size={20} />
-            <span class="hidden sm:inline">Shorts</span>
-          </Link>
+          <ShortsButton
+            where={(article) => eq(article.feedId, feedId())}
+            linkProps={{
+              to: '/feeds/$feedId/shorts',
+              params: { feedId: feedId().toString() },
+              search: { readStatus: readStatus() },
+            }}
+          />
           <Show when={currentFeed()}>
             <Dropdown end btnClasses="btn-sm" btnContent={<MoreVertical size={20} />}>
               <li>
