@@ -18,10 +18,10 @@ export const followFeedsAction = createOptimisticAction<FollowFeedsWithTags>({
       feedsCollection.insert({
         id: feed.id,
         userId: '',
-        url: feed.url ?? feed.feedUrl,
+        url: feed.url ?? '',
         feedUrl: feed.feedUrl,
-        title: feed.title ?? 'Unknown',
-        description: feed.description ?? '',
+        title: feed.title ?? '',
+        description: feed.description ?? null,
         icon: feed.icon ?? null,
         createdAt: now,
         updatedAt: now,
@@ -31,13 +31,17 @@ export const followFeedsAction = createOptimisticAction<FollowFeedsWithTags>({
       });
     }
 
+    // Compute next order so new tags appear after existing ones (same pattern as TagModal)
+    const currentTags = tagsCollection.toArray;
+    let nextOrder = currentTags.length > 0 ? Math.max(...currentTags.map((t) => t.order)) + 1 : 0;
+
     for (const tag of vars.newTags) {
       tagsCollection.insert({
         id: tag.id,
         userId: '',
         name: tag.name,
         color: null,
-        order: 0,
+        order: nextOrder++,
         createdAt: now,
         updatedAt: now,
       });
