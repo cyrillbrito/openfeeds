@@ -1,5 +1,6 @@
 import { Queue } from 'bullmq';
 import { QUEUE_NAMES, redisConnection } from './config';
+import { afterTransactionCommit } from './transaction-context';
 
 export interface FeedSyncJobData {
   feedId: string;
@@ -38,6 +39,13 @@ let _feedDetailQueue: Queue<UserFeedJobData> | null = null;
 export function getFeedDetailQueue(): Queue<UserFeedJobData> {
   return (_feedDetailQueue ??= new Queue<UserFeedJobData>(QUEUE_NAMES.FEED_DETAIL, {
     connection: redisConnection,
+    defaultJobOptions: {
+      attempts: 3,
+      backoff: {
+        type: 'exponential',
+        delay: 5_000,
+      },
+    },
   }));
 }
 
@@ -55,18 +63,23 @@ let _queuesInitialized = false;
  * Uses jobId for deduplication — if a job for this feed is already waiting, delayed
  * (in retry backoff), or active, the new enqueue is silently ignored by BullMQ.
  * This prevents the orchestrator (running every minute) from stacking duplicate jobs.
+ *
+ * Transaction-aware: if called inside `withTransaction`, the job is deferred until
+ * after the transaction commits. Otherwise it fires immediately.
  */
-export async function enqueueFeedSync(feedId: string) {
-  return getSingleFeedSyncQueue().add(
-    feedId,
-    { feedId },
-    {
-      // Deduplication key: BullMQ skips adding this job if one with the same jobId
-      // is already in waiting, delayed, or active state.
-      jobId: `feed-sync-${feedId}`,
-      removeOnComplete: 100,
-      removeOnFail: 500,
-    },
+export function enqueueFeedSync(feedId: string) {
+  return afterTransactionCommit(() =>
+    getSingleFeedSyncQueue().add(
+      feedId,
+      { feedId },
+      {
+        // Deduplication key: BullMQ skips adding this job if one with the same jobId
+        // is already in waiting, delayed, or active state.
+        jobId: `feed-sync-${feedId}`,
+        removeOnComplete: 100,
+        removeOnFail: 500,
+      },
+    ),
   );
 }
 
@@ -75,28 +88,36 @@ export async function enqueueFeedSync(feedId: string) {
  * Removes any existing waiting/delayed/active job for this feed first,
  * then adds a fresh job with no delay and attempt count reset to 0.
  * Use this for user-triggered "sync now" or "reset broken feed" actions.
+ *
+ * Transaction-aware: deferred until after commit when inside `withTransaction`.
  */
-export async function forceEnqueueFeedSync(feedId: string) {
-  const queue = getSingleFeedSyncQueue();
-  const jobId = `feed-sync-${feedId}`;
-  await queue.remove(jobId);
-  return queue.add(feedId, { feedId }, { jobId, removeOnComplete: 100, removeOnFail: 500 });
+export function forceEnqueueFeedSync(feedId: string) {
+  return afterTransactionCommit(async () => {
+    const queue = getSingleFeedSyncQueue();
+    const jobId = `feed-sync-${feedId}`;
+    await queue.remove(jobId);
+    return queue.add(feedId, { feedId }, { jobId, removeOnComplete: 100, removeOnFail: 500 });
+  });
 }
 
 /**
- * Enqueue a feed detail/metadata update job
+ * Enqueue a feed detail/metadata update job.
+ *
+ * Transaction-aware: deferred until after commit when inside `withTransaction`.
  */
-export async function enqueueFeedDetail(userId: string, feedId: string) {
-  return getFeedDetailQueue().add(
-    `${userId}-${feedId}`,
-    {
-      userId,
-      feedId,
-    },
-    {
-      removeOnComplete: 100,
-      removeOnFail: 500,
-    },
+export function enqueueFeedDetail(userId: string, feedId: string) {
+  return afterTransactionCommit(() =>
+    getFeedDetailQueue().add(
+      `${userId}-${feedId}`,
+      {
+        userId,
+        feedId,
+      },
+      {
+        removeOnComplete: 100,
+        removeOnFail: 500,
+      },
+    ),
   );
 }
 

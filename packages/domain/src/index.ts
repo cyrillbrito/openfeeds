@@ -36,6 +36,7 @@ export {
   getFeedDetailQueue,
   getAutoArchiveQueue,
 } from './queues';
+export { withTransaction, afterTransactionCommit } from './transaction-context';
 
 // Analytics
 export { trackEvent, type ServerAnalyticsEventMap } from './analytics';
