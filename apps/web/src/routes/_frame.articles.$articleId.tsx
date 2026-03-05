@@ -24,7 +24,7 @@ import { extractYouTubeVideoId, isYouTubeUrl } from '~/utils/youtube';
 export const Route = createFileRoute('/_frame/articles/$articleId')({
   component: ArticleView,
   head: () => ({
-    links: [{ rel: 'stylesheet', href: articlePrintCss, media: 'print' }],
+    links: [{ rel: 'stylesheet', href: articlePrintCss }],
   }),
 });
 
@@ -202,7 +202,7 @@ function ArticleView() {
                       <Link
                         to="/feeds/$feedId"
                         params={{ feedId: art().feedId! }}
-                        class="text-primary font-medium hover:underline print:text-inherit print:no-underline"
+                        class="text-primary font-medium hover:underline"
                       >
                         {feed()!.title}
                       </Link>
