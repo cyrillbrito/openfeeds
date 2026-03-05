@@ -112,7 +112,7 @@ function DiscoverPage() {
     const feedId = createId();
 
     const vars: FollowFeedsWithTags = {
-      feeds: [{ id: feedId, feedUrl: feed.url }],
+      feeds: [{ id: feedId, feedUrl: feed.url, url: searchUrl() }],
       newTags: [],
       feedTags: selectedTagIds.map((tagId) => ({ id: createId(), feedId, tagId })),
     };
