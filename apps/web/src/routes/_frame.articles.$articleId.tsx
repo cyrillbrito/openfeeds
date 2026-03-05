@@ -17,11 +17,15 @@ import { articlesCollection } from '~/entities/articles';
 import { $$extractArticleContent } from '~/entities/articles.functions';
 import { useFeeds } from '~/entities/feeds';
 import { useTags } from '~/entities/tags';
+import articlePrintCss from '~/styles/article-print.css?url';
 import { containsHtml, downshiftHeadings } from '~/utils/html';
 import { extractYouTubeVideoId, isYouTubeUrl } from '~/utils/youtube';
 
 export const Route = createFileRoute('/_frame/articles/$articleId')({
   component: ArticleView,
+  head: () => ({
+    links: [{ rel: 'stylesheet', href: articlePrintCss, media: 'print' }],
+  }),
 });
 
 function ArticleView() {
