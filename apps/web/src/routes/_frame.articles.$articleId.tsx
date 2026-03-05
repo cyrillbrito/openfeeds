@@ -24,7 +24,7 @@ import { extractYouTubeVideoId, isYouTubeUrl } from '~/utils/youtube';
 export const Route = createFileRoute('/_frame/articles/$articleId')({
   component: ArticleView,
   head: () => ({
-    links: [{ rel: 'stylesheet', href: articlePrintCss }],
+    links: [{ rel: 'stylesheet', href: articlePrintCss, media: 'print' }],
   }),
 });
 
