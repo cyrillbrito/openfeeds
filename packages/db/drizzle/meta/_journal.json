@@ -43,6 +43,13 @@
       "when": 1771784250596,
       "tag": "0005_add-audio-generated-at",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1772486077603,
+      "tag": "0006_add-tags-order",
+      "breakpoints": true
     }
   ]
 }

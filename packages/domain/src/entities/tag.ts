@@ -15,11 +15,24 @@ export async function createTags(
 ): Promise<Tag[]> {
   if (data.length === 0) return [];
 
+  // Determine the next order value for tags without an explicit order
+  const needsAutoOrder = data.some((item) => item.order === undefined);
+  let nextOrder = 0;
+
+  if (needsAutoOrder) {
+    const result = await conn
+      .select({ maxOrder: sql<number>`coalesce(max(${tags.order}), -1)` })
+      .from(tags)
+      .where(eq(tags.userId, userId));
+    nextOrder = (result[0]?.maxOrder ?? -1) + 1;
+  }
+
   const values = data.map((item) => ({
     id: item.id ?? createId(),
     userId,
     name: item.name,
     color: item.color ?? null,
+    order: item.order ?? nextOrder++,
   }));
 
   // NOTE: Duplicates are silently skipped via ON CONFLICT DO NOTHING (case-insensitive
@@ -40,6 +53,7 @@ export async function createTags(
     userId: t.userId,
     name: t.name,
     color: t.color as Tag['color'],
+    order: t.order,
     createdAt: t.createdAt.toISOString(),
     updatedAt: t.updatedAt.toISOString(),
   }));
@@ -65,9 +79,10 @@ export async function updateTags(
         }
       }
 
-      const updateData: { name?: string; color?: string | null } = {};
+      const updateData: { name?: string; color?: string | null; order?: number } = {};
       if (updates.name !== undefined) updateData.name = updates.name;
       if (updates.color !== undefined) updateData.color = updates.color;
+      if (updates.order !== undefined) updateData.order = updates.order;
 
       if (Object.keys(updateData).length > 0) {
         await tx

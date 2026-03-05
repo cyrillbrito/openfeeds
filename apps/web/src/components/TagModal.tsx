@@ -2,7 +2,7 @@ import type { Tag, TagColor } from '@repo/domain/client';
 import { createId } from '@repo/shared/utils';
 import { CircleAlert } from 'lucide-solid';
 import { createEffect, createSignal, For, Show } from 'solid-js';
-import { tagsCollection } from '~/entities/tags';
+import { tagsCollection, useTags } from '~/entities/tags';
 import { availableTagColors, getTagDotColor } from '~/utils/tagColors';
 import { ColorIndicator } from './ColorIndicator';
 import { LazyModal, type ModalController } from './LazyModal';
@@ -43,6 +43,7 @@ interface TagFormProps {
 
 function TagForm(props: TagFormProps) {
   const isEditMode = () => !!props.editTag;
+  const tags = useTags();
 
   const [tagName, setTagName] = createSignal('');
   const [tagColor, setTagColor] = createSignal<TagColor>(null);
@@ -80,11 +81,14 @@ function TagForm(props: TagFormProps) {
       props.onEditComplete?.();
     } else {
       const now = new Date().toISOString();
+      const currentTags = tags();
+      const maxOrder = currentTags ? Math.max(-1, ...currentTags.map((t) => t.order)) : -1;
       tagsCollection.insert({
         id: createId(),
         userId: '', // Will be set by server
         name,
         color: tagColor(),
+        order: maxOrder + 1,
         createdAt: now,
         updatedAt: now,
       });

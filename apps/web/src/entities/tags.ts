@@ -23,7 +23,7 @@ export const tagsCollection = createCollection(
     onInsert: collectionErrorHandler('tags.onInsert', async ({ transaction }) => {
       const tags = transaction.mutations.map((mutation) => {
         const tag = mutation.modified;
-        return { id: mutation.key as string, name: tag.name, color: tag.color };
+        return { id: mutation.key as string, name: tag.name, color: tag.color, order: tag.order };
       });
       return await $$createTags({ data: tags });
     }),
@@ -44,5 +44,7 @@ export const tagsCollection = createCollection(
 );
 
 export function useTags() {
-  return useLiveQuery((q) => q.from({ tag: tagsCollection }));
+  return useLiveQuery((q) =>
+    q.from({ tag: tagsCollection }).orderBy(({ tag }) => tag.order, 'asc'),
+  );
 }

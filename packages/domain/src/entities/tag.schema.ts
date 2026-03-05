@@ -28,6 +28,7 @@ export const TagSchema = z.object({
   userId: z.string(),
   name: z.string(),
   color: TagColorSchema,
+  order: z.number(),
   createdAt: z.iso.datetime(),
   updatedAt: z.iso.datetime(),
 });
@@ -37,6 +38,7 @@ export const CreateTagSchema = z.object({
   id: z.uuidv7().optional(),
   name: z.string(),
   color: TagColorSchema.optional(),
+  order: z.number().optional(),
 });
 export type CreateTag = z.infer<typeof CreateTagSchema>;
 
@@ -44,5 +46,6 @@ export const UpdateTagSchema = z.object({
   id: z.uuidv7(),
   name: z.string().optional(),
   color: TagColorSchema.optional(),
+  order: z.number().optional(),
 });
 export type UpdateTag = z.infer<typeof UpdateTagSchema>;
