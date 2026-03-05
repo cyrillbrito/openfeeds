@@ -198,7 +198,7 @@ function ArticleView() {
                       <Link
                         to="/feeds/$feedId"
                         params={{ feedId: art().feedId! }}
-                        class="text-primary font-medium hover:underline"
+                        class="text-primary font-medium hover:underline print:text-inherit print:no-underline"
                       >
                         {feed()!.title}
                       </Link>
@@ -212,16 +212,23 @@ function ArticleView() {
 
                   <Show when={art().pubDate}>
                     <span>•</span>
-                    <TimeAgo date={art().pubDate!} />
+                    <TimeAgo date={art().pubDate!} class="print:hidden" />
+                    <span class="hidden print:inline">
+                      {new Date(art().pubDate!).toLocaleDateString('en-US', {
+                        year: 'numeric',
+                        month: 'long',
+                        day: 'numeric',
+                      })}
+                    </span>
                   </Show>
 
                   <Show when={art().url}>
-                    <span>•</span>
+                    <span class="print:hidden">•</span>
                     <a
                       href={art().url!}
                       target="_blank"
                       rel="noopener noreferrer"
-                      class="text-primary hover:underline"
+                      class="text-primary hover:underline print:hidden"
                     >
                       View Original
                     </a>
