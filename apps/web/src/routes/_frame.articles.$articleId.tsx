@@ -10,17 +10,22 @@ import { ArticleTagManager } from '~/components/ArticleTagManager';
 import { HighlightedArticleContent } from '~/components/HighlightedArticleContent';
 import { Loader } from '~/components/Loader';
 import { PageLayout } from '~/components/PageLayout';
+import { PrintIconButton } from '~/components/PrintIconButton';
 import { ReadIconButton } from '~/components/ReadIconButton';
 import { TimeAgo } from '~/components/TimeAgo';
 import { articlesCollection } from '~/entities/articles';
 import { $$extractArticleContent } from '~/entities/articles.functions';
 import { useFeeds } from '~/entities/feeds';
 import { useTags } from '~/entities/tags';
+import articlePrintCss from '~/styles/article-print.css?url';
 import { containsHtml, downshiftHeadings } from '~/utils/html';
 import { extractYouTubeVideoId, isYouTubeUrl } from '~/utils/youtube';
 
 export const Route = createFileRoute('/_frame/articles/$articleId')({
   component: ArticleView,
+  head: () => ({
+    links: [{ rel: 'stylesheet', href: articlePrintCss, media: 'print' }],
+  }),
 });
 
 function ArticleView() {
@@ -156,7 +161,8 @@ function ArticleView() {
                   <h1 class="text-base-content flex-1 text-2xl leading-tight font-bold md:text-3xl">
                     {art().title}
                   </h1>
-                  <div class="flex shrink-0 gap-2">
+                  <div class="flex shrink-0 gap-2 print:hidden">
+                    <PrintIconButton />
                     <ArchiveIconButton
                       read={art().isRead || false}
                       archived={art().isArchived || false}
@@ -181,9 +187,9 @@ function ArticleView() {
                   <div class="flex items-center gap-1">
                     <Show
                       when={art().isArchived}
-                      fallback={<Inbox size={16} class="text-base-content/40" />}
+                      fallback={<Inbox size={16} class="text-base-content/40 print:hidden" />}
                     >
-                      <Archive size={16} class="text-base-content/40" />
+                      <Archive size={16} class="text-base-content/40 print:hidden" />
                     </Show>
                     <Show
                       when={feed()}
@@ -210,16 +216,23 @@ function ArticleView() {
 
                   <Show when={art().pubDate}>
                     <span>•</span>
-                    <TimeAgo date={art().pubDate!} />
+                    <TimeAgo date={art().pubDate!} class="print:hidden" />
+                    <span class="hidden print:inline">
+                      {new Date(art().pubDate!).toLocaleDateString('en-US', {
+                        year: 'numeric',
+                        month: 'long',
+                        day: 'numeric',
+                      })}
+                    </span>
                   </Show>
 
                   <Show when={art().url}>
-                    <span>•</span>
+                    <span class="print:hidden">•</span>
                     <a
                       href={art().url!}
                       target="_blank"
                       rel="noopener noreferrer"
-                      class="text-primary hover:underline"
+                      class="text-primary hover:underline print:hidden"
                     >
                       View Original
                     </a>
@@ -228,7 +241,7 @@ function ArticleView() {
 
                 {/* Article Tags */}
                 <Show when={tagsQuery()}>
-                  <div class="mt-4">
+                  <div class="mt-4 print:hidden">
                     <ArticleTagManager articleId={art().id} tags={tagsQuery()!} />
                   </div>
                 </Show>
