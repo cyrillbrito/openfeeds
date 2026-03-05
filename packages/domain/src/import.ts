@@ -1,7 +1,8 @@
-import { db, feeds, feedTags, tags } from '@repo/db';
+import { feeds, feedTags, tags } from '@repo/db';
 import { and, eq, inArray } from 'drizzle-orm';
 import { parseOpml } from 'feedsmith';
 import { trackEvent } from './analytics';
+import type { TransactionContext } from './domain-context';
 import { captureException } from './error-tracking';
 import { assert, LimitExceededError } from './errors';
 import { countUserFeeds, FREE_TIER_LIMITS } from './limits';
@@ -23,7 +24,7 @@ function getFeedsFromOutlines(outlines: OPMLOutlines): Array<{
   htmlUrl: string;
   category?: string;
 }> {
-  const feeds: Array<{
+  const feedsList: Array<{
     title: string;
     xmlUrl: string;
     htmlUrl: string;
@@ -33,7 +34,7 @@ function getFeedsFromOutlines(outlines: OPMLOutlines): Array<{
   for (const outline of outlines) {
     // If this outline has xmlUrl, it's a feed
     if (outline.xmlUrl) {
-      feeds.push({
+      feedsList.push({
         title: outline.title || outline.text || 'Unknown Feed',
         xmlUrl: outline.xmlUrl,
         htmlUrl: outline.htmlUrl || outline.xmlUrl,
@@ -46,7 +47,7 @@ function getFeedsFromOutlines(outlines: OPMLOutlines): Array<{
       const nestedFeeds = getFeedsFromOutlines(outline.outlines);
       // If this outline doesn't have xmlUrl but has nested feeds, it's likely a category
       const categoryName = outline.text || outline.title;
-      feeds.push(
+      feedsList.push(
         ...nestedFeeds.map((feed) => ({
           ...feed,
           category: feed.category || categoryName,
@@ -55,24 +56,27 @@ function getFeedsFromOutlines(outlines: OPMLOutlines): Array<{
     }
   }
 
-  return feeds;
+  return feedsList;
 }
 
 // Core business logic for importing OPML feeds
-export async function importOpmlFeeds(opmlContent: string, userId: string): Promise<ImportResult> {
+export async function importOpmlFeeds(
+  ctx: TransactionContext,
+  opmlContent: string,
+): Promise<ImportResult> {
   const parsedOpml = parseOpml(opmlContent);
 
   // Extract all feeds from the OPML structure
   const feedsToImport = getFeedsFromOutlines(parsedOpml.body?.outlines || []);
 
   // Check free-tier feed limit: count existing feeds, deduplicate against OPML, and verify the new ones fit
-  const currentFeedCount = await countUserFeeds(userId, db);
+  const currentFeedCount = await countUserFeeds(ctx.userId, ctx.conn);
 
   const opmlUrls = feedsToImport.map((f) => f.xmlUrl);
   const existingFeedUrls = new Set(
     (
-      await db.query.feeds.findMany({
-        where: and(inArray(feeds.feedUrl, opmlUrls), eq(feeds.userId, userId)),
+      await ctx.conn.query.feeds.findMany({
+        where: and(inArray(feeds.feedUrl, opmlUrls), eq(feeds.userId, ctx.userId)),
         columns: { feedUrl: true },
       })
     ).map((f) => f.feedUrl),
@@ -81,7 +85,7 @@ export async function importOpmlFeeds(opmlContent: string, userId: string): Prom
   const remainingSlots = FREE_TIER_LIMITS.feeds - currentFeedCount;
 
   if (newFeedCount > remainingSlots) {
-    trackEvent(userId, 'limits:feeds_limit_hit', {
+    trackEvent(ctx.userId, 'limits:feeds_limit_hit', {
       source: 'opml_import',
       current_usage: currentFeedCount,
       limit: FREE_TIER_LIMITS.feeds,
@@ -94,8 +98,8 @@ export async function importOpmlFeeds(opmlContent: string, userId: string): Prom
   const failed: string[] = [];
 
   // Prefetch all tags for this user
-  const existingTags = await db.query.tags.findMany({
-    where: eq(tags.userId, userId),
+  const existingTags = await ctx.conn.query.tags.findMany({
+    where: eq(tags.userId, ctx.userId),
     columns: { id: true, name: true },
   });
 
@@ -118,9 +122,9 @@ export async function importOpmlFeeds(opmlContent: string, userId: string): Prom
 
           if (!tagId) {
             try {
-              const tagResult = await db
+              const tagResult = await ctx.conn
                 .insert(tags)
-                .values({ userId, name: category })
+                .values({ userId: ctx.userId, name: category })
                 .returning();
               tagId = tagResult[0]?.id;
               assert(tagId);
@@ -139,8 +143,8 @@ export async function importOpmlFeeds(opmlContent: string, userId: string): Prom
       }
 
       // Check if feed already exists (by feedUrl for this user) — skip if so
-      const existingFeed = await db.query.feeds.findFirst({
-        where: and(eq(feeds.feedUrl, feed.xmlUrl), eq(feeds.userId, userId)),
+      const existingFeed = await ctx.conn.query.feeds.findFirst({
+        where: and(eq(feeds.feedUrl, feed.xmlUrl), eq(feeds.userId, ctx.userId)),
         columns: { id: true },
       });
 
@@ -149,52 +153,31 @@ export async function importOpmlFeeds(opmlContent: string, userId: string): Prom
         continue;
       }
 
-      const feedId = await db.transaction(async (tx) => {
-        const insertResult = await tx
-          .insert(feeds)
-          .values({
-            userId,
-            title: feed.title,
-            url: feed.htmlUrl,
-            feedUrl: feed.xmlUrl,
-          })
-          .returning();
-
-        const id = insertResult[0]?.id;
-        assert(id);
-
-        if (tagIds.length > 0) {
-          await tx.insert(feedTags).values(
-            tagIds.map((tagId) => ({
-              userId,
-              feedId: id,
-              tagId,
-            })),
-          );
-        }
-
-        return id;
-      });
-
-      try {
-        await enqueueFeedSync(feedId);
-      } catch (enqueueError) {
-        console.error(enqueueError, {
-          operation: 'import_feed_enqueue_sync',
-          feedTitle: feed.title,
+      const insertResult = await ctx.conn
+        .insert(feeds)
+        .values({
+          userId: ctx.userId,
+          title: feed.title,
+          url: feed.htmlUrl,
           feedUrl: feed.xmlUrl,
-        });
+        })
+        .returning();
+
+      const id = insertResult[0]?.id;
+      assert(id);
+
+      if (tagIds.length > 0) {
+        await ctx.conn.insert(feedTags).values(
+          tagIds.map((tagId) => ({
+            userId: ctx.userId,
+            feedId: id,
+            tagId,
+          })),
+        );
       }
 
-      try {
-        await enqueueFeedDetail(userId, feedId);
-      } catch (enqueueError) {
-        console.error(enqueueError, {
-          operation: 'import_feed_detail_enqueue',
-          feedTitle: feed.title,
-          feedUrl: feed.xmlUrl,
-        });
-      }
+      ctx.afterCommit(() => enqueueFeedSync(ctx.userId, id));
+      ctx.afterCommit(() => enqueueFeedDetail(ctx.userId, id));
 
       imported++;
     } catch (error) {
@@ -214,7 +197,7 @@ export async function importOpmlFeeds(opmlContent: string, userId: string): Prom
 
   // Track OPML import (server-side for reliability)
   if (imported > 0) {
-    trackEvent(userId, 'feeds:opml_import', {
+    trackEvent(ctx.userId, 'feeds:opml_import', {
       feed_count: imported,
       tag_count: Object.keys(tagLookup).length - existingTags.length, // New tags created
       failed_count: failed.length,

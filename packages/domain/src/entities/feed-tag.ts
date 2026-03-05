@@ -1,5 +1,6 @@
 import { db, feedTags, type Db, type Transaction } from '@repo/db';
 import { and, eq, inArray, sql } from 'drizzle-orm';
+import type { TransactionContext } from '../domain-context';
 import type { CreateFeedTag, FeedTag } from './feed-tag.schema';
 
 // Re-export schemas and types from schema file
@@ -19,50 +20,45 @@ export async function getAllFeedTags(userId: string): Promise<FeedTag[]> {
 }
 
 export async function createFeedTags(
+  ctx: TransactionContext,
   data: CreateFeedTag[],
-  userId: string,
-  conn: Db | Transaction,
 ): Promise<FeedTag[]> {
   if (data.length === 0) return [];
 
   const newTags = data.map((item) => ({
     id: item.id,
-    userId,
+    userId: ctx.userId,
     feedId: item.feedId,
     tagId: item.tagId,
   }));
 
-  return conn.transaction(async (tx) => {
-    const inserted = await tx.insert(feedTags).values(newTags).onConflictDoNothing().returning();
+  const inserted = await ctx.conn
+    .insert(feedTags)
+    .values(newTags)
+    .onConflictDoNothing()
+    .returning();
 
-    // Propagate: add these tags to all existing articles of the affected feeds
-    if (inserted.length > 0) {
-      await propagateTagsToArticles(tx, inserted, userId);
-    }
+  // Propagate: add these tags to all existing articles of the affected feeds
+  if (inserted.length > 0) {
+    await propagateTagsToArticles(ctx.conn, inserted, ctx.userId);
+  }
 
-    return inserted;
-  });
+  return inserted;
 }
 
-export async function deleteFeedTags(
-  ids: string[],
-  userId: string,
-  conn: Db | Transaction,
-): Promise<void> {
+export async function deleteFeedTags(ctx: TransactionContext, ids: string[]): Promise<void> {
   if (ids.length === 0) return;
 
-  await conn.transaction(async (tx) => {
-    // Single DELETE ... RETURNING to get the pairs and remove in one query
-    const deleted = await tx
-      .delete(feedTags)
-      .where(and(inArray(feedTags.id, ids), eq(feedTags.userId, userId)))
-      .returning({ feedId: feedTags.feedId, tagId: feedTags.tagId });
+  // Single DELETE ... RETURNING to get the pairs and remove in one query
+  const deleted = await ctx.conn
+    .delete(feedTags)
+    .where(and(inArray(feedTags.id, ids), eq(feedTags.userId, ctx.userId)))
+    .returning({ feedId: feedTags.feedId, tagId: feedTags.tagId });
 
-    // Propagate: remove these tags from all articles of the affected feeds
-    if (deleted.length > 0) {
-      await removeTagsFromFeedArticles(tx, deleted, userId);
-    }
-  });
+  // Propagate: remove these tags from all articles of the affected feeds
+  if (deleted.length > 0) {
+    await removeTagsFromFeedArticles(ctx.conn as Transaction, deleted, ctx.userId);
+  }
 }
 
 /**
@@ -71,7 +67,7 @@ export async function deleteFeedTags(
  * ON CONFLICT DO NOTHING so already-tagged articles are unaffected.
  */
 async function propagateTagsToArticles(
-  tx: Transaction,
+  tx: Transaction | Db,
   feedTagPairs: { feedId: string; tagId: string }[],
   userId: string,
 ): Promise<void> {

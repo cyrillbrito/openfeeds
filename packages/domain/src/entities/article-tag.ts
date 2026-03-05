@@ -1,6 +1,7 @@
-import { articleTags, db, type Db, type Transaction } from '@repo/db';
+import { articleTags, db } from '@repo/db';
 import { createId } from '@repo/shared/utils';
 import { and, eq, inArray } from 'drizzle-orm';
+import type { TransactionContext } from '../domain-context';
 import type { ArticleTag, CreateArticleTag } from './article-tag.schema';
 
 // Re-export schemas and types from schema file
@@ -20,30 +21,25 @@ export async function getAllArticleTags(userId: string): Promise<ArticleTag[]> {
 }
 
 export async function createArticleTags(
+  ctx: TransactionContext,
   data: CreateArticleTag[],
-  userId: string,
-  conn: Db | Transaction,
 ): Promise<ArticleTag[]> {
   if (data.length === 0) return [];
 
   const newTags = data.map((item) => ({
     id: item.id ?? createId(),
-    userId,
+    userId: ctx.userId,
     articleId: item.articleId,
     tagId: item.tagId,
   }));
 
-  return conn.insert(articleTags).values(newTags).onConflictDoNothing().returning();
+  return ctx.conn.insert(articleTags).values(newTags).onConflictDoNothing().returning();
 }
 
-export async function deleteArticleTags(
-  ids: string[],
-  userId: string,
-  conn: Db | Transaction,
-): Promise<void> {
+export async function deleteArticleTags(ctx: TransactionContext, ids: string[]): Promise<void> {
   if (ids.length === 0) return;
 
-  await conn
+  await ctx.conn
     .delete(articleTags)
-    .where(and(inArray(articleTags.id, ids), eq(articleTags.userId, userId)));
+    .where(and(inArray(articleTags.id, ids), eq(articleTags.userId, ctx.userId)));
 }

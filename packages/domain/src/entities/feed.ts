@@ -1,8 +1,9 @@
-import { db, feeds, type Db, type DbFeed, type DbInsertFeed, type Transaction } from '@repo/db';
+import { db, feeds, type DbFeed, type DbInsertFeed } from '@repo/db';
 import { discoverFeeds } from '@repo/discovery/server';
 import { createId } from '@repo/shared/utils';
 import { and, eq, inArray } from 'drizzle-orm';
 import { getDomain, trackEvent } from '../analytics';
+import type { TransactionContext } from '../domain-context';
 import { BadRequestError, LimitExceededError, NotFoundError } from '../errors';
 import { countUserFeeds, FREE_TIER_LIMITS } from '../limits';
 import { enqueueFeedDetail, enqueueFeedSync } from '../queues';
@@ -40,17 +41,13 @@ async function assertFeedExists(id: string, userId: string): Promise<void> {
   }
 }
 
-export async function createFeeds(
-  data: CreateFeed[],
-  userId: string,
-  conn: Db | Transaction,
-): Promise<Feed[]> {
+export async function createFeeds(ctx: TransactionContext, data: CreateFeed[]): Promise<Feed[]> {
   if (data.length === 0) return [];
 
   // Check free-tier feed limit
-  const currentCount = await countUserFeeds(userId, conn);
+  const currentCount = await countUserFeeds(ctx.userId, ctx.conn);
   if (currentCount + data.length > FREE_TIER_LIMITS.feeds) {
-    trackEvent(userId, 'limits:feeds_limit_hit', {
+    trackEvent(ctx.userId, 'limits:feeds_limit_hit', {
       source: 'create',
       current_usage: currentCount,
       limit: FREE_TIER_LIMITS.feeds,
@@ -60,7 +57,7 @@ export async function createFeeds(
 
   const values: DbInsertFeed[] = data.map((item) => ({
     id: item.id ?? createId(),
-    userId,
+    userId: ctx.userId,
     title: item.title ?? 'Unknown',
     description: item.description ?? '',
     url: item.url ?? item.feedUrl,
@@ -74,24 +71,22 @@ export async function createFeeds(
   // The client already prevents following feeds the user already has, so conflicts
   // here are a race-condition safety net. We may want to revisit this and surface
   // skipped feeds to the caller if it causes confusion down the line.
-  const inserted = await conn
+  const inserted = await ctx.conn
     .insert(feeds)
     .values(values)
     .onConflictDoNothing({ target: [feeds.userId, feeds.feedUrl] })
     .returning();
 
-  // Enqueue workers for all newly created feeds
-  // TODO: move side effects post-commit (enqueue can fire before transaction commits)
-  await Promise.all(
-    inserted.map(async (feed) => {
-      await enqueueFeedDetail(userId, feed.id);
-      await enqueueFeedSync(feed.id);
-    }),
-  );
+  // Enqueue workers for all newly created feeds.
+  // Deferred until after commit so workers don't query entities that don't exist yet.
+  for (const feed of inserted) {
+    ctx.afterCommit(() => enqueueFeedDetail(ctx.userId, feed.id));
+    ctx.afterCommit(() => enqueueFeedSync(ctx.userId, feed.id));
+  }
 
   // Track feed creations
   for (const feed of inserted) {
-    trackEvent(userId, 'feeds:feed_create', {
+    trackEvent(ctx.userId, 'feeds:feed_create', {
       feed_url: feed.feedUrl,
       feed_domain: getDomain(feed.feedUrl),
     });
@@ -100,41 +95,31 @@ export async function createFeeds(
   return inserted.map(toApiFeed);
 }
 
-export async function updateFeeds(
-  data: UpdateFeed[],
-  userId: string,
-  conn: Db | Transaction,
-): Promise<void> {
+export async function updateFeeds(ctx: TransactionContext, data: UpdateFeed[]): Promise<void> {
   if (data.length === 0) return;
 
-  await conn.transaction(async (tx) => {
-    for (const { id, ...updates } of data) {
-      const feedUpdateData: Record<string, unknown> = {};
-      if (updates.title !== undefined) feedUpdateData.title = updates.title;
-      if (updates.description !== undefined) feedUpdateData.description = updates.description;
-      if (updates.url !== undefined) feedUpdateData.url = updates.url;
-      if (updates.icon !== undefined) feedUpdateData.icon = updates.icon;
+  for (const { id, ...updates } of data) {
+    const feedUpdateData: Record<string, unknown> = {};
+    if (updates.title !== undefined) feedUpdateData.title = updates.title;
+    if (updates.description !== undefined) feedUpdateData.description = updates.description;
+    if (updates.url !== undefined) feedUpdateData.url = updates.url;
+    if (updates.icon !== undefined) feedUpdateData.icon = updates.icon;
 
-      if (Object.keys(feedUpdateData).length > 0) {
-        await tx
-          .update(feeds)
-          .set(feedUpdateData)
-          .where(and(eq(feeds.id, id), eq(feeds.userId, userId)));
-      }
+    if (Object.keys(feedUpdateData).length > 0) {
+      await ctx.conn
+        .update(feeds)
+        .set(feedUpdateData)
+        .where(and(eq(feeds.id, id), eq(feeds.userId, ctx.userId)));
     }
-  });
+  }
 }
 
-export async function deleteFeeds(
-  ids: string[],
-  userId: string,
-  conn: Db | Transaction,
-): Promise<void> {
+export async function deleteFeeds(ctx: TransactionContext, ids: string[]): Promise<void> {
   if (ids.length === 0) return;
 
-  await conn.delete(feeds).where(and(inArray(feeds.id, ids), eq(feeds.userId, userId)));
+  await ctx.conn.delete(feeds).where(and(inArray(feeds.id, ids), eq(feeds.userId, ctx.userId)));
 
-  trackEvent(userId, 'feeds:feed_delete', { count: ids.length });
+  trackEvent(ctx.userId, 'feeds:feed_delete', { count: ids.length });
 }
 
 /**

@@ -3,6 +3,7 @@ import { QUEUE_NAMES, redisConnection } from './config';
 
 export interface FeedSyncJobData {
   feedId: string;
+  userId: string;
 }
 
 export interface UserFeedJobData {
@@ -38,6 +39,13 @@ let _feedDetailQueue: Queue<UserFeedJobData> | null = null;
 export function getFeedDetailQueue(): Queue<UserFeedJobData> {
   return (_feedDetailQueue ??= new Queue<UserFeedJobData>(QUEUE_NAMES.FEED_DETAIL, {
     connection: redisConnection,
+    defaultJobOptions: {
+      attempts: 3,
+      backoff: {
+        type: 'exponential',
+        delay: 5_000,
+      },
+    },
   }));
 }
 
@@ -55,11 +63,13 @@ let _queuesInitialized = false;
  * Uses jobId for deduplication — if a job for this feed is already waiting, delayed
  * (in retry backoff), or active, the new enqueue is silently ignored by BullMQ.
  * This prevents the orchestrator (running every minute) from stacking duplicate jobs.
+ *
+ * Plain queue operation — callers use `ctx.afterCommit()` to defer when inside a transaction.
  */
-export async function enqueueFeedSync(feedId: string) {
+export function enqueueFeedSync(userId: string, feedId: string) {
   return getSingleFeedSyncQueue().add(
     feedId,
-    { feedId },
+    { feedId, userId },
     {
       // Deduplication key: BullMQ skips adding this job if one with the same jobId
       // is already in waiting, delayed, or active state.
@@ -75,18 +85,22 @@ export async function enqueueFeedSync(feedId: string) {
  * Removes any existing waiting/delayed/active job for this feed first,
  * then adds a fresh job with no delay and attempt count reset to 0.
  * Use this for user-triggered "sync now" or "reset broken feed" actions.
+ *
+ * Plain queue operation — callers use `ctx.afterCommit()` to defer when inside a transaction.
  */
-export async function forceEnqueueFeedSync(feedId: string) {
+export async function forceEnqueueFeedSync(userId: string, feedId: string) {
   const queue = getSingleFeedSyncQueue();
   const jobId = `feed-sync-${feedId}`;
   await queue.remove(jobId);
-  return queue.add(feedId, { feedId }, { jobId, removeOnComplete: 100, removeOnFail: 500 });
+  return queue.add(feedId, { feedId, userId }, { jobId, removeOnComplete: 100, removeOnFail: 500 });
 }
 
 /**
- * Enqueue a feed detail/metadata update job
+ * Enqueue a feed detail/metadata update job.
+ *
+ * Plain queue operation — callers use `ctx.afterCommit()` to defer when inside a transaction.
  */
-export async function enqueueFeedDetail(userId: string, feedId: string) {
+export function enqueueFeedDetail(userId: string, feedId: string) {
   return getFeedDetailQueue().add(
     `${userId}-${feedId}`,
     {

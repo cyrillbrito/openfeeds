@@ -1,10 +1,12 @@
 import { db, getTxId } from '@repo/db';
 import {
+  createDomainContext,
   getSettings as domainGetSettings,
   getUserUsage as domainGetUserUsage,
   performArchiveArticles as domainPerformArchiveArticles,
   updateSettings as domainUpdateSettings,
   UpdateSettingsSchema,
+  withTransaction,
 } from '@repo/domain';
 import { createServerFn } from '@tanstack/solid-start';
 import { z } from 'zod';
@@ -22,16 +24,17 @@ export const $$updateSettings = createServerFn({ method: 'POST' })
   .handler(async ({ context, data }) => {
     // Settings is a singleton, so we just take the first update
     const updates = data[0] || {};
-    return await db.transaction(async (tx) => {
-      await domainUpdateSettings(context.user.id, updates, tx);
-      return { txid: await getTxId(tx) };
+    return await withTransaction(db, context.user.id, async (ctx) => {
+      await domainUpdateSettings(ctx, updates);
+      return { txid: await getTxId(ctx.conn) };
     });
   });
 
 export const $$triggerAutoArchive = createServerFn({ method: 'POST' })
   .middleware([authMiddleware])
   .handler(({ context }) => {
-    return domainPerformArchiveArticles(context.user.id);
+    const ctx = createDomainContext(db, context.user.id);
+    return domainPerformArchiveArticles(ctx);
   });
 
 export const $$getUserUsage = createServerFn({ method: 'GET' })

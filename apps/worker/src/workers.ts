@@ -1,6 +1,8 @@
+import { db, feeds } from '@repo/db';
 import {
   autoArchiveForAllUsers,
   captureException,
+  createDomainContext,
   enqueueStaleFeeds,
   markFeedAsFailing,
   QUEUE_NAMES,
@@ -8,12 +10,30 @@ import {
   redisConnection,
   syncSingleFeed,
   updateFeedMetadata,
+  withTransaction,
   writeFeedSyncLog,
   type FeedSyncJobData,
   type UserFeedJobData,
 } from '@repo/domain';
 import { Worker, type Job } from 'bullmq';
+import { eq } from 'drizzle-orm';
 import { env } from './env';
+
+/**
+ * Resolve userId from job data, falling back to a DB lookup for legacy jobs
+ * that were enqueued before userId was added to FeedSyncJobData.
+ */
+async function resolveUserId(data: FeedSyncJobData): Promise<string> {
+  if (data.userId) return data.userId;
+
+  const feed = await db.query.feeds.findFirst({
+    where: eq(feeds.id, data.feedId),
+    columns: { userId: true },
+  });
+
+  if (!feed) throw new Error(`Feed ${data.feedId} not found — cannot resolve userId`);
+  return feed.userId;
+}
 
 export function createFeedSyncOrchestratorWorker() {
   return new Worker(
@@ -37,9 +57,11 @@ export function createSingleFeedSyncWorker() {
         `Starting single feed sync job ${job.id} for feed ${job.data.feedId} (attempt ${job.attemptsMade + 1})`,
       );
       const { feedId } = job.data;
+      const userId = await resolveUserId(job.data);
+      const ctx = createDomainContext(db, userId);
       // Throws FeedSyncError on failure — BullMQ retries with exponential backoff.
       // The `completed` and `failed` events below are responsible for writing feed_sync_logs.
-      return await syncSingleFeed(feedId);
+      return await syncSingleFeed(ctx, feedId);
     },
     {
       connection: redisConnection,
@@ -58,7 +80,9 @@ export function createSingleFeedSyncWorker() {
     const durationMs =
       job.processedOn != null ? (job.finishedOn ?? Date.now()) - job.processedOn : null;
     try {
-      await writeFeedSyncLog(feedId, result, durationMs);
+      const userId = await resolveUserId(job.data);
+      const ctx = createDomainContext(db, userId);
+      await writeFeedSyncLog(ctx, feedId, result, durationMs);
     } catch (logErr) {
       const err = logErr instanceof Error ? logErr : new Error(String(logErr));
       console.error('Failed to write sync log on completion', { error: err, feedId });
@@ -81,10 +105,15 @@ export function createSingleFeedSyncWorker() {
     const durationMs =
       job.processedOn != null ? (job.finishedOn ?? Date.now()) - job.processedOn : null;
     try {
+      const userId = await resolveUserId(job.data);
       if (attemptsExhausted) {
-        await recordFeedSyncFailure(feedId, err, attemptNumber, durationMs);
+        await withTransaction(db, userId, (ctx) =>
+          recordFeedSyncFailure(ctx, feedId, err, attemptNumber, durationMs),
+        );
       } else {
-        await markFeedAsFailing(feedId, err, attemptNumber, durationMs);
+        await withTransaction(db, userId, (ctx) =>
+          markFeedAsFailing(ctx, feedId, err, attemptNumber, durationMs),
+        );
       }
     } catch (updateErr) {
       const err = updateErr instanceof Error ? updateErr : new Error(String(updateErr));
@@ -108,7 +137,8 @@ export function createFeedDetailsWorker() {
         `Starting feed details job ${job.id} for user ${job.data.userId}, feed ${job.data.feedId}`,
       );
       const { userId, feedId } = job.data;
-      await updateFeedMetadata(userId, feedId);
+      const ctx = createDomainContext(db, userId);
+      await updateFeedMetadata(ctx, feedId);
     },
     {
       connection: redisConnection,
