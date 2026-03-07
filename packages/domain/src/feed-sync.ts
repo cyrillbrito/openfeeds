@@ -2,7 +2,7 @@ import { articles, articleTags, db, feeds, feedSyncLogs, feedTags, filterRules }
 import { sanitizeHtml } from '@repo/readability/sanitize';
 import { and, asc, desc, eq, inArray, isNull, lt, ne, or } from 'drizzle-orm';
 import { autoArchiveArticles } from './archive';
-import { createDomainContext, type DomainContext, type TransactionContext } from './domain-context';
+import { createDomainContext, type DomainContext } from './domain-context';
 import { shouldMarkAsRead } from './entities/filter-rule';
 import { getAutoArchiveCutoffDate } from './entities/settings';
 import { captureException } from './error-tracking';
@@ -251,7 +251,7 @@ export async function syncSingleFeed(
  * Sets syncStatus to 'failing' and writes a feed_sync_logs row.
  */
 export async function markFeedAsFailing(
-  ctx: TransactionContext,
+  ctx: DomainContext,
   feedId: string,
   error: Error,
   attemptNumber: number,
@@ -259,19 +259,21 @@ export async function markFeedAsFailing(
 ): Promise<void> {
   const httpStatus = error instanceof HttpFetchError ? error.status : null;
 
-  await ctx.conn
-    .update(feeds)
-    .set({ syncStatus: 'failing', syncError: error.message.slice(0, 1000) })
-    .where(eq(feeds.id, feedId));
+  await ctx.conn.transaction(async (tx) => {
+    await tx
+      .update(feeds)
+      .set({ syncStatus: 'failing', syncError: error.message.slice(0, 1000) })
+      .where(eq(feeds.id, feedId));
 
-  await ctx.conn.insert(feedSyncLogs).values({
-    userId: ctx.userId,
-    feedId,
-    status: 'failed',
-    durationMs,
-    httpStatus,
-    error: `[attempt ${attemptNumber}] ${error.message}`.slice(0, 1000),
-    articlesAdded: 0,
+    await tx.insert(feedSyncLogs).values({
+      userId: ctx.userId,
+      feedId,
+      status: 'failed',
+      durationMs,
+      httpStatus,
+      error: `[attempt ${attemptNumber}] ${error.message}`.slice(0, 1000),
+      articlesAdded: 0,
+    });
   });
 }
 
@@ -282,7 +284,7 @@ export async function markFeedAsFailing(
  * The user can reset a broken feed via forceEnqueueFeedSync which clears syncStatus.
  */
 export async function recordFeedSyncFailure(
-  ctx: TransactionContext,
+  ctx: DomainContext,
   feedId: string,
   error: Error,
   attemptNumber: number,
@@ -290,26 +292,29 @@ export async function recordFeedSyncFailure(
 ): Promise<void> {
   const httpStatus = error instanceof HttpFetchError ? error.status : null;
 
-  await ctx.conn
-    .update(feeds)
-    .set({
-      lastSyncAt: new Date(),
-      syncStatus: 'broken',
-      syncError: error.message.slice(0, 1000),
-    })
-    .where(eq(feeds.id, feedId));
+  await ctx.conn.transaction(async (tx) => {
+    await tx
+      .update(feeds)
+      .set({
+        lastSyncAt: new Date(),
+        syncStatus: 'broken',
+        syncError: error.message.slice(0, 1000),
+      })
+      .where(eq(feeds.id, feedId));
 
-  await ctx.conn.insert(feedSyncLogs).values({
-    userId: ctx.userId,
-    feedId,
-    status: 'failed',
-    durationMs,
-    httpStatus,
-    error: `[attempt ${attemptNumber}] ${error.message}`.slice(0, 1000),
-    articlesAdded: 0,
+    await tx.insert(feedSyncLogs).values({
+      userId: ctx.userId,
+      feedId,
+      status: 'failed',
+      durationMs,
+      httpStatus,
+      error: `[attempt ${attemptNumber}] ${error.message}`.slice(0, 1000),
+      articlesAdded: 0,
+    });
   });
 
-  // Read feed for logging context (title/url) — separate read, acceptable overhead
+  // Read feed for logging context (title/url) — outside the transaction,
+  // acceptable if feed is already gone (feed? is optional).
   const feed = await ctx.conn.query.feeds.findFirst({
     where: eq(feeds.id, feedId),
     columns: { title: true, feedUrl: true },

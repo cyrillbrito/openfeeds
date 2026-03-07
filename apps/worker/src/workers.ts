@@ -10,7 +10,6 @@ import {
   redisConnection,
   syncSingleFeed,
   updateFeedMetadata,
-  withTransaction,
   writeFeedSyncLog,
   type FeedSyncJobData,
   type UserFeedJobData,
@@ -87,14 +86,11 @@ export function createSingleFeedSyncWorker() {
       job.processedOn != null ? (job.finishedOn ?? Date.now()) - job.processedOn : null;
     try {
       const { userId } = job.data;
+      const ctx = createDomainContext(db, userId);
       if (attemptsExhausted) {
-        await withTransaction(db, userId, (ctx) =>
-          recordFeedSyncFailure(ctx, feedId, err, attemptNumber, durationMs),
-        );
+        await recordFeedSyncFailure(ctx, feedId, err, attemptNumber, durationMs);
       } else {
-        await withTransaction(db, userId, (ctx) =>
-          markFeedAsFailing(ctx, feedId, err, attemptNumber, durationMs),
-        );
+        await markFeedAsFailing(ctx, feedId, err, attemptNumber, durationMs);
       }
     } catch (updateErr) {
       const err = updateErr instanceof Error ? updateErr : new Error(String(updateErr));
