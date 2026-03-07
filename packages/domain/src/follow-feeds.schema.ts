@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { feedUrlSchema } from './entities/feed.schema';
 
 export const FollowFeedsWithTagsSchema = z.object({
   feeds: z.array(
@@ -7,7 +8,7 @@ export const FollowFeedsWithTagsSchema = z.object({
       /** Website URL */
       url: z.url().nullable().optional(),
       /** RSS/Atom feed URL */
-      feedUrl: z.url(),
+      feedUrl: feedUrlSchema,
       title: z.string().nullable().optional(),
       description: z.string().nullable().optional(),
       icon: z.url().nullable().optional(),

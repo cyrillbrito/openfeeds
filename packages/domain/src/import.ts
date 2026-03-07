@@ -3,6 +3,7 @@ import { and, eq, inArray } from 'drizzle-orm';
 import { parseOpml } from 'feedsmith';
 import { trackEvent } from './analytics';
 import type { TransactionContext } from './domain-context';
+import { feedUrlSchema } from './entities/feed.schema';
 import { captureException } from './error-tracking';
 import { assert, LimitExceededError } from './errors';
 import { countUserFeeds, FREE_TIER_LIMITS } from './limits';
@@ -66,8 +67,18 @@ export async function importOpmlFeeds(
 ): Promise<ImportResult> {
   const parsedOpml = parseOpml(opmlContent);
 
-  // Extract all feeds from the OPML structure
-  const feedsToImport = getFeedsFromOutlines(parsedOpml.body?.outlines || []);
+  // Extract all feeds from the OPML structure, filtering out entries with invalid URLs
+  const allFeeds = getFeedsFromOutlines(parsedOpml.body?.outlines || []);
+  const feedsToImport: typeof allFeeds = [];
+  const failed: string[] = [];
+
+  for (const feed of allFeeds) {
+    if (feedUrlSchema.safeParse(feed.xmlUrl).success) {
+      feedsToImport.push(feed);
+    } else {
+      failed.push(feed.title);
+    }
+  }
 
   // Check free-tier feed limit: count existing feeds, deduplicate against OPML, and verify the new ones fit
   const currentFeedCount = await countUserFeeds(ctx.userId, ctx.conn);
@@ -95,7 +106,6 @@ export async function importOpmlFeeds(
 
   let imported = 0;
   let skipped = 0;
-  const failed: string[] = [];
 
   // Prefetch all tags for this user
   const existingTags = await ctx.conn.query.tags.findMany({
@@ -207,7 +217,7 @@ export async function importOpmlFeeds(
   }
 
   return {
-    found: feedsToImport.length,
+    found: allFeeds.length,
     imported,
     skipped,
     failed,

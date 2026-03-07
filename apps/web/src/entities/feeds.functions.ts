@@ -2,6 +2,7 @@ import { db, feeds, getTxId } from '@repo/db';
 import * as feedsDomain from '@repo/domain';
 import {
   CreateFeedSchema,
+  feedUrlSchema,
   FollowFeedsWithTagsSchema,
   UpdateFeedSchema,
   withTransaction,
@@ -13,7 +14,7 @@ import { authMiddleware } from '~/server/middleware/auth';
 
 export const $$discoverFeeds = createServerFn({ method: 'POST' })
   .middleware([authMiddleware])
-  .inputValidator(z.object({ url: z.url() }))
+  .inputValidator(z.object({ url: feedUrlSchema }))
   .handler(({ data }) => {
     return feedsDomain.discoverRssFeeds(data.url);
   });

@@ -1,8 +1,13 @@
 import { db } from '@repo/db';
 import * as feedsDomain from '@repo/domain';
-import { withTransaction } from '@repo/domain';
+import { feedUrlSchema, withTransaction } from '@repo/domain';
 import { createFileRoute } from '@tanstack/solid-router';
+import { z } from 'zod/v4';
 import { auth } from '~/server/auth';
+
+const CreateFeedBody = z.object({
+  url: feedUrlSchema,
+});
 
 function corsHeaders(request: Request) {
   const origin = request.headers.get('Origin') || '';
@@ -37,20 +42,21 @@ export const Route = createFileRoute('/api/feeds')({
           return Response.json({ message: 'Unauthorized' }, { status: 401, headers });
         }
 
-        let body: { url?: string };
+        let json: unknown;
         try {
-          body = await request.json();
+          json = await request.json();
         } catch {
           return Response.json({ message: 'Invalid JSON' }, { status: 400, headers });
         }
 
-        if (!body.url || typeof body.url !== 'string') {
-          return Response.json({ message: 'URL is required' }, { status: 400, headers });
+        const parsed = CreateFeedBody.safeParse(json);
+        if (!parsed.success) {
+          return Response.json({ message: 'A valid URL is required' }, { status: 400, headers });
         }
 
         try {
           const [feed] = await withTransaction(db, session.user.id, async (ctx) => {
-            return feedsDomain.createFeeds(ctx, [{ feedUrl: body.url! }]);
+            return feedsDomain.createFeeds(ctx, [{ feedUrl: parsed.data.url }]);
           });
           return Response.json(feed, { status: 201, headers });
         } catch (error) {
