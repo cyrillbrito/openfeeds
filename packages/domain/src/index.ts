@@ -36,6 +36,12 @@ export {
   getFeedDetailQueue,
   getAutoArchiveQueue,
 } from './queues';
+export {
+  createDomainContext,
+  withTransaction,
+  type DomainContext,
+  type TransactionContext,
+} from './domain-context';
 
 // Analytics
 export { trackEvent, type ServerAnalyticsEventMap } from './analytics';

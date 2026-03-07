@@ -1,6 +1,11 @@
 import { db, feeds, getTxId } from '@repo/db';
 import * as feedsDomain from '@repo/domain';
-import { CreateFeedSchema, FollowFeedsWithTagsSchema, UpdateFeedSchema } from '@repo/domain';
+import {
+  CreateFeedSchema,
+  FollowFeedsWithTagsSchema,
+  UpdateFeedSchema,
+  withTransaction,
+} from '@repo/domain';
 import { createServerFn } from '@tanstack/solid-start';
 import { eq } from 'drizzle-orm';
 import { z } from 'zod';
@@ -17,7 +22,9 @@ export const $$importOpml = createServerFn({ method: 'POST' })
   .middleware([authMiddleware])
   .inputValidator(z.object({ opmlContent: z.string() }))
   .handler(({ context, data }) => {
-    return feedsDomain.importOpmlFeeds(data.opmlContent, context.user.id);
+    return withTransaction(db, context.user.id, (ctx) =>
+      feedsDomain.importOpmlFeeds(ctx, data.opmlContent),
+    );
   });
 
 export const $$exportOpml = createServerFn()
@@ -40,9 +47,9 @@ export const $$createFeeds = createServerFn({ method: 'POST' })
   .middleware([authMiddleware])
   .inputValidator(z.array(CreateFeedSchema))
   .handler(async ({ context, data }) => {
-    return await db.transaction(async (tx) => {
-      await feedsDomain.createFeeds(data, context.user.id, tx);
-      return { txid: await getTxId(tx) };
+    return await withTransaction(db, context.user.id, async (ctx) => {
+      await feedsDomain.createFeeds(ctx, data);
+      return { txid: await getTxId(ctx.conn) };
     });
   });
 
@@ -50,9 +57,9 @@ export const $$updateFeeds = createServerFn({ method: 'POST' })
   .middleware([authMiddleware])
   .inputValidator(z.array(UpdateFeedSchema))
   .handler(async ({ context, data }) => {
-    return await db.transaction(async (tx) => {
-      await feedsDomain.updateFeeds(data, context.user.id, tx);
-      return { txid: await getTxId(tx) };
+    return await withTransaction(db, context.user.id, async (ctx) => {
+      await feedsDomain.updateFeeds(ctx, data);
+      return { txid: await getTxId(ctx.conn) };
     });
   });
 
@@ -60,9 +67,9 @@ export const $$deleteFeeds = createServerFn({ method: 'POST' })
   .middleware([authMiddleware])
   .inputValidator(z.array(z.uuidv7()))
   .handler(async ({ context, data: ids }) => {
-    return await db.transaction(async (tx) => {
-      await feedsDomain.deleteFeeds(ids, context.user.id, tx);
-      return { txid: await getTxId(tx) };
+    return await withTransaction(db, context.user.id, async (ctx) => {
+      await feedsDomain.deleteFeeds(ctx, ids);
+      return { txid: await getTxId(ctx.conn) };
     });
   });
 
@@ -84,8 +91,8 @@ export const $$followFeedsWithTags = createServerFn({ method: 'POST' })
   .middleware([authMiddleware])
   .inputValidator(FollowFeedsWithTagsSchema)
   .handler(async ({ context, data }) => {
-    return await db.transaction(async (tx) => {
-      await feedsDomain.followFeedsWithTags(data, context.user.id, tx);
-      return { txid: await getTxId(tx) };
+    return await withTransaction(db, context.user.id, async (ctx) => {
+      await feedsDomain.followFeedsWithTags(ctx, data);
+      return { txid: await getTxId(ctx.conn) };
     });
   });

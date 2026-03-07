@@ -2,6 +2,7 @@ import { articles, articleTags, db, feeds, feedSyncLogs, feedTags, filterRules }
 import { sanitizeHtml } from '@repo/readability/sanitize';
 import { and, asc, desc, eq, inArray, isNull, lt, ne, or } from 'drizzle-orm';
 import { autoArchiveArticles } from './archive';
+import { createDomainContext, type DomainContext } from './domain-context';
 import { shouldMarkAsRead } from './entities/filter-rule';
 import { getAutoArchiveCutoffDate } from './entities/settings';
 import { captureException } from './error-tracking';
@@ -62,16 +63,16 @@ function getNormalizedItems(feedResult: ParseFeedResult): NormalizedFeedItem[] {
  * Filter rules can mark articles as read regardless of age.
  */
 export async function syncFeedArticles(
+  ctx: DomainContext,
   feedResult: ParseFeedResult,
   feedId: string,
-  userId: string,
   autoArchiveCutoffDate?: Date,
 ): Promise<{
   created: number;
   updated: number;
 }> {
   // optional, so when doing many this avoids repeated fetches
-  autoArchiveCutoffDate ??= await getAutoArchiveCutoffDate(userId);
+  autoArchiveCutoffDate ??= await getAutoArchiveCutoffDate(ctx.userId);
 
   const counts = {
     created: 0,
@@ -93,9 +94,9 @@ export async function syncFeedArticles(
 
   const existingGuids = new Set<string>();
   if (guidsToCheck.length > 0) {
-    const existingArticles = await db.query.articles.findMany({
+    const existingArticles = await ctx.conn.query.articles.findMany({
       columns: { guid: true },
-      where: and(eq(articles.userId, userId), inArray(articles.guid, guidsToCheck)),
+      where: and(eq(articles.userId, ctx.userId), inArray(articles.guid, guidsToCheck)),
     });
     for (const a of existingArticles) {
       if (a.guid) existingGuids.add(a.guid);
@@ -112,17 +113,17 @@ export async function syncFeedArticles(
   }
 
   // Batch filter rules: load once for the entire feed instead of per-article
-  const activeRules = await db.query.filterRules.findMany({
+  const activeRules = await ctx.conn.query.filterRules.findMany({
     where: and(
-      eq(filterRules.userId, userId),
+      eq(filterRules.userId, ctx.userId),
       eq(filterRules.feedId, feedId),
       eq(filterRules.isActive, true),
     ),
   });
 
   // Batch feed tags: load once instead of per-article
-  const feedTagsList = await db.query.feedTags.findMany({
-    where: and(eq(feedTags.userId, userId), eq(feedTags.feedId, feedId)),
+  const feedTagsList = await ctx.conn.query.feedTags.findMany({
+    where: and(eq(feedTags.userId, ctx.userId), eq(feedTags.feedId, feedId)),
     columns: { tagId: true },
   });
 
@@ -133,10 +134,10 @@ export async function syncFeedArticles(
       // Evaluate filter rules using pre-loaded rules (pure function, no DB queries)
       const shouldMarkAsReadByRules = shouldMarkAsRead(activeRules, item.title);
 
-      const [newArticle] = await db
+      const [newArticle] = await ctx.conn
         .insert(articles)
         .values({
-          userId,
+          userId: ctx.userId,
           feedId: feedId,
           guid: item.guid,
           title: item.title,
@@ -154,9 +155,9 @@ export async function syncFeedArticles(
 
       // Auto-assign feed tags to the new article using pre-loaded tags
       if (newArticle && feedTagsList.length > 0) {
-        await db.insert(articleTags).values(
+        await ctx.conn.insert(articleTags).values(
           feedTagsList.map((ft) => ({
-            userId,
+            userId: ctx.userId,
             articleId: newArticle.id,
             tagId: ft.tagId,
           })),
@@ -201,16 +202,17 @@ export interface SyncSingleFeedResult {
  * No log writes happen inside this function — all logging is centralised in the
  * worker event handlers to guarantee exactly one log row per attempt.
  */
-export async function syncSingleFeed(feedId: string): Promise<SyncSingleFeedResult> {
-  const feed = await db.query.feeds.findFirst({
+export async function syncSingleFeed(
+  ctx: DomainContext,
+  feedId: string,
+): Promise<SyncSingleFeedResult> {
+  const feed = await ctx.conn.query.feeds.findFirst({
     where: eq(feeds.id, feedId),
   });
 
   if (!feed) {
     throw new Error(`Feed ${feedId} not found`);
   }
-
-  const userId = feed.userId;
 
   const fetchResult = await fetchRss(feed.feedUrl, {
     etag: feed.etagHeader,
@@ -219,20 +221,15 @@ export async function syncSingleFeed(feedId: string): Promise<SyncSingleFeedResu
 
   // 304 Not Modified — feed hasn't changed, just bump lastSyncAt
   if (fetchResult.notModified) {
-    await db.update(feeds).set({ lastSyncAt: new Date() }).where(eq(feeds.id, feed.id));
+    await ctx.conn.update(feeds).set({ lastSyncAt: new Date() }).where(eq(feeds.id, feed.id));
     return { httpStatus: 304, articlesAdded: 0 };
   }
 
-  const autoArchiveCutoffDate = await getAutoArchiveCutoffDate(userId);
-  const { created } = await syncFeedArticles(
-    fetchResult.feed,
-    feed.id,
-    userId,
-    autoArchiveCutoffDate,
-  );
+  const autoArchiveCutoffDate = await getAutoArchiveCutoffDate(ctx.userId);
+  const { created } = await syncFeedArticles(ctx, fetchResult.feed, feed.id, autoArchiveCutoffDate);
 
   // Success: reset sync health, update lastSyncAt, and store cache headers
-  await db
+  await ctx.conn
     .update(feeds)
     .set({
       lastSyncAt: new Date(),
@@ -254,29 +251,23 @@ export async function syncSingleFeed(feedId: string): Promise<SyncSingleFeedResu
  * Sets syncStatus to 'failing' and writes a feed_sync_logs row.
  */
 export async function markFeedAsFailing(
+  ctx: DomainContext,
   feedId: string,
   error: Error,
   attemptNumber: number,
   durationMs: number | null,
 ): Promise<void> {
-  const feed = await db.query.feeds.findFirst({
-    where: eq(feeds.id, feedId),
-    columns: { id: true, userId: true },
-  });
-
-  if (!feed) return;
-
   const httpStatus = error instanceof HttpFetchError ? error.status : null;
 
-  await db.transaction(async (tx) => {
+  await ctx.conn.transaction(async (tx) => {
     await tx
       .update(feeds)
       .set({ syncStatus: 'failing', syncError: error.message.slice(0, 1000) })
       .where(eq(feeds.id, feedId));
 
     await tx.insert(feedSyncLogs).values({
-      userId: feed.userId,
-      feedId: feed.id,
+      userId: ctx.userId,
+      feedId,
       status: 'failed',
       durationMs,
       httpStatus,
@@ -293,21 +284,15 @@ export async function markFeedAsFailing(
  * The user can reset a broken feed via forceEnqueueFeedSync which clears syncStatus.
  */
 export async function recordFeedSyncFailure(
+  ctx: DomainContext,
   feedId: string,
   error: Error,
   attemptNumber: number,
   durationMs: number | null,
 ): Promise<void> {
-  const feed = await db.query.feeds.findFirst({
-    where: eq(feeds.id, feedId),
-    columns: { id: true, userId: true, title: true, feedUrl: true },
-  });
-
-  if (!feed) return;
-
   const httpStatus = error instanceof HttpFetchError ? error.status : null;
 
-  await db.transaction(async (tx) => {
+  await ctx.conn.transaction(async (tx) => {
     await tx
       .update(feeds)
       .set({
@@ -315,11 +300,11 @@ export async function recordFeedSyncFailure(
         syncStatus: 'broken',
         syncError: error.message.slice(0, 1000),
       })
-      .where(eq(feeds.id, feed.id));
+      .where(eq(feeds.id, feedId));
 
     await tx.insert(feedSyncLogs).values({
-      userId: feed.userId,
-      feedId: feed.id,
+      userId: ctx.userId,
+      feedId,
       status: 'failed',
       durationMs,
       httpStatus,
@@ -328,11 +313,18 @@ export async function recordFeedSyncFailure(
     });
   });
 
+  // Read feed for logging context (title/url) — outside the transaction,
+  // acceptable if feed is already gone (feed? is optional).
+  const feed = await ctx.conn.query.feeds.findFirst({
+    where: eq(feeds.id, feedId),
+    columns: { title: true, feedUrl: true },
+  });
+
   console.error(error, {
     operation: 'sync_feed_exhausted',
-    feedId: feed.id,
-    feedTitle: feed.title,
-    feedUrl: feed.feedUrl,
+    feedId,
+    feedTitle: feed?.title,
+    feedUrl: feed?.feedUrl,
   });
 }
 
@@ -341,20 +333,14 @@ export async function recordFeedSyncFailure(
  * durationMs is derived by the worker from job.processedOn / job.finishedOn.
  */
 export async function writeFeedSyncLog(
+  ctx: DomainContext,
   feedId: string,
   result: SyncSingleFeedResult,
   durationMs: number | null,
 ): Promise<void> {
-  const feed = await db.query.feeds.findFirst({
-    where: eq(feeds.id, feedId),
-    columns: { id: true, userId: true },
-  });
-
-  if (!feed) return;
-
-  await db.insert(feedSyncLogs).values({
-    userId: feed.userId,
-    feedId: feed.id,
+  await ctx.conn.insert(feedSyncLogs).values({
+    userId: ctx.userId,
+    feedId,
     status: 'ok',
     durationMs,
     httpStatus: result.httpStatus,
@@ -372,7 +358,7 @@ export async function enqueueStaleFeeds(): Promise<void> {
   const outdatedDate = new Date(Date.now() - OUTDATED_MIN * 60 * 1000);
 
   const feedsToSync = await db
-    .select({ id: feeds.id })
+    .select({ id: feeds.id, userId: feeds.userId })
     .from(feeds)
     .where(
       and(
@@ -389,7 +375,7 @@ export async function enqueueStaleFeeds(): Promise<void> {
   console.log(`[SYNC] Enqueueing ${feedsToSync.length} feeds for sync`);
 
   for (const feed of feedsToSync) {
-    await enqueueFeedSync(feed.id);
+    await enqueueFeedSync(feed.userId, feed.id);
   }
 
   console.log(`[SYNC] Successfully enqueued ${feedsToSync.length} feed sync jobs`);
@@ -416,6 +402,7 @@ export async function autoArchiveForAllUsers(): Promise<void> {
   const users = await db.query.user.findMany({ columns: { id: true } });
 
   for (const u of users) {
-    await autoArchiveArticles(u.id);
+    const ctx = createDomainContext(db, u.id);
+    await autoArchiveArticles(ctx);
   }
 }

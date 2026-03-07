@@ -56,7 +56,7 @@ Each entity in `src/entities/` is split into two files:
 - Client code → `@repo/domain/client` (schemas/types only)
 - Server code → `@repo/domain` (full CRUD)
 
-**Server function pattern:** `createServerFn({ method: 'POST' }).middleware([authMiddleware]).handler(...)` with `inputValidator` (Zod).
+**Server function pattern:** `createServerFn({ method: 'POST' }).middleware([authMiddleware]).handler(...)` with `inputValidator` (Zod). Mutation handlers wrap domain calls in `withTransaction(db, context.user.id, (ctx) => { ... })` and return `{ txid }` for optimistic sync. Domain functions receive `ctx` as first parameter — see [docs/domain-context.md](../../docs/domain-context.md).
 
 **API routes vs server functions:**
 

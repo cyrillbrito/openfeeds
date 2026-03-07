@@ -1,5 +1,6 @@
 import { db, settings as settingsTable, type Db, type Transaction } from '@repo/db';
 import { eq } from 'drizzle-orm';
+import type { TransactionContext } from '../domain-context';
 import { assert } from '../errors';
 import { getEffectiveAutoArchiveDays, type Settings } from './settings.schema';
 
@@ -45,11 +46,10 @@ export async function getSettings(userId: string, conn: Db | Transaction): Promi
  * Pass null for autoArchiveDays to reset to app default.
  */
 export async function updateSettings(
-  userId: string,
+  ctx: TransactionContext,
   updates: Partial<Omit<Settings, 'userId'>>,
-  conn: Db | Transaction,
 ): Promise<Settings> {
-  const currentSettings = await getSettings(userId, conn);
+  const currentSettings = await getSettings(ctx.userId, ctx.conn);
 
   // Merge updates - undefined means "don't change"
   const theme = updates.theme !== undefined ? updates.theme : currentSettings.theme;
@@ -58,10 +58,10 @@ export async function updateSettings(
       ? updates.autoArchiveDays
       : currentSettings.autoArchiveDays;
 
-  const [row] = await conn
+  const [row] = await ctx.conn
     .insert(settingsTable)
     .values({
-      userId,
+      userId: ctx.userId,
       theme,
       autoArchiveDays,
     })

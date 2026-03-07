@@ -1,6 +1,8 @@
+import { db } from '@repo/db';
 import {
   autoArchiveForAllUsers,
   captureException,
+  createDomainContext,
   enqueueStaleFeeds,
   markFeedAsFailing,
   QUEUE_NAMES,
@@ -36,10 +38,11 @@ export function createSingleFeedSyncWorker() {
       console.log(
         `Starting single feed sync job ${job.id} for feed ${job.data.feedId} (attempt ${job.attemptsMade + 1})`,
       );
-      const { feedId } = job.data;
+      const { feedId, userId } = job.data;
+      const ctx = createDomainContext(db, userId);
       // Throws FeedSyncError on failure — BullMQ retries with exponential backoff.
       // The `completed` and `failed` events below are responsible for writing feed_sync_logs.
-      return await syncSingleFeed(feedId);
+      return await syncSingleFeed(ctx, feedId);
     },
     {
       connection: redisConnection,
@@ -58,7 +61,8 @@ export function createSingleFeedSyncWorker() {
     const durationMs =
       job.processedOn != null ? (job.finishedOn ?? Date.now()) - job.processedOn : null;
     try {
-      await writeFeedSyncLog(feedId, result, durationMs);
+      const ctx = createDomainContext(db, job.data.userId);
+      await writeFeedSyncLog(ctx, feedId, result, durationMs);
     } catch (logErr) {
       const err = logErr instanceof Error ? logErr : new Error(String(logErr));
       console.error('Failed to write sync log on completion', { error: err, feedId });
@@ -81,10 +85,12 @@ export function createSingleFeedSyncWorker() {
     const durationMs =
       job.processedOn != null ? (job.finishedOn ?? Date.now()) - job.processedOn : null;
     try {
+      const { userId } = job.data;
+      const ctx = createDomainContext(db, userId);
       if (attemptsExhausted) {
-        await recordFeedSyncFailure(feedId, err, attemptNumber, durationMs);
+        await recordFeedSyncFailure(ctx, feedId, err, attemptNumber, durationMs);
       } else {
-        await markFeedAsFailing(feedId, err, attemptNumber, durationMs);
+        await markFeedAsFailing(ctx, feedId, err, attemptNumber, durationMs);
       }
     } catch (updateErr) {
       const err = updateErr instanceof Error ? updateErr : new Error(String(updateErr));
@@ -108,7 +114,8 @@ export function createFeedDetailsWorker() {
         `Starting feed details job ${job.id} for user ${job.data.userId}, feed ${job.data.feedId}`,
       );
       const { userId, feedId } = job.data;
-      await updateFeedMetadata(userId, feedId);
+      const ctx = createDomainContext(db, userId);
+      await updateFeedMetadata(ctx, feedId);
     },
     {
       connection: redisConnection,

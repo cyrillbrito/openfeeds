@@ -1,5 +1,6 @@
-import { db, feeds } from '@repo/db';
+import { feeds } from '@repo/db';
 import { and, eq } from 'drizzle-orm';
+import type { DomainContext } from './domain-context';
 import type { Feed } from './entities/feed';
 import { assert } from './errors';
 import { fetchRss, type ParseFeedResult } from './rss-fetch';
@@ -180,16 +181,20 @@ export async function fetchFeedMetadata(feed: ParseFeedResult): Promise<Partial<
   };
 }
 
-export async function updateFeedMetadata(userId: string, feedId: string) {
-  const feed = await db.query.feeds.findFirst({
+/**
+ * Fetches and updates feed metadata (icon, title, description, url) from the feed's website.
+ */
+export async function updateFeedMetadata(ctx: DomainContext, feedId: string) {
+  const feed = await ctx.conn.query.feeds.findFirst({
     columns: { feedUrl: true },
-    where: and(eq(feeds.id, feedId), eq(feeds.userId, userId)),
+    where: and(eq(feeds.id, feedId), eq(feeds.userId, ctx.userId)),
   });
 
   assert(feed);
 
   const fetchResult = await fetchRss(feed.feedUrl);
   if (fetchResult.notModified) return;
+
   const partialFeedWithMetadata = await fetchFeedMetadata(fetchResult.feed);
 
   // Only update fields that are safe to update
@@ -206,8 +211,8 @@ export async function updateFeedMetadata(userId: string, feedId: string) {
   if (partialFeedWithMetadata.description !== undefined)
     updateData.description = partialFeedWithMetadata.description;
 
-  await db
+  await ctx.conn
     .update(feeds)
     .set(updateData)
-    .where(and(eq(feeds.id, feedId), eq(feeds.userId, userId)));
+    .where(and(eq(feeds.id, feedId), eq(feeds.userId, ctx.userId)));
 }

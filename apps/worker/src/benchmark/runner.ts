@@ -1,4 +1,4 @@
-import { enqueueFeedSync, QUEUE_NAMES, redisConnection } from '@repo/domain';
+import { getSingleFeedSyncQueue, QUEUE_NAMES, redisConnection } from '@repo/domain';
 import { QueueEvents } from 'bullmq';
 import type { BenchmarkContext } from './harness';
 import { formatMs, formatRate, mean, percentile, stddev } from './stats';
@@ -143,7 +143,11 @@ export async function runBenchmark(ctx: BenchmarkContext): Promise<BenchmarkResu
   const startTime = Date.now();
 
   for (const feedId of ctx.feedIds) {
-    const job = await enqueueFeedSync(feedId);
+    const job = await getSingleFeedSyncQueue().add(
+      feedId,
+      { feedId, userId: 'benchmark-user' },
+      { jobId: `feed-sync-${feedId}`, removeOnComplete: 100, removeOnFail: 500 },
+    );
     if (job.id) {
       jobTimings.set(job.id, { enqueuedAt: Date.now() });
     }

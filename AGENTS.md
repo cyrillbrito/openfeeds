@@ -45,7 +45,7 @@ Each app/package has its own `AGENTS.md` with specific patterns and guidelines.
 ## Architecture
 
 - **Local-first:** Client-side TanStack Solid DB collections with Electric SQL sync. Entities in `apps/web/src/entities/`
-- **Server functions:** TanStack Start `createServerFn` with auth middleware, calls `@repo/domain`
+- **Server functions:** TanStack Start `createServerFn` with auth middleware, calls `@repo/domain` with explicit context. See [docs/domain-context.md](docs/domain-context.md)
 - **Background jobs:** BullMQ queues (owned by `@repo/domain`), processed by `apps/worker/`
 - **Error handling:** Domain errors are transport-agnostic. See [docs/error-handling.md](docs/error-handling.md)
 - **OAuth/MCP:** OAuth 2.1 Authorization Server for MCP clients via Better Auth. See [docs/oauth-mcp.md](docs/oauth-mcp.md)

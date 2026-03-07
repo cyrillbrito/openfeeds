@@ -47,6 +47,18 @@ Domain errors are transport-agnostic. See [docs/error-handling.md](../../docs/er
 - Never add HTTP concepts (status codes) to domain errors
 - Error classes: `NotFoundError`, `ConflictError`, `UnauthorizedError`, etc.
 
+## Domain Context
+
+All mutation functions take an explicit context object (`ctx`) as their first parameter. See [docs/domain-context.md](../../docs/domain-context.md).
+
+- **`TransactionContext`** — CRUD mutations that write + may enqueue jobs. Use `ctx.afterCommit(() => enqueue...)` to defer side effects until after commit.
+- **`DomainContext`** — functions that read/write but don't need deferred side effects (e.g., `syncSingleFeed`).
+- **No context** — pure functions, standalone reads, or queue enqueue functions. Take explicit params directly.
+
+Callers (`apps/web` server functions, `apps/worker`) own the transaction boundary via `withTransaction()` or `createDomainContext()`. Domain functions never create their own top-level transactions.
+
+For per-item error isolation inside a transaction (e.g., OPML import loop), use `ctx.conn.transaction()` (Drizzle savepoints).
+
 ## Guidelines
 
 - Pure business logic only (no HTTP, no Workers)

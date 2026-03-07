@@ -24,6 +24,8 @@ bun benchmark    # Performance benchmark
 
 **Does NOT:** Enqueue jobs (that's `@repo/domain`), contain business logic, or run HTTP.
 
+Workers use `createDomainContext(db, userId)` for non-transactional domain calls and `withTransaction(db, userId, fn)` for transactional ones. See [docs/domain-context.md](../../docs/domain-context.md).
+
 ## Workers
 
 - **Feed Sync Orchestrator** — `enqueueStaleFeeds()`, every minute

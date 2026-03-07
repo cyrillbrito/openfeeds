@@ -1,8 +1,9 @@
-import { articles, db, type Db, type Transaction } from '@repo/db';
+import { articles, db } from '@repo/db';
 import { fetchArticleContent } from '@repo/readability/server';
 import { createId } from '@repo/shared/utils';
 import { and, eq } from 'drizzle-orm';
 import { trackEvent } from '../analytics';
+import type { TransactionContext } from '../domain-context';
 import { LimitExceededError, NotFoundError } from '../errors';
 import {
   countDailyExtractions,
@@ -141,35 +142,31 @@ export async function extractArticleContent(id: string, userId: string): Promise
 }
 
 export async function updateArticles(
+  ctx: TransactionContext,
   data: UpdateArticle[],
-  userId: string,
-  conn: Db | Transaction,
 ): Promise<void> {
   if (data.length === 0) return;
 
-  await conn.transaction(async (tx) => {
-    for (const { id, ...updates } of data) {
-      if (Object.keys(updates).length === 0) continue;
+  for (const { id, ...updates } of data) {
+    if (Object.keys(updates).length === 0) continue;
 
-      await tx
-        .update(articles)
-        .set(updates)
-        .where(and(eq(articles.id, id), eq(articles.userId, userId)));
-    }
-  });
+    await ctx.conn
+      .update(articles)
+      .set(updates)
+      .where(and(eq(articles.id, id), eq(articles.userId, ctx.userId)));
+  }
 }
 
 export async function createArticles(
+  ctx: TransactionContext,
   data: CreateArticleFromUrl[],
-  userId: string,
-  conn: Db | Transaction,
 ): Promise<void> {
   if (data.length === 0) return;
 
   // Check free-tier saved article limit (only user-created articles, not feed-synced)
-  const currentCount = await countUserSavedArticles(userId, conn);
+  const currentCount = await countUserSavedArticles(ctx.userId, ctx.conn);
   if (currentCount + data.length > FREE_TIER_LIMITS.savedArticles) {
-    trackEvent(userId, 'limits:saved_articles_limit_hit', {
+    trackEvent(ctx.userId, 'limits:saved_articles_limit_hit', {
       current_usage: currentCount,
       limit: FREE_TIER_LIMITS.savedArticles,
     });
@@ -192,7 +189,7 @@ export async function createArticles(
 
   const values = extracted.map((item) => ({
     id: item.id ?? createId(),
-    userId,
+    userId: ctx.userId,
     feedId: null,
     title: item.title || item.url,
     description: item.excerpt ?? null,
@@ -205,10 +202,10 @@ export async function createArticles(
     contentExtractedAt: item.content !== null ? now : null,
   }));
 
-  await conn.insert(articles).values(values);
+  await ctx.conn.insert(articles).values(values);
 
   for (const item of data) {
-    trackEvent(userId, 'articles:article_create', {
+    trackEvent(ctx.userId, 'articles:article_create', {
       article_url: item.url,
     });
   }
