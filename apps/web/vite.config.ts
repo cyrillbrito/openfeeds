@@ -16,7 +16,11 @@ export default defineConfig({
     devtools(),
     nitro({
       rollupConfig: {
-        external: ['uuid', 'msgpackr'],
+        // These packages must be externalized because Rollup's CJS-to-ESM conversion
+        // generates default imports (e.g. `import x from "uuid"`) but these packages
+        // only have named exports. This causes "Missing 'default' export" errors at runtime.
+        // svix internally requires uuid, and uuid@11+ is pure ESM with no default export.
+        external: ['uuid', 'msgpackr', 'svix'],
       },
     }),
     viteTsConfigPaths({ projects: ['./tsconfig.json'] }),

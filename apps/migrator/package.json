@@ -9,7 +9,7 @@
     "@repo/db": "workspace:*"
   },
   "devDependencies": {
-    "@types/bun": "^1.3.9",
+    "@types/bun": "^1.3.10",
     "typescript": "^5"
   }
 }

@@ -17,15 +17,15 @@
     "@repo/emails": "workspace:*",
     "@repo/readability": "workspace:*",
     "@repo/shared": "workspace:*",
-    "bullmq": "^5.70.1",
+    "bullmq": "^5.70.4",
     "drizzle-orm": "^0.45.1",
     "feedsmith": "^2.9.0",
-    "posthog-node": "^5.26.0",
+    "posthog-node": "^5.28.0",
     "resend": "^6.9.3",
     "zod": "^4.3.6"
   },
   "devDependencies": {
-    "@types/bun": "^1.3.9",
+    "@types/bun": "^1.3.10",
     "typescript": "^5"
   }
 }
