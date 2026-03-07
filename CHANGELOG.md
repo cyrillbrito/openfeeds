@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.8.3](https://github.com/cyrillbrito/openfeeds/compare/v0.8.2...v0.8.3) (2026-03-07)
+
+
+### Bug Fixes
+
+* **ci:** drop --frozen-lockfile after turbo prune ([#148](https://github.com/cyrillbrito/openfeeds/issues/148)) ([2e3a916](https://github.com/cyrillbrito/openfeeds/commit/2e3a916cb8d3314b131661c8cf92ec7aaba953e4))
+
 ## [0.8.2](https://github.com/cyrillbrito/openfeeds/compare/v0.8.1...v0.8.2) (2026-03-07)
 
 
