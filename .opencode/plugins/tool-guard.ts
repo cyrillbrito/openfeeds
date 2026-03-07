@@ -1,6 +1,7 @@
 import type { Plugin } from '@opencode-ai/plugin';
 
-const GIT_COMMANDS = /^\s*git\s+/;
+const GIT_WRITE_COMMANDS =
+  /^\s*git\s+(add|commit|push|checkout|merge|rebase|stash|cherry-pick|reset|branch)\b/;
 const NPM_COMMANDS = /^\s*npm\s+/;
 const PNPM_COMMANDS = /^\s*pnpm\s+/;
 const NPX_COMMANDS = /^\s*npx\s+/;
@@ -12,10 +13,8 @@ export const ToolGuard: Plugin = async () => {
 
       const cmd = output.args.command;
 
-      if (GIT_COMMANDS.test(cmd)) {
-        const rewritten = cmd.replace(GIT_COMMANDS, 'but ');
-        output.args.command = `echo "[tool-guard] Rewritten: git → but" && ${rewritten}`;
-        output.args.description = `[GitButler CLI] ${output.args.description ?? rewritten}`;
+      if (GIT_WRITE_COMMANDS.test(cmd)) {
+        output.args.command = `${cmd} && echo "" && echo "[tool-guard] Reminder: prefer \`but\` (GitButler CLI) for commits, branches, and pushes. Load the 'but' skill for usage."`;
       }
 
       if (NPM_COMMANDS.test(cmd)) {
