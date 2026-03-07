@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.8.2](https://github.com/cyrillbrito/openfeeds/compare/v0.8.1...v0.8.2) (2026-03-07)
+
+
+### Bug Fixes
+
+* remove svix from Rollup externals ([#145](https://github.com/cyrillbrito/openfeeds/issues/145)) ([2fd5253](https://github.com/cyrillbrito/openfeeds/commit/2fd5253ce0958d7a18d085954fd3b46a041efc76))
+
 ## [0.8.1](https://github.com/cyrillbrito/openfeeds/compare/v0.8.0...v0.8.1) (2026-03-07)
 
 
