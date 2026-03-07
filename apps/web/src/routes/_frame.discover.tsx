@@ -34,9 +34,9 @@ import { useTags } from '~/entities/tags';
 export const Route = createFileRoute('/_frame/discover')({
   component: DiscoverPage,
   validateSearch: (search): { url?: string } => {
-    return {
-      url: (search?.url as string) || undefined,
-    };
+    const raw = (search?.url as string) || undefined;
+    const url = raw && !/^https?:\/\//i.test(raw) ? `https://${raw}` : raw;
+    return { url };
   },
 });
 
@@ -99,7 +99,9 @@ function DiscoverPage() {
     e.preventDefault();
     const trimmed = inputUrl().trim();
     if (!trimmed) return;
-    navigate({ search: { url: trimmed } });
+    const normalized = /^https?:\/\//i.test(trimmed) ? trimmed : `https://${trimmed}`;
+    setInputUrl(normalized);
+    navigate({ search: { url: normalized } });
   };
 
   const handleExampleClick = (exampleUrl: string) => {
