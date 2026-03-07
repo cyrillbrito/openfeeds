@@ -34,8 +34,10 @@ jobs:
       - name: Prune monorepo
         run: bunx turbo@^2 prune @repo/web
 
+      # --frozen-lockfile removed: turbo prune outputs a modified lockfile
+      # that bun started rejecting after a turbo/bun update
       - name: Install dependencies
-        run: bun install --frozen-lockfile
+        run: bun install
         working-directory: out
 
       - name: Build
@@ -101,8 +103,10 @@ jobs:
       - name: Prune monorepo
         run: bunx turbo@^2 prune @repo/worker
 
+      # --frozen-lockfile removed: turbo prune outputs a modified lockfile
+      # that bun started rejecting after a turbo/bun update
       - name: Install dependencies
-        run: bun install --frozen-lockfile
+        run: bun install
         working-directory: out
 
       - name: Build dependencies
@@ -152,8 +156,10 @@ jobs:
       - name: Prune monorepo
         run: bunx turbo@^2 prune @repo/migrator
 
+      # --frozen-lockfile removed: turbo prune outputs a modified lockfile
+      # that bun started rejecting after a turbo/bun update
       - name: Install dependencies
-        run: bun install --frozen-lockfile
+        run: bun install
         working-directory: out
 
       - name: Log in to GitHub Container Registry
