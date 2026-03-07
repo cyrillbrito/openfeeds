@@ -1,5 +1,10 @@
 import { z } from 'zod';
 
+/** Feed URL schema — restricts to http/https since fetch() only supports these protocols */
+export const feedUrlSchema = z
+  .url()
+  .refine((u) => /^https?:\/\//i.test(u), { message: 'Only http and https URLs are supported' });
+
 export const SyncStatusSchema = z.enum(['ok', 'failing', 'broken']);
 export type SyncStatus = z.infer<typeof SyncStatusSchema>;
 
@@ -24,7 +29,7 @@ export const CreateFeedSchema = z.object({
   /** Website URL — if omitted, defaults to feedUrl until the feed-detail worker enriches it */
   url: z.url().nullable().optional(),
   /** RSS/Atom feed URL (required) */
-  feedUrl: z.url(),
+  feedUrl: feedUrlSchema,
   title: z.string().nullable().optional(),
   description: z.string().nullable().optional(),
   icon: z.url().nullable().optional(),
