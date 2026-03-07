@@ -40,8 +40,15 @@ export async function withTransaction<T>(
     return fn(ctx);
   });
 
-  // Transaction committed — flush deferred effects
-  await Promise.all(pendingEffects.map((effect) => effect()));
+  // Transaction committed — flush deferred effects (failures are logged, not thrown,
+  // since the DB transaction already committed and callers shouldn't see phantom errors).
+  await Promise.all(
+    pendingEffects.map((effect) =>
+      effect().catch((err) => {
+        console.error('afterCommit effect failed', err);
+      }),
+    ),
+  );
 
   return result;
 }

@@ -113,6 +113,17 @@ export async function importOpmlFeeds(
       // Each feed runs in a savepoint so a DB error on one feed doesn't poison
       // the outer transaction and roll back previously-imported feeds.
       const feedId = await ctx.conn.transaction(async (sp) => {
+        // Check existence first — before tag creation — so a rollback for an
+        // already-existing feed doesn't leave stale IDs in the shared tagLookup.
+        const existingFeed = await sp.query.feeds.findFirst({
+          where: and(eq(feeds.feedUrl, feed.xmlUrl), eq(feeds.userId, ctx.userId)),
+          columns: { id: true },
+        });
+
+        if (existingFeed) {
+          return null;
+        }
+
         // Parse comma-separated categories per OPML 2.0 spec
         const tagIds: string[] = [];
         if (feed.category) {
@@ -134,16 +145,6 @@ export async function importOpmlFeeds(
             }
             tagIds.push(tagId);
           }
-        }
-
-        // Check if feed already exists (by feedUrl for this user) — skip if so
-        const existingFeed = await sp.query.feeds.findFirst({
-          where: and(eq(feeds.feedUrl, feed.xmlUrl), eq(feeds.userId, ctx.userId)),
-          columns: { id: true },
-        });
-
-        if (existingFeed) {
-          return null;
         }
 
         const insertResult = await sp
