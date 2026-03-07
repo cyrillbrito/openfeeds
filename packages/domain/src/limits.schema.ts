@@ -7,7 +7,7 @@
  */
 export const FREE_TIER_LIMITS = {
   /** Maximum number of feed subscriptions per user */
-  feeds: 100,
+  feeds: 200,
 
   /** Maximum number of filter rules per user */
   filterRules: 10,
@@ -16,10 +16,10 @@ export const FREE_TIER_LIMITS = {
   savedArticles: 100,
 
   /** Maximum content extractions per user per day */
-  extractionsPerDay: 20,
+  extractionsPerDay: 30,
 
   /** Maximum content extractions per user per month (rolling 30 days) */
-  extractionsPerMonth: 300,
+  extractionsPerMonth: 450,
 
   /** Maximum TTS audio generations per user per day */
   ttsPerDay: 5,
