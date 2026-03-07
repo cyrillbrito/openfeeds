@@ -4,7 +4,7 @@ import { and, asc, desc, eq, inArray, isNull, lt, ne, or } from 'drizzle-orm';
 import { autoArchiveArticles } from './archive';
 import { shouldMarkAsRead } from './entities/filter-rule';
 import { getAutoArchiveCutoffDate } from './entities/settings';
-import { logger } from './logger';
+import { captureException } from './error-tracking';
 import { enqueueFeedSync } from './queues';
 import { fetchRss, HttpFetchError, type ParseFeedResult } from './rss-fetch';
 
@@ -165,7 +165,13 @@ export async function syncFeedArticles(
 
       counts.created++;
     } catch (error) {
-      logger.error(error instanceof Error ? error : new Error(String(error)), {
+      const err = error instanceof Error ? error : new Error(String(error));
+      console.error(err, {
+        feedId,
+        guid: item.guid,
+        title: item.title?.slice(0, 100),
+      });
+      captureException(err, {
         feedId,
         guid: item.guid,
         title: item.title?.slice(0, 100),
@@ -322,7 +328,7 @@ export async function recordFeedSyncFailure(
     });
   });
 
-  logger.error(error, {
+  console.error(error, {
     operation: 'sync_feed_exhausted',
     feedId: feed.id,
     feedTitle: feed.title,

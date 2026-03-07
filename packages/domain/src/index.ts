@@ -23,7 +23,7 @@ export * from './tts';
 
 // Infrastructure
 export { shutdownDomain, redisConnection, QUEUE_NAMES } from './config';
-export { logger, type LogMetadata } from './logger';
+export { captureException, type ExceptionMetadata } from './error-tracking';
 export {
   enqueueFeedDetail,
   enqueueFeedSync,

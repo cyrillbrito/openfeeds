@@ -1,7 +1,7 @@
 import {
   autoArchiveForAllUsers,
+  captureException,
   enqueueStaleFeeds,
-  logger,
   markFeedAsFailing,
   QUEUE_NAMES,
   recordFeedSyncFailure,
@@ -60,7 +60,9 @@ export function createSingleFeedSyncWorker() {
     try {
       await writeFeedSyncLog(feedId, result, durationMs);
     } catch (logErr) {
-      logger.error(logErr instanceof Error ? logErr : new Error(String(logErr)), {
+      const err = logErr instanceof Error ? logErr : new Error(String(logErr));
+      console.error('Failed to write sync log on completion', { error: err, feedId });
+      captureException(err, {
         source: 'worker',
         operation: 'write_sync_log_completed',
         feedId,
@@ -85,7 +87,9 @@ export function createSingleFeedSyncWorker() {
         await markFeedAsFailing(feedId, err, attemptNumber, durationMs);
       }
     } catch (updateErr) {
-      logger.error(updateErr instanceof Error ? updateErr : new Error(String(updateErr)), {
+      const err = updateErr instanceof Error ? updateErr : new Error(String(updateErr));
+      console.error('Failed to record feed sync failure', { error: err, feedId });
+      captureException(err, {
         source: 'worker',
         operation: QUEUE_NAMES.SINGLE_FEED_SYNC,
         feedId,

@@ -2,9 +2,9 @@ import { db, feeds, feedTags, tags } from '@repo/db';
 import { and, eq, inArray } from 'drizzle-orm';
 import { parseOpml } from 'feedsmith';
 import { trackEvent } from './analytics';
+import { captureException } from './error-tracking';
 import { assert, LimitExceededError } from './errors';
 import { countUserFeeds, FREE_TIER_LIMITS } from './limits';
-import { logger } from './logger';
 import { enqueueFeedDetail, enqueueFeedSync } from './queues';
 
 export interface ImportResult {
@@ -126,7 +126,7 @@ export async function importOpmlFeeds(opmlContent: string, userId: string): Prom
               assert(tagId);
               tagLookup[category] = tagId;
             } catch (tagErr) {
-              logger.error(tagErr as Error, {
+              console.error(tagErr, {
                 operation: 'import_tag_creation',
                 tagName: category,
               });
@@ -179,7 +179,7 @@ export async function importOpmlFeeds(opmlContent: string, userId: string): Prom
       try {
         await enqueueFeedSync(feedId);
       } catch (enqueueError) {
-        logger.error(enqueueError as Error, {
+        console.error(enqueueError, {
           operation: 'import_feed_enqueue_sync',
           feedTitle: feed.title,
           feedUrl: feed.xmlUrl,
@@ -189,7 +189,7 @@ export async function importOpmlFeeds(opmlContent: string, userId: string): Prom
       try {
         await enqueueFeedDetail(userId, feedId);
       } catch (enqueueError) {
-        logger.error(enqueueError as Error, {
+        console.error(enqueueError, {
           operation: 'import_feed_detail_enqueue',
           feedTitle: feed.title,
           feedUrl: feed.xmlUrl,
@@ -198,7 +198,12 @@ export async function importOpmlFeeds(opmlContent: string, userId: string): Prom
 
       imported++;
     } catch (error) {
-      logger.error(error as Error, {
+      console.error(error, {
+        operation: 'import_feed',
+        feedTitle: feed.title,
+        feedUrl: feed.xmlUrl,
+      });
+      captureException(error as Error, {
         operation: 'import_feed',
         feedTitle: feed.title,
         feedUrl: feed.xmlUrl,
