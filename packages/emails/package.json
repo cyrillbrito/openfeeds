@@ -25,6 +25,6 @@
     "@types/react": "^19.2.14",
     "@types/react-dom": "^19.2.3",
     "react-email": "5.2.9",
-    "tsdown": "^0.20.3"
+    "tsdown": "^0.21.0"
   }
 }
