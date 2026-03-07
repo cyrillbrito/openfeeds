@@ -1,5 +1,26 @@
 # Changelog
 
+## [0.8.0](https://github.com/cyrillbrito/openfeeds/compare/v0.7.0...v0.8.0) (2026-03-07)
+
+
+### Features
+
+* **web:** add drag-and-drop tag reordering ([#133](https://github.com/cyrillbrito/openfeeds/issues/133)) ([7aa48df](https://github.com/cyrillbrito/openfeeds/commit/7aa48df0e26622273cd2b19f7e68c361c9da0165))
+* **web:** add print button for clean article printing ([#134](https://github.com/cyrillbrito/openfeeds/issues/134)) ([6f902f2](https://github.com/cyrillbrito/openfeeds/commit/6f902f2ccdccb66826e3e3362f816b42083b23c3))
+* **web:** only show Shorts button when shorts exist ([#132](https://github.com/cyrillbrito/openfeeds/issues/132)) ([bcb1e5f](https://github.com/cyrillbrito/openfeeds/commit/bcb1e5f5d685ee1b17dcb9a62f8d3f6c4239750e))
+
+
+### Bug Fixes
+
+* **domain:** pass curated feed metadata through to feed creation ([#131](https://github.com/cyrillbrito/openfeeds/issues/131)) ([8164090](https://github.com/cyrillbrito/openfeeds/commit/8164090939aca9048160bc4a6b620130c63a7896))
+* **domain:** update TTS default voice ([#142](https://github.com/cyrillbrito/openfeeds/issues/142)) ([8e396c5](https://github.com/cyrillbrito/openfeeds/commit/8e396c5e23025e809a44a0575cb9742c7091e174))
+* **domain:** validate feed URLs on extension API and OPML import ([#139](https://github.com/cyrillbrito/openfeeds/issues/139)) ([cf3dc3a](https://github.com/cyrillbrito/openfeeds/commit/cf3dc3a2aba8cd7551b18f732ccc6c79f02f2cef))
+* **emails:** improve email deliverability ([#125](https://github.com/cyrillbrito/openfeeds/issues/125)) ([6bf9d12](https://github.com/cyrillbrito/openfeeds/commit/6bf9d12d1f360eeaedc05ad5aedd3949e6b85ffa))
+* **tooling:** stop rewriting git to but, show reminder instead ([#137](https://github.com/cyrillbrito/openfeeds/issues/137)) ([c91ccf8](https://github.com/cyrillbrito/openfeeds/commit/c91ccf808fcc7fa5b85a713bd76c5431f64e6f91))
+* **web:** auto-prepend https:// to discover URLs without protocol ([#140](https://github.com/cyrillbrito/openfeeds/issues/140)) ([7eea47d](https://github.com/cyrillbrito/openfeeds/commit/7eea47d1485aaa03b2505bc6970fb4141ef84c8a))
+* **web:** fix stale Show accessor crash on feed view navigation ([#130](https://github.com/cyrillbrito/openfeeds/issues/130)) ([17ca948](https://github.com/cyrillbrito/openfeeds/commit/17ca948d878d1d0abae22df3d869a1aab40f4a7b))
+* **web:** pass site URL on follow and pin happy-dom for readability ([#136](https://github.com/cyrillbrito/openfeeds/issues/136)) ([fd123dc](https://github.com/cyrillbrito/openfeeds/commit/fd123dc057c002517b7d5d59f2ffd6bbc98c3b37))
+
 ## [0.7.0](https://github.com/cyrillbrito/openfeeds/compare/v0.6.0...v0.7.0) (2026-02-28)
 
 
