@@ -185,28 +185,17 @@ export async function fetchFeedMetadata(feed: ParseFeedResult): Promise<Partial<
  * Fetches and updates feed metadata (icon, title, description, url) from the feed's website.
  */
 export async function updateFeedMetadata(ctx: DomainContext, feedId: string) {
-  console.log(`[feed-detail] Starting metadata update for feed ${feedId}`);
-
   const feed = await ctx.conn.query.feeds.findFirst({
     columns: { feedUrl: true },
     where: and(eq(feeds.id, feedId), eq(feeds.userId, ctx.userId)),
   });
 
-  if (!feed) {
-    console.log(`[feed-detail] Feed ${feedId} not found in DB (race condition?)`);
-  }
   assert(feed);
 
-  console.log(`[feed-detail] Fetching RSS from ${feed.feedUrl}`);
   const fetchResult = await fetchRss(feed.feedUrl);
-  if (fetchResult.notModified) {
-    console.log(`[feed-detail] Feed ${feedId} not modified, skipping`);
-    return;
-  }
+  if (fetchResult.notModified) return;
 
-  console.log(`[feed-detail] Feed format: ${fetchResult.feed.format}`);
   const partialFeedWithMetadata = await fetchFeedMetadata(fetchResult.feed);
-  console.log(`[feed-detail] Metadata result:`, JSON.stringify(partialFeedWithMetadata, null, 2));
 
   // Only update fields that are safe to update
   const updateData: {
@@ -222,12 +211,8 @@ export async function updateFeedMetadata(ctx: DomainContext, feedId: string) {
   if (partialFeedWithMetadata.description !== undefined)
     updateData.description = partialFeedWithMetadata.description;
 
-  console.log(`[feed-detail] Updating feed ${feedId} with:`, JSON.stringify(updateData, null, 2));
-
   await ctx.conn
     .update(feeds)
     .set(updateData)
     .where(and(eq(feeds.id, feedId), eq(feeds.userId, ctx.userId)));
-
-  console.log(`[feed-detail] Feed ${feedId} metadata updated successfully`);
 }

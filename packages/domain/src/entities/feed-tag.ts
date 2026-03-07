@@ -57,7 +57,7 @@ export async function deleteFeedTags(ctx: TransactionContext, ids: string[]): Pr
 
   // Propagate: remove these tags from all articles of the affected feeds
   if (deleted.length > 0) {
-    await removeTagsFromFeedArticles(ctx.conn as Transaction, deleted, ctx.userId);
+    await removeTagsFromFeedArticles(ctx.conn, deleted, ctx.userId);
   }
 }
 

@@ -110,74 +110,75 @@ export async function importOpmlFeeds(
 
   for (const feed of feedsToImport) {
     try {
-      // Parse comma-separated categories per OPML 2.0 spec
-      const tagIds: string[] = [];
-      if (feed.category) {
-        const categories = feed.category
-          .split(',')
-          .map((c) => c.trim())
-          .filter(Boolean);
-        for (const category of categories) {
-          let tagId = tagLookup[category];
+      // Each feed runs in a savepoint so a DB error on one feed doesn't poison
+      // the outer transaction and roll back previously-imported feeds.
+      const feedId = await ctx.conn.transaction(async (sp) => {
+        // Parse comma-separated categories per OPML 2.0 spec
+        const tagIds: string[] = [];
+        if (feed.category) {
+          const categories = feed.category
+            .split(',')
+            .map((c) => c.trim())
+            .filter(Boolean);
+          for (const category of categories) {
+            let tagId = tagLookup[category];
 
-          if (!tagId) {
-            try {
-              const tagResult = await ctx.conn
+            if (!tagId) {
+              const tagResult = await sp
                 .insert(tags)
                 .values({ userId: ctx.userId, name: category })
                 .returning();
               tagId = tagResult[0]?.id;
               assert(tagId);
               tagLookup[category] = tagId;
-            } catch (tagErr) {
-              console.error(tagErr, {
-                operation: 'import_tag_creation',
-                tagName: category,
-              });
-              // Continue with other categories, don't fail the whole feed
-              continue;
             }
+            tagIds.push(tagId);
           }
-          tagIds.push(tagId);
         }
-      }
 
-      // Check if feed already exists (by feedUrl for this user) — skip if so
-      const existingFeed = await ctx.conn.query.feeds.findFirst({
-        where: and(eq(feeds.feedUrl, feed.xmlUrl), eq(feeds.userId, ctx.userId)),
-        columns: { id: true },
+        // Check if feed already exists (by feedUrl for this user) — skip if so
+        const existingFeed = await sp.query.feeds.findFirst({
+          where: and(eq(feeds.feedUrl, feed.xmlUrl), eq(feeds.userId, ctx.userId)),
+          columns: { id: true },
+        });
+
+        if (existingFeed) {
+          return null;
+        }
+
+        const insertResult = await sp
+          .insert(feeds)
+          .values({
+            userId: ctx.userId,
+            title: feed.title,
+            url: feed.htmlUrl,
+            feedUrl: feed.xmlUrl,
+          })
+          .returning();
+
+        const id = insertResult[0]?.id;
+        assert(id);
+
+        if (tagIds.length > 0) {
+          await sp.insert(feedTags).values(
+            tagIds.map((tagId) => ({
+              userId: ctx.userId,
+              feedId: id,
+              tagId,
+            })),
+          );
+        }
+
+        return id;
       });
 
-      if (existingFeed) {
+      if (feedId === null) {
         skipped++;
         continue;
       }
 
-      const insertResult = await ctx.conn
-        .insert(feeds)
-        .values({
-          userId: ctx.userId,
-          title: feed.title,
-          url: feed.htmlUrl,
-          feedUrl: feed.xmlUrl,
-        })
-        .returning();
-
-      const id = insertResult[0]?.id;
-      assert(id);
-
-      if (tagIds.length > 0) {
-        await ctx.conn.insert(feedTags).values(
-          tagIds.map((tagId) => ({
-            userId: ctx.userId,
-            feedId: id,
-            tagId,
-          })),
-        );
-      }
-
-      ctx.afterCommit(() => enqueueFeedSync(ctx.userId, id));
-      ctx.afterCommit(() => enqueueFeedDetail(ctx.userId, id));
+      ctx.afterCommit(() => enqueueFeedSync(ctx.userId, feedId));
+      ctx.afterCommit(() => enqueueFeedDetail(ctx.userId, feedId));
 
       imported++;
     } catch (error) {
