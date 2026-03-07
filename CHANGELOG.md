@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.8.1](https://github.com/cyrillbrito/openfeeds/compare/v0.8.0...v0.8.1) (2026-03-07)
+
+
+### Bug Fixes
+
+* update dependencies and externalize svix in vite config ([#143](https://github.com/cyrillbrito/openfeeds/issues/143)) ([26a4154](https://github.com/cyrillbrito/openfeeds/commit/26a4154ce2af1719b574b47157e8602813fa2043))
+
 ## [0.8.0](https://github.com/cyrillbrito/openfeeds/compare/v0.7.0...v0.8.0) (2026-03-07)
 
 
