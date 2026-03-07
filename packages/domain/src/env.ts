@@ -11,7 +11,7 @@ export const env = createEnv({
     RESEND_API_KEY: z.string().optional(),
     DATA_PATH: z.string().optional(),
     UNREAL_SPEECH_API_KEY: z.string().optional(),
-    TTS_DEFAULT_VOICE: z.string().default('Scarlett'),
+    TTS_DEFAULT_VOICE: z.string().default('Sierra'),
   },
   runtimeEnv: process.env,
   emptyStringAsUndefined: true,
