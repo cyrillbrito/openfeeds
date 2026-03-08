@@ -27,9 +27,12 @@ export function isDomainError(error: unknown): error is Error {
   return DOMAIN_ERRORS.some((cls) => error instanceof cls);
 }
 
+export type ErrorSource = 'server-function' | 'worker';
+
 export interface BoundaryErrorOptions {
+  source: ErrorSource;
   userId?: string;
-  context?: string;
+  [key: string]: unknown;
 }
 
 /**
@@ -41,15 +44,16 @@ export interface BoundaryErrorOptions {
  *   2. Reported to PostHog server-side with cause preserved
  *   3. Replaced with a generic `UnexpectedError` so raw SQL / internal details never leak
  */
-export function handleBoundaryError(error: unknown, opts?: BoundaryErrorOptions): Error {
+export function handleBoundaryError(error: unknown, opts: BoundaryErrorOptions): Error {
   if (isDomainError(error)) return error;
 
-  // Infrastructure error — log full details server-side before sanitizing
-  console.error(`[error-boundary] ${opts?.context ?? 'unknown'}`, error);
+  const { source, userId, ...extra } = opts;
 
-  if (error instanceof Error) {
-    captureException(error, { userId: opts?.userId, context: opts?.context });
-  }
+  // Infrastructure error — log full details server-side before sanitizing
+  console.error(`[error-boundary] ${source}`, error);
+
+  const err = error instanceof Error ? error : new Error(String(error));
+  captureException(err, { userId, source, ...extra });
 
   return new UnexpectedError();
 }

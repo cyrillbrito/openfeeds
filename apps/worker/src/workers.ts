@@ -65,8 +65,12 @@ export function createSingleFeedSyncWorker() {
       await writeFeedSyncLog(ctx, feedId, result, durationMs);
     } catch (logErr) {
       handleBoundaryError(logErr, {
+        source: 'worker',
         userId: job.data.userId,
-        context: 'worker:write_sync_log_completed',
+        queue: QUEUE_NAMES.SINGLE_FEED_SYNC,
+        operation: 'write_sync_log_completed',
+        feedId: job.data.feedId,
+        jobId: job.id,
       });
     }
   });
@@ -91,8 +95,11 @@ export function createSingleFeedSyncWorker() {
       }
     } catch (updateErr) {
       handleBoundaryError(updateErr, {
+        source: 'worker',
         userId: job.data.userId,
-        context: `worker:${QUEUE_NAMES.SINGLE_FEED_SYNC}`,
+        queue: QUEUE_NAMES.SINGLE_FEED_SYNC,
+        feedId: job.data.feedId,
+        jobId: job.id,
       });
     }
   });

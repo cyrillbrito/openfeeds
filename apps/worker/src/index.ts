@@ -26,7 +26,11 @@ const autoArchiveWorker = createAutoArchiveWorker();
 
 // Setup error handlers
 feedSyncOrchestratorWorker.on('failed', (job, err) => {
-  handleBoundaryError(err, { context: `worker:${QUEUE_NAMES.FEED_SYNC_ORCHESTRATOR}` });
+  handleBoundaryError(err, {
+    source: 'worker',
+    queue: QUEUE_NAMES.FEED_SYNC_ORCHESTRATOR,
+    jobId: job?.id,
+  });
 });
 
 singleFeedSyncWorker.on('failed', (job, err) => {
@@ -40,11 +44,11 @@ singleFeedSyncWorker.on('failed', (job, err) => {
 });
 
 autoArchiveWorker.on('failed', (job, err) => {
-  handleBoundaryError(err, { context: `worker:${QUEUE_NAMES.AUTO_ARCHIVE}` });
+  handleBoundaryError(err, { source: 'worker', queue: QUEUE_NAMES.AUTO_ARCHIVE, jobId: job?.id });
 });
 
 feedDetailsWorker.on('failed', (job, err) => {
-  handleBoundaryError(err, { context: `worker:${QUEUE_NAMES.FEED_DETAIL}` });
+  handleBoundaryError(err, { source: 'worker', queue: QUEUE_NAMES.FEED_DETAIL, jobId: job?.id });
 });
 
 // Collect all workers for graceful shutdown
@@ -65,7 +69,7 @@ async function shutdown() {
     process.exit(0);
   } catch (error) {
     console.error('Shutdown failed', { error });
-    handleBoundaryError(error, { context: 'worker:shutdown' });
+    handleBoundaryError(error, { source: 'worker', operation: 'shutdown' });
     await shutdownDomain();
     process.exit(1);
   }

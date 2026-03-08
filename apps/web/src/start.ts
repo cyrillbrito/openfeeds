@@ -16,7 +16,7 @@ const errorBoundary = createMiddleware({ type: 'function' }).server(async ({ nex
   try {
     return await next();
   } catch (error) {
-    throw handleBoundaryError(error, { context: 'server-function' });
+    throw handleBoundaryError(error, { source: 'server-function' });
   }
 });
 

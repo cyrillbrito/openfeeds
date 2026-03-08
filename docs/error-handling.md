@@ -81,7 +81,7 @@ import { handleBoundaryError, isDomainError } from '@repo/domain';
 try {
   await domainFunction(ctx, data);
 } catch (error) {
-  throw handleBoundaryError(error, { userId, context: 'some-context' });
+  throw handleBoundaryError(error, { source: 'server-function', userId });
 }
 ```
 
