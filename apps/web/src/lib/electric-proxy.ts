@@ -6,8 +6,8 @@ interface ProxyShapeOptions {
   request: Request;
   /** The database table name to sync */
   table: string;
-  /** SQL WHERE clause to filter rows (e.g., `user_id = '${userId}'`) */
-  where?: string;
+  /** The authenticated user's ID — used to filter rows via `user_id = $1` */
+  userId: string;
 }
 
 /**
@@ -23,7 +23,7 @@ interface ProxyShapeOptions {
 export async function proxyElectricRequest({
   request,
   table,
-  where,
+  userId,
 }: ProxyShapeOptions): Promise<Response> {
   const url = new URL(request.url);
 
@@ -40,10 +40,9 @@ export async function proxyElectricRequest({
   // Set the table server-side - not from client params
   originUrl.searchParams.set('table', table);
 
-  // Set the where clause if provided
-  if (where) {
-    originUrl.searchParams.set('where', where);
-  }
+  // Always filter by user_id — every shape must be scoped to the authenticated user
+  originUrl.searchParams.set('where', 'user_id = $1');
+  originUrl.searchParams.set('params[1]', userId);
 
   // Append Electric Cloud credentials if configured
   if (env.ELECTRIC_SOURCE_ID) {

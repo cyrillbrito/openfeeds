@@ -45,11 +45,17 @@ export function collectionErrorHandler<TArgs extends unknown[], TReturn>(
 /**
  * Returns an Electric shape stream error handler.
  * Shows an error toast and reports to PostHog but does NOT throw — stream errors are informational.
+ * Returns {} to signal the stream should retry (returning void would stop it permanently).
  */
-export function shapeErrorHandler(context: string): (error: unknown) => void {
+export function shapeErrorHandler(context: string): (error: unknown) => Record<string, never> {
+  let hasToasted = false;
   return (error: unknown) => {
     const message = sanitizeErrorMessage(error);
-    toastService.error(message);
+    if (!hasToasted) {
+      toastService.error(message);
+      hasToasted = true;
+    }
     posthog.captureException(error, { context });
+    return {};
   };
 }
