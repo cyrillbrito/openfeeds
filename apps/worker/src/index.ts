@@ -68,7 +68,6 @@ async function shutdown() {
     console.log('✅ All workers closed successfully');
     process.exit(0);
   } catch (error) {
-    console.error('Shutdown failed', { error });
     handleBoundaryError(error, { source: 'worker', operation: 'shutdown' });
     await shutdownDomain();
     process.exit(1);
