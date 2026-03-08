@@ -671,8 +671,8 @@ function FeedRow(props: FeedRowProps) {
         </Show>
       </div>
 
-      {/* Actions dropdown — visible on hover */}
-      <div class="shrink-0 pt-0.5 opacity-0 transition-opacity group-hover:opacity-100">
+      {/* Actions dropdown — always visible on touch, hover-only on desktop */}
+      <div class="shrink-0 pt-0.5 md:opacity-0 md:transition-opacity md:group-hover:opacity-100">
         <Dropdown
           end
           btnClasses="btn-circle btn-ghost btn-sm"
