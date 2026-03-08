@@ -5,8 +5,6 @@ import { twMerge } from 'tailwind-merge';
 interface AvatarCheckboxProps {
   /** Whether the item is currently selected */
   selected: boolean;
-  /** Whether the list is in selection mode (at least one item selected) */
-  selecting: boolean;
   /** Called when the user clicks to toggle selection */
   onToggle: () => void;
   /** The avatar content (img, icon fallback, etc.) */
@@ -23,7 +21,7 @@ interface AvatarCheckboxProps {
  *
  * Usage:
  * ```tsx
- * <AvatarCheckbox selected={isSelected()} selecting={isSelecting()} onToggle={toggle}>
+ * <AvatarCheckbox selected={isSelected()} onToggle={toggle}>
  *   <img src={icon} class="size-8 rounded-full object-cover" />
  * </AvatarCheckbox>
  * ```
@@ -43,15 +41,6 @@ export function AvatarCheckbox(props: AvatarCheckboxProps) {
       aria-label={props.selected ? 'Deselect' : 'Select'}
       type="button"
     >
-      {/* Visually hidden native checkbox for accessibility / form semantics */}
-      <input
-        type="checkbox"
-        class="sr-only"
-        checked={props.selected}
-        tabIndex={-1}
-        onChange={() => {}}
-      />
-
       {/* Avatar content + overlay scoped to the avatar's own size */}
       <div class="relative">
         {props.children}
@@ -60,11 +49,7 @@ export function AvatarCheckbox(props: AvatarCheckboxProps) {
         <div
           class={twMerge(
             'pointer-events-none absolute inset-0 flex items-center justify-center rounded-full bg-black/60 transition-opacity duration-150',
-            props.selected
-              ? 'opacity-100'
-              : props.selecting
-                ? 'opacity-0'
-                : 'opacity-0 group-hover/select:opacity-100',
+            props.selected ? 'opacity-100' : 'opacity-0 group-hover/select:opacity-100',
           )}
         >
           <Check class="size-4 text-white md:size-5" strokeWidth={3} />

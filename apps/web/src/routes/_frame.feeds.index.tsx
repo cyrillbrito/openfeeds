@@ -311,7 +311,6 @@ function FeedsComponent() {
                       feed={feed}
                       feedTags={feedTagsQuery()}
                       tags={tagsQuery()}
-                      selecting={isSelecting()}
                       selected={selectedIds().has(feed.id)}
                       onToggleSelect={() => toggleSelect(feed.id)}
                       onEdit={() => {
@@ -568,13 +567,38 @@ function BulkAddTagsModal(props: BulkAddTagsModalProps) {
   );
 }
 
+// --- Feed Icon ---
+
+function FeedIcon(props: { feed: Feed }) {
+  const [iconError, setIconError] = createSignal(false);
+
+  return (
+    <Show
+      when={props.feed.icon && !iconError()}
+      fallback={
+        <div class="bg-base-300 flex size-8 items-center justify-center rounded-full md:size-10">
+          <Rss size={14} class="text-base-content/50 md:size-4" />
+        </div>
+      }
+    >
+      <img
+        src={props.feed.icon!}
+        alt={props.feed.title}
+        class="bg-base-300 size-8 rounded-full object-cover md:size-10"
+        loading="lazy"
+        draggable={false}
+        onError={() => setIconError(true)}
+      />
+    </Show>
+  );
+}
+
 // --- Feed Row ---
 
 interface FeedRowProps {
   feed: Feed;
   feedTags: ReturnType<typeof useFeedTags> extends () => infer T ? T : never;
   tags: ReturnType<typeof useTags> extends () => infer T ? T : never;
-  selecting: boolean;
   selected: boolean;
   onToggleSelect: () => void;
   onEdit: () => void;
@@ -593,35 +617,8 @@ function FeedRow(props: FeedRowProps) {
       classList={{ 'bg-base-200/30': props.selected }}
     >
       {/* Icon area — avatar doubles as selection checkbox */}
-      <AvatarCheckbox
-        selected={props.selected}
-        selecting={props.selecting}
-        onToggle={props.onToggleSelect}
-        class="pt-0.5"
-      >
-        <Show
-          when={props.feed.icon}
-          fallback={
-            <div class="bg-base-300 flex size-8 items-center justify-center rounded-full md:size-10">
-              <Rss size={14} class="text-base-content/50 md:size-4" />
-            </div>
-          }
-        >
-          <img
-            src={props.feed.icon!}
-            alt={props.feed.title}
-            class="bg-base-300 size-8 rounded-full object-cover md:size-10"
-            loading="lazy"
-            draggable={false}
-            onError={(e) => {
-              e.currentTarget.style.display = 'none';
-              e.currentTarget.nextElementSibling?.classList.remove('hidden');
-            }}
-          />
-          <div class="bg-base-300 flex hidden size-8 items-center justify-center rounded-full md:size-10">
-            <Rss size={14} class="text-base-content/50 md:size-4" />
-          </div>
-        </Show>
+      <AvatarCheckbox selected={props.selected} onToggle={props.onToggleSelect} class="pt-0.5">
+        <FeedIcon feed={props.feed} />
       </AvatarCheckbox>
 
       {/* Feed info */}
