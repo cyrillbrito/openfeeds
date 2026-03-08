@@ -5,74 +5,32 @@ type IconProps = { class?: string };
 export function FeedIllustration(props?: IconProps) {
   return (
     <svg
-      width="200"
+      width="160"
       height="160"
-      viewBox="0 0 200 160"
+      viewBox="0 0 160 160"
       fill="none"
       xmlns="http://www.w3.org/2000/svg"
       class={twMerge('text-base-content/30', props?.class)}
     >
-      <circle
-        cx="100"
-        cy="80"
-        r="60"
-        fill="currentColor"
-        fill-opacity="0.1"
-        stroke="currentColor"
-        stroke-width="2"
-      />
-      <circle cx="80" cy="100" r="6" fill="currentColor" />
+      {/* Soft background circle */}
+      <circle cx="80" cy="80" r="60" fill="currentColor" fill-opacity="0.08" />
+      {/* RSS dot */}
+      <circle cx="64" cy="104" r="6" fill="currentColor" />
+      {/* Inner arc */}
       <path
-        d="M80 80 Q80 90, 90 90 Q100 90, 100 100"
+        d="M64 88 A16 16 0 0 1 80 104"
         stroke="currentColor"
-        stroke-width="3"
+        stroke-width="4"
         fill="none"
         stroke-linecap="round"
       />
+      {/* Outer arc */}
       <path
-        d="M80 60 Q80 70, 85 75 Q90 80, 100 80 Q110 80, 115 85 Q120 90, 120 100"
+        d="M64 72 A32 32 0 0 1 96 104"
         stroke="currentColor"
-        stroke-width="3"
+        stroke-width="4"
         fill="none"
         stroke-linecap="round"
-      />
-      <rect x="130" y="30" width="40" height="6" rx="3" fill="currentColor" fill-opacity="0.3" />
-      <rect x="130" y="40" width="30" height="4" rx="2" fill="currentColor" fill-opacity="0.2" />
-      <rect x="130" y="48" width="25" height="4" rx="2" fill="currentColor" fill-opacity="0.2" />
-      <rect x="35" y="35" width="35" height="6" rx="3" fill="currentColor" fill-opacity="0.3" />
-      <rect x="35" y="45" width="25" height="4" rx="2" fill="currentColor" fill-opacity="0.2" />
-      <rect x="35" y="53" width="20" height="4" rx="2" fill="currentColor" fill-opacity="0.2" />
-      <rect x="140" y="120" width="30" height="6" rx="3" fill="currentColor" fill-opacity="0.3" />
-      <rect x="140" y="130" width="20" height="4" rx="2" fill="currentColor" fill-opacity="0.2" />
-      <line
-        x1="100"
-        y1="40"
-        x2="130"
-        y2="38"
-        stroke="currentColor"
-        stroke-width="1"
-        stroke-dasharray="3,3"
-        opacity="0.4"
-      />
-      <line
-        x1="60"
-        y1="60"
-        x2="35"
-        y2="50"
-        stroke="currentColor"
-        stroke-width="1"
-        stroke-dasharray="3,3"
-        opacity="0.4"
-      />
-      <line
-        x1="120"
-        y1="100"
-        x2="140"
-        y2="123"
-        stroke="currentColor"
-        stroke-width="1"
-        stroke-dasharray="3,3"
-        opacity="0.4"
       />
     </svg>
   );

@@ -139,7 +139,7 @@ function Inbox() {
         </div>
       }
     >
-      <p class="text-base-content-gray mb-4">Latest articles from all your RSS feeds</p>
+      <p class="text-base-content-gray mb-4">Latest articles from all your feeds</p>
 
       <ArticleListToolbar
         leftContent={

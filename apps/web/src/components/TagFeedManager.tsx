@@ -112,7 +112,7 @@ export function TagEmptyState(props: TagEmptyStateProps) {
         when={props.feeds.length > 0}
         fallback={
           <p class="text-base-content/40 text-sm">
-            You don't have any feeds yet. Add some RSS feeds first.
+            You don't have any feeds yet. Follow some feeds first.
           </p>
         }
       >

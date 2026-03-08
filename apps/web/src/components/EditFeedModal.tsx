@@ -24,7 +24,7 @@ export function EditFeedModal(props: EditFeedModalProps) {
         props.controller(controller);
       }}
       class="max-w-2xl"
-      title="Edit Feed"
+      title="Edit"
     >
       <Show when={props.feed}>
         {(feed) => <EditFeedForm feed={feed()} onClose={() => modalController.close()} />}

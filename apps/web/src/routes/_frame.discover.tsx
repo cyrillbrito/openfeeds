@@ -215,10 +215,10 @@ function DiscoverPage() {
   const hasFeeds = () => discoveredFeeds().length > 0;
 
   return (
-    <PageLayout title="Discover content" mobileOnlyTitle>
+    <PageLayout title="Discover" mobileOnlyTitle>
       {/* Hero URL Input */}
       <div class="sm:py-4">
-        <h2 class="mb-2 hidden text-2xl font-bold sm:block sm:text-3xl">Discover content</h2>
+        <h2 class="mb-2 hidden text-2xl font-bold sm:block sm:text-3xl">Discover</h2>
         <p class="text-base-content/60 mb-4 sm:mb-6">
           Paste any link to find feeds to follow or save an article for later.
         </p>
@@ -410,7 +410,7 @@ function DiscoverPage() {
             }
           >
             <div class="alert alert-success">
-              <span>Feed added! We'll try to sync it.</span>
+              <span>Feed followed! We'll start syncing it.</span>
             </div>
           </Show>
         </div>

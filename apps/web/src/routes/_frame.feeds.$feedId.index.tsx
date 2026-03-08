@@ -149,7 +149,7 @@ function FeedArticles() {
           <Show when={currentFeed()}>
             <Dropdown end btnClasses="btn-sm" btnContent={<MoreVertical size={20} />}>
               <li>
-                <button onClick={() => editFeedModalController.open()}>Edit Feed</button>
+                <button onClick={() => editFeedModalController.open()}>Edit</button>
               </li>
               <li>
                 <button onClick={() => syncLogsModalController.open()}>Sync Logs</button>
@@ -163,7 +163,7 @@ function FeedArticles() {
                     deleteFeedModalController.open();
                   }}
                 >
-                  Delete Feed
+                  Unfollow
                 </button>
               </li>
             </Dropdown>
@@ -215,7 +215,7 @@ function FeedArticles() {
                       deleteFeedModalController.open();
                     }}
                   >
-                    Delete feed
+                    Unfollow
                   </button>
                 </div>
               </div>
@@ -275,7 +275,7 @@ function FeedArticles() {
 
       <DeleteFeedModal
         controller={(controller) => (deleteFeedModalController = controller)}
-        feed={feedToDelete()}
+        feeds={feedToDelete() ? [feedToDelete()!] : []}
         onDeleteComplete={() => setFeedToDelete(null)}
       />
 

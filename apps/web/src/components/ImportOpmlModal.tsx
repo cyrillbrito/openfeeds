@@ -109,7 +109,7 @@ function ImportOpmlForm(props: ImportOpmlFormProps) {
               }}
             />
             <label class="label">
-              <span class="label-text-alt">Select an OPML file exported from your RSS reader</span>
+              <span class="label-text-alt">Select an OPML file exported from your feed reader</span>
             </label>
           </div>
         </Match>
@@ -181,7 +181,7 @@ function ImportResultView(props: { result: ImportResult }) {
             <Show when={props.result.skipped > 0}>
               <div class="flex items-center gap-1.5">
                 <CircleMinus size={14} class="text-base-content/30" />
-                <span>{props.result.skipped} already subscribed</span>
+                <span>{props.result.skipped} already following</span>
               </div>
             </Show>
             <Show when={props.result.failed.length > 0}>

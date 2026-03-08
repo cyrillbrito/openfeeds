@@ -92,9 +92,9 @@ export function ArticleList(props: ArticleListProps) {
         icon: <FeedIllustration />,
         title: 'No Articles Found',
         description:
-          "You don't have any articles yet. Add some RSS feeds and sync them to see articles here.",
+          "You don't have any articles yet. Follow some feeds and sync them to see articles here.",
         actions: {
-          primary: { text: 'Add Feeds', href: '/feeds' },
+          primary: { text: 'Discover Feeds', href: '/discover' },
           secondary: { text: 'Browse Tags', href: '/tags' },
         },
       },
@@ -112,7 +112,7 @@ export function ArticleList(props: ArticleListProps) {
         description:
           "This tag doesn't have any articles yet. Articles will appear here once feeds with this tag are synced and contain content.",
         actions: {
-          primary: { text: 'Manage Feeds', href: '/feeds' },
+          primary: { text: 'Feeds', href: '/feeds' },
           secondary: { text: 'Browse Tags', href: '/tags' },
         },
       },

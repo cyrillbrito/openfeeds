@@ -1,5 +1,5 @@
 import { ClientOnly, createFileRoute, Link, Outlet, useLocation } from '@tanstack/solid-router';
-import { Compass, Inbox, Library, Plus } from 'lucide-solid';
+import { Compass, Inbox, Plus, Rss } from 'lucide-solid';
 import posthog from 'posthog-js';
 import { createEffect, For, on, onMount, Suspense } from 'solid-js';
 import { ColorIndicator } from '~/components/ColorIndicator';
@@ -104,8 +104,8 @@ function FrameLayout() {
                       class="flex items-center gap-3"
                       activeProps={{ class: 'menu-active' }}
                     >
-                      <Library size={20} />
-                      Manage Feeds
+                      <Rss size={20} />
+                      Feeds
                     </Link>
                   </li>
                 </ul>
