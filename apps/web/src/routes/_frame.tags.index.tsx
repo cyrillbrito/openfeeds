@@ -150,8 +150,8 @@ function TagsComponent() {
 
               <h2 class="mb-4 text-3xl font-bold">No Tags Yet</h2>
               <p class="text-base-content-gray mx-auto mb-8 max-w-md">
-                Create tags to organize and categorize your RSS feeds. Tags help you quickly find
-                and filter related content.
+                Create tags to organize and categorize your feeds. Tags help you quickly find and
+                filter related content.
               </p>
 
               <button class="btn btn-primary btn-lg" onClick={() => tagModalController.open()}>

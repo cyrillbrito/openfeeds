@@ -1,17 +1,23 @@
 import type { Feed } from '@repo/domain/client';
-import { TriangleAlert } from 'lucide-solid';
-import { Show } from 'solid-js';
 import { feedsCollection } from '~/entities/feeds';
 import { LazyModal, type ModalController } from './LazyModal';
 
 interface DeleteFeedModalProps {
   controller: (controller: ModalController) => void;
-  feed: Feed | null;
+  feeds: Feed[];
   onDeleteComplete?: () => void;
 }
 
 export function DeleteFeedModal(props: DeleteFeedModalProps) {
   let modalController!: ModalController;
+
+  const count = () => props.feeds.length;
+
+  const handleConfirm = () => {
+    feedsCollection.delete(props.feeds.map((f) => f.id));
+    props.onDeleteComplete?.();
+    modalController.close();
+  };
 
   return (
     <LazyModal
@@ -19,60 +25,25 @@ export function DeleteFeedModal(props: DeleteFeedModalProps) {
         modalController = controller;
         props.controller(controller);
       }}
-      class="max-w-md"
-      title="Delete Feed"
+      class="max-w-sm"
+      title={count() === 1 ? 'Unfollow Feed' : 'Unfollow Feeds'}
     >
-      <Show when={props.feed}>
-        {(feed) => (
-          <DeleteFeedForm
-            feed={feed()}
-            onDeleteComplete={props.onDeleteComplete}
-            onClose={() => modalController.close()}
-          />
-        )}
-      </Show>
-    </LazyModal>
-  );
-}
-
-interface DeleteFeedFormProps {
-  feed: Feed;
-  onDeleteComplete?: () => void;
-  onClose: () => void;
-}
-
-function DeleteFeedForm(props: DeleteFeedFormProps) {
-  const handleDeleteConfirm = () => {
-    feedsCollection.delete(props.feed.id);
-    props.onDeleteComplete?.();
-    props.onClose();
-  };
-
-  return (
-    <>
-      <div class="mb-6">
-        <p class="mb-4">Are you sure you want to delete this feed? This action cannot be undone.</p>
-
-        <div class="bg-base-200 rounded-lg p-4">
-          <h4 class="text-base-content-gray mb-1 text-sm font-semibold">Feed to delete:</h4>
-          <p class="font-medium">{props.feed.title}</p>
-          <p class="text-base-content-gray mt-1 text-sm">{props.feed.url}</p>
-        </div>
-
-        <div class="alert alert-warning mt-4">
-          <TriangleAlert size={20} />
-          <span class="text-sm">All articles from this feed will also be deleted.</span>
-        </div>
-      </div>
+      <p class="text-base-content/70 text-sm">
+        Unfollow{' '}
+        <span class="text-base-content font-medium">
+          {count() === 1 ? props.feeds[0]?.title : `${count()} feeds`}
+        </span>
+        ? All {count() === 1 ? 'its' : 'their'} articles will also be removed.
+      </p>
 
       <div class="modal-action">
-        <button type="button" class="btn" onClick={() => props.onClose()}>
+        <button type="button" class="btn btn-ghost btn-sm" onClick={() => modalController.close()}>
           Cancel
         </button>
-        <button type="button" class="btn btn-error" onClick={handleDeleteConfirm}>
-          Delete Feed
+        <button type="button" class="btn btn-error btn-sm" onClick={handleConfirm}>
+          Unfollow
         </button>
       </div>
-    </>
+    </LazyModal>
   );
 }

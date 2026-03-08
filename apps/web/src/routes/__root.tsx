@@ -29,7 +29,7 @@ export const Route = createRootRoute({
       {
         name: 'description',
         content:
-          'A centralized RSS feed reader where you control what you see. No algorithms, no distractions.',
+          'A centralized feed reader where you control what you see. No algorithms, no distractions.',
       },
     ],
     links: [
