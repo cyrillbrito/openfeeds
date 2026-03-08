@@ -47,13 +47,11 @@ export interface BoundaryErrorOptions {
 export function handleBoundaryError(error: unknown, opts: BoundaryErrorOptions): Error {
   if (isDomainError(error)) return error;
 
-  const { source, userId, ...extra } = opts;
-
   // Infrastructure error — log full details server-side before sanitizing
-  console.error(`[error-boundary] ${source}`, error);
+  console.error(`[error-boundary] ${opts.source}`, error);
 
   const err = error instanceof Error ? error : new Error(String(error));
-  captureException(err, { userId, source, ...extra });
+  captureException(err, opts);
 
   return new UnexpectedError();
 }
