@@ -102,6 +102,7 @@ function FeedsComponent() {
       replace: true,
     });
     setSearchDebounced(newQ);
+    clearSelection();
   }, SEARCH_DEBOUNCE_MS);
 
   // Filtered feeds based on search query from URL, with broken/failing sorted to top
@@ -197,7 +198,11 @@ function FeedsComponent() {
 
       <BulkAddTagsModal
         controller={(controller) => (bulkAddTagsModalController = controller)}
-        selectedFeedIds={() => [...selectedIds()]}
+        selectedFeedIds={() =>
+          filteredFeeds()
+            .filter((f) => selectedIds().has(f.id))
+            .map((f) => f.id)
+        }
         feedTags={feedTagsQuery()}
         onComplete={clearSelection}
       />
