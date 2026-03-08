@@ -1,5 +1,5 @@
 import {
-  captureException,
+  handleBoundaryError,
   initializeScheduledJobs,
   QUEUE_NAMES,
   setAppVersion,
@@ -26,11 +26,7 @@ const autoArchiveWorker = createAutoArchiveWorker();
 
 // Setup error handlers
 feedSyncOrchestratorWorker.on('failed', (job, err) => {
-  console.error('Feed sync orchestrator failed', { error: err, jobId: job?.id });
-  captureException(err, {
-    operation: QUEUE_NAMES.FEED_SYNC_ORCHESTRATOR,
-    jobId: job?.id,
-  });
+  handleBoundaryError(err, { context: `worker:${QUEUE_NAMES.FEED_SYNC_ORCHESTRATOR}` });
 });
 
 singleFeedSyncWorker.on('failed', (job, err) => {
@@ -44,19 +40,11 @@ singleFeedSyncWorker.on('failed', (job, err) => {
 });
 
 autoArchiveWorker.on('failed', (job, err) => {
-  console.error('Auto archive failed', { error: err, jobId: job?.id });
-  captureException(err, {
-    operation: QUEUE_NAMES.AUTO_ARCHIVE,
-    jobId: job?.id,
-  });
+  handleBoundaryError(err, { context: `worker:${QUEUE_NAMES.AUTO_ARCHIVE}` });
 });
 
 feedDetailsWorker.on('failed', (job, err) => {
-  console.error('Feed details worker failed', { error: err, jobId: job?.id });
-  captureException(err, {
-    operation: QUEUE_NAMES.FEED_DETAIL,
-    jobId: job?.id,
-  });
+  handleBoundaryError(err, { context: `worker:${QUEUE_NAMES.FEED_DETAIL}` });
 });
 
 // Collect all workers for graceful shutdown
@@ -77,7 +65,7 @@ async function shutdown() {
     process.exit(0);
   } catch (error) {
     console.error('Shutdown failed', { error });
-    captureException(error as Error, { operation: 'shutdown' });
+    handleBoundaryError(error, { context: 'worker:shutdown' });
     await shutdownDomain();
     process.exit(1);
   }

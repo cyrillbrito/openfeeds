@@ -46,17 +46,64 @@ Use for values that should always exist but TypeScript can't prove (e.g., `array
 ## Error Flow
 
 ```
-Domain Layer                    Transport Layer                 Client/Consumer
-─────────────                   ───────────────                 ───────────────
-throw NotFoundError()    →    Server function (seroval)     →    catch (err)
-                              only message survives              display err.message
+Domain Layer                    Error Boundary                  Transport Layer                 Client/Consumer
+─────────────                   ──────────────                  ───────────────                 ───────────────
+throw NotFoundError()    →    passes through (domain)    →    Server function (seroval)     →    catch (err)
+                                                              only message survives              display err.message
 
-throw ConflictError()    →    API route catch block         →    HTTP 409 response
-                              instanceof works (same process)
+throw DrizzleQueryError  →    log + report + sanitize    →    Server function (seroval)     →    catch (err)
+  (Postgres/infra)            becomes UnexpectedError          "An unexpected error occurred"     display err.message
 
-throw NotFoundError()    →    Worker try-catch              →    Log + retry/skip
-                              instanceof works (same process)
+throw ConflictError()    →    passes through (domain)    →    API route catch block         →    HTTP 409 response
+                                                              instanceof works (same process)
+
+throw DrizzleQueryError  →    log + report + sanitize    →    API route catch block         →    HTTP 500 response
+  (Postgres/infra)            becomes UnexpectedError          instanceof works (same process)
+
+throw NotFoundError()    →    passes through (domain)    →    Worker try-catch              →    Log + retry/skip
+                                                              instanceof works (same process)
 ```
+
+## Error Boundary (`packages/domain/src/error-boundary.ts`)
+
+The error boundary sits between the domain layer and each transport. It classifies errors into two categories:
+
+- **Domain errors** (`NotFoundError`, `ConflictError`, etc.) — pass through unchanged. Already have user-safe messages.
+- **Infrastructure errors** (Drizzle `DrizzleQueryError`, Postgres failures, network errors, etc.) — get:
+  1. Logged to console with full cause chain (including Postgres error code, detail, constraint)
+  2. Reported to PostHog server-side via `captureException` (preserving `.cause`)
+  3. Replaced with a generic `UnexpectedError("An unexpected error occurred")` — raw SQL and internal details never leak
+
+```typescript
+import { handleBoundaryError, isDomainError } from '@repo/domain';
+
+// In a transport boundary (middleware, error handler, etc.):
+try {
+  await domainFunction(ctx, data);
+} catch (error) {
+  throw handleBoundaryError(error, { userId, context: 'some-context' });
+}
+```
+
+### Why this exists
+
+Without the boundary, Drizzle wraps Postgres errors in `DrizzleQueryError` with the raw SQL in `.message` and the actual Postgres error in `.cause`. TanStack Start's `ShallowErrorPlugin` serializes only `.message` — the `.cause` (with the real error code and detail) is lost. The client receives a useless `Error("Failed query: INSERT INTO...")` with raw SQL exposed.
+
+The boundary ensures:
+
+- PostHog gets the **full error** with `.cause` server-side, before serialization strips it
+- The client only ever sees clean, user-safe error messages
+- No SQL or internal details leak to the browser
+
+### Transport wiring
+
+Each transport wires the boundary at its own level:
+
+| Transport         | Wiring                                          | File                         |
+| ----------------- | ----------------------------------------------- | ---------------------------- |
+| Server functions  | Global `functionMiddleware` via `createStart()` | `apps/web/src/start.ts`      |
+| API routes (Hono) | `app.onError()` global handler                  | `packages/api/` (future)     |
+| Workers           | `worker.on('failed')` handler                   | `apps/worker/src/workers.ts` |
 
 ## Web App: Server Functions
 
@@ -176,12 +223,14 @@ See [feed-sync.md](./feed-sync.md) for the full feed sync retry and health track
 
 **PostHog** captures exceptions across all layers:
 
-- **Server-side:** `logger.error(error, metadata)` → PostHog via domain logger
-- **Client-side:** `posthog.captureException(err)` for unexpected UI errors; known errors shown to user instead
+- **Server-side (error boundary):** `handleBoundaryError` catches infrastructure errors at each transport boundary. Reports the full error with `.cause` chain to PostHog via `captureException` before sanitizing. This is the primary source of truth for production errors.
+- **Server-side (manual):** `captureException(error, metadata)` called explicitly in feed sync, OPML import, and worker error handlers for expected per-item failures.
+- **Client-side:** `posthog.captureException(err)` in `collectionErrorHandler` / `shapeErrorHandler` for client-visible errors. These only see the post-serialization error (no `.cause`), so server-side capture is preferred.
 
 ## Adding New Domain Errors
 
 1. Define in `packages/domain/src/errors.ts` with user-safe default message
 2. Export from `packages/domain/src/index.ts`
-3. Throw from domain functions — don't catch/wrap at domain level
-4. Update API route error mapping if needed for specific HTTP status
+3. Add to `DOMAIN_ERRORS` array in `packages/domain/src/error-boundary.ts` — so the boundary passes it through instead of sanitizing it
+4. Throw from domain functions — don't catch/wrap at domain level
+5. Update API route error mapping if needed for specific HTTP status

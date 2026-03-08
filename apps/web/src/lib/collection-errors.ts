@@ -1,25 +1,19 @@
 import posthog from 'posthog-js';
 import { toastService } from '~/lib/toast-service';
 
-/** Extracts a user-friendly message from an error, hiding raw SQL/technical details. */
+/**
+ * Extracts a user-friendly message from an error.
+ *
+ * The server-side error boundary (packages/domain/src/error-boundary.ts) already
+ * replaces infrastructure errors with a generic UnexpectedError before they reach
+ * the client. This function is a defense-in-depth safety net — it caps message
+ * length and catches anything that slips through.
+ */
 function sanitizeErrorMessage(error: unknown): string {
   if (!(error instanceof Error)) return 'Something went wrong';
 
   const msg = error.message;
-  const msgLower = msg.toLowerCase();
 
-  // Hide raw SQL statements — show generic sync error instead
-  if (
-    msgLower.includes('insert into') ||
-    msgLower.includes('update ') ||
-    msgLower.includes('delete from') ||
-    msgLower.includes('select ') ||
-    msgLower.includes('values (')
-  ) {
-    return 'Something went wrong while syncing. Please try again.';
-  }
-
-  // Cap message length for anything else that slips through
   if (msg.length > 150) {
     return `${msg.slice(0, 150)}…`;
   }

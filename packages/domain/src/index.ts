@@ -24,6 +24,7 @@ export * from './tts';
 // Infrastructure
 export { shutdownDomain, redisConnection, QUEUE_NAMES } from './config';
 export { captureException, type ExceptionMetadata } from './error-tracking';
+export { handleBoundaryError, isDomainError, type BoundaryErrorOptions } from './error-boundary';
 export {
   enqueueFeedDetail,
   enqueueFeedSync,
