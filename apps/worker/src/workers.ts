@@ -1,9 +1,9 @@
 import { db } from '@repo/db';
 import {
   autoArchiveForAllUsers,
-  captureException,
   createDomainContext,
   enqueueStaleFeeds,
+  handleBoundaryError,
   markFeedAsFailing,
   QUEUE_NAMES,
   recordFeedSyncFailure,
@@ -64,12 +64,13 @@ export function createSingleFeedSyncWorker() {
       const ctx = createDomainContext(db, job.data.userId);
       await writeFeedSyncLog(ctx, feedId, result, durationMs);
     } catch (logErr) {
-      const err = logErr instanceof Error ? logErr : new Error(String(logErr));
-      console.error('Failed to write sync log on completion', { error: err, feedId });
-      captureException(err, {
+      handleBoundaryError(logErr, {
         source: 'worker',
+        userId: job.data.userId,
+        queue: QUEUE_NAMES.SINGLE_FEED_SYNC,
         operation: 'write_sync_log_completed',
-        feedId,
+        feedId: job.data.feedId,
+        jobId: job.id,
       });
     }
   });
@@ -93,12 +94,12 @@ export function createSingleFeedSyncWorker() {
         await markFeedAsFailing(ctx, feedId, err, attemptNumber, durationMs);
       }
     } catch (updateErr) {
-      const err = updateErr instanceof Error ? updateErr : new Error(String(updateErr));
-      console.error('Failed to record feed sync failure', { error: err, feedId });
-      captureException(err, {
+      handleBoundaryError(updateErr, {
         source: 'worker',
-        operation: QUEUE_NAMES.SINGLE_FEED_SYNC,
-        feedId,
+        userId: job.data.userId,
+        queue: QUEUE_NAMES.SINGLE_FEED_SYNC,
+        feedId: job.data.feedId,
+        jobId: job.id,
       });
     }
   });
