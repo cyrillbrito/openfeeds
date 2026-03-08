@@ -11,7 +11,7 @@ export const Route = createFileRoute('/api/shapes/feed-tags')({
         return proxyElectricRequest({
           request,
           table: 'feed_tags',
-          where: `user_id = '${user.id}'`,
+          userId: user.id,
         });
       },
     },

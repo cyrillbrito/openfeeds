@@ -11,7 +11,7 @@ export const Route = createFileRoute('/api/shapes/feeds')({
         return proxyElectricRequest({
           request,
           table: 'feeds',
-          where: `user_id = '${user.id}'`,
+          userId: user.id,
         });
       },
     },
