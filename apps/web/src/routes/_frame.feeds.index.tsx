@@ -20,7 +20,6 @@ import { ColorIndicator } from '~/components/ColorIndicator';
 import { DeleteFeedModal } from '~/components/DeleteFeedModal';
 import { Dropdown } from '~/components/Dropdown';
 import { EditFeedModal } from '~/components/EditFeedModal';
-import { FeedIllustration } from '~/components/Icons';
 import { ImportOpmlModal } from '~/components/ImportOpmlModal';
 import { LazyModal, type ModalController } from '~/components/LazyModal';
 import { CenterLoader } from '~/components/Loader';
@@ -165,49 +164,7 @@ function FeedsComponent() {
 
   return (
     <PageLayout title="Feeds" mobileOnlyTitle>
-      {/* Inline heading + actions (visible sm+, like Discover) */}
-      <div class="sm:py-4">
-        <div class="mb-4 hidden items-center justify-between sm:flex">
-          <h2 class="text-2xl font-bold sm:text-3xl">Feeds</h2>
-          <div class="flex gap-2">
-            <button class="btn btn-outline btn-sm" onClick={() => importOpmlModalController.open()}>
-              <CloudDownload size={18} />
-              Import OPML
-            </button>
-            <Link to="/discover" class="btn btn-primary btn-sm">
-              <Plus size={18} />
-              Discover
-            </Link>
-          </div>
-        </div>
-
-        <p class="text-base-content/60 mb-4">View and organize your feeds</p>
-
-        {/* Mobile-only action buttons — above search */}
-        <div class="mb-3 flex gap-2 sm:hidden">
-          <button class="btn btn-outline btn-sm" onClick={() => importOpmlModalController.open()}>
-            <CloudDownload size={18} />
-            Import OPML
-          </button>
-          <Link to="/discover" class="btn btn-primary btn-sm">
-            <Plus size={18} />
-            Discover
-          </Link>
-        </div>
-
-        {/* Search Input */}
-        <label class="input input-bordered flex w-full max-w-md items-center gap-2">
-          <Search size={20} class="opacity-50" />
-          <input
-            type="search"
-            placeholder="Search feeds..."
-            class="grow"
-            value={searchDebounced()}
-            onInput={(e) => setSearchDebounce(e.currentTarget.value)}
-          />
-        </label>
-      </div>
-
+      {/* Modals — always mounted so controllers are available */}
       <ImportOpmlModal controller={(controller) => (importOpmlModalController = controller)} />
 
       <DeleteFeedModal
@@ -229,7 +186,6 @@ function FeedsComponent() {
         feed={syncLogsFeed()}
       />
 
-      {/* Bulk Retry Confirmation */}
       <BulkRetryModal
         controller={(controller) => (bulkRetryModalController = controller)}
         failingCount={selectedFailingCount}
@@ -239,7 +195,6 @@ function FeedsComponent() {
         }}
       />
 
-      {/* Bulk Add Tags */}
       <BulkAddTagsModal
         controller={(controller) => (bulkAddTagsModalController = controller)}
         selectedFeedIds={() => [...selectedIds()]}
@@ -248,52 +203,22 @@ function FeedsComponent() {
       />
 
       <Switch>
-        {/* Loading state */}
         <Match when={feedsQuery() === undefined}>
           <CenterLoader />
         </Match>
 
-        {/* Empty state - no feeds */}
         <Match when={feedsQuery()?.length === 0}>
-          <div class="py-16 text-center">
-            <div class="mb-8 flex justify-center">
-              <FeedIllustration />
-            </div>
-
-            <h2 class="mb-4 text-3xl font-bold">No Feeds Yet</h2>
-            <p class="text-base-content-gray mx-auto mb-8 max-w-md">
-              Start building your personalized feed by following your favorite sources. Stay updated
-              with the latest content from blogs, news sites, and more.
-            </p>
-
-            <div class="flex flex-col justify-center gap-3 sm:flex-row">
-              <button
-                class="btn btn-outline btn-lg"
-                onClick={() => importOpmlModalController.open()}
-              >
-                <CloudDownload size={20} class="mr-2" />
-                Import OPML
-              </button>
-              <Link to="/discover" class="btn btn-primary btn-lg">
-                <Plus size={20} class="mr-2" />
-                Follow Your First Feed
-              </Link>
-            </div>
-
-            <div class="text-base-content/50 mt-8 text-sm">
-              <p>Not sure where to start? Try popular feeds like:</p>
-              <div class="mt-3 flex flex-wrap justify-center gap-2">
-                <span class="badge badge-outline">Tech News</span>
-                <span class="badge badge-outline">Blog Posts</span>
-                <span class="badge badge-outline">News Sites</span>
-                <span class="badge badge-outline">Podcasts</span>
-              </div>
-            </div>
-          </div>
+          <FeedsEmptyState onImportOpml={() => importOpmlModalController.open()} />
         </Match>
 
-        {/* Has feeds */}
         <Match when={feedsQuery() && feedsQuery()!.length > 0}>
+          {/* Header with title, action buttons, and search — only when feeds exist */}
+          <FeedsHeader
+            searchValue={searchDebounced()}
+            onSearchChange={setSearchDebounce}
+            onImportOpml={() => importOpmlModalController.open()}
+          />
+
           <Show
             when={filteredFeeds().length > 0}
             fallback={
@@ -417,6 +342,94 @@ function FeedsComponent() {
         </Match>
       </Switch>
     </PageLayout>
+  );
+}
+
+// --- Empty State ---
+
+interface FeedsEmptyStateProps {
+  onImportOpml: () => void;
+}
+
+function FeedsEmptyState(props: FeedsEmptyStateProps) {
+  return (
+    <div class="py-16 text-center">
+      <div class="mb-6 flex justify-center">
+        <div class="bg-base-300/60 flex size-24 items-center justify-center rounded-full">
+          <Rss size={40} class="text-base-content/30 translate-x-1 -translate-y-0.5" />
+        </div>
+      </div>
+
+      <h2 class="mb-2 text-2xl font-bold">No Feeds Yet</h2>
+      <p class="text-base-content/60 mx-auto mb-8 max-w-sm">
+        Follow your favorite sources to get started.
+      </p>
+
+      <div class="flex flex-col justify-center gap-3 sm:flex-row">
+        <button class="btn btn-outline" onClick={props.onImportOpml}>
+          <CloudDownload size={18} />
+          Import OPML
+        </button>
+        <Link to="/discover" class="btn btn-primary">
+          <Plus size={18} />
+          Discover
+        </Link>
+      </div>
+    </div>
+  );
+}
+
+// --- Header (title + actions + search) ---
+
+interface FeedsHeaderProps {
+  searchValue: string;
+  onSearchChange: (value: string) => void;
+  onImportOpml: () => void;
+}
+
+function FeedsHeader(props: FeedsHeaderProps) {
+  return (
+    <div class="sm:py-4">
+      <div class="mb-4 hidden items-center justify-between sm:flex">
+        <h2 class="text-2xl font-bold sm:text-3xl">Feeds</h2>
+        <div class="flex gap-2">
+          <button class="btn btn-outline btn-sm" onClick={props.onImportOpml}>
+            <CloudDownload size={18} />
+            Import OPML
+          </button>
+          <Link to="/discover" class="btn btn-primary btn-sm">
+            <Plus size={18} />
+            Discover
+          </Link>
+        </div>
+      </div>
+
+      <p class="text-base-content/60 mb-4">View and organize your feeds</p>
+
+      {/* Mobile-only action buttons — above search */}
+      <div class="mb-3 flex gap-2 sm:hidden">
+        <button class="btn btn-outline btn-sm" onClick={props.onImportOpml}>
+          <CloudDownload size={18} />
+          Import OPML
+        </button>
+        <Link to="/discover" class="btn btn-primary btn-sm">
+          <Plus size={18} />
+          Discover
+        </Link>
+      </div>
+
+      {/* Search Input */}
+      <label class="input input-bordered flex w-full max-w-md items-center gap-2">
+        <Search size={20} class="opacity-50" />
+        <input
+          type="search"
+          placeholder="Search feeds..."
+          class="grow"
+          value={props.searchValue}
+          onInput={(e) => props.onSearchChange(e.currentTarget.value)}
+        />
+      </label>
+    </div>
   );
 }
 
@@ -554,6 +567,8 @@ function BulkAddTagsModal(props: BulkAddTagsModalProps) {
     </LazyModal>
   );
 }
+
+// --- Feed Row ---
 
 interface FeedRowProps {
   feed: Feed;
