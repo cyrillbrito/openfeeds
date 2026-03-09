@@ -1,5 +1,18 @@
 # Changelog
 
+## [0.9.0](https://github.com/cyrillbrito/openfeeds/compare/v0.8.3...v0.9.0) (2026-03-08)
+
+
+### Features
+
+* **web:** redesign feeds page and standardize follow/unfollow language ([#151](https://github.com/cyrillbrito/openfeeds/issues/151)) ([a40ffbb](https://github.com/cyrillbrito/openfeeds/commit/a40ffbb45e6df77e52051aca34033105c6170a9d))
+
+
+### Bug Fixes
+
+* add transport-agnostic error boundary to prevent SQL leaks ([#152](https://github.com/cyrillbrito/openfeeds/issues/152)) ([78fb49c](https://github.com/cyrillbrito/openfeeds/commit/78fb49c7dfe0e80a0e87e0bb733467da7352faa8))
+* **web:** use positional params in Electric WHERE clauses and fix shape error retry ([#150](https://github.com/cyrillbrito/openfeeds/issues/150)) ([2c620e8](https://github.com/cyrillbrito/openfeeds/commit/2c620e851af6799aea2b333994ea1e372b4922f4))
+
 ## [0.8.3](https://github.com/cyrillbrito/openfeeds/compare/v0.8.2...v0.8.3) (2026-03-07)
 
 
