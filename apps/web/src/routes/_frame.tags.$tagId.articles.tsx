@@ -3,7 +3,6 @@ import { createFileRoute } from '@tanstack/solid-router';
 import { createSignal, onMount, Show, Suspense } from 'solid-js';
 import { ArticleList, ARTICLES_PER_PAGE } from '~/components/ArticleList';
 import { ArticleListToolbar } from '~/components/ArticleListToolbar';
-import { LazyModal, type ModalController } from '~/components/LazyModal';
 import { CenterLoader } from '~/components/Loader';
 import { MarkAllArchivedButton } from '~/components/MarkAllArchivedButton';
 import { ReadStatusToggle, type ReadStatus } from '~/components/ReadStatusToggle';
@@ -53,7 +52,7 @@ function TagArticlesPage() {
     return query.orderBy(({ article }) => article.pubDate, 'desc').limit(visibleCount());
   });
 
-  // Lightweight count query - only selects id to avoid tracking full article objects
+  // Lightweight count query for current read status filter (no limit)
   const totalCountQuery = useLiveQuery((q) => {
     let query = q
       .from({ article: articlesCollection })
@@ -70,23 +69,37 @@ function TagArticlesPage() {
     return query.select(({ article }) => ({ id: article.id }));
   });
 
-  let markAllModalController!: ModalController;
-  const [isMarkingAllArchived, setIsMarkingAllArchived] = createSignal(false);
+  // Count of unread articles (independent of current read status filter)
+  const unreadCountQuery = useLiveQuery((q) =>
+    q
+      .from({ article: articlesCollection })
+      .innerJoin({ articleTag: articleTagsCollection }, ({ article, articleTag }) =>
+        eq(article.id, articleTag.articleId),
+      )
+      .where(({ articleTag }) => eq(articleTag.tagId, tagId()))
+      .where(({ article }) => eq(article.isArchived, false))
+      .where(({ article }) => eq(article.isRead, false))
+      .select(({ article }) => ({ id: article.id })),
+  );
+
+  // Non-archived articles for this tag (for archive button count + action)
+  const archivableQuery = useLiveQuery((q) =>
+    q
+      .from({ article: articlesCollection })
+      .innerJoin({ articleTag: articleTagsCollection }, ({ article, articleTag }) =>
+        eq(article.id, articleTag.articleId),
+      )
+      .where(({ articleTag }) => eq(articleTag.tagId, tagId()))
+      .where(({ article }) => eq(article.isArchived, false))
+      .select(({ article }) => ({ id: article.id })),
+  );
 
   const handleMarkAllArchived = async () => {
-    try {
-      setIsMarkingAllArchived(true);
-      const articleIds = (totalCountQuery() || []).map((a) => a.id);
-      if (articleIds.length > 0) {
-        articlesCollection.update(articleIds, (drafts) => {
-          drafts.forEach((d) => (d.isArchived = true));
-        });
-      }
-      markAllModalController.close();
-    } catch (err) {
-      console.error('Mark many archived failed:', err);
-    } finally {
-      setIsMarkingAllArchived(false);
+    const articleIds = (archivableQuery() || []).map((a) => a.id);
+    if (articleIds.length > 0) {
+      articlesCollection.update(articleIds, (drafts) => {
+        drafts.forEach((d) => (d.isArchived = true));
+      });
     }
   };
 
@@ -106,7 +119,8 @@ function TagArticlesPage() {
 
   const filteredArticles = () => articlesQuery() || [];
   const totalCount = () => (totalCountQuery() || []).length;
-  const unreadCount = () => filteredArticles().filter((article) => !article.isRead).length;
+  const unreadCount = () => (unreadCountQuery() || []).length;
+  const archivableCount = () => (archivableQuery() || []).length;
 
   const handleLoadMore = () => {
     setVisibleCount((prev) => prev + ARTICLES_PER_PAGE);
@@ -117,20 +131,22 @@ function TagArticlesPage() {
       <ArticleListToolbar
         leftContent={<ReadStatusToggle currentStatus={readStatus()} />}
         rightContent={
-          <Show when={unreadCount() > 0 && readStatus() === 'unread'}>
+          <Show when={archivableCount() > 0}>
             <MarkAllArchivedButton
-              totalCount={unreadCount()}
+              totalCount={archivableCount()}
               contextLabel="in this tag"
               onConfirm={handleMarkAllArchived}
             />
           </Show>
         }
         mobileMenuContent={
-          <Show when={unreadCount() > 0 && readStatus() === 'unread'}>
+          <Show when={archivableCount() > 0}>
             <li>
-              <button onClick={() => markAllModalController.open()}>
-                Mark All Archived ({unreadCount()})
-              </button>
+              <MarkAllArchivedButton
+                totalCount={archivableCount()}
+                contextLabel="in this tag"
+                onConfirm={handleMarkAllArchived}
+              />
             </li>
           </Show>
         }
@@ -153,48 +169,6 @@ function TagArticlesPage() {
           />
         </Show>
       </Suspense>
-
-      <LazyModal
-        controller={(controller) => (markAllModalController = controller)}
-        class="max-w-md"
-        title="Mark All as Archived"
-      >
-        <div class="mb-6">
-          <p class="mb-4">
-            Are you sure you want to mark all unarchived articles as archived in this tag? This
-            action cannot be undone.
-          </p>
-
-          <Show when={unreadCount() > 0}>
-            <div class="bg-base-200 rounded-lg p-4">
-              <h4 class="text-base-content-gray mb-1 text-sm font-semibold">Articles to mark:</h4>
-              <p class="font-medium">
-                {unreadCount()} unarchived article{unreadCount() !== 1 ? 's' : ''}
-              </p>
-            </div>
-          </Show>
-        </div>
-
-        <div class="modal-action">
-          <button
-            type="button"
-            class="btn"
-            onClick={() => markAllModalController.close()}
-            disabled={isMarkingAllArchived()}
-          >
-            Cancel
-          </button>
-          <button
-            type="button"
-            class="btn btn-primary"
-            onClick={handleMarkAllArchived}
-            disabled={isMarkingAllArchived()}
-          >
-            {isMarkingAllArchived() && <span class="loading loading-spinner loading-sm"></span>}
-            {isMarkingAllArchived() ? 'Archiving...' : 'Mark All Archived'}
-          </button>
-        </div>
-      </LazyModal>
     </>
   );
 }
