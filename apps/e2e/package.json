@@ -1,5 +1,9 @@
 {
   "name": "@repo/e2e",
+  "description": "",
+  "keywords": [],
+  "license": "ISC",
+  "author": "",
   "main": "index.js",
   "scripts": {
     "test": "playwright test",
@@ -9,10 +13,6 @@
     "test:debug": "playwright test --debug",
     "report": "playwright show-report"
   },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
-  "description": "",
   "devDependencies": {
     "@playwright/test": "^1.58.2"
   }

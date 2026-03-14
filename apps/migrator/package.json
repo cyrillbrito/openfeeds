@@ -1,7 +1,7 @@
 {
   "name": "@repo/migrator",
-  "main": "src/index.ts",
   "type": "module",
+  "main": "src/index.ts",
   "scripts": {
     "migrate": "bun --env-file=../../.env src/index.ts"
   },
