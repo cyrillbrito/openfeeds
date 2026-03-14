@@ -539,3 +539,711 @@ All entity IDs are UUIDv7 (36 chars). The CLI should support deterministic short
 - [Citty](https://github.com/unjs/citty) — minimal CLI builder from UnJS ecosystem
 - [oclif](https://oclif.io/) — enterprise CLI framework by Salesforce (plugins, auto-update, installers)
 - [Simon Willison's `llm` CLI](https://llm.datasette.io/) — composable CLI for LLMs, pipe-friendly, plugin architecture, SQLite logging
+
+---
+
+---
+
+# Implementation Plan
+
+Step-by-step plan for building the OpenFeeds CLI as a Bun app using Commander.js.
+
+## Architecture: HTTP Client, Not Domain-Direct
+
+**The CLI is an HTTP client.** It calls the OpenFeeds server over HTTP — it does NOT import `@repo/domain` or access the database directly. This is the only viable model for distribution: users need a server URL and an auth token, not a Postgres connection string.
+
+**Implication: the server needs an API surface.** Today, entity mutations are done via TanStack Start server functions (internal RPC, not callable externally). The CLI needs proper HTTP endpoints. See [API Strategy](#api-strategy-hono-mounted-in-tanstack-start) below.
+
+### Package Architecture: `packages/api` with Dual Exports
+
+The Hono API is defined in a shared package (`packages/api`) with **two entrypoints** via the `exports` map:
+
+- **`@repo/api/server`** — the full Hono app (routes, middleware, domain calls). Used by `apps/web` to mount.
+- **`@repo/api/client`** — only the `AppType` type + pre-compiled `hc` helper. Used by `apps/cli`.
+
+This solves the dependency problem: the CLI never imports `@repo/domain`, `@repo/db`, SolidJS, or TanStack Start. It only imports `@repo/api/client`, which at runtime depends on nothing but `hono/client` — the `import type` from the server entrypoint is erased at compile time.
+
+```
+packages/api/
+├── package.json         ← exports: { "./server", "./client" }
+├── src/
+│   ├── server.ts        ← export const app = new Hono()... (full app)
+│   ├── client.ts        ← export type AppType + createApiClient()
+│   ├── routes/
+│   │   ├── feeds.ts
+│   │   ├── articles.ts
+│   │   ├── tags.ts
+│   │   ├── status.ts
+│   │   ├── opml.ts
+│   │   └── discover.ts
+│   ├── middleware/
+│   │   ├── auth.ts      ← Bearer token + session cookie
+│   │   └── errors.ts    ← global error handler
+│   └── openapi.ts       ← spec + Swagger UI route
+```
+
+```json
+// packages/api/package.json
+{
+  "name": "@repo/api",
+  "exports": {
+    "./server": "./src/server.ts",
+    "./client": "./src/client.ts"
+  }
+}
+```
+
+```ts
+// packages/api/src/client.ts
+import { hc } from 'hono/client';
+import type { app } from './server';
+
+export type AppType = typeof app;
+export const createApiClient = (...args: Parameters<typeof hc<AppType>>) => hc<AppType>(...args);
+```
+
+### What depends on what
+
+```
+apps/cli
+  └── @repo/api/client     ← type-only + hono/client (lightweight)
+       └── hono/client
+
+apps/web
+  └── @repo/api/server     ← full Hono app
+       └── @repo/domain
+           └── @repo/db
+           └── @repo/discovery
+           └── etc.
+```
+
+The CLI's only runtime dependencies: `commander` and `hono/client`. Everything else is type-only.
+
+## API Strategy: Hono Mounted in TanStack Start
+
+**Decision: mount a Hono app at `/api/v1/` inside TanStack Start.** This is a general-purpose API — not CLI-specific. The CLI is the first consumer, but the web app itself could migrate to use it over time, and any future consumer (mobile app, third-party integrations) gets the same API.
+
+### Why Hono
+
+Options considered:
+
+| Option                         | Verdict                                                                                                                                                                                                             |
+| ------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **TanStack Start routes only** | Works but no validation framework, no OpenAPI, no typed client. Every handler is manual `request.json()` + Zod + error handling boilerplate. Fine for 3-5 endpoints, painful for 20+.                               |
+| **Expose server functions**    | Internal/unstable URLs, POST-only, framework-controlled serialization. Not suitable for external consumers.                                                                                                         |
+| **JSON-RPC**                   | Less discoverable, harder to `curl`, no ecosystem tooling.                                                                                                                                                          |
+| **tRPC**                       | Good type safety but no OpenAPI, opinionated transport, less familiar.                                                                                                                                              |
+| **Elysia**                     | Has Eden Treaty (great typed client) and OpenAPI, but uses TypeBox instead of Zod (our entire codebase is Zod), Bun-only, complex type system with cryptic errors. Previously explored and found hard to work with. |
+| **Hono**                       | Web Standard `fetch` (same as TanStack Start), Zod-native validation, OpenAPI generation via `hono-openapi`, built-in typed RPC client (`hc`), rich middleware ecosystem, runs on any runtime.                      |
+
+Hono wins because:
+
+1. **Zod-native** — our entire codebase uses Zod. Hono + `hono-openapi` uses Zod schemas directly for validation AND OpenAPI spec generation. Zero friction.
+2. **OpenAPI for free** — auto-generated spec from route definitions → Swagger UI + standalone client generation for distribution.
+3. **Typed RPC client** — `hc` infers types from `typeof app` at compile time. Works in monorepo with zero codegen.
+4. **Trivial mounting** — one catch-all file, same pattern as our existing MCP route.
+5. **Familiar** — Express-like `app.get`, `app.post`, `.use()` middleware. No new mental model.
+
+### How It Mounts
+
+```ts
+// apps/web/src/routes/api/v1/$.ts
+import { app } from '@repo/api/server';
+import { createFileRoute } from '@tanstack/solid-router';
+
+const handle = ({ request }: { request: Request }) => app.fetch(request);
+
+export const Route = createFileRoute('/api/v1/$')({
+  server: {
+    handlers: { GET: handle, POST: handle, PUT: handle, DELETE: handle, PATCH: handle },
+  },
+});
+```
+
+The Hono app lives in `packages/api/` (not in the web app). The catch-all route in `apps/web` is just the mount point — a 5-line file. Hono handles its own routing, middleware, validation, and responses internally.
+
+### What Hono Gives Us
+
+| Concern             | How                                                                                                                                                                            |
+| ------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| **Validation**      | `validator('json', zodSchema)` — validates body, query, params, headers. Returns 400 automatically on failure. Typed access via `c.req.valid('json')`.                         |
+| **Middleware**      | Built-in: `hono/cors`, `hono/bearer-auth`, `hono/logger`. Custom middleware wraps our existing auth logic.                                                                     |
+| **OpenAPI/Swagger** | `hono-openapi`: `describeRoute()` adds metadata, `resolver(zodSchema)` links response schemas, `openAPIRouteHandler(app)` serves the spec. Mount Swagger UI at `/api/v1/docs`. |
+| **Error handling**  | `app.onError()` global handler. `HTTPException` for typed errors. Structured `{ error: { code, message, details } }` responses.                                                |
+| **CORS**            | `hono/cors` one-liner.                                                                                                                                                         |
+
+### Server Functions vs API Routes: Coexistence Path
+
+Today, 35 server functions handle all mutations. ~29 are thin wrappers: `authMiddleware → Zod validation → withTransaction(db, userId, ctx => domain.fn(ctx, data)) → { txid }`. The Hono routes will call the exact same `@repo/domain` functions.
+
+**Phase 1:** Hono API exists alongside server functions. Both call `@repo/domain`. The CLI uses the Hono API. The web app keeps using server functions. Zero migration risk.
+
+**Phase 2 (later, optional):** The web app migrates from server functions to calling the Hono API via the typed `hc` client (or plain `fetch`). Server functions become dead code and get deleted. Single API surface, single auth path, single validation layer.
+
+No rush on Phase 2 — the duplication is mechanical and harmless. The domain layer is the source of truth regardless of transport.
+
+### Auth for API Routes
+
+The existing `authRequestMiddleware` (used by shape proxies) already handles request-level auth — validates session cookies and returns 401 JSON on failure. For CLI/external use, we need **Bearer token auth** (not cookies). Better Auth supports API key or Bearer token authentication that can be added to the same middleware.
+
+The Hono app will have its own auth middleware (using `hono/bearer-auth` or a custom wrapper around Better Auth) that supports both session cookies (for web app calls) and Bearer tokens (for CLI/external calls).
+
+### API Client Strategy
+
+The CLI uses the typed Hono RPC client from `@repo/api/client`. This is the primary approach — the alternatives below are fallbacks for specific scenarios.
+
+#### Primary: Hono RPC Client via `@repo/api/client`
+
+The `packages/api` package exports a pre-compiled typed client. The CLI imports it directly:
+
+```ts
+import { createApiClient } from '@repo/api/client';
+
+const client = createApiClient('https://app.openfeeds.com', {
+  headers: { Authorization: `Bearer ${token}` },
+});
+
+const res = await client.api.v1.feeds.$get();
+const data = await res.json(); // fully typed
+```
+
+**How type inference works:** Hono routes must be **chained** (not registered separately) for types to propagate. Each sub-router chains its handlers, then chains into the main app via `.route()`:
+
+```ts
+// packages/api/src/routes/feeds.ts
+const feedRoutes = new Hono()
+  .get('/', validator('query', listSchema), (c) => { ... })
+  .post('/', validator('json', createSchema), (c) => { ... })
+  .get('/:id', (c) => { ... })
+
+// packages/api/src/server.ts
+const app = new Hono()
+  .basePath('/api/v1')
+  .route('/feeds', feedRoutes)
+  .route('/articles', articleRoutes)
+  // Must be chained — app.route() called separately breaks type inference
+
+export type AppType = typeof app
+```
+
+**Known limitations and gotchas:**
+
+- **Chaining is mandatory.** `app.route('/feeds', feeds); app.route('/articles', articles)` as separate statements does NOT propagate types. Must be `app.route('/feeds', feeds).route('/articles', articles)`.
+- **IDE slowdown with many routes.** Hono's type inference creates massive type instantiations. With ~20 endpoints this should be manageable, but worth monitoring. The pre-compiled `createApiClient` in `@repo/api/client` mitigates this.
+- **`hono` version must match between server and client.** In a monorepo this is natural (single `hono` dependency in `packages/api`).
+- **`c.notFound()` breaks inference.** Must use `c.json({ error: '...' }, 404)` instead. Always specify status codes explicitly in `c.json()`.
+- **`tsconfig` strict mode required** on both server and client side for RPC types to work. We already have this.
+- **Returns raw `Response`**, not `{ data, error }` like Elysia's Eden. You call `res.json()` yourself. Slightly more ceremony but no magic.
+
+#### Fallback A: Plain `fetch` with Shared Types
+
+Skip `hc` entirely. The CLI uses raw `fetch` and imports shared Zod schemas / TypeScript types from `@repo/api/client`:
+
+```ts
+const res = await fetch(`${baseUrl}/api/v1/feeds`, {
+  headers: { Authorization: `Bearer ${token}` },
+});
+const data: FeedListResponse = await res.json();
+```
+
+Simpler, no Hono dependency in the CLI, but no automatic type safety on the response.
+
+#### Fallback B: OpenAPI-Generated Client
+
+Since Hono + `hono-openapi` produces an OpenAPI spec, we can generate a standalone typed client:
+
+```bash
+bunx openapi-typescript https://app.openfeeds.com/api/v1/openapi.json -o src/api-types.ts
+```
+
+Best for distribution if the CLI is ever extracted from the monorepo. More setup but fully decoupled.
+
+#### Decision
+
+Use `@repo/api/client` (the pre-compiled `hc` wrapper). It's zero-config in the monorepo, gives immediate type safety, and the dual-export pattern ensures the CLI never pulls in server dependencies. Fall back to OpenAPI codegen only if the CLI is extracted from the monorepo.
+
+## CLI Structure Research Summary
+
+Studied the file layout of Vite (CAC), Create-T3-App (Commander), Drizzle Kit (brocli), and Supabase CLI (Go/Cobra). Key findings:
+
+| CLI size      | Pattern                              | Example      |
+| ------------- | ------------------------------------ | ------------ |
+| < 5 commands  | Single file, all commands inline     | Vite         |
+| 5-15 commands | Definition file + `commands/` dir    | Drizzle Kit  |
+| 15+ commands  | One file per resource in `commands/` | Supabase CLI |
+
+All separate CLI wiring (parsing flags, routing) from the actual work. Output formatting is its own module.
+
+**Our CLI has ~20 commands across 5 resources** (auth, feed, article, tag, opml) plus `status` and `skill`. One file per resource, Supabase-style.
+
+## Step 0 — Scaffold the App
+
+Create `apps/cli/` as a new Bun workspace app.
+
+```bash
+# From repo root
+mkdir -p apps/cli/src
+```
+
+**`apps/cli/package.json`:**
+
+```json
+{
+  "name": "@repo/cli",
+  "type": "module",
+  "bin": {
+    "openfeeds": "src/index.ts"
+  },
+  "scripts": {
+    "dev": "bun run src/index.ts",
+    "check-types": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@repo/api": "workspace:*",
+    "commander": "^13.0.0"
+  },
+  "devDependencies": {
+    "@types/bun": "^1.3.10",
+    "typescript": "^5"
+  }
+}
+```
+
+Note: `@repo/api` is a dependency, but the CLI only imports from `@repo/api/client` — which at runtime is just `hono/client`. No domain/db/web code is pulled in.
+
+**Root `package.json` addition:**
+
+```json
+"cli": "bun --cwd=apps/cli run src/index.ts --"
+```
+
+This lets you run `bun cli feed list --json` from the repo root during development.
+
+## Step 1 — File Structure
+
+```
+apps/cli/
+├── package.json
+├── tsconfig.json
+├── AGENTS.md
+└── src/
+    ├── index.ts              # Entry point — creates program, registers commands, parses
+    ├── commands/
+    │   ├── auth.ts           # auth login, auth logout, auth status
+    │   ├── feed.ts           # feed list, feed add, feed remove, feed show, feed refresh, feed discover
+    │   ├── article.ts        # article list, article show, article read, article unread, article bookmark, article search
+    │   ├── tag.ts            # tag list, tag create, tag rename, tag delete
+    │   ├── opml.ts           # opml import, opml export
+    │   ├── status.ts         # top-level status command
+    │   └── skill.ts          # skill install
+    ├── lib/
+    │   ├── client.ts         # HTTP client — wraps @repo/api/client's createApiClient, adds auth headers, base URL
+    │   ├── output.ts         # JSON vs human-readable formatting, stdout/stderr routing
+    │   ├── errors.ts         # Structured error handling, exit codes, HTTP error mapping
+    │   ├── auth.ts           # Token resolution (flag → env var → config file → error)
+    │   ├── config.ts         # Read/write ~/.config/openfeeds/config.json (token, server URL)
+    │   ├── globals.ts        # Global option types, extraction from Commander opts
+    └── env.ts                # t3-env validation (OPENFEEDS_URL, OPENFEEDS_TOKEN)
+```
+
+**Key differences from a domain-direct CLI:**
+
+- **`lib/client.ts`** instead of `lib/context.ts` — builds HTTP requests, not DomainContext
+- **`lib/config.ts`** — manages `~/.config/openfeeds/config.json` for persisted server URL + token
+- **No domain/db imports** — errors are mapped from HTTP status codes, not domain error classes
+- **Short IDs are client-side** — the server returns full UUIDs, the CLI truncates for display and expands on input
+
+### Why this structure
+
+- **`commands/`** — One file per resource. Each exports a function that creates a `Command` with subcommands. Follows Supabase/Drizzle pattern.
+- **`lib/`** — CLI concerns: HTTP calls, output formatting, auth, config. No business logic.
+- **`index.ts`** — Thin entry point. Imports command builders, registers on root program, calls `parse()`. ~30 lines.
+
+## Step 2 — Entry Point & Global Options
+
+**`src/index.ts`:**
+
+```ts
+import { Command } from 'commander';
+
+const program = new Command()
+  .name('openfeeds')
+  .description('OpenFeeds CLI — manage your feeds from the terminal')
+  .version('0.1.0')
+  .option('-j, --json', 'Output as JSON')
+  .option('-s, --status-after', 'Include status after mutations')
+  .option('-y, --yes', 'Skip confirmation prompts')
+  .option('--no-color', 'Disable colored output')
+  .option('-q, --quiet', 'Suppress non-essential output')
+  .option('--token <token>', 'Auth token (overrides OPENFEEDS_TOKEN)')
+  .option('--url <url>', 'Server URL (overrides OPENFEEDS_URL)');
+
+// Register commands
+program.addCommand(makeFeedCommand());
+program.addCommand(makeArticleCommand());
+program.addCommand(makeTagCommand());
+program.addCommand(makeAuthCommand());
+program.addCommand(makeOpmlCommand());
+program.addCommand(makeStatusCommand());
+program.addCommand(makeSkillCommand());
+
+program.parse();
+```
+
+**Global options type (`lib/globals.ts`):**
+
+```ts
+export interface GlobalOptions {
+  json?: boolean;
+  statusAfter?: boolean;
+  yes?: boolean;
+  color?: boolean; // Commander negates --no-color to color=false
+  quiet?: boolean;
+  token?: string;
+  url?: string; // Server URL
+}
+
+export function getGlobalOptions(cmd: Command): GlobalOptions {
+  return cmd.optsWithGlobals();
+}
+```
+
+Note the addition of `--url` — since the CLI is an HTTP client, it needs to know where the server is. Resolution order: `--url` flag → `OPENFEEDS_URL` env var → `~/.config/openfeeds/config.json` → default `https://app.openfeeds.com` (or whatever the production URL is).
+
+## Step 3 — HTTP Client (`lib/client.ts`)
+
+The central abstraction. Every command calls the server through this. Two approaches depending on the client strategy chosen (see [API Client Strategy](#api-client-strategy-to-explore)):
+
+### Option A: Hono `hc` Typed Client (Recommended for Monorepo Dev)
+
+```ts
+import { createApiClient } from '@repo/api/client';
+import type { GlobalOptions } from './globals';
+
+function createClient(globals: GlobalOptions) {
+  const baseUrl = resolveUrl(globals);
+  const token = resolveToken(globals);
+  return createApiClient(baseUrl, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+}
+
+// Usage in commands — fully typed
+const client = createClient(globals);
+const res = await client.api.v1.feeds.$get({ query: { limit: '20' } });
+if (!res.ok) throw new ApiError(res.status, await res.json());
+const data = await res.json(); // typed as FeedListResponse
+```
+
+### Option B: Plain Fetch Wrapper (Fallback / Distribution)
+
+```ts
+interface ClientConfig {
+  baseUrl: string;
+  token: string;
+}
+
+function createClient(globals: GlobalOptions): Client {
+  const baseUrl = resolveUrl(globals);
+  const token = resolveToken(globals);
+  return {
+    get: (path, params?) => request('GET', baseUrl, path, token, { params }),
+    post: (path, body?) => request('POST', baseUrl, path, token, { body }),
+    put: (path, body?) => request('PUT', baseUrl, path, token, { body }),
+    delete: (path) => request('DELETE', baseUrl, path, token),
+  };
+}
+
+async function request(method, baseUrl, path, token, opts?) {
+  const res = await fetch(`${baseUrl}${path}`, {
+    method,
+    headers: {
+      Authorization: `Bearer ${token}`,
+      'Content-Type': 'application/json',
+    },
+    body: opts?.body ? JSON.stringify(opts.body) : undefined,
+  });
+
+  if (!res.ok) {
+    const error = await res.json().catch(() => null);
+    throw new ApiError(res.status, error);
+  }
+
+  return res.json();
+}
+```
+
+Simple. No external HTTP library needed — `fetch` is built into Bun.
+
+## Step 4 — Output Formatting (`lib/output.ts`)
+
+Same as before — this is purely a CLI concern, independent of how data is fetched.
+
+```ts
+// Success output — always to stdout
+function output(data: unknown, opts: OutputOptions): void;
+
+// List output with pagination metadata
+function outputList(data: unknown[], meta: PaginationMeta, opts: OutputOptions): void;
+
+// Mutation result, optionally with status-after
+function outputResult(result: unknown, status: unknown | null, opts: OutputOptions): void;
+
+// Error output — always to stderr
+function outputError(error: StructuredError, opts: OutputOptions): void;
+
+// Diagnostic messages — to stderr, suppressed by --quiet
+function log(message: string, opts: OutputOptions): void;
+```
+
+**JSON output shapes:**
+
+```ts
+// Read commands
+{ data: [...], meta: { total, limit, offset } }
+
+// Write commands
+{ result: { ... } }
+
+// Write commands with --status-after
+{ result: { ... }, status: { ... } }
+
+// Errors (on stderr)
+{ error: { code: "feed_not_found", message: "...", details: { ... } } }
+```
+
+**Human-readable output:** Simple table/list formatting. No external dependency for v1.
+
+## Step 5 — Error Handling (`lib/errors.ts`)
+
+Map HTTP status codes (not domain error classes) to exit codes and structured JSON:
+
+```ts
+const EXIT_CODES = {
+  SUCCESS: 0,
+  INPUT_ERROR: 1, // 400 Bad Request, 422 Validation
+  RESOURCE_ERROR: 2, // 404 Not Found, 409 Conflict
+  AUTH_ERROR: 3, // 401 Unauthorized, 403 Forbidden
+  SYSTEM_ERROR: 4, // 500, network errors, timeouts
+} as const;
+
+function handleError(error: unknown, opts: OutputOptions): never {
+  if (error instanceof ApiError) {
+    // Server returned structured error JSON — pass it through
+    const exitCode = httpStatusToExitCode(error.status);
+    outputError(error.body ?? { code: 'unknown', message: error.message }, opts);
+    process.exit(exitCode);
+  }
+  if (error instanceof TypeError && error.message.includes('fetch')) {
+    // Network error — server unreachable
+    outputError({ code: 'network_error', message: 'Could not reach server' }, opts);
+    process.exit(EXIT_CODES.SYSTEM_ERROR);
+  }
+  // Unknown error
+  outputError({ code: 'unknown', message: String(error) }, opts);
+  process.exit(EXIT_CODES.SYSTEM_ERROR);
+}
+```
+
+**Key design: the server should return structured error JSON.** The CLI passes it through. The error format is defined server-side, not client-side. The CLI only maps HTTP status → exit code and handles network-level failures.
+
+## Step 6 — Auth (`lib/auth.ts` + `lib/config.ts`)
+
+Token resolution order:
+
+1. `--token` flag (highest priority)
+2. `OPENFEEDS_TOKEN` env var
+3. Config file `~/.config/openfeeds/config.json`
+4. Error with instructions
+
+```ts
+function resolveToken(opts: GlobalOptions): string {
+  if (opts.token) return opts.token;
+  if (process.env.OPENFEEDS_TOKEN) return process.env.OPENFEEDS_TOKEN;
+  const config = readConfig();
+  if (config?.token) return config.token;
+  throw new AuthRequiredError(
+    "Not authenticated. Run 'openfeeds auth login' or set OPENFEEDS_TOKEN.",
+  );
+}
+```
+
+**Config file (`lib/config.ts`):**
+
+```ts
+// ~/.config/openfeeds/config.json
+interface CliConfig {
+  token?: string;
+  url?: string; // Server URL override
+}
+
+function readConfig(): CliConfig | null;
+function writeConfig(config: CliConfig): void;
+```
+
+**`auth login` v1:** Accept `--token <value>`, save to config. Browser-based OAuth device flow is a later enhancement.
+
+## Step 7 — Command Implementation (One Resource at a Time)
+
+Each command file follows the same pattern (shown with Hono `hc` client):
+
+```ts
+// commands/feed.ts
+import { Command } from 'commander';
+import { createClient } from '../lib/client';
+import { withErrorHandling } from '../lib/errors';
+import { getGlobalOptions } from '../lib/globals';
+import { outputList, outputResult } from '../lib/output';
+
+export function makeFeedCommand(): Command {
+  const feed = new Command('feed').description('Manage feeds');
+
+  feed
+    .command('list')
+    .description('List all feeds')
+    .option('--tag <name>', 'Filter by tag')
+    .option('--limit <n>', 'Limit results', '20')
+    .option('--offset <n>', 'Offset for pagination', '0')
+    .action(
+      withErrorHandling(async (options, cmd) => {
+        const globals = getGlobalOptions(cmd);
+        const client = createClient(globals);
+        const res = await client.api.v1.feeds.$get({
+          query: {
+            tag: options.tag,
+            limit: options.limit,
+            offset: options.offset,
+          },
+        });
+        if (!res.ok) throw new ApiError(res.status, await res.json());
+        const result = await res.json(); // typed
+        outputList(result.data, result.meta, globals);
+      }),
+    );
+
+  feed
+    .command('add')
+    .description('Add a feed')
+    .argument('<url>', 'Feed URL')
+    .option('--title <title>', 'Override feed title')
+    .option('--tag <name>', 'Add to tag')
+    .action(
+      withErrorHandling(async (url, options, cmd) => {
+        const globals = getGlobalOptions(cmd);
+        const client = createClient(globals);
+        const res = await client.api.v1.feeds.$post({
+          json: {
+            url,
+            title: options.title,
+            tag: options.tag,
+            statusAfter: globals.statusAfter,
+          },
+        });
+        if (!res.ok) throw new ApiError(res.status, await res.json());
+        const result = await res.json(); // typed
+        outputResult(result.result, result.status ?? null, globals);
+      }),
+    );
+
+  // ... remove, show, refresh, discover
+
+  return feed;
+}
+```
+
+### Implementation order (by dependency and value)
+
+| Phase | Commands                                                       | Why first                                                      |
+| ----- | -------------------------------------------------------------- | -------------------------------------------------------------- |
+| 1     | `status`, `feed list`, `feed show`                             | Read-only, validates the full stack (auth → HTTP → output)     |
+| 2     | `feed add`, `feed remove`, `feed refresh`                      | Write commands, tests `--status-after`, `--yes`                |
+| 3     | `article list`, `article show`, `article read/unread/bookmark` | High-value for agents                                          |
+| 4     | `tag list/create/rename/delete`                                | Simple CRUD                                                    |
+| 5     | `feed discover`, `article search`                              | More complex                                                   |
+| 6     | `opml import/export`                                           | File I/O, stdin piping                                         |
+| 7     | `auth login/logout/status`                                     | Token-paste works from Phase 1; this adds the interactive flow |
+| 8     | `skill install`                                                | Drops SKILL.md file                                            |
+
+**Critical dependency:** Phases 1-6 require the server API routes to exist. The CLI and API need to be built in parallel or the API first.
+
+## Step 8 — SKILL File (`commands/skill.ts`)
+
+`openfeeds skill install` writes a `SKILL.md` to the current directory. Content is embedded in the CLI binary.
+
+Content should include:
+
+- Command reference (all commands with flags)
+- Common workflows (add feed → list articles → read)
+- Output format examples
+- Rules (always use `--json`, always use `--yes`)
+
+## Step 9 — Wiring into the Monorepo
+
+1. Add `"cli": "bun --cwd=apps/cli run src/index.ts --"` to root `package.json` scripts
+2. Add `apps/cli` to turbo `check-types` task (automatic via workspace)
+3. Add `AGENTS.md` for the CLI app
+4. No build step needed — Bun runs TypeScript directly
+
+## Step 10 — Testing Strategy
+
+- **Manual testing** during development: `bun cli feed list --json` (requires server running)
+- **Unit tests** for `lib/` modules (output formatting, short-id, error mapping) — pure functions, no server needed
+- **Integration tests** against a running dev server — could be part of the existing `apps/e2e` suite
+
+## Server-Side Work Required
+
+Before the CLI can function, the API package and web app mount point need:
+
+1. **`packages/api/` package** — Hono app with dual exports (`./server` for mounting, `./client` for typed client)
+2. **Catch-all route in `apps/web/`** — `src/routes/api/v1/$.ts` importing from `@repo/api/server`
+3. **Hono route modules** — `/feeds`, `/articles`, `/tags`, `/status`, `/opml`, `/discover` with Zod validation via `hono-openapi`
+4. **Bearer token auth** — Hono middleware supporting both session cookies (web app) and Bearer tokens (CLI/external)
+5. **OpenAPI spec + Swagger UI** — via `hono-openapi`, served at `/api/v1/openapi.json` and `/api/v1/docs`
+6. **Structured error responses** — consistent `{ error: { code, message, details } }` JSON via Hono's `onError` handler
+7. **Short ID resolution** — server-side `WHERE id::text LIKE '%suffix'` support
+8. **`statusAfter` support** — routes that accept a `statusAfter` param and append current state to the response
+
+## Checklist
+
+### CLI App (`apps/cli/`)
+
+- [ ] Scaffold: `package.json`, `tsconfig.json`, `AGENTS.md`
+- [ ] `src/index.ts` — entry point, Commander setup, global flags
+- [ ] `src/lib/client.ts` — wraps `@repo/api/client`'s `createApiClient`, adds auth headers + error mapping
+- [ ] `src/lib/output.ts` — JSON + human formatting
+- [ ] `src/lib/errors.ts` — structured errors, exit codes from HTTP status
+- [ ] `src/lib/globals.ts` — global option types
+- [ ] `src/lib/auth.ts` — token resolution (flag → env → config)
+- [ ] `src/lib/config.ts` — `~/.config/openfeeds/config.json` read/write
+- [ ] `src/env.ts` — t3-env validation (`OPENFEEDS_URL`, `OPENFEEDS_TOKEN`)
+- [ ] Phase 1 commands: `status`, `feed list`, `feed show`
+- [ ] Phase 2 commands: `feed add`, `feed remove`, `feed refresh`
+- [ ] Phase 3 commands: `article list`, `article show`, `article read/unread/bookmark`
+- [ ] Phase 4 commands: `tag list/create/rename/delete`
+- [ ] Phase 5 commands: `feed discover`, `article search`
+- [ ] Phase 6 commands: `opml import/export`
+- [ ] Phase 7 commands: `auth login/logout/status`
+- [ ] Phase 8: `skill install` + SKILL.md content
+- [ ] Root `package.json` `cli` script
+
+### API Package (`packages/api/`)
+
+- [ ] Scaffold: `package.json` with dual exports (`./server`, `./client`), `tsconfig.json`, `AGENTS.md`
+- [ ] `src/server.ts` — Hono app with `basePath('/api/v1')`, chained `.route()` calls
+- [ ] `src/client.ts` — `AppType` type export + `createApiClient()` wrapper
+- [ ] Auth middleware: Bearer token + session cookie support
+- [ ] Global error handler with structured `{ error: { code, message, details } }` JSON
+- [ ] OpenAPI spec via `hono-openapi` at `/api/v1/openapi.json`
+- [ ] Swagger UI at `/api/v1/docs`
+- [ ] Route: feeds CRUD (`src/routes/feeds.ts`)
+- [ ] Route: articles CRUD (`src/routes/articles.ts`)
+- [ ] Route: tags CRUD (`src/routes/tags.ts`)
+- [ ] Route: status/overview (`src/routes/status.ts`)
+- [ ] Route: OPML import/export (`src/routes/opml.ts`)
+- [ ] Route: feed discovery (`src/routes/discover.ts`)
+- [ ] `statusAfter` support on mutation endpoints
+
+### Web App (`apps/web/`)
+
+- [ ] Mount catch-all route at `apps/web/src/routes/api/v1/$.ts` importing from `@repo/api/server`
+- [ ] Export `AppType` for typed client consumption
