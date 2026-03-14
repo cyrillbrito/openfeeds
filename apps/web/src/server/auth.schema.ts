@@ -12,6 +12,16 @@ export const auth = betterAuth({
   database: drizzleAdapter(new SQL(''), { provider: 'pg' }),
   trustedOrigins: ['https://appleid.apple.com'],
   disabledPaths: ['/token'],
+  user: {
+    additionalFields: {
+      plan: {
+        type: 'string',
+        required: false,
+        defaultValue: 'free',
+        input: false,
+      },
+    },
+  },
   socialProviders: {
     google: {
       clientId: '',

@@ -1,4 +1,5 @@
 import type { Db, Transaction } from '@repo/db';
+import type { Plan } from './limits.schema';
 
 // ---------------------------------------------------------------------------
 // Context types
@@ -7,6 +8,7 @@ import type { Db, Transaction } from '@repo/db';
 export interface DomainContext {
   userId: string;
   conn: Db | Transaction;
+  plan: Plan;
 }
 
 export interface TransactionContext extends DomainContext {
@@ -18,13 +20,14 @@ export interface TransactionContext extends DomainContext {
 // Context creation
 // ---------------------------------------------------------------------------
 
-export function createDomainContext(conn: Db, userId: string): DomainContext {
-  return { userId, conn };
+export function createDomainContext(conn: Db, userId: string, plan: Plan = 'free'): DomainContext {
+  return { userId, conn, plan };
 }
 
 export async function withTransaction<T>(
   conn: Db,
   userId: string,
+  plan: Plan,
   fn: (ctx: TransactionContext) => Promise<T>,
 ): Promise<T> {
   const pendingEffects: Array<() => Promise<unknown>> = [];
@@ -32,6 +35,7 @@ export async function withTransaction<T>(
   const result = await conn.transaction(async (tx) => {
     const ctx: TransactionContext = {
       userId,
+      plan,
       conn: tx,
       afterCommit: (effect) => {
         pendingEffects.push(effect);

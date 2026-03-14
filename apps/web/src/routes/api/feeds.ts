@@ -1,6 +1,7 @@
 import { db } from '@repo/db';
 import * as feedsDomain from '@repo/domain';
 import { feedUrlSchema, withTransaction } from '@repo/domain';
+import type { Plan } from '@repo/domain/client';
 import { createFileRoute } from '@tanstack/solid-router';
 import { z } from 'zod/v4';
 import { auth } from '~/server/auth';
@@ -55,9 +56,14 @@ export const Route = createFileRoute('/api/feeds')({
         }
 
         try {
-          const [feed] = await withTransaction(db, session.user.id, async (ctx) => {
-            return feedsDomain.createFeeds(ctx, [{ feedUrl: parsed.data.url }]);
-          });
+          const [feed] = await withTransaction(
+            db,
+            session.user.id,
+            (session.user.plan as Plan) ?? 'free',
+            async (ctx) => {
+              return feedsDomain.createFeeds(ctx, [{ feedUrl: parsed.data.url }]);
+            },
+          );
           return Response.json(feed, { status: 201, headers });
         } catch (error) {
           if (error instanceof feedsDomain.LimitExceededError) {
