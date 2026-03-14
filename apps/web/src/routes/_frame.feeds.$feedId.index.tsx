@@ -148,7 +148,7 @@ function FeedArticles() {
             where={(article) => eq(article.feedId, feedId())}
             linkProps={{
               to: '/feeds/$feedId/shorts',
-              params: { feedId: feedId().toString() },
+              params: { feedId: feedId()! },
               search: { readStatus: readStatus() },
             }}
           />
