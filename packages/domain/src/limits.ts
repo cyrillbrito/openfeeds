@@ -209,17 +209,20 @@ export async function getUserUsage(userId: string, plan: Plan = 'free'): Promise
     countMonthlyTts(userId, db),
   ]);
 
+  /** Map Infinity → null so the value survives JSON serialization. */
+  const cap = (n: number): number | null => (Number.isFinite(n) ? n : null);
+
   return {
-    feeds: { used: feedCount, limit: limits.feeds },
-    filterRules: { used: ruleCount, limit: limits.filterRules },
-    savedArticles: { used: savedCount, limit: limits.savedArticles },
+    feeds: { used: feedCount, limit: cap(limits.feeds) },
+    filterRules: { used: ruleCount, limit: cap(limits.filterRules) },
+    savedArticles: { used: savedCount, limit: cap(limits.savedArticles) },
     extractions: {
-      daily: { used: dailyExtractions, limit: limits.extractionsPerDay },
-      monthly: { used: monthlyExtractions, limit: limits.extractionsPerMonth },
+      daily: { used: dailyExtractions, limit: cap(limits.extractionsPerDay) },
+      monthly: { used: monthlyExtractions, limit: cap(limits.extractionsPerMonth) },
     },
     tts: {
-      daily: { used: dailyTts, limit: limits.ttsPerDay },
-      monthly: { used: monthlyTts, limit: limits.ttsPerMonth },
+      daily: { used: dailyTts, limit: cap(limits.ttsPerDay) },
+      monthly: { used: monthlyTts, limit: cap(limits.ttsPerMonth) },
     },
   };
 }

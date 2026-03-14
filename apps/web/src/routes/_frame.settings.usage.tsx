@@ -32,8 +32,8 @@ function flattenUsage(usage: UserUsage) {
   ];
 }
 
-function isUnlimited(limit: number) {
-  return !Number.isFinite(limit);
+function isUnlimited(limit: number | null) {
+  return limit === null;
 }
 
 function UsageLimitsCard() {
@@ -60,7 +60,7 @@ function UsageLimitsCard() {
             <For each={flattenUsage(usage()!)}>
               {(item) => {
                 const unlimited = isUnlimited(item.limit);
-                const pct = () => (unlimited ? 0 : Math.round((item.used / item.limit) * 100));
+                const pct = () => (unlimited ? 0 : Math.round((item.used / item.limit!) * 100));
                 return (
                   <div>
                     <div class="mb-1 flex justify-between text-sm">
@@ -73,7 +73,7 @@ function UsageLimitsCard() {
                       <progress
                         class={`progress w-full ${pct() >= 90 ? 'progress-error' : pct() >= 70 ? 'progress-warning' : 'progress-primary'}`}
                         value={item.used}
-                        max={item.limit}
+                        max={item.limit!}
                       />
                     </Show>
                   </div>
