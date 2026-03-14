@@ -7,9 +7,9 @@ import { trackEvent } from './analytics';
 import { extractArticleContent } from './entities/article';
 import type { ArticleAudioMetadata, WordTiming } from './entities/tts.schema';
 import { env } from './env';
-import { LimitExceededError, TtsNotConfiguredError } from './errors';
-import { countDailyTts, countMonthlyTts } from './limits';
-import { PLAN_LIMITS, type Plan } from './limits.schema';
+import { TtsNotConfiguredError } from './errors';
+import { checkTtsLimit } from './limits';
+import type { Plan } from './limits.schema';
 
 // Re-export client-safe types
 export * from './entities/tts.schema';
@@ -139,29 +139,6 @@ function stripHtml(html: string): string {
 }
 
 /**
- * Check whether a user has exceeded their TTS generation rate limits.
- * Returns the window that was hit ('daily' | 'monthly') or null if within limits.
- */
-async function getTtsLimitWindow(
-  userId: string,
-  plan: Plan,
-): Promise<{ window: 'daily' | 'monthly'; current_usage: number; limit: number } | null> {
-  const limits = PLAN_LIMITS[plan];
-  const [daily, monthly] = await Promise.all([
-    countDailyTts(userId, db),
-    countMonthlyTts(userId, db),
-  ]);
-
-  if (daily >= limits.ttsPerDay) {
-    return { window: 'daily', current_usage: daily, limit: limits.ttsPerDay };
-  }
-  if (monthly >= limits.ttsPerMonth) {
-    return { window: 'monthly', current_usage: monthly, limit: limits.ttsPerMonth };
-  }
-  return null;
-}
-
-/**
  * Generate audio for an article using Unreal Speech API
  */
 export async function generateArticleAudio(
@@ -183,13 +160,7 @@ export async function generateArticleAudio(
     }
   }
 
-  // Check TTS rate limit (daily + monthly)
-  const ttsLimit = await getTtsLimitWindow(userId, plan);
-  if (ttsLimit) {
-    trackEvent(userId, 'limits:tts_limit_hit', ttsLimit);
-    const windowLabel = ttsLimit.window === 'daily' ? 'daily' : 'monthly';
-    throw new LimitExceededError(`${windowLabel} TTS generations`, ttsLimit.limit);
-  }
+  await checkTtsLimit(userId, plan);
 
   const cleanContent = await extractArticleContent(articleId, userId, plan);
 
