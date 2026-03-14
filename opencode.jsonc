@@ -5,5 +5,13 @@
       "type": "local",
       "command": ["bunx", "chrome-devtools-mcp@latest", "--browser-url=http://localhost:9222"],
     },
+    "posthog": {
+      "type": "remote",
+      "url": "https://mcp.posthog.com/mcp",
+      "headers": {
+        "Authorization": "Bearer {env:POSTHOG_API_KEY}",
+        "x-posthog-project-id": "{env:POSTHOG_PROJECT_ID}",
+      },
+    },
   },
 }

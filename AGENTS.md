@@ -62,7 +62,7 @@ Each package/app owns and validates its own env vars using t3-env in `src/env.ts
 
 ## Version Control (GitButler)
 
-This repo uses GitButler workspace mode. Use `but` CLI for all version control operations. Load the `but` skill for command reference.
+This repo uses GitButler workspace mode. Use `but` CLI for **all** version control operations — commits, pushes, branches, and PRs. Prefer `but` over `git` write commands and `gh pr create`. Load the `but` skill for command reference.
 
 Commit messages and PR titles must use [Conventional Commits](https://www.conventionalcommits.org/) (`type(scope): description`). Enforced by CI; used by Release Please for changelogs. PR titles should describe the problem solved or behavior changed, not the technical implementation — they appear in user-facing changelogs.
 
