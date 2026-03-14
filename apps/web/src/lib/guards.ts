@@ -22,12 +22,9 @@ export const hasSession = createIsomorphicFn()
     try {
       const sessionData = await authClient.getSession();
       if (sessionData.error) {
-        const err =
-          sessionData.error instanceof Error
-            ? sessionData.error
-            : new Error(String(sessionData.error));
-        posthog.captureException(err);
-        throw err;
+        throw sessionData.error instanceof Error
+          ? sessionData.error
+          : new Error(String(sessionData.error));
       }
       return !!sessionData.data;
     } catch (error) {
