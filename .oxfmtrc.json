@@ -1,0 +1,16 @@
+{
+  "$schema": "./node_modules/oxfmt/configuration_schema.json",
+  "trailingComma": "all",
+  "singleQuote": true,
+  "printWidth": 100,
+  "sortTailwindcss": {},
+  "sortImports": { "newlinesBetween": false },
+  "ignorePatterns": [
+    "**/build",
+    "**/public",
+    "bun.lock",
+    "routeTree.gen.ts",
+    "packages/db/drizzle/",
+    "*.md"
+  ]
+}

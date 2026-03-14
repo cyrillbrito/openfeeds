@@ -9,8 +9,8 @@
   "dependencies": {
     "@repo/db": "workspace:*",
     "@t3-oss/env-core": "^0.13.10",
-    "better-auth": "^1.5.4",
-    "bullmq": "^5.70.4",
+    "better-auth": "^1.5.5",
+    "bullmq": "^5.71.0",
     "feedsmith": "^2.9.0",
     "zod": "^4.3.6"
   },

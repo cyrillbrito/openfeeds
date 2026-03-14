@@ -2,6 +2,9 @@
   "$schema": "./node_modules/oxlint/configuration_schema.json",
   "plugins": ["unicorn", "typescript", "oxc", "import"],
   "categories": {},
+  "options": {
+    "typeAware": true
+  },
   "rules": {
     // --- Circular dependencies & import graph ---
     "import/no-cycle": "error", // Detect circular imports between modules
