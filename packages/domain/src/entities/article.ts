@@ -5,12 +5,8 @@ import { and, eq } from 'drizzle-orm';
 import { trackEvent } from '../analytics';
 import type { TransactionContext } from '../domain-context';
 import { LimitExceededError, NotFoundError } from '../errors';
-import {
-  countDailyExtractions,
-  countMonthlyExtractions,
-  countUserSavedArticles,
-  FREE_TIER_LIMITS,
-} from '../limits';
+import { countDailyExtractions, countMonthlyExtractions, countUserSavedArticles } from '../limits';
+import { PLAN_LIMITS, type Plan } from '../limits.schema';
 import type { Article, CreateArticleFromUrl, UpdateArticle } from './article.schema';
 
 // Re-export schemas and types from schema file
@@ -60,21 +56,23 @@ function isYouTubeUrl(url: string | null): boolean {
  */
 async function getExtractionLimitWindow(
   userId: string,
+  plan: Plan,
 ): Promise<{ window: 'daily' | 'monthly'; current_usage: number; limit: number } | null> {
+  const limits = PLAN_LIMITS[plan];
   const [daily, monthly] = await Promise.all([
     countDailyExtractions(userId, db),
     countMonthlyExtractions(userId, db),
   ]);
 
   // Check daily first (more likely to be hit in normal use)
-  if (daily >= FREE_TIER_LIMITS.extractionsPerDay) {
-    return { window: 'daily', current_usage: daily, limit: FREE_TIER_LIMITS.extractionsPerDay };
+  if (daily >= limits.extractionsPerDay) {
+    return { window: 'daily', current_usage: daily, limit: limits.extractionsPerDay };
   }
-  if (monthly >= FREE_TIER_LIMITS.extractionsPerMonth) {
+  if (monthly >= limits.extractionsPerMonth) {
     return {
       window: 'monthly',
       current_usage: monthly,
-      limit: FREE_TIER_LIMITS.extractionsPerMonth,
+      limit: limits.extractionsPerMonth,
     };
   }
   return null;
@@ -86,7 +84,11 @@ async function getExtractionLimitWindow(
  * Skips if content was already extracted (contentExtractedAt is set).
  * Returns the clean content (or null if extraction failed/not possible).
  */
-export async function extractArticleContent(id: string, userId: string): Promise<string | null> {
+export async function extractArticleContent(
+  id: string,
+  userId: string,
+  plan: Plan = 'free',
+): Promise<string | null> {
   const article = await db.query.articles.findFirst({
     where: and(eq(articles.id, id), eq(articles.userId, userId)),
   });
@@ -106,7 +108,7 @@ export async function extractArticleContent(id: string, userId: string): Promise
   }
 
   // Check extraction rate limit (daily + monthly)
-  const extractionLimit = await getExtractionLimitWindow(userId);
+  const extractionLimit = await getExtractionLimitWindow(userId, plan);
   if (extractionLimit) {
     trackEvent(userId, 'limits:extractions_limit_hit', extractionLimit);
     const windowLabel = extractionLimit.window === 'daily' ? 'daily' : 'monthly';
@@ -163,14 +165,16 @@ export async function createArticles(
 ): Promise<void> {
   if (data.length === 0) return;
 
-  // Check free-tier saved article limit (only user-created articles, not feed-synced)
+  // Check plan saved article limit (only user-created articles, not feed-synced)
+  const limits = PLAN_LIMITS[ctx.plan];
   const currentCount = await countUserSavedArticles(ctx.userId, ctx.conn);
-  if (currentCount + data.length > FREE_TIER_LIMITS.savedArticles) {
+  if (currentCount + data.length > limits.savedArticles) {
     trackEvent(ctx.userId, 'limits:saved_articles_limit_hit', {
       current_usage: currentCount,
-      limit: FREE_TIER_LIMITS.savedArticles,
+      limit: limits.savedArticles,
+      plan: ctx.plan,
     });
-    throw new LimitExceededError('saved articles', FREE_TIER_LIMITS.savedArticles);
+    throw new LimitExceededError('saved articles', limits.savedArticles);
   }
 
   // Fetch content for all articles in parallel

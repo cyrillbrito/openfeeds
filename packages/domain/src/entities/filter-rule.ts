@@ -4,7 +4,8 @@ import { and, eq, inArray } from 'drizzle-orm';
 import { trackEvent } from '../analytics';
 import type { TransactionContext } from '../domain-context';
 import { LimitExceededError } from '../errors';
-import { countUserFilterRules, FREE_TIER_LIMITS } from '../limits';
+import { countUserFilterRules } from '../limits';
+import { PLAN_LIMITS } from '../limits.schema';
 import type { CreateFilterRule, UpdateFilterRule } from './filter-rule.schema';
 
 // Re-export schemas and types from schema file
@@ -16,14 +17,16 @@ export async function createFilterRules(
 ): Promise<void> {
   if (data.length === 0) return;
 
-  // Check free-tier filter rule limit
+  // Check plan filter rule limit
+  const limits = PLAN_LIMITS[ctx.plan];
   const currentCount = await countUserFilterRules(ctx.userId, ctx.conn);
-  if (currentCount + data.length > FREE_TIER_LIMITS.filterRules) {
+  if (currentCount + data.length > limits.filterRules) {
     trackEvent(ctx.userId, 'limits:filter_rules_limit_hit', {
       current_usage: currentCount,
-      limit: FREE_TIER_LIMITS.filterRules,
+      limit: limits.filterRules,
+      plan: ctx.plan,
     });
-    throw new LimitExceededError('filter rules', FREE_TIER_LIMITS.filterRules);
+    throw new LimitExceededError('filter rules', limits.filterRules);
   }
 
   const values = data.map((item) => ({

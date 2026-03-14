@@ -13,4 +13,11 @@ export * from './entities/tag.schema';
 export * from './entities/tts.schema';
 
 // Limits config (pure constants + types)
-export { FREE_TIER_LIMITS, type LimitKey, type UserUsage } from './limits.schema';
+export {
+  FREE_TIER_LIMITS,
+  PLAN_LIMITS,
+  type LimitKey,
+  type Plan,
+  type PlanLimits,
+  type UserUsage,
+} from './limits.schema';

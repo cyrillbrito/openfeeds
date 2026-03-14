@@ -1,6 +1,6 @@
 import { articles, db, feeds, filterRules, type Db, type Transaction } from '@repo/db';
 import { and, count, eq, isNull, sql } from 'drizzle-orm';
-import { FREE_TIER_LIMITS, type UserUsage } from './limits.schema';
+import { PLAN_LIMITS, type Plan, type UserUsage } from './limits.schema';
 
 // Re-export schema for server barrel
 export * from './limits.schema';
@@ -72,7 +72,9 @@ export function countMonthlyTts(userId: string, conn: Db | Transaction) {
 // Aggregate usage for the settings UI
 // ---------------------------------------------------------------------------
 
-export async function getUserUsage(userId: string): Promise<UserUsage> {
+export async function getUserUsage(userId: string, plan: Plan = 'free'): Promise<UserUsage> {
+  const limits = PLAN_LIMITS[plan];
+
   const [
     feedCount,
     ruleCount,
@@ -92,16 +94,16 @@ export async function getUserUsage(userId: string): Promise<UserUsage> {
   ]);
 
   return {
-    feeds: { used: feedCount, limit: FREE_TIER_LIMITS.feeds },
-    filterRules: { used: ruleCount, limit: FREE_TIER_LIMITS.filterRules },
-    savedArticles: { used: savedCount, limit: FREE_TIER_LIMITS.savedArticles },
+    feeds: { used: feedCount, limit: limits.feeds },
+    filterRules: { used: ruleCount, limit: limits.filterRules },
+    savedArticles: { used: savedCount, limit: limits.savedArticles },
     extractions: {
-      daily: { used: dailyExtractions, limit: FREE_TIER_LIMITS.extractionsPerDay },
-      monthly: { used: monthlyExtractions, limit: FREE_TIER_LIMITS.extractionsPerMonth },
+      daily: { used: dailyExtractions, limit: limits.extractionsPerDay },
+      monthly: { used: monthlyExtractions, limit: limits.extractionsPerMonth },
     },
     tts: {
-      daily: { used: dailyTts, limit: FREE_TIER_LIMITS.ttsPerDay },
-      monthly: { used: monthlyTts, limit: FREE_TIER_LIMITS.ttsPerMonth },
+      daily: { used: dailyTts, limit: limits.ttsPerDay },
+      monthly: { used: monthlyTts, limit: limits.ttsPerMonth },
     },
   };
 }

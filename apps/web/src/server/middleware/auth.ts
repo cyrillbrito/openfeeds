@@ -2,10 +2,10 @@ import { captureException } from '@repo/domain';
 import { redirect } from '@tanstack/solid-router';
 import { createMiddleware } from '@tanstack/solid-start';
 import { getRequestHeaders } from '@tanstack/solid-start/server';
-import type { Session, User } from 'better-auth';
 import { auth } from '~/server/auth';
 
-export type AuthContext = { user: User; session: Session };
+type InferredSession = typeof auth.$Infer.Session;
+export type AuthContext = { user: InferredSession['user']; session: InferredSession['session'] };
 
 /**
  * Function middleware for server functions (createServerFn)
