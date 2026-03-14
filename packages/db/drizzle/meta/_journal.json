@@ -50,6 +50,13 @@
       "when": 1772486077603,
       "tag": "0006_add-tags-order",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1773504656944,
+      "tag": "0007_optimize-articles-user-guid-index",
+      "breakpoints": true
     }
   ]
 }
