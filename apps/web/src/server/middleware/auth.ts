@@ -40,7 +40,16 @@ export const authMiddleware = createMiddleware().server(async ({ request, next }
  */
 export const guestMiddleware = createMiddleware().server(async ({ next }) => {
   const headers = getRequestHeaders();
-  const session = await auth.api.getSession({ headers });
+
+  let session;
+  try {
+    session = await auth.api.getSession({ headers });
+  } catch (error) {
+    const err = error instanceof Error ? error : new Error(String(error));
+    captureException(err, { source: 'guest-middleware', type: 'getSession' });
+    throw error;
+  }
+
   if (session) {
     throw redirect({ to: '/' });
   }
