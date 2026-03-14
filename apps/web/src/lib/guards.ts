@@ -1,18 +1,37 @@
+import { captureException } from '@repo/domain';
 import { redirect } from '@tanstack/solid-router';
 import { createIsomorphicFn } from '@tanstack/solid-start';
 import { getRequestHeaders } from '@tanstack/solid-start/server';
+import posthog from 'posthog-js';
 import { authClient } from '~/lib/auth-client';
 import { auth } from '~/server/auth';
 
 export const hasSession = createIsomorphicFn()
   .server(async () => {
     const headers = getRequestHeaders();
-    const session = await auth.api.getSession({ headers });
-    return !!session;
+    try {
+      const session = await auth.api.getSession({ headers });
+      return !!session;
+    } catch (error) {
+      const err = error instanceof Error ? error : new Error(String(error));
+      captureException(err, { source: 'auth-guard', type: 'getSession' });
+      throw error;
+    }
   })
   .client(async () => {
-    const sessionData = await authClient.getSession();
-    return !!sessionData.data;
+    try {
+      const sessionData = await authClient.getSession();
+      if (sessionData.error) {
+        throw sessionData.error instanceof Error
+          ? sessionData.error
+          : new Error(String(sessionData.error));
+      }
+      return !!sessionData.data;
+    } catch (error) {
+      const err = error instanceof Error ? error : new Error(String(error));
+      posthog.captureException(err);
+      throw err;
+    }
   });
 
 /**
