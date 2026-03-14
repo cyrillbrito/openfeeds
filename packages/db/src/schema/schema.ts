@@ -89,8 +89,8 @@ export const articles = pgTable(
       .defaultNow(),
   },
   (table) => [
-    index('articles_user_id_idx').on(table.userId),
     index('articles_feed_id_idx').on(table.feedId),
+    index('articles_user_id_guid_idx').on(table.userId, table.guid),
   ],
 );
 
