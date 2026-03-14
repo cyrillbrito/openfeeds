@@ -1,3 +1,4 @@
+import { FetchError } from '@electric-sql/client';
 import posthog from 'posthog-js';
 import { toastService } from '~/lib/toast-service';
 
@@ -20,6 +21,8 @@ function sanitizeErrorMessage(error: unknown): string {
 
   return msg;
 }
+
+const MAX_SHAPE_RETRIES = 2;
 
 /**
  * Wraps a collection mutation handler with error handling.
@@ -44,18 +47,47 @@ export function collectionErrorHandler<TArgs extends unknown[], TReturn>(
 
 /**
  * Returns an Electric shape stream error handler.
- * Shows an error toast and reports to PostHog but does NOT throw — stream errors are informational.
- * Returns {} to signal the stream should retry (returning void would stop it permanently).
+ *
+ * Return value controls retry behavior (per Electric SQL docs):
+ * - `{}` → retry with same params
+ * - `void` / `undefined` → stop syncing permanently
+ *
+ * Behavior:
+ * - 401 Unauthorized → stop immediately and redirect to login (session expired)
+ * - Other errors → retry up to MAX_SHAPE_RETRIES times, then stop
  */
-export function shapeErrorHandler(context: string): (error: unknown) => Record<string, never> {
+export function shapeErrorHandler(
+  context: string,
+): (error: unknown) => Record<string, never> | void {
   let hasToasted = false;
+  let retryCount = 0;
+
   return (error: unknown) => {
     const message = sanitizeErrorMessage(error);
+    posthog.captureException(error, { context });
+
+    // 401 = session expired — stop retrying and redirect to login
+    if (error instanceof FetchError && error.status === 401) {
+      if (!hasToasted) {
+        toastService.error('Session expired. Redirecting to login…');
+        hasToasted = true;
+      }
+      window.location.href = '/login';
+      return; // stop syncing
+    }
+
     if (!hasToasted) {
       toastService.error(message);
       hasToasted = true;
     }
-    posthog.captureException(error, { context });
-    return {};
+
+    // Retry other errors a limited number of times
+    if (retryCount < MAX_SHAPE_RETRIES) {
+      retryCount++;
+      return {};
+    }
+
+    // Exhausted retries — stop syncing
+    return;
   };
 }
