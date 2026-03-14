@@ -59,7 +59,7 @@ export const Route = createFileRoute('/api/feeds')({
           const [feed] = await withTransaction(
             db,
             session.user.id,
-            ((session.user as { plan?: string }).plan as Plan) ?? 'free',
+            (session.user.plan as Plan) ?? 'free',
             async (ctx) => {
               return feedsDomain.createFeeds(ctx, [{ feedUrl: parsed.data.url }]);
             },

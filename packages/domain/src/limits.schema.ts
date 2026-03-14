@@ -52,16 +52,16 @@ export const FREE_TIER_LIMITS = PLAN_LIMITS.free;
 export type PlanLimits = (typeof PLAN_LIMITS)[Plan];
 export type LimitKey = keyof typeof FREE_TIER_LIMITS;
 
+/** `limit` is `null` when the user's plan has no cap (pro tier). */
+export interface UsageBucket {
+  used: number;
+  limit: number | null;
+}
+
 export interface UserUsage {
-  feeds: { used: number; limit: number };
-  filterRules: { used: number; limit: number };
-  savedArticles: { used: number; limit: number };
-  extractions: {
-    daily: { used: number; limit: number };
-    monthly: { used: number; limit: number };
-  };
-  tts: {
-    daily: { used: number; limit: number };
-    monthly: { used: number; limit: number };
-  };
+  feeds: UsageBucket;
+  filterRules: UsageBucket;
+  savedArticles: UsageBucket;
+  extractions: { daily: UsageBucket; monthly: UsageBucket };
+  tts: { daily: UsageBucket; monthly: UsageBucket };
 }
