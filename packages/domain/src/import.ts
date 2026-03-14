@@ -6,7 +6,8 @@ import type { TransactionContext } from './domain-context';
 import { feedUrlSchema } from './entities/feed.schema';
 import { captureException } from './error-tracking';
 import { assert, LimitExceededError } from './errors';
-import { countUserFeeds, FREE_TIER_LIMITS } from './limits';
+import { countUserFeeds } from './limits';
+import { PLAN_LIMITS } from './limits.schema';
 import { enqueueFeedDetail, enqueueFeedSync } from './queues';
 
 export interface ImportResult {
@@ -80,7 +81,8 @@ export async function importOpmlFeeds(
     }
   }
 
-  // Check free-tier feed limit: count existing feeds, deduplicate against OPML, and verify the new ones fit
+  // Check plan feed limit: count existing feeds, deduplicate against OPML, and verify the new ones fit
+  const limits = PLAN_LIMITS[ctx.plan];
   const currentFeedCount = await countUserFeeds(ctx.userId, ctx.conn);
 
   const opmlUrls = feedsToImport.map((f) => f.xmlUrl);
@@ -93,15 +95,16 @@ export async function importOpmlFeeds(
     ).map((f) => f.feedUrl),
   );
   const newFeedCount = feedsToImport.filter((f) => !existingFeedUrls.has(f.xmlUrl)).length;
-  const remainingSlots = FREE_TIER_LIMITS.feeds - currentFeedCount;
+  const remainingSlots = limits.feeds - currentFeedCount;
 
   if (newFeedCount > remainingSlots) {
     trackEvent(ctx.userId, 'limits:feeds_limit_hit', {
       source: 'opml_import',
       current_usage: currentFeedCount,
-      limit: FREE_TIER_LIMITS.feeds,
+      limit: limits.feeds,
+      plan: ctx.plan,
     });
-    throw new LimitExceededError('feeds', FREE_TIER_LIMITS.feeds);
+    throw new LimitExceededError('feeds', limits.feeds);
   }
 
   let imported = 0;

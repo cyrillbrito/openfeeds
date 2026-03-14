@@ -19,6 +19,16 @@ export const auth = betterAuth({
   trustedOrigins: [...env.TRUSTED_ORIGINS, 'https://appleid.apple.com'],
   // Required by oauthProvider — the plugin provides its own /token endpoint
   disabledPaths: ['/token'],
+  user: {
+    additionalFields: {
+      plan: {
+        type: 'string',
+        required: false,
+        defaultValue: 'free',
+        input: false, // users cannot set their own plan
+      },
+    },
+  },
   socialProviders: {
     ...(env.GOOGLE_CLIENT_ID &&
       env.GOOGLE_CLIENT_SECRET && {
