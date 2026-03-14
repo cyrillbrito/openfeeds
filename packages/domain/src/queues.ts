@@ -1,5 +1,6 @@
 import { Queue } from 'bullmq';
 import { QUEUE_NAMES, redisConnection } from './config';
+import { captureException } from './error-tracking';
 
 export interface FeedSyncJobData {
   feedId: string;
@@ -67,6 +68,15 @@ let _queuesInitialized = false;
  * Plain queue operation — callers use `ctx.afterCommit()` to defer when inside a transaction.
  */
 export function enqueueFeedSync(userId: string, feedId: string) {
+  // TODO(2026-03-14): Remove after confirming no more null userId errors in PostHog
+  if (!userId) {
+    captureException(
+      new Error(`enqueueFeedSync called with null/undefined userId for feed ${feedId}`),
+      { source: 'worker', operation: 'enqueue-feed-sync', feedId },
+    );
+    return Promise.resolve();
+  }
+
   return getSingleFeedSyncQueue().add(
     feedId,
     { feedId, userId },
@@ -89,6 +99,15 @@ export function enqueueFeedSync(userId: string, feedId: string) {
  * Plain queue operation — callers use `ctx.afterCommit()` to defer when inside a transaction.
  */
 export async function forceEnqueueFeedSync(userId: string, feedId: string) {
+  // TODO(2026-03-14): Remove after confirming no more null userId errors in PostHog
+  if (!userId) {
+    captureException(
+      new Error(`forceEnqueueFeedSync called with null/undefined userId for feed ${feedId}`),
+      { source: 'worker', operation: 'force-enqueue-feed-sync', feedId },
+    );
+    return;
+  }
+
   const queue = getSingleFeedSyncQueue();
   const jobId = `feed-sync-${feedId}`;
   await queue.remove(jobId);
