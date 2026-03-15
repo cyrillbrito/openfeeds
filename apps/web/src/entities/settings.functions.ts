@@ -8,7 +8,6 @@ import {
   UpdateSettingsSchema,
   withTransaction,
 } from '@repo/domain';
-import type { Plan } from '@repo/domain/client';
 import { createServerFn } from '@tanstack/solid-start';
 import { z } from 'zod';
 import { authMiddleware } from '~/server/middleware/auth';
@@ -25,7 +24,7 @@ export const $$updateSettings = createServerFn({ method: 'POST' })
   .handler(async ({ context, data }) => {
     // Settings is a singleton, so we just take the first update
     const updates = data[0] || {};
-    return await withTransaction(db, context.user.id, context.user.plan as Plan, async (ctx) => {
+    return await withTransaction(db, context.user.id, context.user.plan, async (ctx) => {
       await domainUpdateSettings(ctx, updates);
       return { txid: await getTxId(ctx.conn) };
     });
@@ -34,12 +33,12 @@ export const $$updateSettings = createServerFn({ method: 'POST' })
 export const $$triggerAutoArchive = createServerFn({ method: 'POST' })
   .middleware([authMiddleware])
   .handler(({ context }) => {
-    const ctx = createDomainContext(db, context.user.id, context.user.plan as Plan);
+    const ctx = createDomainContext(db, context.user.id, context.user.plan);
     return domainPerformArchiveArticles(ctx);
   });
 
 export const $$getUserUsage = createServerFn({ method: 'GET' })
   .middleware([authMiddleware])
   .handler(({ context }) => {
-    return domainGetUserUsage(context.user.id, context.user.plan as Plan);
+    return domainGetUserUsage(context.user.id, context.user.plan);
   });

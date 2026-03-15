@@ -9,7 +9,7 @@ import type { ArticleAudioMetadata, WordTiming } from './entities/tts.schema';
 import { env } from './env';
 import { TtsNotConfiguredError } from './errors';
 import { checkTtsLimit } from './limits';
-import type { Plan } from './limits.schema';
+
 
 // Re-export client-safe types
 export * from './entities/tts.schema';
@@ -144,7 +144,7 @@ function stripHtml(html: string): string {
 export async function generateArticleAudio(
   articleId: string,
   userId: string,
-  plan: Plan = 'free',
+  plan?: string | null,
   options?: { voice?: string },
 ): Promise<ArticleAudioMetadata> {
   if (!env.DATA_PATH || !env.UNREAL_SPEECH_API_KEY) {

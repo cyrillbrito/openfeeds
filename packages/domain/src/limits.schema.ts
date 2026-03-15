@@ -52,6 +52,11 @@ export const FREE_TIER_LIMITS = PLAN_LIMITS.free;
 export type PlanLimits = (typeof PLAN_LIMITS)[Plan];
 export type LimitKey = keyof typeof FREE_TIER_LIMITS;
 
+/** Coerce an untrusted string into a valid Plan, falling back to 'free'. */
+export function parsePlan(value: string | undefined | null): Plan {
+  return value === 'pro' ? 'pro' : 'free';
+}
+
 /** `limit` is `null` when the user's plan has no cap (pro tier). */
 export interface UsageBucket {
   used: number;

@@ -1,7 +1,6 @@
 import { db, getTxId } from '@repo/db';
 import * as articlesDomain from '@repo/domain';
 import { CreateArticleFromUrlSchema, UpdateArticleSchema, withTransaction } from '@repo/domain';
-import type { Plan } from '@repo/domain/client';
 import { createServerFn } from '@tanstack/solid-start';
 import { z } from 'zod';
 import { authMiddleware } from '~/server/middleware/auth';
@@ -10,7 +9,7 @@ export const $$createArticles = createServerFn({ method: 'POST' })
   .middleware([authMiddleware])
   .inputValidator(z.array(CreateArticleFromUrlSchema))
   .handler(async ({ context, data }) => {
-    return await withTransaction(db, context.user.id, context.user.plan as Plan, async (ctx) => {
+    return await withTransaction(db, context.user.id, context.user.plan, async (ctx) => {
       await articlesDomain.createArticles(ctx, data);
       return { txid: await getTxId(ctx.conn) };
     });
@@ -20,7 +19,7 @@ export const $$updateArticles = createServerFn({ method: 'POST' })
   .middleware([authMiddleware])
   .inputValidator(z.array(UpdateArticleSchema))
   .handler(async ({ context, data }) => {
-    return await withTransaction(db, context.user.id, context.user.plan as Plan, async (ctx) => {
+    return await withTransaction(db, context.user.id, context.user.plan, async (ctx) => {
       await articlesDomain.updateArticles(ctx, data);
       return { txid: await getTxId(ctx.conn) };
     });
@@ -33,6 +32,6 @@ export const $$extractArticleContent = createServerFn({ method: 'POST' })
     return articlesDomain.extractArticleContent(
       data.id,
       context.user.id,
-      context.user.plan as Plan,
+      context.user.plan,
     );
   });

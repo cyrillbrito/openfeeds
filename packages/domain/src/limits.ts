@@ -3,7 +3,7 @@ import { and, count, eq, isNull, sql } from 'drizzle-orm';
 import { trackEvent } from './analytics';
 import type { DomainContext } from './domain-context';
 import { LimitExceededError } from './errors';
-import { PLAN_LIMITS, type Plan, type UserUsage } from './limits.schema';
+import { PLAN_LIMITS, type UserUsage, parsePlan } from './limits.schema';
 
 // Re-export schema for server barrel
 export * from './limits.schema';
@@ -129,8 +129,8 @@ export async function checkSavedArticleLimit(ctx: DomainContext, adding: number)
 }
 
 /** Throws if the user has exceeded their daily or monthly content extraction limit. */
-export async function checkExtractionLimit(userId: string, plan: Plan): Promise<void> {
-  const limits = PLAN_LIMITS[plan];
+export async function checkExtractionLimit(userId: string, plan: string | null | undefined): Promise<void> {
+  const limits = PLAN_LIMITS[parsePlan(plan)];
   if (!Number.isFinite(limits.extractionsPerDay)) return;
 
   const [daily, monthly] = await Promise.all([
@@ -157,8 +157,8 @@ export async function checkExtractionLimit(userId: string, plan: Plan): Promise<
 }
 
 /** Throws if the user has exceeded their daily or monthly TTS generation limit. */
-export async function checkTtsLimit(userId: string, plan: Plan): Promise<void> {
-  const limits = PLAN_LIMITS[plan];
+export async function checkTtsLimit(userId: string, plan: string | null | undefined): Promise<void> {
+  const limits = PLAN_LIMITS[parsePlan(plan)];
   if (!Number.isFinite(limits.ttsPerDay)) return;
 
   const [daily, monthly] = await Promise.all([
@@ -188,8 +188,8 @@ export async function checkTtsLimit(userId: string, plan: Plan): Promise<void> {
 // Aggregate usage for the settings UI
 // ---------------------------------------------------------------------------
 
-export async function getUserUsage(userId: string, plan: Plan = 'free'): Promise<UserUsage> {
-  const limits = PLAN_LIMITS[plan];
+export async function getUserUsage(userId: string, plan?: string | null): Promise<UserUsage> {
+  const limits = PLAN_LIMITS[parsePlan(plan)];
 
   const [
     feedCount,

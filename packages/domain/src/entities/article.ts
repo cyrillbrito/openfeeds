@@ -6,7 +6,7 @@ import { trackEvent } from '../analytics';
 import type { TransactionContext } from '../domain-context';
 import { NotFoundError } from '../errors';
 import { checkExtractionLimit, checkSavedArticleLimit } from '../limits';
-import type { Plan } from '../limits.schema';
+
 import type { Article, CreateArticleFromUrl, UpdateArticle } from './article.schema';
 
 // Re-export schemas and types from schema file
@@ -58,7 +58,7 @@ function isYouTubeUrl(url: string | null): boolean {
 export async function extractArticleContent(
   id: string,
   userId: string,
-  plan: Plan = 'free',
+  plan?: string | null,
 ): Promise<string | null> {
   const article = await db.query.articles.findFirst({
     where: and(eq(articles.id, id), eq(articles.userId, userId)),
