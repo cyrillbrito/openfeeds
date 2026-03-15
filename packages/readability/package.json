@@ -12,12 +12,13 @@
     "test:watch": "bun test --watch"
   },
   "dependencies": {
-    "@mozilla/readability": "^0.6.0",
-    "happy-dom": "20.6.2",
+    "defuddle": "^0.13.0",
+    "jsdom": "^26.1.0",
     "sanitize-html": "^2.17.1"
   },
   "devDependencies": {
     "@types/bun": "^1.3.10",
+    "@types/jsdom": "^21.1.7",
     "@types/sanitize-html": "^2.16.1",
     "typescript": "^5"
   }

@@ -1,22 +1,33 @@
-import { Readability } from '@mozilla/readability';
+import Defuddle from 'defuddle';
 import type { ArticleContent } from './types.js';
 
 export type { ArticleContent } from './types.js';
 
 /**
- * Extract readable content from the current page document
+ * Extract readable content from the current page document using Defuddle
  */
 export function extractFromPage(doc: Document = document): ArticleContent {
-  const reader = new Readability(doc as any);
-  const article = reader.parse();
+  const result = new Defuddle(doc).parse();
 
-  if (!article) {
-    return { title: null, excerpt: null, content: null };
+  if (!result.content) {
+    return {
+      title: null,
+      excerpt: null,
+      content: null,
+      author: null,
+      published: null,
+      image: null,
+      wordCount: null,
+    };
   }
 
   return {
-    title: article.title || null,
-    excerpt: article.excerpt || null,
-    content: article.content || null,
+    title: result.title || null,
+    excerpt: result.description || null,
+    content: result.content || null,
+    author: result.author || null,
+    published: result.published || null,
+    image: result.image || null,
+    wordCount: result.wordCount || null,
   };
 }
