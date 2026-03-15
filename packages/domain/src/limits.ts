@@ -82,7 +82,7 @@ export async function checkFeedLimit(
   source: 'create' | 'opml_import',
 ): Promise<void> {
   const limit = PLAN_LIMITS[ctx.plan].feeds;
-  if (!Number.isFinite(limit)) return;
+  if (limit === null) return;
 
   const current = await countUserFeeds(ctx.userId, ctx.conn);
   if (current + adding > limit) {
@@ -99,7 +99,7 @@ export async function checkFeedLimit(
 /** Throws if adding `count` filter rules would exceed the plan's filter rule limit. */
 export async function checkFilterRuleLimit(ctx: DomainContext, adding: number): Promise<void> {
   const limit = PLAN_LIMITS[ctx.plan].filterRules;
-  if (!Number.isFinite(limit)) return;
+  if (limit === null) return;
 
   const current = await countUserFilterRules(ctx.userId, ctx.conn);
   if (current + adding > limit) {
@@ -115,7 +115,7 @@ export async function checkFilterRuleLimit(ctx: DomainContext, adding: number): 
 /** Throws if adding `count` saved articles would exceed the plan's saved article limit. */
 export async function checkSavedArticleLimit(ctx: DomainContext, adding: number): Promise<void> {
   const limit = PLAN_LIMITS[ctx.plan].savedArticles;
-  if (!Number.isFinite(limit)) return;
+  if (limit === null) return;
 
   const current = await countUserSavedArticles(ctx.userId, ctx.conn);
   if (current + adding > limit) {
@@ -131,7 +131,7 @@ export async function checkSavedArticleLimit(ctx: DomainContext, adding: number)
 /** Throws if the user has exceeded their daily or monthly content extraction limit. */
 export async function checkExtractionLimit(userId: string, plan: string | null | undefined): Promise<void> {
   const limits = PLAN_LIMITS[parsePlan(plan)];
-  if (!Number.isFinite(limits.extractionsPerDay)) return;
+  if (limits.extractionsPerDay === null) return;
 
   const [daily, monthly] = await Promise.all([
     countDailyExtractions(userId, db),
@@ -146,7 +146,7 @@ export async function checkExtractionLimit(userId: string, plan: string | null |
     });
     throw new LimitExceededError('daily content extractions', limits.extractionsPerDay);
   }
-  if (monthly >= limits.extractionsPerMonth) {
+  if (limits.extractionsPerMonth !== null && monthly >= limits.extractionsPerMonth) {
     trackEvent(userId, 'limits:extractions_limit_hit', {
       window: 'monthly',
       current_usage: monthly,
@@ -159,7 +159,7 @@ export async function checkExtractionLimit(userId: string, plan: string | null |
 /** Throws if the user has exceeded their daily or monthly TTS generation limit. */
 export async function checkTtsLimit(userId: string, plan: string | null | undefined): Promise<void> {
   const limits = PLAN_LIMITS[parsePlan(plan)];
-  if (!Number.isFinite(limits.ttsPerDay)) return;
+  if (limits.ttsPerDay === null) return;
 
   const [daily, monthly] = await Promise.all([
     countDailyTts(userId, db),
@@ -174,7 +174,7 @@ export async function checkTtsLimit(userId: string, plan: string | null | undefi
     });
     throw new LimitExceededError('daily TTS generations', limits.ttsPerDay);
   }
-  if (monthly >= limits.ttsPerMonth) {
+  if (limits.ttsPerMonth !== null && monthly >= limits.ttsPerMonth) {
     trackEvent(userId, 'limits:tts_limit_hit', {
       window: 'monthly',
       current_usage: monthly,
@@ -188,7 +188,7 @@ export async function checkTtsLimit(userId: string, plan: string | null | undefi
 // Aggregate usage for the settings UI
 // ---------------------------------------------------------------------------
 
-export async function getUserUsage(userId: string, plan?: string | null): Promise<UserUsage> {
+export async function getUserUsage(userId: string, plan: string | null | undefined): Promise<UserUsage> {
   const limits = PLAN_LIMITS[parsePlan(plan)];
 
   const [
@@ -209,20 +209,17 @@ export async function getUserUsage(userId: string, plan?: string | null): Promis
     countMonthlyTts(userId, db),
   ]);
 
-  /** Map Infinity → null so the value survives JSON serialization. */
-  const cap = (n: number): number | null => (Number.isFinite(n) ? n : null);
-
   return {
-    feeds: { used: feedCount, limit: cap(limits.feeds) },
-    filterRules: { used: ruleCount, limit: cap(limits.filterRules) },
-    savedArticles: { used: savedCount, limit: cap(limits.savedArticles) },
+    feeds: { used: feedCount, limit: limits.feeds },
+    filterRules: { used: ruleCount, limit: limits.filterRules },
+    savedArticles: { used: savedCount, limit: limits.savedArticles },
     extractions: {
-      daily: { used: dailyExtractions, limit: cap(limits.extractionsPerDay) },
-      monthly: { used: monthlyExtractions, limit: cap(limits.extractionsPerMonth) },
+      daily: { used: dailyExtractions, limit: limits.extractionsPerDay },
+      monthly: { used: monthlyExtractions, limit: limits.extractionsPerMonth },
     },
     tts: {
-      daily: { used: dailyTts, limit: cap(limits.ttsPerDay) },
-      monthly: { used: monthlyTts, limit: cap(limits.ttsPerMonth) },
+      daily: { used: dailyTts, limit: limits.ttsPerDay },
+      monthly: { used: monthlyTts, limit: limits.ttsPerMonth },
     },
   };
 }

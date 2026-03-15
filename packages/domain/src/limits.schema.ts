@@ -9,8 +9,8 @@ export type Plan = 'free' | 'pro';
  * Per-plan usage limits.
  *
  * Free-tier limits cap resources for non-paying users.
- * Pro limits use `Infinity` — the comparison `count >= Infinity` is always false,
- * so limit checks are effectively bypassed.
+ * Pro limits use `null` — meaning "no limit". Check functions short-circuit
+ * when a limit is `null`, bypassing the DB count query entirely.
  */
 export const PLAN_LIMITS = {
   free: {
@@ -36,15 +36,15 @@ export const PLAN_LIMITS = {
     ttsPerMonth: 30,
   },
   pro: {
-    feeds: Infinity,
-    filterRules: Infinity,
-    savedArticles: Infinity,
-    extractionsPerDay: Infinity,
-    extractionsPerMonth: Infinity,
-    ttsPerDay: Infinity,
-    ttsPerMonth: Infinity,
+    feeds: null,
+    filterRules: null,
+    savedArticles: null,
+    extractionsPerDay: null,
+    extractionsPerMonth: null,
+    ttsPerDay: null,
+    ttsPerMonth: null,
   },
-} as const satisfies Record<Plan, Record<string, number>>;
+} as const satisfies Record<Plan, Record<string, number | null>>;
 
 /** @deprecated Use `PLAN_LIMITS.free` instead. Kept for backwards-compatibility. */
 export const FREE_TIER_LIMITS = PLAN_LIMITS.free;
@@ -57,7 +57,7 @@ export function parsePlan(value: string | undefined | null): Plan {
   return value === 'pro' ? 'pro' : 'free';
 }
 
-/** `limit` is `null` when the user's plan has no cap (pro tier). */
+/** A single usage metric — `limit` is `null` when the plan has no cap. */
 export interface UsageBucket {
   used: number;
   limit: number | null;

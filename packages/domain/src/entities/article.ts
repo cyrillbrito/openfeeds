@@ -58,7 +58,7 @@ function isYouTubeUrl(url: string | null): boolean {
 export async function extractArticleContent(
   id: string,
   userId: string,
-  plan?: string | null,
+  plan: string | null | undefined,
 ): Promise<string | null> {
   const article = await db.query.articles.findFirst({
     where: and(eq(articles.id, id), eq(articles.userId, userId)),

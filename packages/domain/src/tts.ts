@@ -144,7 +144,7 @@ function stripHtml(html: string): string {
 export async function generateArticleAudio(
   articleId: string,
   userId: string,
-  plan?: string | null,
+  plan: string | null | undefined,
   options?: { voice?: string },
 ): Promise<ArticleAudioMetadata> {
   if (!env.DATA_PATH || !env.UNREAL_SPEECH_API_KEY) {

@@ -55,9 +55,7 @@ export class LimitExceededError extends Error {
 
   constructor(resource: string, limit: number) {
     super(
-      Number.isFinite(limit)
-        ? `You've reached the maximum of ${limit} ${resource}. Upgrade your plan for higher limits.`
-        : `You've reached the limit for ${resource}.`,
+      `You've reached the maximum of ${limit} ${resource}. Upgrade your plan for higher limits.`,
     );
     this.resource = resource;
     this.limit = limit;
