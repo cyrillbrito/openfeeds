@@ -13,12 +13,9 @@ bun check-types  # TypeScript checking
 bun lint         # oxlint type-aware linting
 bun checks       # Type check + lint
 bun migrate      # Run database migrations
-
-# Migration generation (from repo root)
-bun --cwd packages/db drizzle-kit generate --name <migration-name>
 ```
 
-When DB schema changes are made, suggest the migration generation command to the user with a descriptive `--name` (e.g. `--name add-bookmarks-table`, `--name uuid-v7-migration`). Do not run it yourself. After generation, suggest `bun migrate` to apply.
+For database schema changes and migrations, load the `database` skill.
 
 ## Monorepo Structure
 
@@ -44,8 +41,8 @@ Each app/package has its own `AGENTS.md` with specific patterns and guidelines.
 
 ## Architecture
 
-- **Local-first:** Client-side TanStack Solid DB collections with Electric SQL sync. Entities in `apps/web/src/entities/`
-- **Server functions:** TanStack Start `createServerFn` with auth middleware, calls `@repo/domain` with explicit context. See [docs/domain-context.md](docs/domain-context.md)
+- **Local-first:** Client-side TanStack Solid DB collections with Electric SQL sync. Entities in `apps/web/src/entities/`. Load the `new-entity` skill when adding features.
+- **Server functions:** TanStack Start `createServerFn` with auth middleware, calls `@repo/domain` with explicit context.
 - **Background jobs:** BullMQ queues (owned by `@repo/domain`), processed by `apps/worker/`
 - **Error handling:** Domain errors are transport-agnostic. See [docs/error-handling.md](docs/error-handling.md)
 - **OAuth/MCP:** OAuth 2.1 Authorization Server for MCP clients via Better Auth. See [docs/oauth-mcp.md](docs/oauth-mcp.md)
@@ -75,4 +72,4 @@ Commit messages and PR titles must use [Conventional Commits](https://www.conven
 
 ## User ID Denormalization
 
-**Every table must have a `user_id` column with an index.** Electric SQL shapes cannot JOIN/subquery, so all tables need `user_id` directly for per-user filtering. See `packages/db/AGENTS.md` for full pattern, checklist, and code examples.
+**Every table must have a `user_id` column with an index.** Electric SQL shapes cannot JOIN/subquery, so all tables need `user_id` directly for per-user filtering. Load the `database` skill for the full checklist and code examples.

@@ -51,64 +51,21 @@ Each entity in `src/entities/` is split into two files:
 - **`entity.ts`** — Client-side collection (`createCollection` + `electricCollectionOptions`) with `useLiveQuery` hooks
 - **`entity.functions.ts`** — Server functions using `createServerFn` with `authMiddleware` (safe to import from client)
 
+Load the `new-entity` skill for the full end-to-end pattern (domain → collection → server functions → error handling).
+
 **Import rule:**
 
 - Client code → `@repo/domain/client` (schemas/types only)
 - Server code → `@repo/domain` (full CRUD)
-
-**Server function pattern:** `createServerFn({ method: 'POST' }).middleware([authMiddleware]).handler(...)` with `inputValidator` (Zod). Mutation handlers wrap domain calls in `withTransaction(db, context.user.id, (ctx) => { ... })` and return `{ txid }` for optimistic sync. Domain functions receive `ctx` as first parameter — see [docs/domain-context.md](../../docs/domain-context.md).
 
 **API routes vs server functions:**
 
 - Server functions → internal app use
 - API routes (`src/routes/api/`) → external consumers (extension, webhooks)
 
-## Error Handling
+## SolidJS
 
-Domain errors in server functions are serialized by TanStack Start's `ShallowErrorPlugin` — only `message` survives.
-
-- Client code uses `err.message` only
-- No `instanceof`, no `code` property
-- See [docs/error-handling.md](../../docs/error-handling.md)
-
-## SolidJS Patterns
-
-**Use SolidJS, NOT React:**
-
-```tsx
-// Conditional - use Show, not &&
-<Show when={condition} fallback={<Fallback />}>
-  <Content />
-</Show>
-
-// Lists - use For, not map
-<For each={items}>{(item) => <Item item={item} />}</For>
-
-// Multiple conditions - use Switch/Match
-<Switch>
-  <Match when={loading}>Loading...</Match>
-  <Match when={error}>Error</Match>
-  <Match when={data}>Success</Match>
-</Switch>
-
-// Reactive state
-const [value, setValue] = createSignal(0);
-```
-
-## Styling
-
-See [UI_DESIGN.md](./UI_DESIGN.md) for full design language.
-
-- Mobile-first
-- DaisyUI semantic colors (`base-100` background, `base-200` elevated, `base-300` borders)
-- Content width: `max-w-2xl xl:max-w-3xl`
-
-## Component Patterns
-
-- **LazyModal** — wraps `<dialog>` with `<Show>`, destroys content on close. Use for all modals.
-  - Controller pattern: `controller={(c) => { modalController = c; props.controller(c); }}`
-- **Dropdown** — uses native Popover API (`popover="auto"`), renders in browser top-layer.
-  - Immune to `overflow: hidden` and z-index issues.
+**Use SolidJS, NOT React.** The `solidjs` skill is auto-loaded with patterns, anti-patterns, and component conventions.
 
 ## OAuth Provider & MCP
 
