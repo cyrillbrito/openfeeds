@@ -30,6 +30,8 @@ Each entity in `src/entities/` is split into two files:
 - `@repo/domain/client` — schemas, types, pure functions (for client code)
 - `@repo/domain` — full server exports including CRUD (for server code)
 
+Load the `new-entity` skill for the full entity creation pattern.
+
 ## Queues
 
 Domain owns Queue instances and enqueue functions. Worker creates Worker instances.
@@ -38,26 +40,14 @@ Domain owns Queue instances and enqueue functions. Worker creates Worker instanc
 - Config: `QUEUE_NAMES`, `redisConnection`
 - Scheduled: feed sync orchestrator (every minute), auto archive (daily midnight)
 
-## Error Handling
-
-Domain errors are transport-agnostic. See [docs/error-handling.md](../../docs/error-handling.md).
+## Error Handling & Domain Context
 
 - Throw domain errors directly — don't catch/wrap at domain level
 - Error messages must be user-safe (they reach the client as-is)
 - Never add HTTP concepts (status codes) to domain errors
-- Error classes: `NotFoundError`, `ConflictError`, `UnauthorizedError`, etc.
+- All mutation functions take a context object (`ctx`) as first parameter
 
-## Domain Context
-
-All mutation functions take an explicit context object (`ctx`) as their first parameter. See [docs/domain-context.md](../../docs/domain-context.md).
-
-- **`TransactionContext`** — CRUD mutations that write + may enqueue jobs. Use `ctx.afterCommit(() => enqueue...)` to defer side effects until after commit.
-- **`DomainContext`** — functions that read/write but don't need deferred side effects (e.g., `syncSingleFeed`).
-- **No context** — pure functions, standalone reads, or queue enqueue functions. Take explicit params directly.
-
-Callers (`apps/web` server functions, `apps/worker`) own the transaction boundary via `withTransaction()` or `createDomainContext()`. Domain functions never create their own top-level transactions.
-
-For per-item error isolation inside a transaction (e.g., OPML import loop), use `ctx.conn.transaction()` (Drizzle savepoints).
+Load the `database` skill for domain context types, transaction boundaries, and savepoint patterns.
 
 ## Guidelines
 
