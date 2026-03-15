@@ -4,8 +4,8 @@ import { createId } from '@repo/shared/utils';
 import { and, eq, inArray } from 'drizzle-orm';
 import { getDomain, trackEvent } from '../analytics';
 import type { TransactionContext } from '../domain-context';
-import { BadRequestError, LimitExceededError, NotFoundError } from '../errors';
-import { countUserFeeds, FREE_TIER_LIMITS } from '../limits';
+import { BadRequestError, NotFoundError } from '../errors';
+import { checkFeedLimit } from '../limits';
 import { enqueueFeedDetail, enqueueFeedSync } from '../queues';
 import type { CreateFeed, DiscoveredFeed, Feed, UpdateFeed } from './feed.schema';
 
@@ -44,16 +44,7 @@ async function assertFeedExists(id: string, userId: string): Promise<void> {
 export async function createFeeds(ctx: TransactionContext, data: CreateFeed[]): Promise<Feed[]> {
   if (data.length === 0) return [];
 
-  // Check free-tier feed limit
-  const currentCount = await countUserFeeds(ctx.userId, ctx.conn);
-  if (currentCount + data.length > FREE_TIER_LIMITS.feeds) {
-    trackEvent(ctx.userId, 'limits:feeds_limit_hit', {
-      source: 'create',
-      current_usage: currentCount,
-      limit: FREE_TIER_LIMITS.feeds,
-    });
-    throw new LimitExceededError('feeds', FREE_TIER_LIMITS.feeds);
-  }
+  await checkFeedLimit(ctx, data.length, 'create');
 
   const values: DbInsertFeed[] = data.map((item) => ({
     id: item.id ?? createId(),

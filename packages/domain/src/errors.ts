@@ -46,7 +46,7 @@ export class TtsNotConfiguredError extends Error {
 }
 
 /**
- * Thrown when a user exceeds a free-tier usage limit.
+ * Thrown when a user exceeds a usage limit for their plan.
  * Message is user-friendly and displayed as-is on the client.
  */
 export class LimitExceededError extends Error {
@@ -54,7 +54,9 @@ export class LimitExceededError extends Error {
   public readonly limit: number;
 
   constructor(resource: string, limit: number) {
-    super(`You've reached the maximum of ${limit} ${resource} on the free plan.`);
+    super(
+      `You've reached the maximum of ${limit} ${resource}. Upgrade your plan for higher limits.`,
+    );
     this.resource = resource;
     this.limit = limit;
   }

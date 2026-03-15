@@ -55,9 +55,14 @@ export const Route = createFileRoute('/api/feeds')({
         }
 
         try {
-          const [feed] = await withTransaction(db, session.user.id, async (ctx) => {
-            return feedsDomain.createFeeds(ctx, [{ feedUrl: parsed.data.url }]);
-          });
+          const [feed] = await withTransaction(
+            db,
+            session.user.id,
+            session.user.plan,
+            async (ctx) => {
+              return feedsDomain.createFeeds(ctx, [{ feedUrl: parsed.data.url }]);
+            },
+          );
           return Response.json(feed, { status: 201, headers });
         } catch (error) {
           if (error instanceof feedsDomain.LimitExceededError) {

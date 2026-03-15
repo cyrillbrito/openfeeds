@@ -15,7 +15,7 @@ export const $$createFeedTags = createServerFn({ method: 'POST' })
   .middleware([authMiddleware])
   .inputValidator(z.array(CreateFeedTagSchema))
   .handler(async ({ context, data }) => {
-    return await withTransaction(db, context.user.id, async (ctx) => {
+    return await withTransaction(db, context.user.id, context.user.plan, async (ctx) => {
       await feedTagsDomain.createFeedTags(ctx, data);
       return { txid: await getTxId(ctx.conn) };
     });
@@ -25,7 +25,7 @@ export const $$deleteFeedTags = createServerFn({ method: 'POST' })
   .middleware([authMiddleware])
   .inputValidator(z.array(z.uuidv7()))
   .handler(async ({ context, data: ids }) => {
-    return await withTransaction(db, context.user.id, async (ctx) => {
+    return await withTransaction(db, context.user.id, context.user.plan, async (ctx) => {
       await feedTagsDomain.deleteFeedTags(ctx, ids);
       return { txid: await getTxId(ctx.conn) };
     });

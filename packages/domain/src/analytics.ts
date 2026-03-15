@@ -67,14 +67,17 @@ export interface ServerAnalyticsEventMap {
     source: 'create' | 'opml_import';
     current_usage: number;
     limit: number;
+    plan: string;
   };
   'limits:filter_rules_limit_hit': {
     current_usage: number;
     limit: number;
+    plan: string;
   };
   'limits:saved_articles_limit_hit': {
     current_usage: number;
     limit: number;
+    plan: string;
   };
   'limits:extractions_limit_hit': {
     window: 'daily' | 'monthly';

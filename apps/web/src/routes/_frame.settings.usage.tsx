@@ -12,9 +12,7 @@ function UsagePage() {
   return (
     <>
       <div class="mb-6">
-        <p class="text-base-content-gray text-sm">
-          Your current resource usage on the free plan. Limits will increase with paid plans.
-        </p>
+        <p class="text-base-content-gray text-sm">Your current resource usage and limits.</p>
       </div>
 
       <UsageLimitsCard />
@@ -34,6 +32,10 @@ function flattenUsage(usage: UserUsage) {
   ];
 }
 
+function isUnlimited(limit: number | null) {
+  return limit === null;
+}
+
 function UsageLimitsCard() {
   const [usage] = createResource(() => $$getUserUsage());
 
@@ -42,7 +44,6 @@ function UsageLimitsCard() {
       <div class="mb-4 flex items-center justify-between">
         <div>
           <h2 class="text-base-content font-semibold">Usage & Limits</h2>
-          <p class="text-base-content-gray text-sm">Free plan</p>
         </div>
       </div>
 
@@ -58,20 +59,23 @@ function UsageLimitsCard() {
           <div class="space-y-4">
             <For each={flattenUsage(usage()!)}>
               {(item) => {
-                const pct = () => Math.round((item.used / item.limit) * 100);
+                const unlimited = isUnlimited(item.limit);
+                const pct = () => (unlimited ? 0 : Math.round((item.used / item.limit!) * 100));
                 return (
                   <div>
                     <div class="mb-1 flex justify-between text-sm">
                       <span>{item.label}</span>
                       <span class="text-base-content-gray">
-                        {item.used} / {item.limit}
+                        {unlimited ? item.used : `${item.used} / ${item.limit}`}
                       </span>
                     </div>
-                    <progress
-                      class={`progress w-full ${pct() >= 90 ? 'progress-error' : pct() >= 70 ? 'progress-warning' : 'progress-primary'}`}
-                      value={item.used}
-                      max={item.limit}
-                    />
+                    <Show when={!unlimited}>
+                      <progress
+                        class={`progress w-full ${pct() >= 90 ? 'progress-error' : pct() >= 70 ? 'progress-warning' : 'progress-primary'}`}
+                        value={item.used}
+                        max={item.limit!}
+                      />
+                    </Show>
                   </div>
                 );
               }}

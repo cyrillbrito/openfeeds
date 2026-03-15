@@ -9,7 +9,7 @@ export const $$createFilterRules = createServerFn({ method: 'POST' })
   .middleware([authMiddleware])
   .inputValidator(z.array(CreateFilterRuleSchema))
   .handler(async ({ context, data }) => {
-    return await withTransaction(db, context.user.id, async (ctx) => {
+    return await withTransaction(db, context.user.id, context.user.plan, async (ctx) => {
       await filterRulesDomain.createFilterRules(ctx, data);
       return { txid: await getTxId(ctx.conn) };
     });
@@ -19,7 +19,7 @@ export const $$updateFilterRules = createServerFn({ method: 'POST' })
   .middleware([authMiddleware])
   .inputValidator(z.array(UpdateFilterRuleSchema))
   .handler(async ({ context, data }) => {
-    return await withTransaction(db, context.user.id, async (ctx) => {
+    return await withTransaction(db, context.user.id, context.user.plan, async (ctx) => {
       await filterRulesDomain.updateFilterRules(ctx, data);
       return { txid: await getTxId(ctx.conn) };
     });
@@ -29,7 +29,7 @@ export const $$deleteFilterRules = createServerFn({ method: 'POST' })
   .middleware([authMiddleware])
   .inputValidator(z.array(z.uuidv7()))
   .handler(async ({ context, data: ids }) => {
-    return await withTransaction(db, context.user.id, async (ctx) => {
+    return await withTransaction(db, context.user.id, context.user.plan, async (ctx) => {
       await filterRulesDomain.deleteFilterRules(ctx, ids);
       return { txid: await getTxId(ctx.conn) };
     });

@@ -15,7 +15,7 @@ export const $$createArticleTags = createServerFn({ method: 'POST' })
   .middleware([authMiddleware])
   .inputValidator(z.array(CreateArticleTagSchema))
   .handler(async ({ context, data }) => {
-    return await withTransaction(db, context.user.id, async (ctx) => {
+    return await withTransaction(db, context.user.id, context.user.plan, async (ctx) => {
       await articleTagsDomain.createArticleTags(ctx, data);
       return { txid: await getTxId(ctx.conn) };
     });
@@ -25,7 +25,7 @@ export const $$deleteArticleTags = createServerFn({ method: 'POST' })
   .middleware([authMiddleware])
   .inputValidator(z.array(z.uuidv7()))
   .handler(async ({ context, data: ids }) => {
-    return await withTransaction(db, context.user.id, async (ctx) => {
+    return await withTransaction(db, context.user.id, context.user.plan, async (ctx) => {
       await articleTagsDomain.deleteArticleTags(ctx, ids);
       return { txid: await getTxId(ctx.conn) };
     });
