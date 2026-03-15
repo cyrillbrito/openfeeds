@@ -57,7 +57,6 @@ export async function fetchArticleContent(url: string): Promise<ArticleContent> 
       return EMPTY_RESULT;
     }
 
-    console.log(`[${url}] Extracted: "${result.title}" (${result.content.length} chars)`);
     return mapResult(result);
   } catch (error) {
     console.error(
