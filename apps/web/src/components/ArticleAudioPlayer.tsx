@@ -1,5 +1,6 @@
 import type { WordTiming } from '@repo/domain/client';
-import { Headphones, Loader2, Pause, Play } from 'lucide-solid';
+import { Headphones, Loader2, Pause, Play, Wifi } from 'lucide-solid';
+import posthog from 'posthog-js';
 import { createEffect, createResource, createSignal, onCleanup, onMount, Show } from 'solid-js';
 import {
   $$generateArticleAudio,
@@ -19,6 +20,7 @@ export function ArticleAudioPlayer(props: ArticleAudioPlayerProps) {
   const [duration, setDuration] = createSignal<number>(0);
   const [currentTime, setCurrentTime] = createSignal<number>(0);
   const [error, setError] = createSignal<string | null>(null);
+  const [buffering, setBuffering] = createSignal(false);
 
   // Check if TTS is available on the server
   const [ttsAvailable] = createResource(() => $$isTtsAvailable());
@@ -146,6 +148,22 @@ export function ArticleAudioPlayer(props: ArticleAudioPlayerProps) {
     }
   };
 
+  const handleAudioError = () => {
+    stopProgressLoop();
+    const mediaError = audioRef?.error;
+    const errorMsg =
+      mediaError?.code === MediaError.MEDIA_ERR_NETWORK
+        ? 'Audio download failed — check your connection'
+        : 'Audio playback failed';
+    setError(errorMsg);
+    audio.setAudioState('error');
+    posthog.captureException(new Error(errorMsg), {
+      context: 'audio.playback',
+      mediaErrorCode: mediaError?.code,
+      mediaErrorMessage: mediaError?.message,
+    });
+  };
+
   onCleanup(() => {
     stopProgressLoop();
     if (audioRef) {
@@ -180,6 +198,10 @@ export function ArticleAudioPlayer(props: ArticleAudioPlayerProps) {
             src={audioUrl()!}
             onEnded={handleEnded}
             onLoadedMetadata={handleLoadedMetadata}
+            onError={handleAudioError}
+            onWaiting={() => setBuffering(true)}
+            onPlaying={() => setBuffering(false)}
+            onStalled={() => setBuffering(true)}
             preload="metadata"
           />
         </Show>
@@ -245,14 +267,36 @@ export function ArticleAudioPlayer(props: ArticleAudioPlayerProps) {
                 {formatTime(duration())}
               </span>
             </div>
+
+            <Show when={buffering()}>
+              <span class="text-warning flex items-center gap-1 text-xs" title="Slow connection">
+                <Wifi size={14} />
+                Buffering...
+              </span>
+            </Show>
           </Show>
 
           <Show when={audio.audioState() === 'error'}>
             <div class="flex items-center gap-2">
               <span class="text-error text-sm">{error()}</span>
-              <button class="btn btn-ghost btn-sm" onClick={generateAudio}>
-                Retry
-              </button>
+              <Show
+                when={audioUrl()}
+                fallback={
+                  <button class="btn btn-ghost btn-sm" onClick={generateAudio}>
+                    Retry
+                  </button>
+                }
+              >
+                <button
+                  class="btn btn-ghost btn-sm"
+                  onClick={() => {
+                    setError(null);
+                    audio.setAudioState('ready');
+                  }}
+                >
+                  Retry
+                </button>
+              </Show>
             </div>
           </Show>
         </div>
