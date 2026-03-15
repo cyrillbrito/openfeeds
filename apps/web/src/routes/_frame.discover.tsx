@@ -30,12 +30,15 @@ import { useFeeds } from '~/entities/feeds';
 import { $$discoverFeeds } from '~/entities/feeds.functions';
 import { buildFollowVars, followFeedsAction } from '~/entities/follow-feeds';
 import { useTags } from '~/entities/tags';
+import { normalizeUrl } from '~/utils/normalize-url';
 
 export const Route = createFileRoute('/_frame/discover')({
   component: DiscoverPage,
   validateSearch: (search): { url?: string } => {
     const raw = (search?.url as string) || undefined;
-    const url = raw && !/^https?:\/\//i.test(raw) ? `https://${raw}` : raw;
+    // Normalize the URL from search params — drop invalid values so the resource
+    // doesn't fire a request that will fail server-side validation.
+    const url = raw ? (normalizeUrl(raw) ?? undefined) : undefined;
     return { url };
   },
 });
@@ -48,6 +51,7 @@ function DiscoverPage() {
 
   // Local input value (not yet submitted)
   const [inputUrl, setInputUrl] = createSignal(search()?.url ?? '');
+  const [validationError, setValidationError] = createSignal<string | null>(null);
 
   // Discovery results driven by URL search param
   const searchUrl = () => search()?.url;
@@ -93,13 +97,23 @@ function DiscoverPage() {
   const isLoading = () => discoveryResult.loading;
   const discoveredFeeds = () => discoveryResult() ?? [];
   const error = () =>
-    discoveryResult.error ? String(discoveryResult.error?.message ?? discoveryResult.error) : null;
+    validationError() ??
+    (discoveryResult.error
+      ? String(discoveryResult.error?.message ?? discoveryResult.error)
+      : null);
 
   const handleDiscover = (e: Event) => {
     e.preventDefault();
-    const trimmed = inputUrl().trim();
-    if (!trimmed) return;
-    const normalized = /^https?:\/\//i.test(trimmed) ? trimmed : `https://${trimmed}`;
+    const raw = inputUrl().trim();
+    if (!raw) return;
+
+    const normalized = normalizeUrl(raw);
+    if (!normalized) {
+      setValidationError("That doesn't look like a valid URL. Try something like example.com");
+      return;
+    }
+
+    setValidationError(null);
     setInputUrl(normalized);
     navigate({ search: { url: normalized } });
   };
@@ -231,7 +245,10 @@ function DiscoverPage() {
               placeholder="Try youtube.com/mkbhd"
               class="grow"
               value={inputUrl()}
-              onInput={(e) => setInputUrl(e.currentTarget.value)}
+              onInput={(e) => {
+                setInputUrl(e.currentTarget.value);
+                setValidationError(null);
+              }}
               required
             />
             <Show when={inputUrl()}>
@@ -240,6 +257,7 @@ function DiscoverPage() {
                 class="btn btn-ghost btn-xs btn-circle"
                 onClick={() => {
                   setInputUrl('');
+                  setValidationError(null);
                   navigate({ search: {} });
                 }}
               >
