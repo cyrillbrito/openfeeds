@@ -17,8 +17,6 @@ const EMPTY_RESULT: ArticleContent = {
 };
 
 function mapResult(result: Awaited<ReturnType<typeof Defuddle>>): ArticleContent {
-  Bun.file('./banan').write(JSON.stringify(result,null,2))
-  // console.log('Defuddle', JSON.stringify(rest))
   return {
     title: result.title || null,
     excerpt: result.description || null,
@@ -26,7 +24,7 @@ function mapResult(result: Awaited<ReturnType<typeof Defuddle>>): ArticleContent
     author: result.author || null,
     published: result.published || null,
     image: result.image || null,
-    wordCount: result.wordCount || null,
+    wordCount: result.wordCount ?? null,
   };
 }
 

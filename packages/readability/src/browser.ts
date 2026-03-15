@@ -28,6 +28,6 @@ export function extractFromPage(doc: Document = document): ArticleContent {
     author: result.author || null,
     published: result.published || null,
     image: result.image || null,
-    wordCount: result.wordCount || null,
+    wordCount: result.wordCount ?? null,
   };
 }
