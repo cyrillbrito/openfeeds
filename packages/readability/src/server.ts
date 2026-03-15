@@ -18,12 +18,12 @@ const EMPTY_RESULT: ArticleContent = {
 
 function mapResult(result: Awaited<ReturnType<typeof Defuddle>>): ArticleContent {
   return {
-    title: result.title || null,
-    excerpt: result.description || null,
-    content: result.content || null,
-    author: result.author || null,
-    published: result.published || null,
-    image: result.image || null,
+    title: result.title ?? null,
+    excerpt: result.description ?? null,
+    content: result.content ?? null,
+    author: result.author ?? null,
+    published: result.published ?? null,
+    image: result.image ?? null,
     wordCount: result.wordCount ?? null,
   };
 }

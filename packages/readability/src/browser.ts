@@ -9,25 +9,13 @@ export type { ArticleContent } from './types.js';
 export function extractFromPage(doc: Document = document): ArticleContent {
   const result = new Defuddle(doc).parse();
 
-  if (!result.content) {
-    return {
-      title: null,
-      excerpt: null,
-      content: null,
-      author: null,
-      published: null,
-      image: null,
-      wordCount: null,
-    };
-  }
-
   return {
-    title: result.title || null,
-    excerpt: result.description || null,
-    content: result.content || null,
-    author: result.author || null,
-    published: result.published || null,
-    image: result.image || null,
+    title: result.title ?? null,
+    excerpt: result.description ?? null,
+    content: result.content ?? null,
+    author: result.author ?? null,
+    published: result.published ?? null,
+    image: result.image ?? null,
     wordCount: result.wordCount ?? null,
   };
 }
