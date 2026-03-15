@@ -1,111 +1,83 @@
-import { Readability } from '@mozilla/readability';
-import { Browser, BrowserErrorCaptureEnum } from 'happy-dom';
+import { Defuddle } from 'defuddle/node';
+import { JSDOM } from 'jsdom';
 import type { ArticleContent } from './types.js';
 
 export type { ArticleContent } from './types.js';
 
-const NAVIGATION_TIMEOUT_MS = 30_000;
+const FETCH_TIMEOUT_MS = 30_000;
+
+const EMPTY_RESULT: ArticleContent = {
+  title: null,
+  excerpt: null,
+  content: null,
+  author: null,
+  published: null,
+  image: null,
+  wordCount: null,
+};
+
+function mapResult(result: Awaited<ReturnType<typeof Defuddle>>): ArticleContent {
+  return {
+    title: result.title ?? null,
+    excerpt: result.description ?? null,
+    content: result.content ?? null,
+    author: result.author ?? null,
+    published: result.published ?? null,
+    image: result.image ?? null,
+    wordCount: result.wordCount ?? null,
+  };
+}
 
 /**
- * Fetch a URL and extract readable content using happy-dom + Readability
+ * Fetch a URL and extract readable content using JSDOM + Defuddle
  */
 export async function fetchArticleContent(url: string): Promise<ArticleContent> {
-  const browser = new Browser({
-    settings: {
-      errorCapture: BrowserErrorCaptureEnum.disabled,
-      disableJavaScriptEvaluation: true,
-    },
-  });
-
   try {
-    const page = browser.newPage();
+    const response = await fetch(url, {
+      signal: AbortSignal.timeout(FETCH_TIMEOUT_MS),
+      headers: {
+        'User-Agent':
+          'Mozilla/5.0 (compatible; OpenFeeds/1.0; +https://openfeeds.com)',
+        Accept: 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+      },
+      redirect: 'follow',
+    });
 
-    try {
-      await page.goto(url, { timeout: NAVIGATION_TIMEOUT_MS });
-      await page.waitUntilComplete();
-
-      const reader = new Readability(page.mainFrame.document as any);
-      const article = reader.parse();
-
-      if (!article) {
-        console.error(`[${url}] Readability parse returned null`);
-        return { title: null, excerpt: null, content: null };
-      }
-
-      console.log(`[${url}] Extracted: "${article.title}" (${article.content?.length || 0} chars)`);
-
-      return {
-        title: article.title || null,
-        excerpt: article.excerpt || null,
-        content: article.content || null,
-      };
-    } catch (error) {
-      console.error(
-        `[${url}] Article extraction failed:`,
-        error instanceof Error ? error.message : String(error),
-      );
-      return { title: null, excerpt: null, content: null };
-    } finally {
-      await page.close();
+    if (!response.ok) {
+      console.error(`[${url}] Fetch failed with status ${response.status}`);
+      return EMPTY_RESULT;
     }
-  } finally {
-    await browser.close();
+
+    const html = await response.text();
+    const dom = new JSDOM(html, { url });
+    const result = await Defuddle(dom.window.document, url);
+
+    if (!result.content) {
+      console.error(`[${url}] Defuddle returned no content`);
+      return EMPTY_RESULT;
+    }
+
+    return mapResult(result);
+  } catch (error) {
+    console.error(
+      `[${url}] Article extraction failed:`,
+      error instanceof Error ? error.message : String(error),
+    );
+    return EMPTY_RESULT;
   }
 }
 
 /**
  * Batch fetch multiple URLs and extract readable content
- * More efficient for multiple URLs as it reuses the browser instance
  */
 export async function fetchArticleContentBatch(
   urls: string[],
 ): Promise<Map<string, ArticleContent>> {
-  const browser = new Browser({
-    settings: {
-      errorCapture: BrowserErrorCaptureEnum.disabled,
-      disableJavaScriptEvaluation: true,
-    },
-  });
-
   const results = new Map<string, ArticleContent>();
 
-  try {
-    for (const url of urls) {
-      const page = browser.newPage();
-
-      try {
-        await page.goto(url, { timeout: NAVIGATION_TIMEOUT_MS });
-        await page.waitUntilComplete();
-
-        const reader = new Readability(page.mainFrame.document as any);
-        const article = reader.parse();
-
-        if (!article) {
-          console.error(`[${url}] Readability parse returned null`);
-          results.set(url, { title: null, excerpt: null, content: null });
-          continue;
-        }
-
-        console.log(
-          `[${url}] Extracted: "${article.title}" (${article.content?.length || 0} chars)`,
-        );
-        results.set(url, {
-          title: article.title || null,
-          excerpt: article.excerpt || null,
-          content: article.content || null,
-        });
-      } catch (error) {
-        console.error(
-          `[${url}] Article extraction failed:`,
-          error instanceof Error ? error.message : String(error),
-        );
-        results.set(url, { title: null, excerpt: null, content: null });
-      } finally {
-        await page.close();
-      }
-    }
-  } finally {
-    await browser.close();
+  for (const url of urls) {
+    const content = await fetchArticleContent(url);
+    results.set(url, content);
   }
 
   return results;
