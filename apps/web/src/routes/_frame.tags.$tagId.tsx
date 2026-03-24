@@ -4,6 +4,7 @@ import { ColorIndicator } from '~/components/ColorIndicator';
 import { CenterLoader } from '~/components/Loader';
 import { PageLayout } from '~/components/PageLayout';
 import { TagEmptyState } from '~/components/TagFeedManager';
+import { useArticleTags } from '~/entities/article-tags';
 import { useFeedTags } from '~/entities/feed-tags';
 import { useFeeds } from '~/entities/feeds';
 import { useTags } from '~/entities/tags';
@@ -31,18 +32,25 @@ function TagLayout() {
   const tagsQuery = useTags();
   const feedsQuery = useFeeds();
   const feedTagsQuery = useFeedTags();
+  const articleTagsQuery = useArticleTags();
   const tag = createMemo(() => tagsQuery()?.find((t) => t.id === tagId()));
 
   const hasTaggedFeeds = createMemo(() =>
     (feedTagsQuery() ?? []).some((ft) => ft.tagId === tagId()),
   );
 
+  const hasTaggedArticles = createMemo(() =>
+    (articleTagsQuery() ?? []).some((at) => at.tagId === tagId()),
+  );
+
+  const hasContent = createMemo(() => hasTaggedFeeds() || hasTaggedArticles());
+
   const navigate = useNavigate();
   createEffect(
     on(
-      () => [hasTaggedFeeds(), tagId()] as const,
-      ([hasFeed, id]) => {
-        if (hasFeed && isOnIndex()) {
+      () => [hasContent(), tagId()] as const,
+      ([has, id]) => {
+        if (has && isOnIndex()) {
           navigate({ to: '/tags/$tagId/articles', params: { tagId: id }, replace: true });
         }
       },
@@ -63,7 +71,7 @@ function TagLayout() {
       }
     >
       <Show
-        when={hasTaggedFeeds()}
+        when={hasContent()}
         fallback={
           <Show when={feedsQuery()}>
             <TagEmptyState tagId={tagId()} feeds={feedsQuery()!} />
