@@ -1,8 +1,7 @@
-import { captureException } from '@repo/domain';
+import type { auth } from '~/server/auth.server';
 import { redirect } from '@tanstack/solid-router';
 import { createMiddleware } from '@tanstack/solid-start';
 import { getRequestHeaders } from '@tanstack/solid-start/server';
-import { auth } from '~/server/auth';
 
 type InferredSession = typeof auth.$Infer.Session;
 export type AuthContext = { user: InferredSession['user']; session: InferredSession['session'] };
@@ -13,6 +12,8 @@ export type AuthContext = { user: InferredSession['user']; session: InferredSess
  * Distinguishes between "no session" (redirect) and "session check failed" (re-throw).
  */
 export const authMiddleware = createMiddleware().server(async ({ request, next }) => {
+  const { auth } = await import('~/server/auth.server');
+  const { captureException } = await import('@repo/domain');
   const headers = getRequestHeaders();
 
   let session;
@@ -39,6 +40,8 @@ export const authMiddleware = createMiddleware().server(async ({ request, next }
  * Redirects authenticated users to the app root
  */
 export const guestMiddleware = createMiddleware().server(async ({ next }) => {
+  const { auth } = await import('~/server/auth.server');
+  const { captureException } = await import('@repo/domain');
   const headers = getRequestHeaders();
 
   let session;
@@ -63,6 +66,9 @@ export const guestMiddleware = createMiddleware().server(async ({ next }) => {
  */
 export const authRequestMiddleware = createMiddleware({ type: 'request' }).server<AuthContext>(
   async ({ request, next }) => {
+    const { auth } = await import('~/server/auth.server');
+    const { captureException } = await import('@repo/domain');
+
     let session;
     try {
       session = await auth.api.getSession({ headers: request.headers });

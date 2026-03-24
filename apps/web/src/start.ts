@@ -1,4 +1,3 @@
-import { handleBoundaryError } from '@repo/domain';
 import { createMiddleware, createStart } from '@tanstack/solid-start';
 
 /**
@@ -13,6 +12,7 @@ import { createMiddleware, createStart } from '@tanstack/solid-start';
  * Domain errors (NotFoundError, ConflictError, etc.) pass through unchanged.
  */
 const errorBoundary = createMiddleware({ type: 'function' }).server(async ({ next }) => {
+  const { handleBoundaryError } = await import('@repo/domain');
   try {
     return await next();
   } catch (error) {

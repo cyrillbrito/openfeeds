@@ -39,7 +39,18 @@ export default defineConfig({
     }),
     viteTsConfigPaths({ projects: ['./tsconfig.json'] }),
     tailwindcss(),
-    tanstackStart(),
+    tanstackStart({
+      importProtection: {
+        client: {
+          // Block server-only monorepo packages from the client bundle.
+          // Use `@repo/domain/client` for schemas/types, and dynamic
+          // `await import()` inside .server() callbacks for full CRUD.
+          // See: https://github.com/TanStack/router/issues/2783
+          //
+          specifiers: ['@repo/db', '@repo/domain', 'bun'],
+        },
+      },
+    }),
     solidPlugin({ ssr: true }),
   ],
   define: {

@@ -1,9 +1,6 @@
-import { db } from '@repo/db';
-import * as feedsDomain from '@repo/domain';
-import { feedUrlSchema, withTransaction } from '@repo/domain';
 import { createFileRoute } from '@tanstack/solid-router';
 import { z } from 'zod/v4';
-import { auth } from '~/server/auth';
+import { feedUrlSchema } from '@repo/domain/client';
 
 const CreateFeedBody = z.object({
   url: feedUrlSchema,
@@ -35,6 +32,13 @@ export const Route = createFileRoute('/api/feeds')({
       },
 
       POST: async ({ request }) => {
+        // Dynamic imports to keep server-only modules out of the client bundle.
+        // See: https://github.com/TanStack/router/issues/2783
+        const { db } = await import('@repo/db');
+        const feedsDomain = await import('@repo/domain');
+        const { withTransaction } = feedsDomain;
+        const { auth } = await import('~/server/auth.server');
+
         const headers = corsHeaders(request);
 
         const session = await auth.api.getSession({ headers: request.headers });

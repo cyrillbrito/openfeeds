@@ -1,13 +1,13 @@
-import { captureException } from '@repo/domain';
 import { redirect } from '@tanstack/solid-router';
 import { createIsomorphicFn } from '@tanstack/solid-start';
 import { getRequestHeaders } from '@tanstack/solid-start/server';
 import posthog from 'posthog-js';
 import { authClient } from '~/lib/auth-client';
-import { auth } from '~/server/auth';
 
 export const hasSession = createIsomorphicFn()
   .server(async () => {
+    const { auth } = await import('~/server/auth.server');
+    const { captureException } = await import('@repo/domain');
     const headers = getRequestHeaders();
     try {
       const session = await auth.api.getSession({ headers });
