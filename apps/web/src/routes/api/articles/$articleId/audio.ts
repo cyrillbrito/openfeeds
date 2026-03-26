@@ -1,6 +1,4 @@
-import { getArticleAudioBuffer } from '@repo/domain';
 import { createFileRoute } from '@tanstack/solid-router';
-import { auth } from '~/server/auth';
 
 /**
  * Streaming endpoint for audio files.
@@ -18,6 +16,11 @@ export const Route = createFileRoute('/api/articles/$articleId/audio')({
   server: {
     handlers: {
       GET: async ({ request, params }: { request: Request; params: { articleId: string } }) => {
+        // Dynamic imports to keep server-only modules out of the client bundle.
+        // See: https://github.com/TanStack/router/issues/2783
+        const { auth } = await import('~/server/auth.server');
+        const { getArticleAudioBuffer } = await import('@repo/domain');
+
         const session = await auth.api.getSession({ headers: request.headers });
         if (!session) {
           return Response.json({ message: 'Unauthorized' }, { status: 401 });

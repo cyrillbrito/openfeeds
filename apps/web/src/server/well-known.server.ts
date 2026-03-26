@@ -7,7 +7,7 @@ import { NotFoundError } from '@repo/domain';
 import { createAuthClient } from 'better-auth/client';
 import type { Auth } from 'better-auth/types';
 import { env } from '~/env';
-import { auth } from './auth';
+import { auth } from './auth.server';
 
 const handleOpenIdConfig = oauthProviderOpenIdConfigMetadata(auth);
 const handleAuthServer = oauthProviderAuthServerMetadata(auth);

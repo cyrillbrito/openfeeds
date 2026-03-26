@@ -1,9 +1,9 @@
-import { db } from '@repo/db';
-import * as feedsDomain from '@repo/domain';
-import { feedUrlSchema, withTransaction } from '@repo/domain';
 import { createFileRoute } from '@tanstack/solid-router';
 import { z } from 'zod/v4';
-import { auth } from '~/server/auth';
+import { db } from '@repo/db';
+import { auth } from '~/server/auth.server';
+import { LimitExceededError, ConflictError, BadRequestError, withTransaction, createFeeds } from '@repo/domain';
+import { feedUrlSchema } from '@repo/domain/client';
 
 const CreateFeedBody = z.object({
   url: feedUrlSchema,
@@ -60,18 +60,18 @@ export const Route = createFileRoute('/api/feeds')({
             session.user.id,
             session.user.plan,
             async (ctx) => {
-              return feedsDomain.createFeeds(ctx, [{ feedUrl: parsed.data.url }]);
+              return createFeeds(ctx, [{ feedUrl: parsed.data.url }]);
             },
           );
           return Response.json(feed, { status: 201, headers });
         } catch (error) {
-          if (error instanceof feedsDomain.LimitExceededError) {
+          if (error instanceof LimitExceededError) {
             return Response.json({ message: error.message }, { status: 429, headers });
           }
-          if (error instanceof feedsDomain.ConflictError) {
+          if (error instanceof ConflictError) {
             return Response.json({ message: error.message }, { status: 409, headers });
           }
-          if (error instanceof feedsDomain.BadRequestError) {
+          if (error instanceof BadRequestError) {
             return Response.json({ message: error.message }, { status: 400, headers });
           }
           console.error('Failed to create feed:', error);
