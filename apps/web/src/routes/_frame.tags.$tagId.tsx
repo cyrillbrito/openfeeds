@@ -1,10 +1,12 @@
 import { createFileRoute, Link, Outlet, useLocation, useNavigate } from '@tanstack/solid-router';
+import { eq, useLiveQuery } from '@tanstack/solid-db';
 import { createEffect, createMemo, on, Show, Suspense } from 'solid-js';
 import { ColorIndicator } from '~/components/ColorIndicator';
 import { CenterLoader } from '~/components/Loader';
 import { PageLayout } from '~/components/PageLayout';
 import { TagEmptyState } from '~/components/TagFeedManager';
-import { useFeedTags } from '~/entities/feed-tags';
+import { articleTagsCollection } from '~/entities/article-tags';
+import { feedTagsCollection } from '~/entities/feed-tags';
 import { useFeeds } from '~/entities/feeds';
 import { useTags } from '~/entities/tags';
 import { getTagDotColor } from '~/utils/tagColors';
@@ -30,19 +32,33 @@ function TagLayout() {
 
   const tagsQuery = useTags();
   const feedsQuery = useFeeds();
-  const feedTagsQuery = useFeedTags();
   const tag = createMemo(() => tagsQuery()?.find((t) => t.id === tagId()));
 
-  const hasTaggedFeeds = createMemo(() =>
-    (feedTagsQuery() ?? []).some((ft) => ft.tagId === tagId()),
+  const taggedFeedsQuery = useLiveQuery((q) =>
+    q
+      .from({ feedTag: feedTagsCollection })
+      .where(({ feedTag }) => eq(feedTag.tagId, tagId()))
+      .select(({ feedTag }) => ({ id: feedTag.id }))
+      .limit(1),
   );
+
+  const taggedArticlesQuery = useLiveQuery((q) =>
+    q
+      .from({ articleTag: articleTagsCollection })
+      .where(({ articleTag }) => eq(articleTag.tagId, tagId()))
+      .select(({ articleTag }) => ({ id: articleTag.id }))
+      .limit(1),
+  );
+
+  const hasContent = () =>
+    (taggedFeedsQuery()?.length ?? 0) > 0 || (taggedArticlesQuery()?.length ?? 0) > 0;
 
   const navigate = useNavigate();
   createEffect(
     on(
-      () => [hasTaggedFeeds(), tagId()] as const,
-      ([hasFeed, id]) => {
-        if (hasFeed && isOnIndex()) {
+      () => [hasContent(), tagId()] as const,
+      ([has, id]) => {
+        if (has && isOnIndex()) {
           navigate({ to: '/tags/$tagId/articles', params: { tagId: id }, replace: true });
         }
       },
@@ -63,7 +79,7 @@ function TagLayout() {
       }
     >
       <Show
-        when={hasTaggedFeeds()}
+        when={hasContent()}
         fallback={
           <Show when={feedsQuery()}>
             <TagEmptyState tagId={tagId()} feeds={feedsQuery()!} />
