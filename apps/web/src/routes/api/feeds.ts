@@ -1,5 +1,8 @@
 import { createFileRoute } from '@tanstack/solid-router';
 import { z } from 'zod/v4';
+import { db } from '@repo/db';
+import { auth } from '~/server/auth.server';
+import { LimitExceededError, ConflictError, BadRequestError, withTransaction, createFeeds } from '@repo/domain';
 import { feedUrlSchema } from '@repo/domain/client';
 
 const CreateFeedBody = z.object({
@@ -32,13 +35,6 @@ export const Route = createFileRoute('/api/feeds')({
       },
 
       POST: async ({ request }) => {
-        // Dynamic imports to keep server-only modules out of the client bundle.
-        // See: https://github.com/TanStack/router/issues/2783
-        const { db } = await import('@repo/db');
-        const feedsDomain = await import('@repo/domain');
-        const { withTransaction } = feedsDomain;
-        const { auth } = await import('~/server/auth.server');
-
         const headers = corsHeaders(request);
 
         const session = await auth.api.getSession({ headers: request.headers });
@@ -64,18 +60,18 @@ export const Route = createFileRoute('/api/feeds')({
             session.user.id,
             session.user.plan,
             async (ctx) => {
-              return feedsDomain.createFeeds(ctx, [{ feedUrl: parsed.data.url }]);
+              return createFeeds(ctx, [{ feedUrl: parsed.data.url }]);
             },
           );
           return Response.json(feed, { status: 201, headers });
         } catch (error) {
-          if (error instanceof feedsDomain.LimitExceededError) {
+          if (error instanceof LimitExceededError) {
             return Response.json({ message: error.message }, { status: 429, headers });
           }
-          if (error instanceof feedsDomain.ConflictError) {
+          if (error instanceof ConflictError) {
             return Response.json({ message: error.message }, { status: 409, headers });
           }
-          if (error instanceof feedsDomain.BadRequestError) {
+          if (error instanceof BadRequestError) {
             return Response.json({ message: error.message }, { status: 400, headers });
           }
           console.error('Failed to create feed:', error);
