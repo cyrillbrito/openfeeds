@@ -33,7 +33,7 @@
     "@tanstack/solid-start": "^1.167.11",
     "better-auth": "^1.5.6",
     "daisyui": "^5.5.19",
-    "lucide-solid": "^0.577.0",
+    "lucide-solid": "^1.7.0",
     "nitro": "npm:nitro-nightly@3.0.1-20260227-181935-bfbb207c",
     "posthog-js": "^1.364.1",
     "solid-js": "^1.9.12",
