@@ -188,8 +188,10 @@ export async function parseMcpResponse(response: Awaited<ReturnType<APIRequestCo
       }
     }
     // Return the first (and usually only) message for convenience.
+    // oxlint-disable-next-line typescript-eslint/no-unsafe-type-assertion
     return messages[0] as Record<string, unknown>;
   }
+  // oxlint-disable-next-line typescript-eslint/no-unsafe-type-assertion
   return (await response.json()) as Record<string, unknown>;
 }
 
