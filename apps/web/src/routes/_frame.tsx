@@ -42,7 +42,6 @@ function FrameLayout() {
   onMount(() => {
     createEffect(() => {
       void location().pathname; // Track pathname changes
-      // oxlint-disable-next-line typescript-eslint/no-unsafe-type-assertion
       const drawerCheckbox = document.getElementById('my-drawer') as HTMLInputElement;
       if (drawerCheckbox) {
         drawerCheckbox.checked = false;

@@ -72,7 +72,6 @@ async function extractSocialMetadata(url: string): Promise<SocialMetadata> {
         const content = el.getAttribute('content');
         if (property && content) {
           // Convert "og:image" to "image" etc.
-          // oxlint-disable-next-line typescript-eslint/no-unsafe-type-assertion
           const key = property.replace('og:', '') as keyof SocialMetadata;
           metadata[key] = decodeHtmlEntities(content);
         }
@@ -84,7 +83,6 @@ async function extractSocialMetadata(url: string): Promise<SocialMetadata> {
         const name = el.getAttribute('name');
         const content = el.getAttribute('content');
         if (name && content) {
-          // oxlint-disable-next-line typescript-eslint/no-unsafe-type-assertion
           const key = name.replace('twitter:', '') as keyof SocialMetadata;
           // Only use Twitter Card data if we don't have OG data
           if (!metadata[key]) {
@@ -154,7 +152,6 @@ async function extractSocialMetadata(url: string): Promise<SocialMetadata> {
 function extractFeedImage(feedResult: ParseFeedResult): string | undefined {
   if (feedResult.format === 'rss') {
     const feed = feedResult.feed as Record<string, unknown>;
-    // oxlint-disable-next-line typescript-eslint/no-unsafe-type-assertion
     const image = feed.image as Record<string, unknown> | undefined;
     if (image?.url && typeof image.url === 'string') return image.url;
   }

@@ -3,7 +3,6 @@ import { discoverFeeds } from './server.js';
 
 // Mock fetch for testing
 const mockFetch = mock();
-// oxlint-disable-next-line typescript-eslint/no-unsafe-type-assertion
 (global as any).fetch = mockFetch;
 
 describe('RSS Feed Discovery', () => {

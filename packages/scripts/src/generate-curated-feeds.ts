@@ -247,7 +247,6 @@ async function fetchOpmlFileList(): Promise<string[]> {
     throw new Error(`GitHub API error: ${response.status} ${response.statusText}`);
   }
 
-  // oxlint-disable-next-line typescript-eslint/no-unsafe-type-assertion
   const files = (await response.json()) as Array<{ name: string; download_url: string }>;
   const opmlFiles = files.filter((f) => f.name.endsWith('.opml')).map((f) => f.name);
 
@@ -381,16 +380,12 @@ function extractWebsiteUrl(feedResult: ReturnType<typeof parseFeed>): string | n
 }
 
 function extractFeedTitle(feedResult: ReturnType<typeof parseFeed>): string | null {
-  // oxlint-disable-next-line typescript-eslint/no-unsafe-type-assertion
   const feed = feedResult.feed as Record<string, unknown>;
-  // oxlint-disable-next-line typescript-eslint/no-unsafe-type-assertion
   return (feed.title as string) ?? null;
 }
 
 function extractFeedDescription(feedResult: ReturnType<typeof parseFeed>): string | null {
-  // oxlint-disable-next-line typescript-eslint/no-unsafe-type-assertion
   const feed = feedResult.feed as Record<string, unknown>;
-  // oxlint-disable-next-line typescript-eslint/no-unsafe-type-assertion
   return (feed.description as string) ?? (feed.subtitle as string) ?? null;
 }
 
@@ -547,9 +542,7 @@ async function extractImage(siteUrl: string): Promise<string | null> {
  */
 function extractFeedImage(feedResult: ReturnType<typeof parseFeed>): string | null {
   if (feedResult.format === 'rss') {
-    // oxlint-disable-next-line typescript-eslint/no-unsafe-type-assertion
     const feed = feedResult.feed as Record<string, unknown>;
-    // oxlint-disable-next-line typescript-eslint/no-unsafe-type-assertion
     const image = feed.image as Record<string, unknown> | undefined;
     if (image?.url && typeof image.url === 'string') return image.url;
   }

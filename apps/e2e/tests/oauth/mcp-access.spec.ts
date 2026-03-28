@@ -74,9 +74,7 @@ test.describe('MCP Endpoint Access Control', () => {
     expect(mcpResponse.ok()).toBeTruthy();
     const initResult = await parseMcpResponse(mcpResponse);
     expect(initResult.jsonrpc).toBe('2.0');
-    // oxlint-disable-next-line typescript-eslint/no-unsafe-type-assertion
     expect((initResult.result as Record<string, unknown>).serverInfo).toBeDefined();
-    // oxlint-disable-next-line typescript-eslint/no-unsafe-type-assertion
     expect((initResult.result as Record<string, unknown>).protocolVersion).toBeDefined();
   });
 
@@ -105,9 +103,7 @@ test.describe('MCP Endpoint Access Control', () => {
     const toolResult = await parseMcpResponse(toolResponse);
     expect(toolResult.jsonrpc).toBe('2.0');
     expect(toolResult.id).toBe(2);
-    // oxlint-disable-next-line typescript-eslint/no-unsafe-type-assertion
     const result = toolResult.result as Record<string, unknown>;
-    // oxlint-disable-next-line typescript-eslint/no-unsafe-type-assertion
     const content = result.content as Array<Record<string, unknown>>;
     expect(content).toBeDefined();
     expect(content[0].type).toBe('text');

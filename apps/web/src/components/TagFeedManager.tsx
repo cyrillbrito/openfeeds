@@ -151,9 +151,7 @@ function AddFeedsSection(props: AddFeedsSectionProps) {
   };
 
   const handlePopoverRef = (el: HTMLDivElement) => {
-    // oxlint-disable-next-line typescript-eslint/no-unsafe-type-assertion
     el.addEventListener('toggle', handleToggle as EventListener);
-    // oxlint-disable-next-line typescript-eslint/no-unsafe-type-assertion
     onCleanup(() => el.removeEventListener('toggle', handleToggle as EventListener));
   };
 

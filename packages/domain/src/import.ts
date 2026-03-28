@@ -188,7 +188,6 @@ export async function importOpmlFeeds(
         feedTitle: feed.title,
         feedUrl: feed.xmlUrl,
       });
-      // oxlint-disable-next-line typescript-eslint/no-unsafe-type-assertion
       captureException(error as Error, {
         operation: 'import_feed',
         feedTitle: feed.title,

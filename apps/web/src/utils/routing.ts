@@ -7,9 +7,7 @@ export function validateReadStatusSearch(search: Record<string, unknown>): {
   sort?: SortOrder;
 } {
   return {
-    // oxlint-disable-next-line typescript-eslint/no-unsafe-type-assertion
     readStatus: search?.readStatus as ReadStatus,
-    // oxlint-disable-next-line typescript-eslint/no-unsafe-type-assertion
     sort: (search?.sort as SortOrder) || 'newest',
   };
 }

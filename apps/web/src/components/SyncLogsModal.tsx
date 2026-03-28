@@ -27,7 +27,6 @@ function SyncLogsContent(props: { feed: Feed }) {
     (feedId) => $$getFeedSyncLogs({ data: { feedId } }),
   );
 
-  // oxlint-disable-next-line typescript-eslint/no-unsafe-type-assertion
   const errorMessage = () => (logs.error as Error | undefined)?.message ?? 'Unknown error';
 
   return (

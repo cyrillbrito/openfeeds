@@ -7,7 +7,6 @@ export const Route = createFileRoute('/api/shapes/tags')({
     middleware: [authRequestMiddleware],
     handlers: {
       GET: ({ request, context }) => {
-        // oxlint-disable-next-line typescript-eslint/no-unsafe-type-assertion
         const { user } = context as unknown as AuthContext;
         return proxyElectricRequest({
           request,

@@ -8,7 +8,6 @@
   "ignorePatterns": [
     "**/build",
     "**/public",
-    "out/**",
     "bun.lock",
     "routeTree.gen.ts",
     "packages/db/drizzle/",

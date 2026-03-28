@@ -48,7 +48,6 @@ export const Route = createFileRoute('/_frame/feeds/')({
   component: FeedsComponent,
   validateSearch: (search): { q?: string } => {
     return {
-      // oxlint-disable-next-line typescript-eslint/no-unsafe-type-assertion
       q: search?.q as any,
     };
   },

@@ -53,7 +53,6 @@ export function useSettings() {
     get: () => query.isError,
   });
 
-  // oxlint-disable-next-line typescript-eslint/no-unsafe-type-assertion
   return accessor as typeof accessor & { isLoading: boolean; isError: boolean };
 }
 

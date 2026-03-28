@@ -27,6 +27,5 @@ export function randomString() {
 }
 
 export function unwrapFn<T>(valueOrFn: T | (() => T)): T {
-  // oxlint-disable-next-line typescript-eslint/no-unsafe-type-assertion
   return typeof valueOrFn === 'function' ? (valueOrFn as any)() : valueOrFn;
 }

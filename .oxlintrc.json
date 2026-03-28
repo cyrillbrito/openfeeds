@@ -20,6 +20,7 @@
     "import/no-absolute-path": "error", // Absolute paths break across environments
     "import/no-empty-named-blocks": "warn", // `import {} from "x"` — dead import
     "import/no-named-as-default-member": "warn", // Accessing named export as property of default
+    "import/no-unassigned-import": ["error", { "allow": ["**/*.css"] }], // CSS imports are side-effect-only by nature
     "import/max-dependencies": ["warn", { "max": 25 }], // Flag files importing too many modules — sign of god-file
 
     // --- Barrel files & re-export bloat ---
@@ -28,7 +29,12 @@
     // --- Type imports — cleaner output, faster builds ---
     "typescript/consistent-type-imports": "warn", // Use `import type {}` for type-only imports
     "typescript/no-import-type-side-effects": "warn", // `import { type X }` → `import type { X }` when all are types
-    "typescript/no-require-imports": "error" // ESM-only — no require() calls
+    "typescript/no-require-imports": "error", // ESM-only — no require() calls
+
+    // --- Type assertions ---
+    // Too many false positives on legitimate DOM/browser/protocol boundary casts.
+    // Enforce correctness at HTTP boundaries via schema validation instead.
+    "typescript/no-unsafe-type-assertion": "off"
   },
   "overrides": [
     {

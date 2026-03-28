@@ -40,7 +40,6 @@ export const ThemeProvider: ParentComponent = (props) => {
 
   // Load saved theme from localStorage (client-only)
   onMount(() => {
-    // oxlint-disable-next-line typescript-eslint/no-unsafe-type-assertion
     const saved = localStorage.getItem('theme') as ThemeMode;
     if (saved && ['light', 'dark', 'system'].includes(saved)) {
       setTheme(saved);

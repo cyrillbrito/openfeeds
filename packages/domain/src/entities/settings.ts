@@ -35,7 +35,6 @@ export async function getSettings(userId: string, conn: Db | Transaction): Promi
 
   return {
     userId: settings.userId,
-    // oxlint-disable-next-line typescript-eslint/no-unsafe-type-assertion
     theme: settings.theme as Settings['theme'],
     autoArchiveDays: settings.autoArchiveDays,
     updatedAt: settings.updatedAt.toISOString(),
@@ -79,7 +78,6 @@ export async function updateSettings(
 
   return {
     userId: row.userId,
-    // oxlint-disable-next-line typescript-eslint/no-unsafe-type-assertion
     theme: row.theme as Settings['theme'],
     autoArchiveDays: row.autoArchiveDays,
     updatedAt: row.updatedAt.toISOString(),

@@ -34,7 +34,6 @@ import { useTags } from '~/entities/tags';
 export const Route = createFileRoute('/_frame/discover')({
   component: DiscoverPage,
   validateSearch: (search): { url?: string } => {
-    // oxlint-disable-next-line typescript-eslint/no-unsafe-type-assertion
     const raw = (search?.url as string) || undefined;
     const url = raw && !/^https?:\/\//i.test(raw) ? `https://${raw}` : raw;
     return { url };

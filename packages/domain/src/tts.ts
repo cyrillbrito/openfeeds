@@ -93,7 +93,6 @@ export async function getArticleAudioMetadata(
   }
 
   const content = await readFile(timestampsPath, 'utf-8');
-  // oxlint-disable-next-line typescript-eslint/no-unsafe-type-assertion
   return JSON.parse(content) as ArticleAudioMetadata;
 }
 
@@ -202,7 +201,6 @@ export async function generateArticleAudio(
     throw new Error(`Unreal Speech API error: ${response.status} ${errorText}`);
   }
 
-  // oxlint-disable-next-line typescript-eslint/no-unsafe-type-assertion
   const data = (await response.json()) as UnrealSpeechResponse;
 
   // Fetch the audio file
@@ -217,7 +215,6 @@ export async function generateArticleAudio(
   if (!timestampsResponse.ok) {
     throw new Error('Failed to fetch timestamps from Unreal Speech');
   }
-  // oxlint-disable-next-line typescript-eslint/no-unsafe-type-assertion
   const timestamps = (await timestampsResponse.json()) as UnrealSpeechTimestamp[];
 
   // Convert timestamps to our format

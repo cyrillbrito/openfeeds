@@ -1,7 +1,6 @@
 import { createSignal, onMount, Show } from 'solid-js';
 import { initTheme, setTheme, type Theme } from '@/utils/theme';
 import { DEFAULT_API_URL, type StorageData } from '@/utils/types';
-// oxlint-disable-next-line import/no-unassigned-import
 import './App.css';
 
 export function App() {
@@ -26,7 +25,6 @@ export function App() {
   }
 
   async function handleThemeSelect(e: Event & { currentTarget: HTMLSelectElement }) {
-    // oxlint-disable-next-line typescript-eslint/no-unsafe-type-assertion
     await handleThemeChange(e.currentTarget.value as Theme);
   }
 

@@ -98,7 +98,6 @@ function ImportOpmlForm(props: ImportOpmlFormProps) {
                 if (file) {
                   const reader = new FileReader();
                   reader.addEventListener('load', (event) => {
-                    // oxlint-disable-next-line typescript-eslint/no-unsafe-type-assertion
                     const content = event.target?.result as string;
                     void handleImportOpml(content);
                   });

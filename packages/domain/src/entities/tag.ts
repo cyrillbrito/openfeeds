@@ -49,7 +49,6 @@ export async function createTags(ctx: TransactionContext, data: CreateTag[]): Pr
     id: t.id,
     userId: t.userId,
     name: t.name,
-    // oxlint-disable-next-line typescript-eslint/no-unsafe-type-assertion
     color: t.color as Tag['color'],
     order: t.order,
     createdAt: t.createdAt.toISOString(),
