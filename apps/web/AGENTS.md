@@ -8,7 +8,6 @@ Local-first SolidJS app. Data in client-side TanStack Solid DB, synced via Elect
 bun dev           # Development server (port 3000)
 bun build         # Production build
 bun start         # Start production server
-bun check-types   # TypeScript checking
 ```
 
 ## Directory Structure

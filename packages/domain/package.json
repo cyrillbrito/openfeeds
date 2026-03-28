@@ -7,9 +7,7 @@
     "./logger": "./src/logger.ts",
     "./environment": "./src/env.ts"
   },
-  "scripts": {
-    "check-types": "tsc --noEmit"
-  },
+  "scripts": {},
   "dependencies": {
     "@repo/db": "workspace:*",
     "@repo/discovery": "workspace:*",

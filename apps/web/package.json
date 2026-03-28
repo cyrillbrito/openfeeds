@@ -8,7 +8,6 @@
     "preview": "bun --env-file=../../.env vite preview",
     "test": "vitest run",
     "start": "bun --env-file=../../.env .output/server/index.mjs",
-    "check-types": "tsc --noEmit"
   },
   "dependencies": {
     "@better-auth/drizzle-adapter": "^1.5.6",

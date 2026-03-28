@@ -4,16 +4,7 @@ Local-first RSS reader built with SolidJS + TanStack Start. Client-side TanStack
 
 ## Commands
 
-**Use bun only (not npm/pnpm/yarn):**
-
-```bash
-bun dev          # Start dev servers
-bun build        # Build all apps
-bun check-types  # TypeScript checking
-bun lint         # oxlint type-aware linting
-bun checks       # Type check + lint
-bun migrate      # Run database migrations
-```
+**Use bun only (not npm/pnpm/yarn).** Run `bun checks` after every change. Ask the user before running `bun migrate`.
 
 For database schema changes and migrations, load the `database` skill.
 
@@ -66,10 +57,34 @@ Commit messages and PR titles must use [Conventional Commits](https://www.conven
 ## Code Quality
 
 - Never modify tsconfig or use `// @ts-ignore`
-- Run `bun check-types` after changes
+- Run `bun checks` after changes (lint + format check, includes type checking)
 - TypeScript strict mode enabled
-- Lint with oxlint (type-aware)
 
 ## User ID Denormalization
 
 **Every table must have a `user_id` column with an index.** Electric SQL shapes cannot JOIN/subquery, so all tables need `user_id` directly for per-user filtering. Load the `database` skill for the full checklist and code examples.
+
+<!-- intent-skills:start -->
+# Skill mappings - when working in these areas, load the linked skill file into context.
+skills:
+  - task: "adding a new synced entity or feature end-to-end with Electric SQL and TanStack DB"
+    load: "node_modules/@electric-sql/client/skills/electric-new-feature/SKILL.md"
+  - task: "setting up or modifying Electric shape proxy routes with auth"
+    load: "node_modules/@electric-sql/client/skills/electric-proxy-auth/SKILL.md"
+  - task: "configuring ShapeStream options, type parsers, or column mappers on a collection"
+    load: "node_modules/@electric-sql/client/skills/electric-shapes/SKILL.md"
+  - task: "creating or modifying a TanStack DB collection (electricCollectionOptions, sync, autoIndex)"
+    load: "node_modules/@tanstack/db/skills/db-core/collection-setup/SKILL.md"
+  - task: "writing optimistic mutations (onInsert, onUpdate, onDelete, txid handshake)"
+    load: "node_modules/@tanstack/db/skills/db-core/mutations-optimistic/SKILL.md"
+  - task: "writing live queries with useLiveQuery, query builder, joins, or aggregates"
+    load: "node_modules/@tanstack/db/skills/db-core/live-queries/SKILL.md"
+  - task: "adding route guards, auth protection, or authenticated layout routes"
+    load: "node_modules/@tanstack/router-core/skills/router-core/auth-and-guards/SKILL.md"
+  - task: "adding loaders, beforeLoad, or data fetching patterns to routes"
+    load: "node_modules/@tanstack/router-core/skills/router-core/data-loading/SKILL.md"
+  - task: "debugging Electric sync issues (shapes not updating, errors in console)"
+    load: "node_modules/@electric-sql/client/skills/electric-debugging/SKILL.md"
+  - task: "adding or reading search params in routes"
+    load: "node_modules/@tanstack/router-core/skills/router-core/search-params/SKILL.md"
+<!-- intent-skills:end -->
