@@ -1,4 +1,4 @@
-import { Window } from 'happy-dom';
+import { JSDOM } from 'jsdom';
 import {
   checkKnownServices,
   COMMON_FEED_PATHS,
@@ -31,19 +31,11 @@ export async function discoverFeeds(url: string, options: DiscoveryOptions = {})
     return [selfFeed];
   }
 
-  let window: Window | null = null;
+  let dom: JSDOM | null = null;
   try {
     const html = await fetchHtmlContent(url, mergedOptions);
-    window = new Window({
-      url,
-      settings: {
-        disableJavaScriptEvaluation: true,
-        disableJavaScriptFileLoading: true,
-        disableCSSFileLoading: true,
-      },
-    });
-    window.document.body.innerHTML = html;
-    const document = window.document as unknown as Document;
+    dom = new JSDOM(html, { url, runScripts: 'outside-only' });
+    const document = dom.window.document;
 
     const linkFeeds = extractFeedLinks(document, { baseUrl: url });
     const heuristicFeeds = extractHeuristicFeeds(document, { baseUrl: url });
@@ -56,7 +48,7 @@ export async function discoverFeeds(url: string, options: DiscoveryOptions = {})
   } catch (error) {
     console.warn(`Failed to fetch HTML from ${url}:`, error);
   } finally {
-    window?.close();
+    dom?.window.close();
   }
 
   const fallbackFeed = await tryCommonPaths(url, mergedOptions);
