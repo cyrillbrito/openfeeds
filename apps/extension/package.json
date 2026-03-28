@@ -14,13 +14,13 @@
   },
   "dependencies": {
     "daisyui": "^5.5.19",
-    "solid-js": "^1.9.11",
-    "tailwindcss": "^4.2.1"
+    "solid-js": "^1.9.12",
+    "tailwindcss": "^4.2.2"
   },
   "devDependencies": {
-    "@tailwindcss/vite": "^4.2.1",
+    "@tailwindcss/vite": "^4.2.2",
     "@wxt-dev/module-solid": "^1.1.4",
     "typescript": "^5",
-    "wxt": "^0.20.18"
+    "wxt": "^0.20.20"
   }
 }
