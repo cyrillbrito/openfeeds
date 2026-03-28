@@ -48,6 +48,7 @@ export const Route = createFileRoute('/_frame/feeds/')({
   component: FeedsComponent,
   validateSearch: (search): { q?: string } => {
     return {
+      // oxlint-disable-next-line typescript-eslint/no-unsafe-type-assertion
       q: search?.q as any,
     };
   },
@@ -132,10 +133,10 @@ function FeedsComponent() {
 
   // Filtered feeds based on search query from URL, with broken/failing sorted to top
   const filteredFeeds = createMemo(() => {
-    const feeds = feedsWithTagsQuery();
+    const feeds = feedsWithTagsQuery() as FeedWithTags[] | undefined;
     if (!feeds) return [];
 
-    let result = feeds;
+    let result: FeedWithTags[] = feeds;
     const query = searchDebounced();
     if (query) {
       result = result.filter(
@@ -147,15 +148,16 @@ function FeedsComponent() {
     }
 
     // Sort: broken first, then failing, then ok
-    const statusOrder = { broken: 0, failing: 1, ok: 2 };
+    const statusOrder: Record<string, number> = { broken: 0, failing: 1, ok: 2 };
+    // oxlint-disable-next-line no-array-sort
     return [...result].sort(
-      (a, b) => statusOrder[a.syncStatus ?? 'ok'] - statusOrder[b.syncStatus ?? 'ok'],
+      (a, b) => (statusOrder[a.syncStatus ?? 'ok'] ?? 0) - (statusOrder[b.syncStatus ?? 'ok'] ?? 0),
     );
   });
 
   // Bulk action handlers
   const handleBulkDelete = () => {
-    setFeedsToDelete(filteredFeeds().filter((f) => selectedIds().has(f.id)) as FeedWithTags[]);
+    setFeedsToDelete(filteredFeeds().filter((f) => selectedIds().has(f.id)));
     deleteFeedModalController.open();
   };
 
@@ -241,7 +243,7 @@ function FeedsComponent() {
           <FeedsEmptyState onImportOpml={() => importOpmlModalController.open()} />
         </Match>
 
-        <Match when={feedsWithTagsQuery() && feedsWithTagsQuery()!.length > 0}>
+        <Match when={feedsWithTagsQuery() && feedsWithTagsQuery().length > 0}>
           {/* Header with title, action buttons, and search — only when feeds exist */}
           <FeedsHeader
             searchValue={searchDebounced()}
@@ -560,7 +562,7 @@ function BulkAddTagsModal(props: BulkAddTagsModalProps) {
         </p>
 
         <Show
-          when={tagsQuery() && tagsQuery()!.length > 0}
+          when={tagsQuery() && tagsQuery().length > 0}
           fallback={
             <div class="py-8 text-center">
               <p class="text-base-content/60 mb-4">No tags available.</p>
@@ -571,7 +573,7 @@ function BulkAddTagsModal(props: BulkAddTagsModalProps) {
           }
         >
           <MultiSelectTag
-            tags={tagsQuery()!}
+            tags={tagsQuery()}
             selectedIds={selectedTagIds()}
             onSelectionChange={setSelectedTagIds}
           />
@@ -679,7 +681,7 @@ function FeedRow(props: FeedRowProps) {
               {(tag) => (
                 <Link to="/tags/$tagId" params={{ tagId: tag.id!.toString() }}>
                   <span class="badge badge-xs gap-1 transition-all hover:brightness-90">
-                    <ColorIndicator class={getTagDotColor(tag.color as TagColor | null)} />
+                    <ColorIndicator class={getTagDotColor(tag.color ?? null)} />
                     {tag.name}
                   </span>
                 </Link>

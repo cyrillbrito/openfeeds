@@ -13,6 +13,7 @@ const handleOpenIdConfig = oauthProviderOpenIdConfigMetadata(auth);
 const handleAuthServer = oauthProviderAuthServerMetadata(auth);
 
 const protectedResourceClient = createAuthClient({
+  // oxlint-disable-next-line typescript-eslint/no-unsafe-type-assertion
   plugins: [oauthProviderResourceClient(auth as unknown as Auth)],
 });
 

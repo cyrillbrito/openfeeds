@@ -1,6 +1,6 @@
 import { ClientOnly, createFileRoute, Link, Outlet, useLocation } from '@tanstack/solid-router';
 import { Compass, Inbox, Plus, Rss } from 'lucide-solid';
-import posthog from 'posthog-js';
+import { posthog } from 'posthog-js';
 import { createEffect, For, on, onMount, Suspense } from 'solid-js';
 import { ColorIndicator } from '~/components/ColorIndicator';
 import type { ModalController } from '~/components/LazyModal';
@@ -42,6 +42,7 @@ function FrameLayout() {
   onMount(() => {
     createEffect(() => {
       void location().pathname; // Track pathname changes
+      // oxlint-disable-next-line typescript-eslint/no-unsafe-type-assertion
       const drawerCheckbox = document.getElementById('my-drawer') as HTMLInputElement;
       if (drawerCheckbox) {
         drawerCheckbox.checked = false;

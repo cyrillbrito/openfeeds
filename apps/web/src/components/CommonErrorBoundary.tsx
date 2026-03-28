@@ -1,4 +1,4 @@
-import posthog from 'posthog-js';
+import { posthog } from 'posthog-js';
 import { createSignal, ErrorBoundary, Show, type JSXElement } from 'solid-js';
 
 export function CommonErrorBoundary(props: { children: JSXElement }) {

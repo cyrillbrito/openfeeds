@@ -30,7 +30,7 @@ export const tagsCollection = createCollection(
     onInsert: collectionErrorHandler('tags.onInsert', async ({ transaction }) => {
       const tags = transaction.mutations.map((mutation) => {
         const tag = mutation.modified;
-        return { id: mutation.key as string, name: tag.name, color: tag.color, order: tag.order };
+        return { id: String(mutation.key), name: tag.name, color: tag.color, order: tag.order };
       });
       return await $$createTags({ data: tags });
     }),
@@ -44,7 +44,7 @@ export const tagsCollection = createCollection(
     }),
 
     onDelete: collectionErrorHandler('tags.onDelete', async ({ transaction }) => {
-      const ids = transaction.mutations.map((mutation) => mutation.key as string);
+      const ids = transaction.mutations.map((mutation) => String(mutation.key));
       return await $$deleteTags({ data: ids });
     }),
   }),

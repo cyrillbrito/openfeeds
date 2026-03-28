@@ -97,13 +97,14 @@ function ImportOpmlForm(props: ImportOpmlFormProps) {
                 const file = e.currentTarget.files?.[0];
                 if (file) {
                   const reader = new FileReader();
-                  reader.onload = (event) => {
+                  reader.addEventListener('load', (event) => {
+                    // oxlint-disable-next-line typescript-eslint/no-unsafe-type-assertion
                     const content = event.target?.result as string;
                     void handleImportOpml(content);
-                  };
-                  reader.onerror = (error) => {
+                  });
+                  reader.addEventListener('error', (error) => {
                     console.error('[IMPORT UI] FileReader error:', error);
-                  };
+                  });
                   reader.readAsText(file);
                 }
               }}

@@ -1,5 +1,5 @@
 import { snakeCamelMapper } from '@electric-sql/client';
-import { SettingsSchema, type ArchiveResult, type Settings } from '@repo/domain/client';
+import { SettingsSchema, type ArchiveResult } from '@repo/domain/client';
 import { electricCollectionOptions } from '@tanstack/electric-db-collection';
 import { createCollection, useLiveQuery } from '@tanstack/solid-db';
 import { collectionErrorHandler, shapeErrorHandler } from '~/lib/collection-errors';
@@ -22,9 +22,7 @@ export const settingsCollection = createCollection(
     },
 
     onUpdate: collectionErrorHandler('settings.onUpdate', async ({ transaction }) => {
-      const updates = transaction.mutations.map(
-        (mutation) => mutation.changes as Partial<Settings>,
-      );
+      const updates = transaction.mutations.map((mutation) => mutation.changes);
       return await $$updateSettings({ data: updates });
     }),
 
@@ -55,6 +53,7 @@ export function useSettings() {
     get: () => query.isError,
   });
 
+  // oxlint-disable-next-line typescript-eslint/no-unsafe-type-assertion
   return accessor as typeof accessor & { isLoading: boolean; isError: boolean };
 }
 

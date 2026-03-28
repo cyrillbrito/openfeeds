@@ -1,7 +1,7 @@
 import { eq, useLiveQuery } from '@tanstack/solid-db';
 import { createFileRoute, Link, useRouter } from '@tanstack/solid-router';
 import { Archive, ArrowLeft, Inbox } from 'lucide-solid';
-import posthog from 'posthog-js';
+import { posthog } from 'posthog-js';
 import { createEffect, createSignal, on, Show, Suspense } from 'solid-js';
 import { ArchiveIconButton } from '~/components/ArchiveIconButton';
 import { ArticleAudioProvider } from '~/components/ArticleAudioContext';
@@ -240,7 +240,7 @@ function ArticleView() {
                 {/* Article Tags */}
                 <Show when={tagsQuery()}>
                   <div class="mt-4 print:hidden">
-                    <ArticleTagManager articleId={art().id} tags={tagsQuery()!} />
+                    <ArticleTagManager articleId={art().id} tags={tagsQuery()} />
                   </div>
                 </Show>
               </header>

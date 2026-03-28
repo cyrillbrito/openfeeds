@@ -43,6 +43,7 @@ export function HighlightedArticleContent(props: HighlightedArticleContentProps)
     if (!canSeek()) return;
 
     // Find the clicked word span
+    // oxlint-disable-next-line typescript-eslint/no-unsafe-type-assertion
     const target = e.target as HTMLElement;
     const wordIndex = target.getAttribute('data-word-index');
 
@@ -64,6 +65,7 @@ export function HighlightedArticleContent(props: HighlightedArticleContentProps)
       return;
     }
 
+    // oxlint-disable-next-line typescript-eslint/no-unsafe-type-assertion
     const wordSpan = containerRef.querySelector(`[data-word-index="${index}"]`) as HTMLElement;
     if (!wordSpan) {
       highlightRef.style.opacity = '0';
@@ -211,6 +213,7 @@ function wrapWordsWithTimings(html: string, timings: WordTiming[]): string {
 
       node.parentNode?.replaceChild(fragment, node);
     } else if (node.nodeType === Node.ELEMENT_NODE) {
+      // oxlint-disable-next-line typescript-eslint/no-unsafe-type-assertion
       const tagName = (node as Element).tagName.toLowerCase();
       if (['script', 'style', 'noscript', 'iframe'].includes(tagName)) {
         return;

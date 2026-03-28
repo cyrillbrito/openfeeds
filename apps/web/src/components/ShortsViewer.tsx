@@ -1,7 +1,7 @@
 import type { Article, Feed } from '@repo/domain/client';
 import { Link } from '@tanstack/solid-router';
 import { ArrowLeft, ChevronLeft, ChevronRight, EllipsisVertical, X } from 'lucide-solid';
-import posthog from 'posthog-js';
+import { posthog } from 'posthog-js';
 import {
   createEffect,
   createSignal,

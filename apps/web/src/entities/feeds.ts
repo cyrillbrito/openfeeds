@@ -23,21 +23,21 @@ export const feedsCollection = createCollection(
     onInsert: collectionErrorHandler('feeds.onInsert', async ({ transaction }) => {
       const feeds = transaction.mutations.map((mutation) => {
         const feed = mutation.modified;
-        return { id: mutation.key as string, feedUrl: feed.feedUrl };
+        return { id: String(mutation.key), feedUrl: feed.feedUrl };
       });
       return await $$createFeeds({ data: feeds });
     }),
 
     onUpdate: collectionErrorHandler('feeds.onUpdate', async ({ transaction }) => {
       const updates = transaction.mutations.map((mutation) => ({
-        id: mutation.key as string,
+        id: String(mutation.key),
         ...mutation.changes,
       }));
       return await $$updateFeeds({ data: updates });
     }),
 
     onDelete: collectionErrorHandler('feeds.onDelete', async ({ transaction }) => {
-      const ids = transaction.mutations.map((mutation) => mutation.key as string);
+      const ids = transaction.mutations.map((mutation) => String(mutation.key));
       return await $$deleteFeeds({ data: ids });
     }),
   }),

@@ -17,6 +17,7 @@ export function Dropdown(props: DropdownProps) {
 
   // Close popover when a menu item is clicked
   const handleMenuClick = (e: MouseEvent) => {
+    // oxlint-disable-next-line typescript-eslint/no-unsafe-type-assertion
     const target = e.target as HTMLElement;
     if (target.closest('button, a')) {
       document.getElementById(id)?.hidePopover();

@@ -1,7 +1,7 @@
 import { BetterFetchError } from '@better-fetch/fetch';
 import { createFileRoute, Link, useNavigate } from '@tanstack/solid-router';
 import { CircleX } from 'lucide-solid';
-import posthog from 'posthog-js';
+import { posthog } from 'posthog-js';
 import { createSignal, Show } from 'solid-js';
 import { Card } from '~/components/Card';
 import { Loader } from '~/components/Loader';

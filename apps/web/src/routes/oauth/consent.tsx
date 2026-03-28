@@ -93,7 +93,7 @@ function ConsentContent() {
         <div class="bg-base-200 mb-4 rounded-lg p-4">
           <div class="flex items-center gap-3">
             <Show when={clientInfo()?.logo_uri}>
-              <img src={clientInfo()!.logo_uri!} alt="" class="h-10 w-10 rounded-lg" />
+              <img src={clientInfo()?.logo_uri} alt="" class="h-10 w-10 rounded-lg" />
             </Show>
             <div>
               <p class="text-base-content text-lg font-semibold">

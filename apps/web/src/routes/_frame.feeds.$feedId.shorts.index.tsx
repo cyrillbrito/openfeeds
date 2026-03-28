@@ -86,7 +86,7 @@ function FocusedShorts() {
       backLink={{
         to: '/feeds/$feedId',
         text: 'Back to Feed',
-        params: { feedId: feedId()! },
+        params: { feedId: feedId() },
       }}
       hasMore={false}
       loadMore={() => {}}

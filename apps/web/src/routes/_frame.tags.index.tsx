@@ -141,7 +141,7 @@ function TagsComponent() {
       />
       <Suspense fallback={<CenterLoader />}>
         <Show
-          when={tagsQuery() && tagsQuery()!.length > 0}
+          when={tagsQuery() && tagsQuery().length > 0}
           fallback={
             <div class="py-16 text-center">
               <div class="mb-8 flex justify-center">
@@ -181,7 +181,7 @@ function TagsComponent() {
             }}
           >
             <div class="flex flex-col gap-2">
-              <For each={tagsQuery()!}>
+              <For each={tagsQuery()}>
                 {(tag, index) => (
                   <SortableTagItem
                     tag={tag}
