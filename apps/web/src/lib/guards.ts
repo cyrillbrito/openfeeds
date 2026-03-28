@@ -24,7 +24,7 @@ export const hasSession = createIsomorphicFn()
       if (sessionData.error) {
         throw sessionData.error instanceof Error
           ? sessionData.error
-          : new Error(String(sessionData.error));
+          : new Error(sessionData.error.message ?? 'Authentication error');
       }
       return !!sessionData.data;
     } catch (error) {

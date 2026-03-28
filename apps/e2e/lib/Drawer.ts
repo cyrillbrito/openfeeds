@@ -39,7 +39,7 @@ export class Drawer {
   }
 
   getUserMenu() {
-    return this.page.locator('.dropdown').filter({ hasText: this.page.getByTestId('user-email') });
+    return this.page.locator('.dropdown').filter({ has: this.page.getByTestId('user-email') });
   }
 
   getUserInitials() {

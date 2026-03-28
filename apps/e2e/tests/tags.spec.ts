@@ -457,9 +457,9 @@ test('handles network error during tag creation gracefully', async ({ page, user
   await tagsPage.goto();
 
   // Mock network failure for tag creation
-    await page.route('**/api/tags', (route) => {
-      void route.abort('failed');
-    });
+  await page.route('**/api/tags', (route) => {
+    void route.abort('failed');
+  });
 
   await tagsPage.openCreateModal();
   await tagsPage.getTagNameInput().fill('Network Error Tag');

@@ -427,8 +427,8 @@ describe('RSS Feed Discovery', () => {
     const rssFeed = result.find((r) => r.url === 'https://example.com/rss.xml');
     const atomFeed = result.find((r) => r.url === 'https://blog.example.com/atom.xml');
     // Priority is: title attribute > link text > default
-    expect(rssFeed.title).toBe('RSS Feed'); // has title attribute
-    expect(atomFeed.title).toBe('Blog Feed'); // uses link text
+    expect(rssFeed!.title).toBe('RSS Feed'); // has title attribute
+    expect(atomFeed!.title).toBe('Blog Feed'); // uses link text
   });
 
   test('should discover feeds using heuristic patterns', async () => {
