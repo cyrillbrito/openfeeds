@@ -3,12 +3,12 @@ import { createRootRoute, HeadContent, Outlet, Scripts } from '@tanstack/solid-r
 import { TanStackRouterDevtoolsPanel } from '@tanstack/solid-router-devtools';
 import { onMount, Suspense } from 'solid-js';
 import { HydrationScript } from 'solid-js/web';
-import interCss from '~/assets/inter/inter.css?url';
 import { ThemeScript } from '~/components/ThemeScript';
 import { SessionReadProvider } from '~/providers/session-read';
 import { ThemeProvider } from '~/providers/theme';
 import { ToastProvider } from '~/providers/toast';
 import { $$getPublicConfig } from '~/server/public-config.functions';
+import interCss from '~/assets/inter/inter.css?url';
 import appCss from '~/styles/app.css?url';
 
 let publicConfigCache: Awaited<ReturnType<typeof $$getPublicConfig>> | undefined;

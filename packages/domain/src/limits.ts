@@ -129,7 +129,10 @@ export async function checkSavedArticleLimit(ctx: DomainContext, adding: number)
 }
 
 /** Throws if the user has exceeded their daily or monthly content extraction limit. */
-export async function checkExtractionLimit(userId: string, plan: string | null | undefined): Promise<void> {
+export async function checkExtractionLimit(
+  userId: string,
+  plan: string | null | undefined,
+): Promise<void> {
   const limits = PLAN_LIMITS[parsePlan(plan)];
   if (limits.extractionsPerDay === null) return;
 
@@ -157,7 +160,10 @@ export async function checkExtractionLimit(userId: string, plan: string | null |
 }
 
 /** Throws if the user has exceeded their daily or monthly TTS generation limit. */
-export async function checkTtsLimit(userId: string, plan: string | null | undefined): Promise<void> {
+export async function checkTtsLimit(
+  userId: string,
+  plan: string | null | undefined,
+): Promise<void> {
   const limits = PLAN_LIMITS[parsePlan(plan)];
   if (limits.ttsPerDay === null) return;
 
@@ -188,7 +194,10 @@ export async function checkTtsLimit(userId: string, plan: string | null | undefi
 // Aggregate usage for the settings UI
 // ---------------------------------------------------------------------------
 
-export async function getUserUsage(userId: string, plan: string | null | undefined): Promise<UserUsage> {
+export async function getUserUsage(
+  userId: string,
+  plan: string | null | undefined,
+): Promise<UserUsage> {
   const limits = PLAN_LIMITS[parsePlan(plan)];
 
   const [

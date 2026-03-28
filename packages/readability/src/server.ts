@@ -36,8 +36,7 @@ export async function fetchArticleContent(url: string): Promise<ArticleContent> 
     const response = await fetch(url, {
       signal: AbortSignal.timeout(FETCH_TIMEOUT_MS),
       headers: {
-        'User-Agent':
-          'Mozilla/5.0 (compatible; OpenFeeds/1.0; +https://openfeeds.com)',
+        'User-Agent': 'Mozilla/5.0 (compatible; OpenFeeds/1.0; +https://openfeeds.com)',
         Accept: 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
       },
       redirect: 'follow',
