@@ -1,6 +1,7 @@
 import { createSignal, onMount, Show } from 'solid-js';
 import { initTheme, setTheme, type Theme } from '@/utils/theme';
 import { DEFAULT_API_URL, type StorageData } from '@/utils/types';
+// oxlint-disable-next-line import/no-unassigned-import
 import './App.css';
 
 export function App() {
@@ -12,6 +13,7 @@ export function App() {
     const currentTheme = await initTheme();
     setThemeSignal(currentTheme);
 
+    // oxlint-disable-next-line typescript-eslint/no-unnecessary-type-assertion
     const result = (await browser.storage.local.get('apiUrl')) as StorageData;
     if (result.apiUrl) {
       setApiUrl(result.apiUrl);
@@ -21,6 +23,11 @@ export function App() {
   async function handleThemeChange(newTheme: Theme) {
     setThemeSignal(newTheme);
     await setTheme(newTheme);
+  }
+
+  async function handleThemeSelect(e: Event & { currentTarget: HTMLSelectElement }) {
+    // oxlint-disable-next-line typescript-eslint/no-unsafe-type-assertion
+    await handleThemeChange(e.currentTarget.value as Theme);
   }
 
   async function handleBlur() {
@@ -72,7 +79,7 @@ export function App() {
             <select
               class="select select-bordered w-full"
               value={theme()}
-              onChange={(e) => handleThemeChange(e.currentTarget.value as Theme)}
+              onChange={handleThemeSelect}
             >
               <option value="system">System</option>
               <option value="light">Light</option>

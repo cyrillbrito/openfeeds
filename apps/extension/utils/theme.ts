@@ -3,6 +3,7 @@ import type { StorageData } from './types';
 export type Theme = 'light' | 'dark' | 'system';
 
 async function getTheme(): Promise<Theme> {
+  // oxlint-disable-next-line typescript-eslint/no-unnecessary-type-assertion
   const result = (await browser.storage.local.get('theme')) as StorageData;
   return result.theme || 'system';
 }

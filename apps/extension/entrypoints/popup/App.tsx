@@ -2,6 +2,7 @@ import { createSignal, For, Match, onMount, Switch } from 'solid-js';
 import logoUrl from '@/assets/logo.svg';
 import { initTheme } from '@/utils/theme';
 import type { DiscoveredFeed, MessageType } from '@/utils/types';
+// oxlint-disable-next-line import/no-unassigned-import
 import './App.css';
 
 type PopupState = 'loading' | 'no-feeds' | 'feeds-list' | 'error';
@@ -23,6 +24,7 @@ function FeedItem(props: { feed: DiscoveredFeed }) {
     setButtonState('loading');
 
     try {
+      // oxlint-disable-next-line typescript-eslint/no-unsafe-type-assertion
       const response = (await browser.runtime.sendMessage({
         type: 'FOLLOW_FEED',
         feed: props.feed,
@@ -103,6 +105,7 @@ export function App() {
         return;
       }
 
+      // oxlint-disable-next-line typescript-eslint/no-unsafe-type-assertion
       const response = (await browser.tabs.sendMessage(tab.id, {
         type: 'GET_FEEDS',
       } as MessageType)) as { type: 'FEEDS_RESULT'; feeds: DiscoveredFeed[] };
