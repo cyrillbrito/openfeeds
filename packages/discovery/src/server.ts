@@ -31,13 +31,10 @@ export async function discoverFeeds(url: string, options: DiscoveryOptions = {})
     return [selfFeed];
   }
 
+  let dom: JSDOM | null = null;
   try {
     const html = await fetchHtmlContent(url, mergedOptions);
-    const dom = new JSDOM(html, {
-      url,
-      runScripts: 'outside-only',
-      resources: 'usable',
-    });
+    dom = new JSDOM(html, { url, runScripts: 'outside-only' });
     const document = dom.window.document;
 
     const linkFeeds = extractFeedLinks(document, { baseUrl: url });
@@ -50,6 +47,8 @@ export async function discoverFeeds(url: string, options: DiscoveryOptions = {})
     }
   } catch (error) {
     console.warn(`Failed to fetch HTML from ${url}:`, error);
+  } finally {
+    dom?.window.close();
   }
 
   const fallbackFeed = await tryCommonPaths(url, mergedOptions);
