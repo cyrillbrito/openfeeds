@@ -13,7 +13,7 @@
     "lint": "oxlint",
     "format:check": "oxfmt --check .",
     "format": "oxfmt --write .",
-    "checks": "bun run lint && bun run format:check",
+    "checks": "turbo run //#lint && bun run format:check",
     "generate:auth-schema": "turbo -F @repo/db generate:auth-schema",
     "migrate": "bun --cwd=apps/migrator migrate",
     "create-user": "bun --cwd=packages/scripts create-user",

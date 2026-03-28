@@ -39,6 +39,9 @@
       "dependsOn": ["@repo/emails#build"],
       "cache": false,
       "persistent": true
+    },
+    "//#lint": {
+      "dependsOn": ["@repo/emails#build"]
     }
   }
 }
