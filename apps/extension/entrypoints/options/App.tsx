@@ -12,8 +12,7 @@ export function App() {
     const currentTheme = await initTheme();
     setThemeSignal(currentTheme);
 
-    // oxlint-disable-next-line typescript-eslint/no-unnecessary-type-assertion
-    const result = (await browser.storage.local.get('apiUrl')) as StorageData;
+    const result = await browser.storage.local.get<StorageData>('apiUrl');
     if (result.apiUrl) {
       setApiUrl(result.apiUrl);
     }

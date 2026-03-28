@@ -20,8 +20,7 @@ export default function SubscribeForm() {
         body: JSON.stringify({ email: email() }),
       });
 
-      // oxlint-disable-next-line typescript-eslint/no-unnecessary-type-assertion
-      const data = (await response.json()) as { success?: boolean; error?: string };
+      const data: { success?: boolean; error?: string } = await response.json();
 
       if (data.success) {
         setSubmitted(true);
