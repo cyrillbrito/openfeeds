@@ -3,7 +3,7 @@ import type { StorageData } from './types';
 export type Theme = 'light' | 'dark' | 'system';
 
 async function getTheme(): Promise<Theme> {
-  const result = (await browser.storage.local.get('theme')) as StorageData;
+  const result = await browser.storage.local.get<StorageData>('theme');
   return result.theme || 'system';
 }
 

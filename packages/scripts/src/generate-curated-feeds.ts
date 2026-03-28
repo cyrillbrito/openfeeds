@@ -180,7 +180,7 @@ async function mapConcurrent<T, R>(
   concurrency: number,
   fn: (item: T, index: number) => Promise<R>,
 ): Promise<R[]> {
-  const results: R[] = Array.from({ length: items.length }) as R[];
+  const results: R[] = Array.from({ length: items.length });
   let nextIndex = 0;
 
   async function worker() {
@@ -596,6 +596,7 @@ function buildOutput(feeds: EnrichedFeed[]): CuratedCategory[] {
 
   // Sort categories by CATEGORY_ORDER priority, then alphabetically for unlisted ones
   const orderIndex = new Map(CATEGORY_ORDER.map((name, i) => [name, i]));
+  // oxlint-disable-next-line no-array-sort -- no tsconfig with ES2023 lib for .toSorted()
   const sortedEntries = [...categoryMap.entries()].sort(([a], [b]) => {
     const aIdx = orderIndex.get(a) ?? Number.MAX_SAFE_INTEGER;
     const bIdx = orderIndex.get(b) ?? Number.MAX_SAFE_INTEGER;

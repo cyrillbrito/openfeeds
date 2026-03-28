@@ -159,8 +159,8 @@ function TagArticlesPage() {
         <Show when={feedsQuery() && tagsQuery()}>
           <ArticleList
             articles={filteredArticles()}
-            feeds={feedsQuery()!}
-            tags={tagsQuery()!}
+            feeds={feedsQuery()}
+            tags={tagsQuery()}
             totalCount={totalCount()}
             onLoadMore={handleLoadMore}
             onUpdateArticle={handleUpdateArticle}

@@ -4,8 +4,8 @@ import { onMount } from 'solid-js';
 import type { ReadStatus } from '~/components/ReadStatusToggle';
 import { ShortsViewer } from '~/components/ShortsViewer';
 import { articlesCollection } from '~/entities/articles';
-import { feedsCollection } from '~/entities/feeds';
 import { feedTagsCollection } from '~/entities/feed-tags';
+import { feedsCollection } from '~/entities/feeds';
 import { tagsCollection } from '~/entities/tags';
 import { useSessionRead } from '~/providers/session-read';
 import { readStatusFilter } from '~/utils/article-queries';
@@ -86,7 +86,7 @@ function FocusedShorts() {
       backLink={{
         to: '/feeds/$feedId',
         text: 'Back to Feed',
-        params: { feedId: feedId()! },
+        params: { feedId: feedId() },
       }}
       hasMore={false}
       loadMore={() => {}}

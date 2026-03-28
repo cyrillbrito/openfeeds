@@ -31,7 +31,7 @@ export const articlesCollection = createCollection(
       const articles = transaction.mutations
         .filter((mutation) => mutation.modified.feedId === null && mutation.modified.url)
         .map((mutation) => ({
-          id: mutation.key as string,
+          id: String(mutation.key),
           url: mutation.modified.url!,
         }));
 
@@ -41,7 +41,7 @@ export const articlesCollection = createCollection(
 
     onUpdate: collectionErrorHandler('articles.onUpdate', async ({ transaction }) => {
       const updates = transaction.mutations.map((mutation) => ({
-        id: mutation.key as string,
+        id: String(mutation.key),
         isRead: mutation.changes.isRead,
         isArchived: mutation.changes.isArchived,
       }));

@@ -1,5 +1,5 @@
 import { FetchError } from '@electric-sql/client';
-import posthog from 'posthog-js';
+import { posthog } from 'posthog-js';
 import { toastService } from '~/lib/toast-service';
 
 /**

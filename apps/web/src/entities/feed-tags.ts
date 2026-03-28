@@ -29,13 +29,13 @@ export const feedTagsCollection = createCollection(
     onInsert: collectionErrorHandler('feedTags.onInsert', async ({ transaction }) => {
       const tags = transaction.mutations.map((mutation) => {
         const tag = mutation.modified;
-        return { id: mutation.key as string, feedId: tag.feedId, tagId: tag.tagId };
+        return { id: String(mutation.key), feedId: tag.feedId, tagId: tag.tagId };
       });
       return await $$createFeedTags({ data: tags });
     }),
 
     onDelete: collectionErrorHandler('feedTags.onDelete', async ({ transaction }) => {
-      const ids = transaction.mutations.map((mutation) => mutation.key as string);
+      const ids = transaction.mutations.map((mutation) => String(mutation.key));
       return await $$deleteFeedTags({ data: ids });
     }),
   }),

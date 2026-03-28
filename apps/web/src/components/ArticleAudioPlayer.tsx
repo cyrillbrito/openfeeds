@@ -1,6 +1,6 @@
 import type { WordTiming } from '@repo/domain/client';
 import { Headphones, Loader2, Pause, Play, Wifi } from 'lucide-solid';
-import posthog from 'posthog-js';
+import { posthog } from 'posthog-js';
 import { createEffect, createResource, createSignal, onCleanup, onMount, Show } from 'solid-js';
 import {
   $$generateArticleAudio,
@@ -11,6 +11,12 @@ import { useArticleAudio } from './ArticleAudioContext';
 
 interface ArticleAudioPlayerProps {
   articleId: string;
+}
+
+function formatTime(seconds: number) {
+  const mins = Math.floor(seconds / 60);
+  const secs = Math.floor(seconds % 60);
+  return `${mins}:${secs.toString().padStart(2, '0')}`;
 }
 
 export function ArticleAudioPlayer(props: ArticleAudioPlayerProps) {
@@ -170,12 +176,6 @@ export function ArticleAudioPlayer(props: ArticleAudioPlayerProps) {
       audioRef.pause();
     }
   });
-
-  const formatTime = (seconds: number) => {
-    const mins = Math.floor(seconds / 60);
-    const secs = Math.floor(seconds % 60);
-    return `${mins}:${secs.toString().padStart(2, '0')}`;
-  };
 
   // Player becomes sticky once audio is ready (not just idle)
   const isSticky = () => {

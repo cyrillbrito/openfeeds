@@ -1,7 +1,7 @@
 import { redirect } from '@tanstack/solid-router';
 import { createIsomorphicFn } from '@tanstack/solid-start';
 import { getRequestHeaders } from '@tanstack/solid-start/server';
-import posthog from 'posthog-js';
+import { posthog } from 'posthog-js';
 import { authClient } from '~/lib/auth-client';
 
 export const hasSession = createIsomorphicFn()

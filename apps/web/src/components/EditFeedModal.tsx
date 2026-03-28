@@ -128,7 +128,7 @@ function EditFeedForm(props: EditFeedFormProps) {
           <Match when={activeTab() === 'tags'}>
             <Suspense fallback={<div class="loading loading-spinner"></div>}>
               <Show
-                when={tagsQuery() && tagsQuery()!.length > 0}
+                when={tagsQuery() && tagsQuery().length > 0}
                 fallback={
                   <div class="py-8 text-center">
                     <p class="text-base-content/60 mb-4">No tags available.</p>
@@ -139,7 +139,7 @@ function EditFeedForm(props: EditFeedFormProps) {
                 }
               >
                 <MultiSelectTag
-                  tags={tagsQuery()!}
+                  tags={tagsQuery()}
                   selectedIds={currentTagIds()}
                   onSelectionChange={handleSelectionChange}
                 />

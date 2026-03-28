@@ -84,7 +84,7 @@ function TagLayout() {
         when={hasContent()}
         fallback={
           <Show when={feedsQuery()}>
-            <TagEmptyState tagId={tagId()} feeds={feedsQuery()!} />
+            <TagEmptyState tagId={tagId()} feeds={feedsQuery()} />
           </Show>
         }
       >

@@ -124,29 +124,29 @@ function DiscoverPage() {
   };
 
   const handleAddManually = () => {
-    const inputUrl = searchUrl()!;
+    const currentUrl = searchUrl()!;
     const feedId = createId();
 
     const vars: FollowFeedsWithTags = {
-      feeds: [{ id: feedId, feedUrl: inputUrl }],
+      feeds: [{ id: feedId, feedUrl: currentUrl }],
       newTags: [],
       feedTags: [],
     };
 
     followFeedsAction(vars);
-    setAddedFeeds((prev) => new Set([...prev, inputUrl]));
+    setAddedFeeds((prev) => new Set([...prev, currentUrl]));
   };
 
   const handleSaveArticle = () => {
-    const inputUrl = searchUrl()!;
+    const currentUrl = searchUrl()!;
     const articleId = createId();
 
     articlesCollection.insert({
       id: articleId,
       userId: '',
       feedId: null,
-      title: inputUrl,
-      url: inputUrl,
+      title: currentUrl,
+      url: currentUrl,
       description: null,
       content: null,
       author: null,

@@ -1,3 +1,4 @@
+// oxlint-disable import/max-dependencies
 import type { Feed, TagColor } from '@repo/domain/client';
 import { eq, toArray, useLiveQuery } from '@tanstack/solid-db';
 import { createFileRoute, Link } from '@tanstack/solid-router';
@@ -17,9 +18,9 @@ import { ReadStatusToggle, type ReadStatus } from '~/components/ReadStatusToggle
 import { ShortsButton } from '~/components/ShortsButton';
 import { SyncLogsModal } from '~/components/SyncLogsModal';
 import { articlesCollection } from '~/entities/articles';
+import { feedTagsCollection } from '~/entities/feed-tags';
 import { feedsCollection, useFeeds } from '~/entities/feeds';
 import { $$retryFeed } from '~/entities/feeds.functions';
-import { feedTagsCollection } from '~/entities/feed-tags';
 import { tagsCollection, useTags } from '~/entities/tags';
 import { useSessionRead } from '~/providers/session-read';
 import { readStatusFilter } from '~/utils/article-queries';
@@ -164,7 +165,7 @@ function FeedArticles() {
             where={(article) => eq(article.feedId, feedId())}
             linkProps={{
               to: '/feeds/$feedId/shorts',
-              params: { feedId: feedId()! },
+              params: { feedId: feedId() },
               search: { readStatus: readStatus() },
             }}
           />
@@ -281,8 +282,8 @@ function FeedArticles() {
         <Show when={feedsQuery() && tagsQuery()}>
           <ArticleList
             articles={filteredArticles()}
-            feeds={feedsQuery()!}
-            tags={tagsQuery()!}
+            feeds={feedsQuery()}
+            tags={tagsQuery()}
             totalCount={totalCount()}
             onLoadMore={handleLoadMore}
             onUpdateArticle={handleUpdateArticle}
@@ -312,7 +313,12 @@ function FeedArticles() {
 }
 
 type FeedWithTags = Feed & {
-  tags: { feedTagId: string; id: string | undefined; name: string | undefined; color: TagColor | null | undefined }[];
+  tags: {
+    feedTagId: string;
+    id: string | undefined;
+    name: string | undefined;
+    color: TagColor | null | undefined;
+  }[];
 };
 
 function FeedHeader(props: { feed: FeedWithTags }) {
@@ -344,7 +350,7 @@ function FeedHeader(props: { feed: FeedWithTags }) {
               {(tag) => (
                 <Link to="/tags/$tagId" params={{ tagId: tag.id!.toString() }}>
                   <div class="badge badge-sm gap-1.5 transition-all hover:brightness-90">
-                    <ColorIndicator class={getTagDotColor(tag.color as TagColor | null)} />
+                    <ColorIndicator class={getTagDotColor(tag.color ?? null)} />
                     <span>{tag.name}</span>
                   </div>
                 </Link>

@@ -9,6 +9,14 @@ interface RuleManagerProps {
   feedId: string;
 }
 
+const handleRuleUpdate = () => {
+  // Live query auto-updates, no manual refetch needed
+};
+
+const handleRuleDelete = () => {
+  // Live query auto-updates, no manual refetch needed
+};
+
 export function RuleManager(props: RuleManagerProps) {
   const filterRulesQuery = useFilterRules(props.feedId);
 
@@ -25,14 +33,6 @@ export function RuleManager(props: RuleManagerProps) {
 
   const handleAddCancel = () => {
     setShowAddForm(false);
-  };
-
-  const handleRuleUpdate = () => {
-    // Live query auto-updates, no manual refetch needed
-  };
-
-  const handleRuleDelete = () => {
-    // Live query auto-updates, no manual refetch needed
   };
 
   const handleApplyRules = async () => {

@@ -69,7 +69,7 @@ export async function fetchRss(url: string, opts: FetchRssOptions = {}): Promise
     };
   } catch (err) {
     if (err instanceof DOMException && err.name === 'AbortError') {
-      throw new Error(`Feed fetch timed out after ${FETCH_TIMEOUT_MS / 1000}s`);
+      throw new Error(`Feed fetch timed out after ${FETCH_TIMEOUT_MS / 1000}s`, { cause: err });
     }
     throw err;
   } finally {

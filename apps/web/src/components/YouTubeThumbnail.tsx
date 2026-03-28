@@ -44,7 +44,7 @@ export function YouTubeThumbnail(props: YouTubeThumbnailProps) {
       const probe = new Image();
       probe.fetchPriority = 'low';
       probe.src = maxResUrl();
-      probe.onload = () => {
+      probe.addEventListener('load', () => {
         // YouTube serves a real JPEG on 404 — a 120x90 grey placeholder.
         // Real maxresdefault images are 1280x720.
         const isPlaceholder =
@@ -54,7 +54,7 @@ export function YouTubeThumbnail(props: YouTubeThumbnailProps) {
         if (!isPlaceholder) {
           setSrc(probe.src);
         }
-      };
+      });
     }, 100);
   });
 

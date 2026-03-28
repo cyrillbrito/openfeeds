@@ -23,11 +23,7 @@ export class UnexpectedError extends Error {
   }
 }
 
-export class AssertionError extends Error {
-  constructor(message?: string) {
-    super(message);
-  }
-}
+export class AssertionError extends Error {}
 
 export class UnauthorizedError extends Error {
   constructor(message = 'Unauthorized') {

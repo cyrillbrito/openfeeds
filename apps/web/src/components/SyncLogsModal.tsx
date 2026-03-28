@@ -27,6 +27,8 @@ function SyncLogsContent(props: { feed: Feed }) {
     (feedId) => $$getFeedSyncLogs({ data: { feedId } }),
   );
 
+  const errorMessage = () => (logs.error as Error | undefined)?.message ?? 'Unknown error';
+
   return (
     <div>
       <p class="text-base-content-gray mb-4 text-sm">
@@ -41,7 +43,7 @@ function SyncLogsContent(props: { feed: Feed }) {
         </Match>
         <Match when={logs.error}>
           <div class="alert alert-error">
-            <span>Failed to load sync logs: {(logs.error as Error).message}</span>
+            <span>Failed to load sync logs: {errorMessage()}</span>
           </div>
         </Match>
         <Match when={logs()?.length === 0}>

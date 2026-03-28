@@ -1,6 +1,6 @@
 import { Link, useRouter, type ErrorComponentProps } from '@tanstack/solid-router';
 import { TriangleAlert } from 'lucide-solid';
-import posthog from 'posthog-js';
+import { posthog } from 'posthog-js';
 import { createSignal, Show } from 'solid-js';
 
 export function DefaultCatchBoundary({ error }: ErrorComponentProps) {

@@ -1,6 +1,6 @@
 import { Link } from '@tanstack/solid-router';
 import { ChevronsUpDown, LogOut, Monitor, Moon, Settings, Sun } from 'lucide-solid';
-import posthog from 'posthog-js';
+import { posthog } from 'posthog-js';
 import { Suspense } from 'solid-js';
 import { authClient } from '~/lib/auth-client';
 import { useTheme } from '~/providers/theme';

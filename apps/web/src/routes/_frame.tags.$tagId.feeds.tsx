@@ -21,7 +21,7 @@ function TagFeedsPage() {
 
   return (
     <Show when={feedsQuery()}>
-      <TagFeedsTab tagId={tagId()} feeds={feedsQuery()!} feedTags={tagFeedTagsQuery() ?? []} />
+      <TagFeedsTab tagId={tagId()} feeds={feedsQuery()} feedTags={tagFeedTagsQuery() ?? []} />
     </Show>
   );
 }

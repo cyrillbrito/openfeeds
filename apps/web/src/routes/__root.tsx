@@ -1,6 +1,6 @@
 import { TanStackDevtools } from '@tanstack/solid-devtools';
 import { createRootRoute, HeadContent, Outlet, Scripts } from '@tanstack/solid-router';
-import { TanStackRouterDevtoolsPanel } from '@tanstack/solid-router-devtools';
+import { TanStackRouterDevtools } from '@tanstack/solid-router-devtools';
 import { onMount, Suspense } from 'solid-js';
 import { HydrationScript } from 'solid-js/web';
 import { ThemeScript } from '~/components/ThemeScript';
@@ -68,15 +68,8 @@ function RootComponent() {
             <SessionReadProvider>
               <ToastProvider>
                 <Outlet />
-                <TanStackDevtools
-                  config={{ hideUntilHover: true }}
-                  plugins={[
-                    {
-                      name: 'Router',
-                      render: () => <TanStackRouterDevtoolsPanel />,
-                    },
-                  ]}
-                />
+                <TanStackDevtools config={{ hideUntilHover: true }} />
+                <TanStackRouterDevtools />
               </ToastProvider>
             </SessionReadProvider>
           </ThemeProvider>
