@@ -7,7 +7,6 @@ BullMQ Worker instances that process jobs by calling `@repo/domain` business log
 ```bash
 bun dev          # Dev with hot reload
 bun start        # Start prod
-bun check-types  # TypeScript check
 bun benchmark    # Performance benchmark
 ```
 

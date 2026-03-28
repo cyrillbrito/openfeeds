@@ -5,7 +5,6 @@
   "scripts": {
     "dev": "bun --env-file=../../.env run --hot src/index.ts",
     "start": "bun --env-file=../../.env run src/index.ts",
-    "check-types": "tsc --noEmit",
     "benchmark": "bun --env-file=../../.env run src/benchmark/index.ts"
   },
   "dependencies": {

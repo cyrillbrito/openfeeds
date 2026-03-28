@@ -42,15 +42,15 @@ export function extractYouTubeVideoId(url: string): string | null {
 
       // Handle youtube.com/shorts/VIDEO_ID
       const shortsMatch = urlObj.pathname.match(/^\/shorts\/([^/?]+)/);
-      if (shortsMatch) return shortsMatch[1];
+      if (shortsMatch) return shortsMatch[1] ?? null;
 
       // Handle youtube.com/embed/VIDEO_ID
       const embedMatch = urlObj.pathname.match(/^\/embed\/([^/?]+)/);
-      if (embedMatch) return embedMatch[1];
+      if (embedMatch) return embedMatch[1] ?? null;
 
       // Handle youtube.com/v/VIDEO_ID
       const vMatch = urlObj.pathname.match(/^\/v\/([^/?]+)/);
-      if (vMatch) return vMatch[1];
+      if (vMatch) return vMatch[1] ?? null;
     }
 
     // Handle youtu.be/VIDEO_ID

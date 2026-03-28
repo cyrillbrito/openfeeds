@@ -6,7 +6,6 @@ One-shot service that runs all database migrations and exits.
 
 ```bash
 bun start        # Run all migrations
-bun check-types  # TypeScript check
 ```
 
 ## Architecture

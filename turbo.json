@@ -35,10 +35,6 @@
         "WORKER_CONCURRENCY_ORCHESTRATOR"
       ]
     },
-    "//#lint": {},
-    "check-types": {
-      "dependsOn": ["^check-types", "@repo/emails#build"]
-    },
     "dev": {
       "dependsOn": ["@repo/emails#build"],
       "cache": false,

@@ -172,7 +172,7 @@ function TagsComponent() {
               // Optimistically update order via the collection so local-first sync works
               for (let i = 0; i < updated.length; i++) {
                 const tag = updated[i];
-                if (tag.order !== i) {
+                if (tag && tag.order !== i) {
                   tagsCollection.update(tag.id, (draft) => {
                     draft.order = i;
                   });

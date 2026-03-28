@@ -2,12 +2,6 @@
 
 All business logic for OpenFeeds. Shared by web (server functions) and worker (job processing).
 
-## Commands
-
-```bash
-bun check-types
-```
-
 ## Architecture
 
 **Owns:**
