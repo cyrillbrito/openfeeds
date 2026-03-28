@@ -39,6 +39,7 @@ function TagLayout() {
       .from({ feedTag: feedTagsCollection })
       .where(({ feedTag }) => eq(feedTag.tagId, tagId()))
       .select(({ feedTag }) => ({ id: feedTag.id }))
+      .orderBy(({ feedTag }) => feedTag.id)
       .limit(1),
   );
 
@@ -47,6 +48,7 @@ function TagLayout() {
       .from({ articleTag: articleTagsCollection })
       .where(({ articleTag }) => eq(articleTag.tagId, tagId()))
       .select(({ articleTag }) => ({ id: articleTag.id }))
+      .orderBy(({ articleTag }) => articleTag.id)
       .limit(1),
   );
 
