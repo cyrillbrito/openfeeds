@@ -89,9 +89,7 @@ function ArticleView() {
   );
 
   const feedsQuery = useLiveQuery((q) =>
-    q
-      .from({ feed: feedsCollection })
-      .where(({ feed }) => eq(feed.id, article()?.feedId ?? '')),
+    q.from({ feed: feedsCollection }).where(({ feed }) => eq(feed.id, article()?.feedId ?? '')),
   );
   const tagsQuery = useTags();
 

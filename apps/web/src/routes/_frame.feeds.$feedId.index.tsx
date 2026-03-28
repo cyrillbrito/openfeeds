@@ -17,9 +17,9 @@ import { ReadStatusToggle, type ReadStatus } from '~/components/ReadStatusToggle
 import { ShortsButton } from '~/components/ShortsButton';
 import { SyncLogsModal } from '~/components/SyncLogsModal';
 import { articlesCollection } from '~/entities/articles';
+import { feedTagsCollection } from '~/entities/feed-tags';
 import { feedsCollection, useFeeds } from '~/entities/feeds';
 import { $$retryFeed } from '~/entities/feeds.functions';
-import { feedTagsCollection } from '~/entities/feed-tags';
 import { tagsCollection, useTags } from '~/entities/tags';
 import { useSessionRead } from '~/providers/session-read';
 import { readStatusFilter } from '~/utils/article-queries';
@@ -312,7 +312,12 @@ function FeedArticles() {
 }
 
 type FeedWithTags = Feed & {
-  tags: { feedTagId: string; id: string | undefined; name: string | undefined; color: TagColor | null | undefined }[];
+  tags: {
+    feedTagId: string;
+    id: string | undefined;
+    name: string | undefined;
+    color: TagColor | null | undefined;
+  }[];
 };
 
 function FeedHeader(props: { feed: FeedWithTags }) {

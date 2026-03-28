@@ -36,7 +36,12 @@ import { getTagDotColor } from '~/utils/tagColors';
 const SEARCH_DEBOUNCE_MS = 200;
 
 type FeedWithTags = Feed & {
-  tags: { feedTagId: string; id: string | undefined; name: string | undefined; color: TagColor | null | undefined }[];
+  tags: {
+    feedTagId: string;
+    id: string | undefined;
+    name: string | undefined;
+    color: TagColor | null | undefined;
+  }[];
 };
 
 export const Route = createFileRoute('/_frame/feeds/')({
