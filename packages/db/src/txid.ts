@@ -19,5 +19,6 @@ export async function getTxId(tx: Transaction): Promise<number> {
   if (txid === undefined) {
     throw new Error('Failed to get transaction ID');
   }
+  // oxlint-disable-next-line typescript-eslint/no-unsafe-type-assertion
   return parseInt(txid as string, 10);
 }

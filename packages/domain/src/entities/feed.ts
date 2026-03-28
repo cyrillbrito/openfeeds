@@ -24,6 +24,7 @@ function toApiFeed(f: DbFeed): Feed {
     createdAt: f.createdAt.toISOString(),
     updatedAt: f.updatedAt.toISOString(),
     lastSyncAt: f.lastSyncAt?.toISOString() ?? null,
+    // oxlint-disable-next-line typescript-eslint/no-unsafe-type-assertion
     syncStatus: f.syncStatus as Feed['syncStatus'],
     syncError: f.syncError,
   };
