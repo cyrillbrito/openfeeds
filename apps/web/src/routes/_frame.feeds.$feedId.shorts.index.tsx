@@ -1,10 +1,12 @@
-import { eq, ilike, useLiveQuery } from '@tanstack/solid-db';
+import { eq, ilike, toArray, useLiveQuery } from '@tanstack/solid-db';
 import { createFileRoute } from '@tanstack/solid-router';
 import { onMount } from 'solid-js';
 import type { ReadStatus } from '~/components/ReadStatusToggle';
 import { ShortsViewer } from '~/components/ShortsViewer';
 import { articlesCollection } from '~/entities/articles';
-import { useFeeds } from '~/entities/feeds';
+import { feedsCollection } from '~/entities/feeds';
+import { feedTagsCollection } from '~/entities/feed-tags';
+import { tagsCollection } from '~/entities/tags';
 import { useSessionRead } from '~/providers/session-read';
 import { readStatusFilter } from '~/utils/article-queries';
 import { validateReadStatusSearch } from '~/utils/routing';
@@ -37,7 +39,26 @@ function FocusedShorts() {
     return query.orderBy(({ article }) => article.pubDate, 'desc');
   });
 
-  const feedsQuery = useFeeds();
+  const feedWithTagsQuery = useLiveQuery((q) =>
+    q
+      .from({ feed: feedsCollection })
+      .where(({ feed }) => eq(feed.id, feedId()))
+      .select(({ feed }) => ({
+        ...feed,
+        tags: toArray(
+          q
+            .from({ ft: feedTagsCollection })
+            .where(({ ft }) => eq(ft.feedId, feed.id))
+            .join({ tag: tagsCollection }, ({ ft, tag }) => eq(ft.tagId, tag.id))
+            .select(({ ft, tag }) => ({
+              feedTagId: ft.id,
+              id: tag.id,
+              name: tag.name,
+              color: tag.color,
+            })),
+        ),
+      })),
+  );
 
   const shorts = () => shortsQuery() || [];
 
@@ -61,7 +82,7 @@ function FocusedShorts() {
     <ShortsViewer
       readStatus={readStatus()}
       shortsAccessor={shorts}
-      feedsAccessor={() => feedsQuery() || []}
+      feedsAccessor={() => feedWithTagsQuery() ?? []}
       backLink={{
         to: '/feeds/$feedId',
         text: 'Back to Feed',
