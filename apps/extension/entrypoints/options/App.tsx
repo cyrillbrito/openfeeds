@@ -31,7 +31,7 @@ export function App() {
 
   function handleReset() {
     setApiUrl(DEFAULT_API_URL);
-    handleBlur();
+    void handleBlur();
   }
 
   return (

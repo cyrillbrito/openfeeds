@@ -101,12 +101,12 @@ function DiscoverPage() {
     if (!trimmed) return;
     const normalized = /^https?:\/\//i.test(trimmed) ? trimmed : `https://${trimmed}`;
     setInputUrl(normalized);
-    navigate({ search: { url: normalized } });
+    void navigate({ search: { url: normalized } });
   };
 
   const handleExampleClick = (exampleUrl: string) => {
     setInputUrl(exampleUrl);
-    navigate({ search: { url: exampleUrl } });
+    void navigate({ search: { url: exampleUrl } });
   };
 
   const handleFollowFeed = (feed: DiscoveredFeed) => {
@@ -240,7 +240,7 @@ function DiscoverPage() {
                 class="btn btn-ghost btn-xs btn-circle"
                 onClick={() => {
                   setInputUrl('');
-                  navigate({ search: {} });
+                  void navigate({ search: {} });
                 }}
               >
                 <X size={14} />

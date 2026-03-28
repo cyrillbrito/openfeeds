@@ -43,7 +43,7 @@ export function ArticleAudioPlayer(props: ArticleAudioPlayerProps) {
 
         // Start playing if not already
         if (audio.audioState() !== 'playing') {
-          audioRef.play();
+          void audioRef.play();
           audio.setAudioState('playing');
           startProgressLoop();
         }
@@ -129,7 +129,7 @@ export function ArticleAudioPlayer(props: ArticleAudioPlayerProps) {
       audio.setAudioState('paused');
       stopProgressLoop();
     } else {
-      audioRef.play();
+      void audioRef.play();
       audio.setAudioState('playing');
       startProgressLoop();
     }

@@ -49,7 +49,7 @@ function RootComponent() {
   onMount(() => {
     const posthogKey = context()?.publicConfig?.posthogKey;
     if (posthogKey) {
-      import('../utils/posthog').then(({ initPosthog }) => {
+      void import('../utils/posthog').then(({ initPosthog }) => {
         initPosthog(posthogKey);
       });
     }
