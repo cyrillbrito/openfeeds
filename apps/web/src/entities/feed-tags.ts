@@ -1,7 +1,7 @@
 import { snakeCamelMapper } from '@electric-sql/client';
 import { FeedTagSchema } from '@repo/domain/client';
 import { electricCollectionOptions } from '@tanstack/electric-db-collection';
-import { createCollection, useLiveQuery } from '@tanstack/solid-db';
+import { BasicIndex, createCollection, useLiveQuery } from '@tanstack/solid-db';
 import { collectionErrorHandler, shapeErrorHandler } from '~/lib/collection-errors';
 import { getShapeUrl } from '~/lib/electric-client';
 import { $$createFeedTags, $$deleteFeedTags } from './feed-tags.functions';
@@ -12,6 +12,13 @@ export const feedTagsCollection = createCollection(
     id: 'feed-tags',
     schema: FeedTagSchema,
     getKey: (item) => item.id,
+
+    // autoIndex: 'eager' restores the pre-0.6 default, which was changed to 'off'.
+    // It auto-creates B-tree indexes for fields used in orderBy/where at query time.
+    // TODO: consider switching to explicit createIndex calls per field for more control
+    //       over memory usage (avoids surprise indexes from transient queries).
+    autoIndex: 'eager' as const,
+    defaultIndexType: BasicIndex,
 
     shapeOptions: {
       url: getShapeUrl('feed-tags'),
