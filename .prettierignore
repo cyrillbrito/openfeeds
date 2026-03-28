@@ -1,0 +1,2 @@
+# Benchmark fixture files with invalid/minified HTML that cannot be parsed
+apps/worker/src/benchmark/fixtures/
