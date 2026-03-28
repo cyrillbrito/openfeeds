@@ -1,7 +1,7 @@
 import { snakeCamelMapper } from '@electric-sql/client';
 import { ArticleTagSchema } from '@repo/domain/client';
 import { electricCollectionOptions } from '@tanstack/electric-db-collection';
-import { BasicIndex, createCollection, useLiveQuery } from '@tanstack/solid-db';
+import { BasicIndex, createCollection } from '@tanstack/solid-db';
 import { collectionErrorHandler, shapeErrorHandler } from '~/lib/collection-errors';
 import { getShapeUrl } from '~/lib/electric-client';
 import { $$createArticleTags, $$deleteArticleTags } from './article-tags.functions';
@@ -40,7 +40,3 @@ export const articleTagsCollection = createCollection(
     }),
   }),
 );
-
-export function useArticleTags() {
-  return useLiveQuery((q) => q.from({ articleTag: articleTagsCollection }));
-}

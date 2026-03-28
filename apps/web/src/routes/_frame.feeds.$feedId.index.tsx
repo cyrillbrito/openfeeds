@@ -1,15 +1,15 @@
-import type { Feed, FeedTag, Tag } from '@repo/domain/client';
-import { eq, useLiveQuery } from '@tanstack/solid-db';
+import type { Feed, TagColor } from '@repo/domain/client';
+import { eq, toArray, useLiveQuery } from '@tanstack/solid-db';
 import { createFileRoute, Link } from '@tanstack/solid-router';
 import { MoreVertical, TriangleAlert } from 'lucide-solid';
-import { createSignal, For, onMount, Show, Suspense, type Accessor } from 'solid-js';
+import { createSignal, For, onMount, Show, Suspense } from 'solid-js';
 import { ArticleList, ARTICLES_PER_PAGE } from '~/components/ArticleList';
 import { ArticleListToolbar } from '~/components/ArticleListToolbar';
 import { ColorIndicator } from '~/components/ColorIndicator';
 import { DeleteFeedModal } from '~/components/DeleteFeedModal';
 import { Dropdown } from '~/components/Dropdown';
 import { EditFeedModal } from '~/components/EditFeedModal';
-import { type ModalController } from '~/components/LazyModal';
+import type { ModalController } from '~/components/LazyModal';
 import { CenterLoader } from '~/components/Loader';
 import { MarkAllArchivedButton } from '~/components/MarkAllArchivedButton';
 import { PageLayout } from '~/components/PageLayout';
@@ -17,10 +17,10 @@ import { ReadStatusToggle, type ReadStatus } from '~/components/ReadStatusToggle
 import { ShortsButton } from '~/components/ShortsButton';
 import { SyncLogsModal } from '~/components/SyncLogsModal';
 import { articlesCollection } from '~/entities/articles';
-import { useFeedTags } from '~/entities/feed-tags';
 import { feedsCollection, useFeeds } from '~/entities/feeds';
 import { $$retryFeed } from '~/entities/feeds.functions';
-import { useTags } from '~/entities/tags';
+import { feedTagsCollection } from '~/entities/feed-tags';
+import { tagsCollection, useTags } from '~/entities/tags';
 import { useSessionRead } from '~/providers/session-read';
 import { readStatusFilter } from '~/utils/article-queries';
 import { validateReadStatusSearch } from '~/utils/routing';
@@ -90,15 +90,34 @@ function FeedArticles() {
       .select(({ article }) => ({ id: article.id })),
   );
 
+  const feedWithTagsQuery = useLiveQuery((q) =>
+    q
+      .from({ feed: feedsCollection })
+      .where(({ feed }) => eq(feed.id, feedId()))
+      .select(({ feed }) => ({
+        ...feed,
+        tags: toArray(
+          q
+            .from({ ft: feedTagsCollection })
+            .where(({ ft }) => eq(ft.feedId, feed.id))
+            .join({ tag: tagsCollection }, ({ ft, tag }) => eq(ft.tagId, tag.id))
+            .select(({ ft, tag }) => ({
+              feedTagId: ft.id,
+              id: tag.id,
+              name: tag.name,
+              color: tag.color,
+            })),
+        ),
+      })),
+  );
   const feedsQuery = useFeeds();
-  const feedTagsQuery = useFeedTags();
   const tagsQuery = useTags();
 
   let editFeedModalController!: ModalController;
   let deleteFeedModalController!: ModalController;
   let syncLogsModalController!: ModalController;
 
-  const [feedToDelete, setFeedToDelete] = createSignal<Feed | null>(null);
+  const [feedToDelete, setFeedToDelete] = createSignal<FeedWithTags | null>(null);
 
   const handleMarkAllArchived = async () => {
     const articleIds = (archivableQuery() || []).map((a) => a.id);
@@ -134,10 +153,7 @@ function FeedArticles() {
     setVisibleCount((prev) => prev + ARTICLES_PER_PAGE);
   };
 
-  const currentFeed = () => {
-    const feeds = feedsQuery() || [];
-    return feeds.find((feed) => feed.id === feedId()) || null;
-  };
+  const currentFeed = () => (feedWithTagsQuery() ?? [])[0] ?? null;
 
   return (
     <PageLayout
@@ -231,7 +247,7 @@ function FeedArticles() {
       </Show>
 
       <Show when={currentFeed()} keyed>
-        {(feed) => <FeedHeader feed={feed} feedTagsQuery={feedTagsQuery} tagsQuery={tagsQuery} />}
+        {(feed) => <FeedHeader feed={feed} />}
       </Show>
 
       <ArticleListToolbar
@@ -295,14 +311,11 @@ function FeedArticles() {
   );
 }
 
-function FeedHeader(props: {
-  feed: Feed;
-  feedTagsQuery: Accessor<FeedTag[] | undefined>;
-  tagsQuery: Accessor<Tag[] | undefined>;
-}) {
-  const feedTagIds = () =>
-    (props.feedTagsQuery() ?? []).filter((ft) => ft.feedId === props.feed.id).map((ft) => ft.tagId);
+type FeedWithTags = Feed & {
+  tags: { feedTagId: string; id: string | undefined; name: string | undefined; color: TagColor | null | undefined }[];
+};
 
+function FeedHeader(props: { feed: FeedWithTags }) {
   return (
     <div class="mb-4 flex items-start gap-4 sm:gap-5">
       <Show when={props.feed.icon}>
@@ -325,24 +338,17 @@ function FeedHeader(props: {
         </p>
 
         {/* Tags */}
-        <Show when={feedTagIds().length > 0}>
+        <Show when={props.feed.tags.length > 0}>
           <div class="mb-3 flex flex-wrap gap-1.5">
-            <For each={feedTagIds()}>
-              {(tagId) => {
-                const tag = () => props.tagsQuery()?.find((t) => t.id === tagId);
-                return (
-                  <Show when={tag()}>
-                    {(t) => (
-                      <Link to="/tags/$tagId" params={{ tagId: t().id.toString() }}>
-                        <div class="badge badge-sm gap-1.5 transition-all hover:brightness-90">
-                          <ColorIndicator class={getTagDotColor(t().color)} />
-                          <span>{t().name}</span>
-                        </div>
-                      </Link>
-                    )}
-                  </Show>
-                );
-              }}
+            <For each={props.feed.tags}>
+              {(tag) => (
+                <Link to="/tags/$tagId" params={{ tagId: tag.id!.toString() }}>
+                  <div class="badge badge-sm gap-1.5 transition-all hover:brightness-90">
+                    <ColorIndicator class={getTagDotColor(tag.color as TagColor | null)} />
+                    <span>{tag.name}</span>
+                  </div>
+                </Link>
+              )}
             </For>
           </div>
         </Show>

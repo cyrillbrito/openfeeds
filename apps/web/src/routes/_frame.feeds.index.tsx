@@ -1,6 +1,7 @@
-import type { Feed } from '@repo/domain/client';
+import type { Feed, TagColor } from '@repo/domain/client';
 import { createId } from '@repo/shared/utils';
 import { debounce } from '@solid-primitives/scheduled';
+import { eq, toArray, useLiveQuery } from '@tanstack/solid-db';
 import { createFileRoute, Link } from '@tanstack/solid-router';
 import {
   CircleAlert,
@@ -27,12 +28,16 @@ import { MultiSelectTag } from '~/components/MultiSelectTag';
 import { PageLayout } from '~/components/PageLayout';
 import { SyncLogsModal } from '~/components/SyncLogsModal';
 import { feedTagsCollection, useFeedTags } from '~/entities/feed-tags';
-import { feedsCollection, useFeeds } from '~/entities/feeds';
+import { feedsCollection } from '~/entities/feeds';
 import { $$retryFeed } from '~/entities/feeds.functions';
-import { useTags } from '~/entities/tags';
+import { tagsCollection, useTags } from '~/entities/tags';
 import { getTagDotColor } from '~/utils/tagColors';
 
 const SEARCH_DEBOUNCE_MS = 200;
+
+type FeedWithTags = Feed & {
+  tags: { feedTagId: string; id: string | undefined; name: string | undefined; color: TagColor | null | undefined }[];
+};
 
 export const Route = createFileRoute('/_frame/feeds/')({
   component: FeedsComponent,
@@ -44,9 +49,24 @@ export const Route = createFileRoute('/_frame/feeds/')({
 });
 
 function FeedsComponent() {
-  const feedsQuery = useFeeds();
+  const feedsWithTagsQuery = useLiveQuery((q) =>
+    q.from({ feed: feedsCollection }).select(({ feed }) => ({
+      ...feed,
+      tags: toArray(
+        q
+          .from({ ft: feedTagsCollection })
+          .where(({ ft }) => eq(ft.feedId, feed.id))
+          .join({ tag: tagsCollection }, ({ ft, tag }) => eq(ft.tagId, tag.id))
+          .select(({ ft, tag }) => ({
+            feedTagId: ft.id,
+            id: tag.id,
+            name: tag.name,
+            color: tag.color,
+          })),
+      ),
+    })),
+  );
   const feedTagsQuery = useFeedTags();
-  const tagsQuery = useTags();
   const navigate = Route.useNavigate();
   const search = Route.useSearch();
 
@@ -59,9 +79,9 @@ function FeedsComponent() {
   let bulkAddTagsModalController!: ModalController;
 
   // Modal state
-  const [feedsToDelete, setFeedsToDelete] = createSignal<Feed[]>([]);
-  const [editingFeed, setEditingFeed] = createSignal<Feed | null>(null);
-  const [syncLogsFeed, setSyncLogsFeed] = createSignal<Feed | null>(null);
+  const [feedsToDelete, setFeedsToDelete] = createSignal<FeedWithTags[]>([]);
+  const [editingFeed, setEditingFeed] = createSignal<FeedWithTags | null>(null);
+  const [syncLogsFeed, setSyncLogsFeed] = createSignal<FeedWithTags | null>(null);
 
   // Selection state — selection mode is entered by clicking a feed icon
   const [selectedIds, setSelectedIds] = createSignal<Set<string>>(new Set());
@@ -97,7 +117,7 @@ function FeedsComponent() {
 
   const setSearchDebounce = debounce((value: string) => {
     const newQ = value.toLowerCase().trim();
-    navigate({
+    void navigate({
       search: newQ ? { q: newQ } : {},
       replace: true,
     });
@@ -107,7 +127,7 @@ function FeedsComponent() {
 
   // Filtered feeds based on search query from URL, with broken/failing sorted to top
   const filteredFeeds = createMemo(() => {
-    const feeds = feedsQuery();
+    const feeds = feedsWithTagsQuery();
     if (!feeds) return [];
 
     let result = feeds;
@@ -130,7 +150,7 @@ function FeedsComponent() {
 
   // Bulk action handlers
   const handleBulkDelete = () => {
-    setFeedsToDelete(filteredFeeds().filter((f) => selectedIds().has(f.id)));
+    setFeedsToDelete(filteredFeeds().filter((f) => selectedIds().has(f.id)) as FeedWithTags[]);
     deleteFeedModalController.open();
   };
 
@@ -150,7 +170,7 @@ function FeedsComponent() {
           draft.syncStatus = 'ok';
           draft.syncError = null;
         });
-        $$retryFeed({ data: { id: feed.id } });
+        void $$retryFeed({ data: { id: feed.id } });
       }
     }
     clearSelection();
@@ -208,15 +228,15 @@ function FeedsComponent() {
       />
 
       <Switch>
-        <Match when={feedsQuery() === undefined}>
+        <Match when={feedsWithTagsQuery() === undefined}>
           <CenterLoader />
         </Match>
 
-        <Match when={feedsQuery()?.length === 0}>
+        <Match when={feedsWithTagsQuery()?.length === 0}>
           <FeedsEmptyState onImportOpml={() => importOpmlModalController.open()} />
         </Match>
 
-        <Match when={feedsQuery() && feedsQuery()!.length > 0}>
+        <Match when={feedsWithTagsQuery() && feedsWithTagsQuery()!.length > 0}>
           {/* Header with title, action buttons, and search — only when feeds exist */}
           <FeedsHeader
             searchValue={searchDebounced()}
@@ -314,8 +334,6 @@ function FeedsComponent() {
                     </Show>
                     <FeedRow
                       feed={feed}
-                      feedTags={feedTagsQuery()}
-                      tags={tagsQuery()}
                       selected={selectedIds().has(feed.id)}
                       onToggleSelect={() => toggleSelect(feed.id)}
                       onEdit={() => {
@@ -331,7 +349,7 @@ function FeedsComponent() {
                           draft.syncStatus = 'ok';
                           draft.syncError = null;
                         });
-                        $$retryFeed({ data: { id: feed.id } });
+                        void $$retryFeed({ data: { id: feed.id } });
                       }}
                       onViewLogs={() => {
                         setSyncLogsFeed(feed);
@@ -574,7 +592,7 @@ function BulkAddTagsModal(props: BulkAddTagsModalProps) {
 
 // --- Feed Icon ---
 
-function FeedIcon(props: { feed: Feed }) {
+function FeedIcon(props: { feed: FeedWithTags }) {
   const [iconError, setIconError] = createSignal(false);
 
   return (
@@ -601,9 +619,7 @@ function FeedIcon(props: { feed: Feed }) {
 // --- Feed Row ---
 
 interface FeedRowProps {
-  feed: Feed;
-  feedTags: ReturnType<typeof useFeedTags> extends () => infer T ? T : never;
-  tags: ReturnType<typeof useTags> extends () => infer T ? T : never;
+  feed: FeedWithTags;
   selected: boolean;
   onToggleSelect: () => void;
   onEdit: () => void;
@@ -613,9 +629,6 @@ interface FeedRowProps {
 }
 
 function FeedRow(props: FeedRowProps) {
-  const feedTagIds = () =>
-    (props.feedTags ?? []).filter((ft) => ft.feedId === props.feed.id).map((ft) => ft.tagId);
-
   return (
     <div
       class="hover:bg-base-200/50 group relative flex items-start gap-3 rounded-lg px-2 py-3 transition-colors md:gap-4 md:py-4"
@@ -655,22 +668,17 @@ function FeedRow(props: FeedRowProps) {
         </Show>
 
         {/* Tags inline */}
-        <Show when={feedTagIds().length > 0}>
+        <Show when={props.feed.tags.length > 0}>
           <div class="mt-1.5 flex flex-wrap gap-1">
-            <For each={feedTagIds()}>
-              {(tagId) => {
-                const tag = () => props.tags?.find((t) => t.id === tagId);
-                return (
-                  <Show when={tag()}>
-                    <Link to="/tags/$tagId" params={{ tagId: tag()!.id.toString() }}>
-                      <span class="badge badge-xs gap-1 transition-all hover:brightness-90">
-                        <ColorIndicator class={getTagDotColor(tag()!.color)} />
-                        {tag()!.name}
-                      </span>
-                    </Link>
-                  </Show>
-                );
-              }}
+            <For each={props.feed.tags}>
+              {(tag) => (
+                <Link to="/tags/$tagId" params={{ tagId: tag.id!.toString() }}>
+                  <span class="badge badge-xs gap-1 transition-all hover:brightness-90">
+                    <ColorIndicator class={getTagDotColor(tag.color as TagColor | null)} />
+                    {tag.name}
+                  </span>
+                </Link>
+              )}
             </For>
           </div>
         </Show>

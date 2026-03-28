@@ -15,11 +15,11 @@ import { ReadIconButton } from '~/components/ReadIconButton';
 import { TimeAgo } from '~/components/TimeAgo';
 import { articlesCollection } from '~/entities/articles';
 import { $$extractArticleContent } from '~/entities/articles.functions';
-import { useFeeds } from '~/entities/feeds';
+import { feedsCollection } from '~/entities/feeds';
 import { useTags } from '~/entities/tags';
-import articlePrintCss from '~/styles/article-print.css?url';
 import { containsHtml, downshiftHeadings } from '~/utils/html';
 import { extractYouTubeVideoId, isYouTubeUrl } from '~/utils/youtube';
+import articlePrintCss from '~/styles/article-print.css?url';
 
 export const Route = createFileRoute('/_frame/articles/$articleId')({
   component: ArticleView,
@@ -88,14 +88,14 @@ function ArticleView() {
     ),
   );
 
-  const feedsQuery = useFeeds();
+  const feedsQuery = useLiveQuery((q) =>
+    q
+      .from({ feed: feedsCollection })
+      .where(({ feed }) => eq(feed.id, article()?.feedId ?? '')),
+  );
   const tagsQuery = useTags();
 
-  const feed = () => {
-    const art = article();
-    if (!art || !art.feedId || !feedsQuery()) return null;
-    return feedsQuery()!.find((f) => f.id === art.feedId);
-  };
+  const feed = () => (feedsQuery() ?? [])[0] ?? null;
 
   const isVideo = () => {
     const art = article();
@@ -120,7 +120,7 @@ function ArticleView() {
       window.history.back();
     } else {
       // User came from external link or bookmark, navigate to inbox
-      router.navigate({ to: '/inbox' });
+      void router.navigate({ to: '/inbox' });
     }
   };
 
