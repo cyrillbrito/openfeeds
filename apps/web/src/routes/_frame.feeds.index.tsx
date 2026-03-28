@@ -148,8 +148,7 @@ function FeedsComponent() {
 
     // Sort: broken first, then failing, then ok
     const statusOrder: Record<string, number> = { broken: 0, failing: 1, ok: 2 };
-    // oxlint-disable-next-line no-array-sort
-    return [...result].sort(
+    return result.toSorted(
       (a, b) => (statusOrder[a.syncStatus ?? 'ok'] ?? 0) - (statusOrder[b.syncStatus ?? 'ok'] ?? 0),
     );
   });

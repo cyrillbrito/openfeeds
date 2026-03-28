@@ -38,7 +38,7 @@ export function generateTestPassword(length: number = 12) {
   return (
     password
       .split('')
-      // oxlint-disable-next-line no-array-sort
+      // oxlint-disable-next-line no-array-sort -- no tsconfig with ES2023 lib for .toSorted()
       .sort(() => Math.random() - 0.5)
       .join('')
   );
