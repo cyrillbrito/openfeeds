@@ -20,11 +20,7 @@ export interface TransactionContext extends DomainContext {
 // Context creation
 // ---------------------------------------------------------------------------
 
-export function createDomainContext(
-  conn: Db,
-  userId: string,
-  plan?: string | null,
-): DomainContext {
+export function createDomainContext(conn: Db, userId: string, plan?: string | null): DomainContext {
   return { userId, conn, plan: parsePlan(plan) };
 }
 

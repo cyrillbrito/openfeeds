@@ -180,7 +180,7 @@ async function mapConcurrent<T, R>(
   concurrency: number,
   fn: (item: T, index: number) => Promise<R>,
 ): Promise<R[]> {
-  const results: R[] = new Array(items.length);
+  const results: R[] = Array.from({ length: items.length }) as R[];
   let nextIndex = 0;
 
   async function worker() {
@@ -329,7 +329,7 @@ async function fetchAndParseOpmls(fileNames: string[]): Promise<RawFeedEntry[]> 
         console.log(`  SKIP ${categoryName}: no feeds found`);
       }
     } catch (err) {
-      console.log(`  FAIL ${categoryName}: ${err instanceof Error ? err.message : err}`);
+      console.log(`  FAIL ${categoryName}: ${err instanceof Error ? err.message : String(err)}`);
     }
   }
 

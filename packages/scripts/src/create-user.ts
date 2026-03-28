@@ -47,4 +47,4 @@ async function createUser() {
   }
 }
 
-createUser();
+void createUser();

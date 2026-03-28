@@ -1,5 +1,5 @@
-import { createFileRoute, Link, Outlet, useLocation, useNavigate } from '@tanstack/solid-router';
 import { eq, useLiveQuery } from '@tanstack/solid-db';
+import { createFileRoute, Link, Outlet, useLocation, useNavigate } from '@tanstack/solid-router';
 import { createEffect, createMemo, on, Show, Suspense } from 'solid-js';
 import { ColorIndicator } from '~/components/ColorIndicator';
 import { CenterLoader } from '~/components/Loader';
@@ -61,7 +61,7 @@ function TagLayout() {
       () => [hasContent(), tagId()] as const,
       ([has, id]) => {
         if (has && isOnIndex()) {
-          navigate({ to: '/tags/$tagId/articles', params: { tagId: id }, replace: true });
+          void navigate({ to: '/tags/$tagId/articles', params: { tagId: id }, replace: true });
         }
       },
     ),

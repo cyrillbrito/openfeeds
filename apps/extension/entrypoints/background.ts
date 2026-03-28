@@ -8,7 +8,7 @@ import {
 export default defineBackground(() => {
   browser.runtime.onMessage.addListener((message: MessageType, _sender, sendResponse) => {
     if (message.type === 'FOLLOW_FEED') {
-      handleFollowFeed(message.feed).then(sendResponse);
+      void handleFollowFeed(message.feed).then(sendResponse);
       return true; // Keep channel open for async response
     }
   });

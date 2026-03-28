@@ -11,6 +11,7 @@
     "bun.lock",
     "routeTree.gen.ts",
     "packages/db/drizzle/",
-    "*.md"
+    "*.md",
+    "apps/worker/src/benchmark/fixtures/**"
   ]
 }

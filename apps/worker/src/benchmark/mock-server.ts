@@ -103,7 +103,7 @@ export function startMockServer(config: MockServerConfig): MockServer {
   return {
     url: baseUrl,
     close: () => {
-      server.stop();
+      void server.stop();
       console.log('Mock server stopped');
     },
   };

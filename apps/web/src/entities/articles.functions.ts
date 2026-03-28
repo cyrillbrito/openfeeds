@@ -29,9 +29,5 @@ export const $$extractArticleContent = createServerFn({ method: 'POST' })
   .middleware([authMiddleware])
   .inputValidator(z.object({ id: z.uuidv7() }))
   .handler(({ context, data }) => {
-    return articlesDomain.extractArticleContent(
-      data.id,
-      context.user.id,
-      context.user.plan,
-    );
+    return articlesDomain.extractArticleContent(data.id, context.user.id, context.user.plan);
   });

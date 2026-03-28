@@ -59,12 +59,9 @@ export const $$generateArticleAudio = createServerFn({ method: 'POST' })
     const userId = context.user.id;
     const { articleId, voice } = data;
 
-    const metadata = await ttsDomain.generateArticleAudio(
-      articleId,
-      userId,
-      context.user.plan,
-      { voice },
-    );
+    const metadata = await ttsDomain.generateArticleAudio(articleId, userId, context.user.plan, {
+      voice,
+    });
 
     return {
       audioUrl: `/api/articles/${articleId}/audio`,

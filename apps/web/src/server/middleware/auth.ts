@@ -1,7 +1,7 @@
-import type { auth } from '~/server/auth.server';
 import { redirect } from '@tanstack/solid-router';
 import { createMiddleware } from '@tanstack/solid-start';
 import { getRequestHeaders } from '@tanstack/solid-start/server';
+import type { auth } from '~/server/auth.server';
 
 type InferredSession = typeof auth.$Infer.Session;
 export type AuthContext = { user: InferredSession['user']; session: InferredSession['session'] };

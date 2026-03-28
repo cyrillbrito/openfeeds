@@ -1,6 +1,6 @@
+import { createSignal, onMount, Show } from 'solid-js';
 import { initTheme, setTheme, type Theme } from '@/utils/theme';
 import { DEFAULT_API_URL, type StorageData } from '@/utils/types';
-import { createSignal, onMount, Show } from 'solid-js';
 import './App.css';
 
 export function App() {
@@ -31,7 +31,7 @@ export function App() {
 
   function handleReset() {
     setApiUrl(DEFAULT_API_URL);
-    handleBlur();
+    void handleBlur();
   }
 
   return (

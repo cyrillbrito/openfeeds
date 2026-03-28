@@ -6,7 +6,6 @@ import { trackEvent } from '../analytics';
 import type { TransactionContext } from '../domain-context';
 import { NotFoundError } from '../errors';
 import { checkExtractionLimit, checkSavedArticleLimit } from '../limits';
-
 import type { Article, CreateArticleFromUrl, UpdateArticle } from './article.schema';
 
 // Re-export schemas and types from schema file

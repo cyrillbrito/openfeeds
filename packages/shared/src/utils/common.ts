@@ -1,3 +1,5 @@
+/// <reference types="bun-types" />
+
 /**
  * Async timeout utility for delaying execution
  * @param ms - Milliseconds to wait (should be positive)

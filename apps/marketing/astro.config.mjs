@@ -27,6 +27,7 @@ export default defineConfig({
   integrations: [solidJs()],
 
   vite: {
+    // @ts-expect-error -- @tailwindcss/vite uses root vite, astro bundles its own; types diverge
     plugins: [tailwindcss()],
   },
 });

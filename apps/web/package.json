@@ -7,7 +7,7 @@
     "build": "bun --bun --env-file=../../.env vite build",
     "preview": "bun --env-file=../../.env vite preview",
     "test": "vitest run",
-    "start": "bun --env-file=../../.env .output/server/index.mjs",
+    "start": "bun --env-file=../../.env .output/server/index.mjs"
   },
   "dependencies": {
     "@better-auth/drizzle-adapter": "^1.5.6",
