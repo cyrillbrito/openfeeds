@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.11.3](https://github.com/cyrillbrito/openfeeds/compare/v0.11.2...v0.11.3) (2026-03-29)
+
+
+### Bug Fixes
+
+* **web:** bundle all SSR deps to fix Node.js production runtime ([#194](https://github.com/cyrillbrito/openfeeds/issues/194)) ([5e10b76](https://github.com/cyrillbrito/openfeeds/commit/5e10b768dbe7d0c48b9ff94815ec3ed2d7f1ed4e))
+
 ## [0.11.2](https://github.com/cyrillbrito/openfeeds/compare/v0.11.1...v0.11.2) (2026-03-29)
 
 
