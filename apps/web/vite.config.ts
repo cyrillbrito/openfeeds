@@ -22,7 +22,7 @@ const rootPkg = JSON.parse(readFileSync('../../package.json', 'utf-8'));
  * `import * as x from "uuid"; export default x;` — a namespace import that
  * works with ESM-only packages.
  */
-const ESM_EXTERNAL_PACKAGES = ['uuid', 'msgpackr'];
+const ESM_EXTERNAL_PACKAGES = ['uuid', 'msgpackr', 'turndown', '@mixmark-io/domino'];
 
 export default defineConfig({
   plugins: [
