@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.11.12](https://github.com/cyrillbrito/openfeeds/compare/v0.11.11...v0.11.12) (2026-03-29)
+
+
+### Bug Fixes
+
+* **web:** patch css-tree to fix production CSS parsing crash ([#213](https://github.com/cyrillbrito/openfeeds/issues/213)) ([c7b0781](https://github.com/cyrillbrito/openfeeds/commit/c7b0781d07adee0e19f9fdc6101f8dbc10cbf282))
+
 ## [0.11.11](https://github.com/cyrillbrito/openfeeds/compare/v0.11.10...v0.11.11) (2026-03-29)
 
 
