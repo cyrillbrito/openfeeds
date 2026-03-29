@@ -232,6 +232,11 @@ export default defineConfig({
   ],
   define: {
     __APP_VERSION__: JSON.stringify(rootPkg.version),
+    // Nitro's server environment sets this for its own bundle, but the SSR
+    // environment (managed by TanStack Start) does not. Without this, Rollup
+    // keeps React's development jsx-runtime which uses createRequire("react")
+    // — a bare require that fails in Docker where no node_modules exist.
+    'process.env.NODE_ENV': JSON.stringify('production'),
   },
   build: {
     sourcemap: 'hidden',
