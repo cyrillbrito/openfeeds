@@ -2,8 +2,8 @@
   "name": "@repo/scripts",
   "type": "module",
   "scripts": {
-    "create-user": "tsx --env-file=../../.env src/create-user.ts",
-    "queue-feed-details": "tsx --env-file=../../.env src/queue-feed-details.ts",
+    "create-user": "tsx --env-file-if-exists=../../.env src/create-user.ts",
+    "queue-feed-details": "tsx --env-file-if-exists=../../.env src/queue-feed-details.ts",
     "generate-curated-feeds": "tsx src/generate-curated-feeds.ts"
   },
   "dependencies": {
