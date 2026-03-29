@@ -32,6 +32,21 @@ export default defineConfig({
   define: {
     __APP_VERSION__: JSON.stringify(rootPkg.version),
   },
+  ssr: {
+    // Vite externalizes node_modules by default for SSR builds, leaving bare
+    // `import "drizzle-orm/..."` statements in the output. Our Dockerfile only
+    // copies dist/ (no node_modules), so Node can't resolve them at runtime.
+    //
+    // Previously Nitro handled this (its nf3 tracer bundled + copied deps to
+    // .output/server/node_modules/), but Nitro v3 is still beta and caused
+    // repeated build issues (CJS/ESM interop, Rollup crashes, missing traces).
+    // TanStack Start now uses native Vite builds, so we use Vite's own
+    // noExternal: true to produce a fully self-contained server bundle.
+    //
+    // See: https://vite.dev/config/ssr-options.html#ssr-noexternal
+    // See: https://github.com/TanStack/router/issues/4409
+    noExternal: true,
+  },
   build: {
     sourcemap: 'hidden',
   },
