@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.11.8](https://github.com/cyrillbrito/openfeeds/compare/v0.11.7...v0.11.8) (2026-03-29)
+
+
+### Bug Fixes
+
+* **web:** handle css-tree v2 CJS require in Nitro bundle ([#204](https://github.com/cyrillbrito/openfeeds/issues/204)) ([04869ef](https://github.com/cyrillbrito/openfeeds/commit/04869ef2c28c5ecd4fe3cb245ee92d05c4e9ae38))
+
 ## [0.11.7](https://github.com/cyrillbrito/openfeeds/compare/v0.11.6...v0.11.7) (2026-03-29)
 
 
