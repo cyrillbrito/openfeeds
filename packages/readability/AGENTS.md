@@ -38,6 +38,10 @@ const article = extractFromPage(someDocument);
 - `extractFromPage(doc?)` - Extract from Document
 - `ArticleContent` type
 
+## Undeclared transitive dependencies
+
+`turndown` and `@mixmark-io/domino` are listed as explicit dependencies even though this package never imports them directly. They are undeclared transitive deps of `defuddle` (defuddle -> turndown -> @mixmark-io/domino). Without them here, Nitro's dependency tracer can't find them and they're missing from the production server output, causing runtime `Cannot find module` errors. See #181 and #183. Safe to remove if defuddle declares them in its own package.json.
+
 ## ArticleContent
 
 ```typescript
