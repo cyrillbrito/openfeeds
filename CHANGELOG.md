@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.11.11](https://github.com/cyrillbrito/openfeeds/compare/v0.11.10...v0.11.11) (2026-03-29)
+
+
+### Bug Fixes
+
+* **web:** copy WASM files to Nitro output to fix htmlrewriter crash ([#211](https://github.com/cyrillbrito/openfeeds/issues/211)) ([f3895d5](https://github.com/cyrillbrito/openfeeds/commit/f3895d59209ce4070337b70d4dfb9f1452ec00f5))
+
 ## [0.11.10](https://github.com/cyrillbrito/openfeeds/compare/v0.11.9...v0.11.10) (2026-03-29)
 
 
