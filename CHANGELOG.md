@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.11.9](https://github.com/cyrillbrito/openfeeds/compare/v0.11.8...v0.11.9) (2026-03-29)
+
+
+### Bug Fixes
+
+* **web:** inject CJS shim into all server chunks ([#206](https://github.com/cyrillbrito/openfeeds/issues/206)) ([a54d539](https://github.com/cyrillbrito/openfeeds/commit/a54d539f74af480d7d63cb93b4df4a10ea827c52))
+
 ## [0.11.8](https://github.com/cyrillbrito/openfeeds/compare/v0.11.7...v0.11.8) (2026-03-29)
 
 
