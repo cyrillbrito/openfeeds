@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.11.6](https://github.com/cyrillbrito/openfeeds/compare/v0.11.5...v0.11.6) (2026-03-29)
+
+
+### Bug Fixes
+
+* **web:** resolve CJS require() crash in Nitro ESM bundle ([#200](https://github.com/cyrillbrito/openfeeds/issues/200)) ([d8a499b](https://github.com/cyrillbrito/openfeeds/commit/d8a499b529c5c01816f285c49f2c475773ef7291))
+
 ## [0.11.5](https://github.com/cyrillbrito/openfeeds/compare/v0.11.4...v0.11.5) (2026-03-29)
 
 
