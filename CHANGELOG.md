@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.11.7](https://github.com/cyrillbrito/openfeeds/compare/v0.11.6...v0.11.7) (2026-03-29)
+
+
+### Bug Fixes
+
+* **web:** handle css-tree createRequire() JSON loads in Nitro bundle ([#202](https://github.com/cyrillbrito/openfeeds/issues/202)) ([865e298](https://github.com/cyrillbrito/openfeeds/commit/865e2987fb1b0d3bccefac90381e3a5cf1114371))
+
 ## [0.11.6](https://github.com/cyrillbrito/openfeeds/compare/v0.11.5...v0.11.6) (2026-03-29)
 
 
