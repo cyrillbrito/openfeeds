@@ -36,9 +36,11 @@ This is different from Nitro's standalone Rollup builder, which has an externals
 | Dependency Chain | CJS Pattern | Fix |
 |---|---|---|
 | `defuddle` → `turndown` → `@mixmark-io/domino` | `require()` in turndown's ESM build | **pnpm patch** on turndown |
+| `css-tree` v3 | `require('../data/patch.json')` relative path | **pnpm patch** on css-tree |
 | `jsdom`, `data-urls`, `whatwg-url`, `debug`, `decimal.js` | `module.exports` | CJS shim plugin |
 | `undici` | `require("node:http2")`, `require("node:tls")` | CJS shim plugin |
-| `ajv`, `ajv-formats` | `require("ajv/dist/...")` | CJS shim plugin |
+| `ajv`, `ajv-formats` | `require("ajv/dist/...")` (string literals in code-gen, not runtime) | CJS shim plugin (for `module.exports` only) |
+| `@react-email/components` → `react/jsx-dev-runtime` | `createRequire` + `require("react")` | `process.env.NODE_ENV` define (tree-shakes dev runtime) |
 | `jsdom` | `__dirname` | CJS shim plugin |
 | `mixmark-io/domino` | `module.exports` | CJS shim plugin |
 | `htmlrewriter` | `.wasm` file not copied to output | WASM copy plugin |
@@ -61,6 +63,38 @@ Replacing `require` with `import` is the correct fix — not a workaround. The `
 
 After patching, remove the `cjsRequireToImportPlugin` from `apps/web/vite.config.ts` — it was specifically built to rewrite this one `require()` call.
 
+## The css-tree Problem (pnpm patch)
+
+**Root cause:** css-tree v3's ESM build uses `createRequire(import.meta.url)` to load JSON data files with relative paths (`require('../data/patch.json')`, `require('../package.json')`, and `require()` calls for mdn-data JSON files). In `node_modules` this works because the JSON files exist relative to the source `.js` file. After Nitro bundles the JS into `.output/server/_libs/css-tree.mjs`, the relative path resolves to `.output/server/data/patch.json` which doesn't exist.
+
+**Why the CJS shim doesn't help:** The shim provides a working `require` via `createRequire(import.meta.url)`, but the `import.meta.url` now points to the bundled file's location, not the original source. Relative paths resolve against the wrong directory.
+
+**Why this only crashes on specific page loads:** The css-tree CSS syntax lexer is initialized lazily — only when jsdom/csso processes CSS during content parsing (e.g. feed article extraction). Server startup doesn't trigger it.
+
+**Fix:** `pnpm patch css-tree@3.2.1` — replace `createRequire` + `require()` with `import ... with { type: 'json' }` in `lib/data-patch.js`, `lib/version.js`, and `lib/data.js`. This lets Rollup inline the JSON at bundle time.
+
+## The React jsx-dev-runtime Problem (process.env.NODE_ENV define)
+
+**Root cause:** `@react-email/components` (pre-compiled by tsdown in `packages/emails`) bundles both production and development versions of `react/jsx-runtime`, with a runtime guard:
+
+```js
+"production" !== process.env.NODE_ENV && (function() { ... __require("react") ... })()
+```
+
+The production variant is self-contained. The development variant calls `createRequire(import.meta.url)` + `require("react")` — a bare module require that fails in Docker because there's no `node_modules`.
+
+**Why the development variant was kept:** Nitro's Vite builder sets `define: { "process.env.NODE_ENV": "production" }` for its own server bundle (line 326 of `nitro/dist/vite.mjs`), but this does NOT apply to the **SSR environment** which is managed by TanStack Start. The SSR build used `NODE_ENV=development` (Vite's default for SSR), so Rollup dead-code-eliminated the production path and kept the development path.
+
+**Why the crash is deferred:** `_ssr/index.mjs` is lazily imported via `lazyService(() => import(...))` in `index.mjs`. It only loads on the first SSR request, not at server startup. The `import_jsx_runtime` variable inside is eagerly evaluated at module top level, so the crash happens as soon as any route triggers SSR.
+
+**How React Email reaches the SSR bundle:** The `@repo/domain` barrel (`export * from './email'`) causes every `import ... from '@repo/domain'` to transitively pull in `@repo/emails` → `react` → `react/jsx-runtime`. Even entity function files that only use feed/article domain logic bring in the entire React Email stack.
+
+**Fix:** Add `'process.env.NODE_ENV': JSON.stringify('production')` to the `define` block in `apps/web/vite.config.ts`. This applies to ALL Vite environments (client, SSR, Nitro), ensuring React's development code paths are tree-shaken everywhere. After this fix, zero `__require` calls remain in the SSR bundle.
+
+**Considered alternatives:**
+- **Break the barrel** — remove `export * from './email'` from `@repo/domain/index.ts`. Would eliminate React from the SSR bundle entirely, but is a larger refactor.
+- **pnpm patch the emails package** — remove the dev variant from the pre-compiled output. Fragile, breaks on package updates.
+
 ## The CJS Shim Plugin (required, can't remove)
 
 `cjsShimPlugin()` in `apps/web/vite.config.ts` post-processes all `.mjs` files in `.output/server/` after build, injecting CJS compatibility globals into any file that contains CJS patterns.
@@ -74,7 +108,7 @@ The shim injects:
 
 The shim works for these because:
 - `require("node:http2")` and `require("node:tls")` — Node.js builtins, always available via `createRequire`
-- `require("ajv/dist/...")` — these are self-references within the bundled ajv code; Rollup inlined the code but left the `require()` calls as runtime code generation strings (ajv uses them to generate validation functions). The `require` from `createRequire` can resolve them from `node_modules`.
+- `require("ajv/dist/...")` — these are **string literals** in ajv's code generation pipeline, not runtime `require()` calls. Ajv uses them as code templates when serializing validators to standalone files (via `ajv.standalone()`). During normal runtime, ajv uses the `ref` property (pointing to the bundled in-memory object), not the `code` string. The CJS shim's `require` is never actually called for these. Safe to ignore.
 - `module.exports` — the shim provides a dummy `module` object. The assignments don't crash, and the actual exports use ESM `export` statements that Rollup generated.
 - `__dirname` — jsdom uses it to locate a CSS file. The shim provides the correct directory path.
 
@@ -155,3 +189,4 @@ If a new dependency loads WASM via `new URL("...wasm", import.meta.url)`, add it
 - `cjsShimPlugin()` — **keep**, required safety net for all CJS-in-ESM issues. Cannot be removed while Nitro Vite builder uses `noExternal: true`.
 - `wasmCopyPlugin()` — **keep**, copies WASM files that Rollup doesn't bundle. Required for `htmlrewriter` and any future WASM-loading dependencies.
 - `cjsRequireToImportPlugin()` — **removed**, replaced by pnpm patch on turndown.
+- `define: { 'process.env.NODE_ENV': JSON.stringify('production') }` — **keep**, ensures React dev code paths are tree-shaken in the SSR bundle. Required because Nitro only sets this for its own environment, not the SSR environment managed by TanStack Start.

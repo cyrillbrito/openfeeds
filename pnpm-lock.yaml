@@ -5,6 +5,9 @@ settings:
   excludeLinksFromLockfile: false
 
 patchedDependencies:
+  css-tree@3.2.1:
+    hash: 12fc3d5218279f1a98a0c0ce7a9bb2cb38071382ea670dffb5861ee5e2ebd5de
+    path: patches/css-tree@3.2.1.patch
   turndown@7.2.2:
     hash: a10c62d7e4d530aed689b2d21683f7ca1db61f0d2bdf746bebb0c1c49380ed2d
     path: patches/turndown@7.2.2.patch
@@ -180,7 +183,7 @@ importers:
         version: 1.5.6(@cloudflare/workers-types@4.20260329.1)(@opentelemetry/api@1.9.1)(@tanstack/solid-start@1.167.12(crossws@0.4.4(srvx@0.11.13))(solid-js@1.9.12)(vite-plugin-solid@2.11.11(solid-js@1.9.12)(vite@7.3.1(@types/node@24.12.0)(jiti@2.6.1)(lightningcss@1.32.0)(tsx@4.21.0)))(vite@7.3.1(@types/node@24.12.0)(jiti@2.6.1)(lightningcss@1.32.0)(tsx@4.21.0)))(drizzle-kit@0.31.10)(drizzle-orm@0.45.2(@cloudflare/workers-types@4.20260329.1)(@opentelemetry/api@1.9.1)(kysely@0.28.14)(postgres@3.4.8))(next@16.1.7(@babel/core@7.29.0)(@opentelemetry/api@1.9.1)(@playwright/test@1.58.2)(react-dom@19.2.4(react@19.2.4))(react@19.2.4))(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(solid-js@1.9.12)(vitest@3.2.4(@types/debug@4.1.13)(@types/node@24.12.0)(jiti@2.6.1)(jsdom@29.0.1(@noble/hashes@2.0.1))(lightningcss@1.32.0)(tsx@4.21.0))
       css-tree:
         specifier: ^3.2.1
-        version: 3.2.1
+        version: 3.2.1(patch_hash=12fc3d5218279f1a98a0c0ce7a9bb2cb38071382ea670dffb5861ee5e2ebd5de)
       daisyui:
         specifier: ^5.5.19
         version: 5.5.19
@@ -7295,7 +7298,7 @@ snapshots:
     dependencies:
       '@asamuzakjp/nwsapi': 2.3.9
       bidi-js: 1.0.3
-      css-tree: 3.2.1
+      css-tree: 3.2.1(patch_hash=12fc3d5218279f1a98a0c0ce7a9bb2cb38071382ea670dffb5861ee5e2ebd5de)
       is-potential-custom-element-name: 1.0.1
       lru-cache: 11.2.7
 
@@ -7621,7 +7624,7 @@ snapshots:
 
   '@bramus/specificity@2.4.2':
     dependencies:
-      css-tree: 3.2.1
+      css-tree: 3.2.1(patch_hash=12fc3d5218279f1a98a0c0ce7a9bb2cb38071382ea670dffb5861ee5e2ebd5de)
 
   '@capsizecss/unpack@4.0.0':
     dependencies:
@@ -7695,9 +7698,9 @@ snapshots:
     dependencies:
       '@csstools/css-tokenizer': 4.0.0
 
-  '@csstools/css-syntax-patches-for-csstree@1.1.2(css-tree@3.2.1)':
+  '@csstools/css-syntax-patches-for-csstree@1.1.2(css-tree@3.2.1(patch_hash=12fc3d5218279f1a98a0c0ce7a9bb2cb38071382ea670dffb5861ee5e2ebd5de))':
     optionalDependencies:
-      css-tree: 3.2.1
+      css-tree: 3.2.1(patch_hash=12fc3d5218279f1a98a0c0ce7a9bb2cb38071382ea670dffb5861ee5e2ebd5de)
 
   '@csstools/css-tokenizer@4.0.0': {}
 
@@ -10417,7 +10420,7 @@ snapshots:
       mdn-data: 2.0.28
       source-map-js: 1.2.1
 
-  css-tree@3.2.1:
+  css-tree@3.2.1(patch_hash=12fc3d5218279f1a98a0c0ce7a9bb2cb38071382ea670dffb5861ee5e2ebd5de):
     dependencies:
       mdn-data: 2.27.1
       source-map-js: 1.2.1
@@ -11369,9 +11372,9 @@ snapshots:
       '@asamuzakjp/css-color': 5.1.1
       '@asamuzakjp/dom-selector': 7.0.4
       '@bramus/specificity': 2.4.2
-      '@csstools/css-syntax-patches-for-csstree': 1.1.2(css-tree@3.2.1)
+      '@csstools/css-syntax-patches-for-csstree': 1.1.2(css-tree@3.2.1(patch_hash=12fc3d5218279f1a98a0c0ce7a9bb2cb38071382ea670dffb5861ee5e2ebd5de))
       '@exodus/bytes': 1.15.0(@noble/hashes@2.0.1)
-      css-tree: 3.2.1
+      css-tree: 3.2.1(patch_hash=12fc3d5218279f1a98a0c0ce7a9bb2cb38071382ea670dffb5861ee5e2ebd5de)
       data-urls: 7.0.0(@noble/hashes@2.0.1)
       decimal.js: 10.6.0
       html-encoding-sniffer: 6.0.0(@noble/hashes@2.0.1)
@@ -13200,7 +13203,7 @@ snapshots:
     dependencies:
       commander: 11.1.0
       css-select: 5.2.2
-      css-tree: 3.2.1
+      css-tree: 3.2.1(patch_hash=12fc3d5218279f1a98a0c0ce7a9bb2cb38071382ea670dffb5861ee5e2ebd5de)
       css-what: 6.2.2
       csso: 5.0.5
       picocolors: 1.1.1
@@ -13403,7 +13406,7 @@ snapshots:
 
   unifont@0.7.4:
     dependencies:
-      css-tree: 3.2.1
+      css-tree: 3.2.1(patch_hash=12fc3d5218279f1a98a0c0ce7a9bb2cb38071382ea670dffb5861ee5e2ebd5de)
       ofetch: 1.5.1
       ohash: 2.0.11
 
