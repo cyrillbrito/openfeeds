@@ -1,5 +1,14 @@
-import { readFileSync, readdirSync, statSync, writeFileSync } from 'node:fs';
-import { join } from 'node:path';
+import {
+  copyFileSync,
+  existsSync,
+  mkdirSync,
+  readFileSync,
+  readdirSync,
+  statSync,
+  writeFileSync,
+} from 'node:fs';
+import { createRequire } from 'node:module';
+import { dirname, join, resolve } from 'node:path';
 import tailwindcss from '@tailwindcss/vite';
 import { devtools } from '@tanstack/devtools-vite';
 import { tanstackStart } from '@tanstack/solid-start/plugin/vite';
@@ -37,6 +46,21 @@ const rootPkg = JSON.parse(readFileSync('../../package.json', 'utf-8'));
  *
  * See: docs/decisions/2026-03-29-nitro-cjs-esm-bundling.md
  */
+
+/** Recursively collect all .mjs files under a directory. */
+function walkMjs(dir: string): string[] {
+  const files: string[] = [];
+  for (const entry of readdirSync(dir)) {
+    const full = join(dir, entry);
+    if (statSync(full).isDirectory()) {
+      files.push(...walkMjs(full));
+    } else if (full.endsWith('.mjs')) {
+      files.push(full);
+    }
+  }
+  return files;
+}
+
 function cjsShimPlugin(): Plugin {
   const CJS_PATTERN = /\brequire\s*\(|(?<!\.\w*)module\.exports\b|\b__dirname\b|\b__filename\b/;
 
@@ -51,19 +75,6 @@ function cjsShimPlugin(): Plugin {
     'const module = { exports: {} };',
     '',
   ].join('\n');
-
-  function walkMjs(dir: string): string[] {
-    const files: string[] = [];
-    for (const entry of readdirSync(dir)) {
-      const full = join(dir, entry);
-      if (statSync(full).isDirectory()) {
-        files.push(...walkMjs(full));
-      } else if (full.endsWith('.mjs')) {
-        files.push(full);
-      }
-    }
-    return files;
-  }
 
   return {
     name: 'cjs-shim',
@@ -102,6 +113,96 @@ function cjsShimPlugin(): Plugin {
   };
 }
 
+/**
+ * Vite plugin that copies WASM files referenced by bundled server code.
+ *
+ * Some dependencies (e.g. htmlrewriter) load .wasm files at runtime via
+ * fs.readFileSync with a path relative to import.meta.url. Rollup bundles
+ * the JS but does NOT copy companion .wasm files into .output/server/.
+ *
+ * Why not alias to a bundler-friendly entry or use Nitro's unwasm?
+ * - Nitro aliases apply to ALL Vite environments (SSR + Nitro) via
+ *   sharedDuringBuild, but only the Nitro environment has the unwasm plugin.
+ *   The SSR environment fails with "ESM integration proposal for Wasm is not
+ *   supported" when it encounters `import wasm from '...wasm'`.
+ * - Nitro's unwasm only intercepts `import '...wasm'` patterns, not
+ *   fs.readFileSync calls that the "node" export condition uses.
+ *
+ * This plugin runs after both builds complete, scans bundled .mjs files for
+ * `new URL("...wasm", import.meta.url)` patterns, and copies the source .wasm
+ * file from node_modules to the expected location in the output directory.
+ *
+ * See: docs/decisions/2026-03-29-nitro-cjs-esm-bundling.md
+ */
+function wasmCopyPlugin(): Plugin {
+  // Matches: new URL("./dist/foo.wasm", import.meta.url) or new url$1.URL("foo.wasm", import.meta.url)
+  // Rollup may rename `url` to `url$1` etc. ($ is not a \w char), so we use \S+ for the namespace.
+  // The (?:\S+\.)? group makes the namespace optional to also match plain `new URL(...)`.
+  const WASM_URL_PATTERN = /new\s+(?:\S+\.)?URL\(\s*"([^"]+\.wasm)"\s*,\s*import\.meta\.url\s*\)/g;
+
+  return {
+    name: 'wasm-copy',
+    apply: 'build',
+    closeBundle() {
+      const serverDir = join(process.cwd(), '.output', 'server');
+      try {
+        if (!statSync(serverDir).isDirectory()) return;
+      } catch {
+        return;
+      }
+
+      // Resolve WASM source paths from node_modules. htmlrewriter is a dep of
+      // @repo/domain (not apps/web), so we resolve from the domain package.
+      const domainRequire = createRequire(resolve('../../packages/domain/package.json'));
+      const wasmSources: Record<string, string> = {};
+      try {
+        const htmlrewriterDir = dirname(domainRequire.resolve('htmlrewriter'));
+        wasmSources['html_rewriter_bg'] = join(htmlrewriterDir, 'dist', 'html_rewriter_bg.wasm');
+      } catch {
+        // htmlrewriter not installed
+      }
+
+      const files = walkMjs(serverDir);
+      let copied = 0;
+
+      for (const file of files) {
+        const code = readFileSync(file, 'utf-8');
+        const fileDir = dirname(file);
+
+        let match;
+        WASM_URL_PATTERN.lastIndex = 0;
+        while ((match = WASM_URL_PATTERN.exec(code)) !== null) {
+          const relativePath = match[1]!;
+          const targetPath = resolve(fileDir, relativePath);
+
+          // Skip if already exists
+          if (existsSync(targetPath)) continue;
+
+          // Look up source by basename (without extension)
+          const baseName = relativePath.replace(/.*\//, '').replace(/\.wasm$/, '');
+          const sourcePath = wasmSources[baseName];
+          if (!sourcePath || !existsSync(sourcePath)) {
+            // eslint-disable-next-line no-console
+            console.warn(
+              `[wasm-copy] Cannot find source for ${relativePath} referenced in ${file}`,
+            );
+            continue;
+          }
+
+          mkdirSync(dirname(targetPath), { recursive: true });
+          copyFileSync(sourcePath, targetPath);
+          copied++;
+        }
+      }
+
+      if (copied > 0) {
+        // eslint-disable-next-line no-console
+        console.log(`[wasm-copy] Copied ${copied} WASM file(s) to server output`);
+      }
+    },
+  };
+}
+
 export default defineConfig({
   plugins: [
     lucidePreprocess(),
@@ -127,6 +228,7 @@ export default defineConfig({
     // See: https://tanstack.com/start/latest/docs/framework/solid/guide/hosting
     nitro(),
     cjsShimPlugin(),
+    wasmCopyPlugin(),
   ],
   define: {
     __APP_VERSION__: JSON.stringify(rootPkg.version),

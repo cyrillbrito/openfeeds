@@ -2,7 +2,7 @@
 
 **Date:** 2026-03-29
 **Status:** Active workarounds in place
-**Context:** Production crashes from `Cannot find module` errors after Nitro bundles CJS dependencies into ESM output
+**Context:** Production crashes from CJS-in-ESM bundling issues and missing WASM files after Nitro bundles all dependencies into `.output/server/`
 
 ## The Problem
 
@@ -41,6 +41,7 @@ This is different from Nitro's standalone Rollup builder, which has an externals
 | `ajv`, `ajv-formats` | `require("ajv/dist/...")` | CJS shim plugin |
 | `jsdom` | `__dirname` | CJS shim plugin |
 | `mixmark-io/domino` | `module.exports` | CJS shim plugin |
+| `htmlrewriter` | `.wasm` file not copied to output | WASM copy plugin |
 
 Related PRs: #181, #183, #200, #202, #204, #206
 
@@ -91,6 +92,7 @@ The shim works for these because:
    - **If `require('some-package')` and the package isn't available** (like `@mixmark-io/domino`) — the package was supposed to be bundled but Rollup missed it. Fix: **pnpm patch** the upstream package to use `import` instead of `require`. Then add an entry to `cjsRequireToImportPlugin` as a temporary build-time rewrite if you need an immediate fix before patching.
    - **If the CJS shim should have caught it but didn't** — check that the regex pattern in `cjsShimPlugin` matches the CJS pattern in the file. The shim only injects into files matching `CJS_PATTERN`.
    - **If the shim is there but `require()` can't find the module** — the module isn't in `node_modules` and isn't bundled. This is the turndown scenario. Must patch the source.
+   - **If `ENOENT` for a `.wasm` file** — Rollup bundled the JS but not the companion WASM. Add the source WASM path to `wasmSources` in `wasmCopyPlugin()` and rebuild.
 
 5. **Verify:** After fixing, rebuild and check `.output/server/` — grep for the pattern, confirm the shim is injected (look for `__cjs_createRequire__`).
 
@@ -107,7 +109,49 @@ Common workarounds others use: `rolldownConfig.external`, `nitro({ alias: {...} 
 
 The real fix will come from Nitro/Rolldown improving CJS-to-ESM conversion, or the Vite builder supporting proper externalization with `node_modules` tracing (like the Rollup builder already does).
 
+## The htmlrewriter WASM Problem (wasmCopyPlugin)
+
+`htmlrewriter` (used in `@repo/domain` for HTML meta tag extraction) ships a `.wasm` file that it loads at runtime. When Nitro bundles the JS, the companion WASM file is **not** copied to `.output/server/`, causing `ENOENT: html_rewriter_bg.wasm` at runtime.
+
+### Why It Happens
+
+htmlrewriter has two entry points controlled by Node.js export conditions:
+
+| Condition | Entry | WASM Loading |
+|---|---|---|
+| `"node"` | `node.mjs` | `fs.readFileSync` relative to `import.meta.url` |
+| `"default"` | `default.js` | `import wasm from '...bg.wasm'` |
+
+Nitro resolves the `"node"` condition, bundling `node.mjs`. Rollup inlines the JS but does not follow the `readFileSync` call to copy the WASM file — it's an opaque runtime string, not a static import.
+
+### Alternatives Considered and Rejected
+
+**Alias to `default.js` (the bundler-friendly entry):** Nitro's `alias` config applies to ALL Vite environments via `sharedDuringBuild: true` (line 568 in `nitro/dist/vite.mjs`). The `default.js` entry uses `import wasm from '...bg.wasm'`, which works in the Nitro environment (has `unwasm` plugin) but **fails in the SSR environment** with `"ESM integration proposal for Wasm is not supported"` because SSR does not have `unwasm`.
+
+**Nitro's built-in `unwasm` plugin:** Only intercepts `import '...wasm'` patterns. Does not handle `fs.readFileSync` calls that the `"node"` export condition uses.
+
+**Per-environment Vite plugin with `resolveId`:** Vite plugins need `sharedDuringBuild: true` and `applyToEnvironment` to work across environments. Even then, Nitro has its own resolution pipeline that may override plugin hooks. Too fragile.
+
+### The Fix: wasmCopyPlugin
+
+Same pattern as `cjsShimPlugin`. A `closeBundle` hook that runs after both SSR and Nitro builds complete:
+
+1. Resolves the source WASM file from `node_modules` (via `createRequire` from the `@repo/domain` package, since htmlrewriter is its dependency, not `apps/web`'s).
+2. Scans all `.mjs` files in `.output/server/` for `new URL("...wasm", import.meta.url)` patterns — the runtime WASM loading code that `node.mjs` uses.
+3. Copies the source WASM to the expected relative path in the output directory.
+
+The regex handles both plain `new URL(...)` and Rollup-renamed `new url$1.URL(...)` patterns (Rollup renames `url` to `url$1` etc. using `$` which is not a `\w` character).
+
+Two copies are made because the bundled output has two different relative paths referencing the same WASM file:
+- `html_rewriter_bg.wasm` (from the inline WASM import path)
+- `./dist/html_rewriter_bg.wasm` (from the `node.mjs` `readFileSync` path)
+
+### Adding Support for Other WASM Dependencies
+
+If a new dependency loads WASM via `new URL("...wasm", import.meta.url)`, add its source path to the `wasmSources` map in `wasmCopyPlugin()` (keyed by WASM filename without extension). The plugin will automatically match and copy it.
+
 ## Current State of vite.config.ts
 
 - `cjsShimPlugin()` — **keep**, required safety net for all CJS-in-ESM issues. Cannot be removed while Nitro Vite builder uses `noExternal: true`.
+- `wasmCopyPlugin()` — **keep**, copies WASM files that Rollup doesn't bundle. Required for `htmlrewriter` and any future WASM-loading dependencies.
 - `cjsRequireToImportPlugin()` — **removed**, replaced by pnpm patch on turndown.
