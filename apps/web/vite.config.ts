@@ -10,19 +10,25 @@ import viteTsConfigPaths from 'vite-tsconfig-paths';
 
 const rootPkg = JSON.parse(readFileSync('../../package.json', 'utf-8'));
 
-// Some dependencies (e.g. turndown via defuddle) ship CJS with bare
-// require() calls. When Vite/Nitro bundles them into ESM output, these
-// calls fail at runtime ("require is not defined in ES module scope").
+// Some dependencies use require() or createRequire() to load modules/JSON
+// at init time. When Vite/Nitro bundles them into ESM output, these calls
+// fail at runtime because .output/ has no node_modules:
 //
-// turndown specifically does: var domino = require("@mixmark-io/domino")
-// This is executed at module initialization (not lazily), and the Nitro
-// .output/ directory has no node_modules for require() to resolve from.
+// - turndown (via defuddle): require("@mixmark-io/domino")
+// - css-tree (via jsdom): createRequire()("../data/patch.json"),
+//   createRequire()("mdn-data/css/*.json")
 //
-// Fix: replace the require("@mixmark-io/domino") call with an ESM import
-// during the transform phase so the bundler inlines domino's code.
+// Fix: replace require() calls with ESM imports during the transform phase
+// so the bundler resolves and inlines the dependencies.
 function cjsRequireToImport(): Plugin {
-  const replacements: Record<string, string> = {
-    '@mixmark-io/domino': '__cjs_domino__',
+  // "default" for JSON files (single default export),
+  // "namespace" for CJS packages (import * as ...).
+  const replacements: Record<string, { alias: string; style: 'default' | 'namespace' }> = {
+    '@mixmark-io/domino': { alias: '__cjs_domino__', style: 'namespace' },
+    '../data/patch.json': { alias: '__cjs_patch_json__', style: 'default' },
+    'mdn-data/css/at-rules.json': { alias: '__cjs_mdn_atrules__', style: 'default' },
+    'mdn-data/css/properties.json': { alias: '__cjs_mdn_properties__', style: 'default' },
+    'mdn-data/css/syntaxes.json': { alias: '__cjs_mdn_syntaxes__', style: 'default' },
   };
 
   return {
@@ -34,11 +40,14 @@ function cjsRequireToImport(): Plugin {
       let transformed = code;
       let imports = '';
 
-      for (const [pkg, alias] of Object.entries(replacements)) {
+      for (const [pkg, { alias, style }] of Object.entries(replacements)) {
         const escaped = pkg.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
         const pattern = new RegExp(`require\\s*\\(\\s*["']${escaped}["']\\s*\\)`, 'g');
         if (pattern.test(transformed)) {
-          imports += `import * as ${alias} from '${pkg}';\n`;
+          imports +=
+            style === 'namespace'
+              ? `import * as ${alias} from '${pkg}';\n`
+              : `import ${alias} from '${pkg}';\n`;
           transformed = transformed.replace(pattern, alias);
           changed = true;
         }
