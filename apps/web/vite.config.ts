@@ -100,6 +100,57 @@ function cjsShimPlugin(): Plugin {
   };
 }
 
+/**
+ * Vite plugin that rewrites CJS require() calls to ESM imports at build time.
+ *
+ * Some bundled dependencies contain dynamic require() calls that Rollup can't
+ * statically analyze. Without this transform, the CJS shim provides a working
+ * require() function, but the required package isn't in .output/node_modules.
+ *
+ * This plugin converts require() calls to top-level ESM imports so Rollup can
+ * trace, tree-shake, and bundle the dependency code into the output chunks.
+ *
+ * Each entry maps a require specifier to a unique import variable name.
+ */
+function cjsRequireToImportPlugin(): Plugin {
+  // Map of require("specifier") → ESM import variable name
+  const rewrites: Record<string, string> = {
+    '@mixmark-io/domino': '__cjs_domino__',
+  };
+
+  const requirePattern = new RegExp(
+    `require\\(["'](${Object.keys(rewrites)
+      .map((k) => k.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'))
+      .join('|')})["']\\)`,
+    'g',
+  );
+
+  return {
+    name: 'cjs-require-to-import',
+    apply: 'build',
+    transform(code, _id) {
+      if (!requirePattern.test(code)) return null;
+      requirePattern.lastIndex = 0;
+
+      // Collect which packages are required in this module
+      const needed = new Set<string>();
+      let transformed = code.replace(requirePattern, (_match, specifier: string) => {
+        needed.add(specifier);
+        return rewrites[specifier]!;
+      });
+
+      // Prepend ESM imports for each required package
+      const imports = [...needed]
+        .map((spec) => `import * as ${rewrites[spec]} from ${JSON.stringify(spec)};`)
+        .join('\n');
+
+      transformed = imports + '\n' + transformed;
+
+      return { code: transformed, map: null };
+    },
+  };
+}
+
 export default defineConfig({
   plugins: [
     lucidePreprocess(),
@@ -124,6 +175,7 @@ export default defineConfig({
     // Required for Node.js/Docker deployment per TanStack Start hosting docs.
     // See: https://tanstack.com/start/latest/docs/framework/solid/guide/hosting
     nitro(),
+    cjsRequireToImportPlugin(),
     cjsShimPlugin(),
   ],
   define: {
