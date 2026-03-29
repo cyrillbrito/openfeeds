@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.11.5](https://github.com/cyrillbrito/openfeeds/compare/v0.11.4...v0.11.5) (2026-03-29)
+
+
+### Bug Fixes
+
+* **ci:** update PostHog sourcemaps path for Nitro build output ([#198](https://github.com/cyrillbrito/openfeeds/issues/198)) ([bf52d34](https://github.com/cyrillbrito/openfeeds/commit/bf52d344d66d5b7c5895dc72bf80569e68ef3d97))
+
 ## [0.11.4](https://github.com/cyrillbrito/openfeeds/compare/v0.11.3...v0.11.4) (2026-03-29)
 
 
