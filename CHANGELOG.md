@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.11.10](https://github.com/cyrillbrito/openfeeds/compare/v0.11.9...v0.11.10) (2026-03-29)
+
+
+### Bug Fixes
+
+* **web:** patch turndown ESM build to fix production domino crash ([#209](https://github.com/cyrillbrito/openfeeds/issues/209)) ([2280c88](https://github.com/cyrillbrito/openfeeds/commit/2280c8881e80c9217e3d202c30c9f3eabdc50cda))
+
 ## [0.11.9](https://github.com/cyrillbrito/openfeeds/compare/v0.11.8...v0.11.9) (2026-03-29)
 
 
