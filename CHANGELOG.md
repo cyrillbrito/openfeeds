@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.11.2](https://github.com/cyrillbrito/openfeeds/compare/v0.11.1...v0.11.2) (2026-03-29)
+
+
+### Bug Fixes
+
+* **web:** update build output paths from .output to dist ([#191](https://github.com/cyrillbrito/openfeeds/issues/191)) ([1a082d8](https://github.com/cyrillbrito/openfeeds/commit/1a082d8ba0819427e222fe9ef5e839344d7df8ee))
+
 ## [0.11.1](https://github.com/cyrillbrito/openfeeds/compare/v0.11.0...v0.11.1) (2026-03-29)
 
 
