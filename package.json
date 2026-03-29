@@ -1,6 +1,6 @@
 {
   "name": "openfeeds",
-  "version": "0.11.9",
+  "version": "0.11.10",
   "private": true,
   "scripts": {
     "dev": "turbo run dev --filter=@repo/web --filter=@repo/worker",
