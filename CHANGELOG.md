@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.10.1](https://github.com/cyrillbrito/openfeeds/compare/v0.10.0...v0.10.1) (2026-03-29)
+
+
+### Bug Fixes
+
+* **web:** externalize turndown and domino for Nitro build ([#181](https://github.com/cyrillbrito/openfeeds/issues/181)) ([301fcca](https://github.com/cyrillbrito/openfeeds/commit/301fccaa55ac2f48a995f604de20f3bd56da803a))
+
 ## [0.10.0](https://github.com/cyrillbrito/openfeeds/compare/v0.9.0...v0.10.0) (2026-03-28)
 
 
