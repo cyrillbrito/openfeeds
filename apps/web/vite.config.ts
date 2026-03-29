@@ -27,13 +27,15 @@ const rootPkg = JSON.parse(readFileSync('../../package.json', 'utf-8'));
  *    require2) to avoid conflicts with existing bindings
  *
  * Affected dependency chains include:
- * - defuddle → turndown → @mixmark-io/domino (require)
  * - jsdom → css-tree v3 (createRequire, module.exports)
  * - jsdom → csso → css-tree v2 (require)
  * - undici (module.exports, require)
  * - ajv (require, module.exports)
  *
- * See: #181, #183, #200, #202, #204
+ * The defuddle → turndown → @mixmark-io/domino chain is fixed via pnpm patch
+ * on turndown (replacing require() with import in the ESM build).
+ *
+ * See: docs/decisions/2026-03-29-nitro-cjs-esm-bundling.md
  */
 function cjsShimPlugin(): Plugin {
   const CJS_PATTERN = /\brequire\s*\(|(?<!\.\w*)module\.exports\b|\b__dirname\b|\b__filename\b/;
