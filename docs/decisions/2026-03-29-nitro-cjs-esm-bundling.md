@@ -36,6 +36,7 @@ This is different from Nitro's standalone Rollup builder, which has an externals
 | Dependency Chain | CJS Pattern | Fix |
 |---|---|---|
 | `defuddle` → `turndown` → `@mixmark-io/domino` | `require()` in turndown's ESM build | **pnpm patch** on turndown |
+| `css-tree` v3 | `require('../data/patch.json')` relative path | **pnpm patch** on css-tree |
 | `jsdom`, `data-urls`, `whatwg-url`, `debug`, `decimal.js` | `module.exports` | CJS shim plugin |
 | `undici` | `require("node:http2")`, `require("node:tls")` | CJS shim plugin |
 | `ajv`, `ajv-formats` | `require("ajv/dist/...")` | CJS shim plugin |
@@ -60,6 +61,16 @@ Replacing `require` with `import` is the correct fix — not a workaround. The `
 **Fix:** `pnpm patch turndown` — change the one `require('@mixmark-io/domino')` to an `import` in `lib/turndown.es.js`.
 
 After patching, remove the `cjsRequireToImportPlugin` from `apps/web/vite.config.ts` — it was specifically built to rewrite this one `require()` call.
+
+## The css-tree Problem (pnpm patch)
+
+**Root cause:** css-tree v3's ESM build uses `createRequire(import.meta.url)` to load JSON data files with relative paths (`require('../data/patch.json')`, `require('../package.json')`). In `node_modules` this works because the JSON files exist relative to the source `.js` file. After Nitro bundles the JS into `.output/server/_libs/css-tree.mjs`, the relative path resolves to `.output/server/data/patch.json` which doesn't exist.
+
+**Why the CJS shim doesn't help:** The shim provides a working `require` via `createRequire(import.meta.url)`, but the `import.meta.url` now points to the bundled file's location, not the original source. Relative paths resolve against the wrong directory.
+
+**Why this only crashes on specific page loads:** The css-tree CSS syntax lexer is initialized lazily — only when jsdom/csso processes CSS during content parsing (e.g. feed article extraction). Server startup doesn't trigger it.
+
+**Fix:** `pnpm patch css-tree@3.2.1` — replace `createRequire` + `require()` with `import ... with { type: 'json' }` in `lib/data-patch.js` and `lib/version.js`. This lets Rollup inline the JSON at bundle time.
 
 ## The CJS Shim Plugin (required, can't remove)
 
