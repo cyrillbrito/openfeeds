@@ -23,6 +23,9 @@
     // Some stricter flags (disabled by default)
     "noUnusedLocals": false,
     "noUnusedParameters": false,
-    "noPropertyAccessFromIndexSignature": false
+    "noPropertyAccessFromIndexSignature": false,
+
+    // Ensure all TS syntax is erasable (compatible with Node's --strip-types)
+    "erasableSyntaxOnly": true
   }
 }

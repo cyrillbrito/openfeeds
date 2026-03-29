@@ -1,7 +1,7 @@
 import { readdirSync, readFileSync } from 'fs';
 import { dirname, join } from 'path';
 import { fileURLToPath } from 'url';
-import { migrate } from 'drizzle-orm/bun-sql/migrator';
+import { migrate } from 'drizzle-orm/postgres-js/migrator';
 import { db } from './config';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));

@@ -46,11 +46,11 @@ getEmailInput() {
 After creating or updating some tests, run then with these commands. By passing the file path of the changed tests.
 
 ```bash
-bunx playwright test                    # Run all tests
-bunx playwright test --update-snapshots # Generate screenshot baselines
-bunx playwright test --ui               # Debug mode
+pnpx playwright test                    # Run all tests
+pnpx playwright test --update-snapshots # Generate screenshot baselines
+pnpx playwright test --ui               # Debug mode
 
-bunx playwright test tests/import-opml.spec.ts
+pnpx playwright test tests/import-opml.spec.ts
 ```
 
 ## Mock Server

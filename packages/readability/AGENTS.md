@@ -4,7 +4,7 @@ Article content extraction using Defuddle + JSDOM (server) / Defuddle (browser).
 
 ## Usage
 
-**Server (Node/Bun with JSDOM):**
+**Server (Node.js with JSDOM):**
 
 ```typescript
 import { fetchArticleContent, fetchArticleContentBatch } from '@repo/readability/server';

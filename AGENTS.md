@@ -4,7 +4,7 @@ Local-first RSS reader built with SolidJS + TanStack Start. Client-side TanStack
 
 ## Commands
 
-**Use bun only (not npm/pnpm/yarn).** Run `bun checks` after every change. Ask the user before running `bun migrate`.
+**Use pnpm only (not npm/yarn).** Run `pnpm checks` after every change. Ask the user before running `pnpm migrate`.
 
 For database schema changes and migrations, load the `database` skill.
 
@@ -57,7 +57,7 @@ Commit messages and PR titles must use [Conventional Commits](https://www.conven
 ## Code Quality
 
 - Never modify tsconfig or use `// @ts-ignore`
-- Run `bun checks` after changes (lint + format check, includes type checking)
+- Run `pnpm checks` after changes (lint + format check, includes type checking)
 - TypeScript strict mode enabled
 
 ## User ID Denormalization

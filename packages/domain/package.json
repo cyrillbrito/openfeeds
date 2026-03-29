@@ -18,12 +18,13 @@
     "bullmq": "^5.71.1",
     "drizzle-orm": "^0.45.2",
     "feedsmith": "^2.9.1",
+    "htmlrewriter": "^0.0.13",
     "posthog-node": "^5.28.8",
     "resend": "^6.9.4",
     "zod": "^4.3.6"
   },
   "devDependencies": {
-    "@types/bun": "^1.3.11",
+    "@types/node": "^24",
     "typescript": "^5"
   }
 }

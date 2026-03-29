@@ -1,4 +1,4 @@
-#!/usr/bin/env bun
+#!/usr/bin/env tsx
 
 /**
  * Generates curated feed data for the discovery page.
@@ -7,8 +7,9 @@
  * validates each feed URL, enriches with metadata (title, description, image),
  * and outputs a JSON file consumed by the web app.
  *
- * Usage: bun generate-curated-feeds
+ * Usage: pnpm generate-curated-feeds
  */
+import { writeFile } from 'fs/promises';
 import { parseFeed, parseOpml } from 'feedsmith';
 
 // ---------------------------------------------------------------------------
@@ -663,7 +664,7 @@ async function main() {
 
   // Step 6: Write JSON
   const output = JSON.stringify(categories, null, 2);
-  await Bun.write(OUTPUT_PATH, output);
+  await writeFile(OUTPUT_PATH, output);
 
   const elapsed = ((performance.now() - startTime) / 1000).toFixed(1);
   console.log('\n=== Done ===');

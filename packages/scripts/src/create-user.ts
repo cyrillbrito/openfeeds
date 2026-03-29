@@ -1,4 +1,4 @@
-#!/usr/bin/env bun
+#!/usr/bin/env tsx
 import { createAuthClient } from 'better-auth/client';
 import { env } from './env';
 

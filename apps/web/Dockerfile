@@ -1,6 +1,6 @@
 # Packaging only — build happens on CI runner
 # Nitro's node-server output is fully self-contained
-FROM oven/bun:1
+FROM node:24-slim
 
 WORKDIR /app
 
@@ -8,10 +8,10 @@ WORKDIR /app
 COPY out/apps/web/.output ./.output
 
 # Pre-create data directory with correct ownership before switching to non-root
-RUN mkdir -p /data && chown bun:bun /data
+RUN mkdir -p /data && chown node:node /data
 
 # Run as non-root
-USER bun
+USER node
 
 EXPOSE 3000
-CMD ["bun", "--bun", "run", ".output/server/index.mjs"]
+CMD ["node", ".output/server/index.mjs"]

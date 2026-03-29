@@ -5,7 +5,9 @@
     "skipLibCheck": true,
     "strict": true,
     "noEmit": true,
-    "strictNullChecks": true
+    "strictNullChecks": true,
+
+    "erasableSyntaxOnly": true
   },
   "include": ["**/*.ts", "**/*.tsx"],
   "exclude": ["node_modules", ".react-email", "create-broadcast.tsx", "send-reply.tsx"]

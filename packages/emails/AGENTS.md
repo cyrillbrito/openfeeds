@@ -11,9 +11,9 @@ This package uses **tsdown** to pre-compile React components before other packag
 ## Commands
 
 ```bash
-bun dev    # Preview emails at localhost:3002
-bun build  # Pre-compile templates with tsdown (required before other packages can import)
-bun export # Export to static HTML files
+pnpm dev    # Preview emails at localhost:3002
+pnpm build  # Pre-compile templates with tsdown (required before other packages can import)
+pnpm export # Export to static HTML files
 ```
 
 ## Structure
@@ -47,7 +47,7 @@ Used by `@repo/domain` for user actions (verification, password reset). These ar
 
 1. Create template in `emails/my-template.tsx`
 2. Export from `emails/index.ts`
-3. Run `bun build` to compile
+3. Run `pnpm build` to compile
 
 ### Broadcast (manually-triggered)
 
@@ -55,8 +55,8 @@ Marketing/announcement emails sent to Resend segments. These are **not** exporte
 
 1. Create template in `emails/my-template.tsx`
 2. Export a `subject` string from the template
-3. Preview with `bun dev` (localhost:3002)
-4. Create draft: `bun create-broadcast <email-name>`, then review and send from the Resend dashboard
+3. Preview with `pnpm dev` (localhost:3002)
+4. Create draft: `pnpm create-broadcast <email-name>`, then review and send from the Resend dashboard
 
 Broadcast templates should:
 

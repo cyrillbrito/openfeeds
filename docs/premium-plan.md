@@ -68,7 +68,7 @@ export const user = pgTable('user', {
 });
 ```
 
-Generate migration: `bun --cwd packages/db drizzle-kit generate --name add-user-plan-column`
+Generate migration: `pnpm -C packages/db drizzle-kit generate --name add-user-plan-column`
 
 ### Domain changes
 
@@ -393,7 +393,7 @@ export const auth = betterAuth({
 });
 ```
 
-Auth schema file (`apps/web/src/server/auth.schema.ts`) would also need updating to mirror the plugin setup for schema generation, then run `bun generate:auth-schema` + migration.
+Auth schema file (`apps/web/src/server/auth.schema.ts`) would also need updating to mirror the plugin setup for schema generation, then run `pnpm generate:auth-schema` + migration.
 
 ### Polar Plugin Setup
 
@@ -452,12 +452,12 @@ ALTER TABLE "user" ADD COLUMN "plan" text NOT NULL DEFAULT 'free';
 No other tables needed. Generate with:
 
 ```bash
-bun --cwd packages/db drizzle-kit generate --name add-user-plan-column
+pnpm -C packages/db drizzle-kit generate --name add-user-plan-column
 ```
 
 ### Stage 2 with Stripe plugin
 
-The Better Auth Stripe plugin auto-manages a `subscription` table. Schema generated via `bun generate:auth-schema`. Fields include:
+The Better Auth Stripe plugin auto-manages a `subscription` table. Schema generated via `pnpm generate:auth-schema`. Fields include:
 
 - `id`, `plan`, `referenceId` (user ID), `stripeCustomerId`, `stripeSubscriptionId`
 - `status` (active, trialing, canceled, past_due, incomplete, etc.)

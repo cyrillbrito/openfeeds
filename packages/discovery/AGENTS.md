@@ -16,8 +16,8 @@ Individual service checkers available via `services` export.
 ## Development
 
 ```bash
-bun test
-bun test src/services.test.ts
+pnpm test
+pnpm test src/services.test.ts
 ```
 
 Follow existing patterns when adding new service detectors. Test thoroughly.

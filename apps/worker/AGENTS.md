@@ -5,9 +5,9 @@ BullMQ Worker instances that process jobs by calling `@repo/domain` business log
 ## Commands
 
 ```bash
-bun dev          # Dev with hot reload
-bun start        # Start prod
-bun benchmark    # Performance benchmark
+pnpm dev          # Dev with hot reload
+pnpm start        # Start prod
+pnpm benchmark    # Performance benchmark
 ```
 
 ## Architecture
@@ -39,10 +39,10 @@ Configured in `src/env.ts`. All `WORKER_CONCURRENCY_*` vars default to 1-2 (cons
 ## Benchmarking
 
 ```bash
-bun benchmark                             # 50 feeds, 30 articles each
-bun benchmark --feeds=100 --articles=50   # Custom scale
-bun benchmark --delay=50                  # Simulate network latency
-bun benchmark --json                      # JSON output
+pnpm benchmark                             # 50 feeds, 30 articles each
+pnpm benchmark --feeds=100 --articles=50   # Custom scale
+pnpm benchmark --delay=50                  # Simulate network latency
+pnpm benchmark --json                      # JSON output
 ```
 
 Requires Redis + workers running. Results saved to `benchmark-results/`.

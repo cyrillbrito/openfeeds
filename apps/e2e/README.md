@@ -34,16 +34,16 @@
 
 ```bash
 # Verify if cleanup is needed
-bun cleanup:verify
+pnpm cleanup:verify
 
 # See what would be cleaned (dry run)
-bun cleanup:dry-run
+pnpm cleanup:dry-run
 
 # Actually perform cleanup
-bun cleanup
+pnpm cleanup
 
 # Manual cleanup verification
-bun scripts/verify-cleanup.ts --help
+pnpm scripts/verify-cleanup.ts --help
 ```
 
 ### Automatic Cleanup
@@ -61,13 +61,13 @@ If tests are interrupted or cleanup fails, use manual cleanup:
 
 ```bash
 # Check what needs cleaning
-bun cleanup:verify
+pnpm cleanup:verify
 
 # Preview cleanup actions
-bun cleanup:dry-run
+pnpm cleanup:dry-run
 
 # Perform cleanup
-bun cleanup
+pnpm cleanup
 ```
 
 ## Project Structure

@@ -4,7 +4,9 @@ dist
 dist-ssr
 *.local
 .env
-.output
 .nitro
 .tanstack
 .wrangler
+.output
+.vinxi
+__unconfig*

@@ -165,7 +165,7 @@ Added to `apps/web/package.json`:
 
 ## Testing with MCP Inspector
 
-1. Start the dev server: `bun dev`
+1. Start the dev server: `pnpm dev`
 2. Open [MCP Inspector](https://inspector.tools/)
 3. Connect to `http://localhost:3000/api/mcp`
 4. The inspector will discover endpoints via `.well-known`, register as a client, and prompt you to log in and consent

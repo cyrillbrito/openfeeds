@@ -1,5 +1,5 @@
 # Local development: infrastructure services only
-# App services (web, worker, migrator) run directly via `bun dev`
+# App services (web, worker, migrator) run directly via `pnpm dev`
 services:
   postgres:
     image: postgres:18.1-alpine

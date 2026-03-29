@@ -1,4 +1,5 @@
 import { readdirSync, readFileSync } from 'fs';
+import { createServer, type Server } from 'http';
 import { dirname, join } from 'path';
 import { fileURLToPath } from 'url';
 
@@ -47,6 +48,10 @@ function generateRssFeed(feedId: string, articleCount: number, baseUrl: string):
     .replace('{{ITEMS}}', items);
 }
 
+function sleep(ms: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
 interface MockServerConfig {
   port: number;
   articlesPerFeed: number;
@@ -62,48 +67,47 @@ export function startMockServer(config: MockServerConfig): MockServer {
   const { port, articlesPerFeed, delay = 0 } = config;
   const baseUrl = `http://localhost:${port}`;
 
-  const server = Bun.serve({
-    port,
-    fetch: async (req) => {
-      const url = new URL(req.url);
-      const path = url.pathname;
+  const server: Server = createServer(async (req, res) => {
+    const url = new URL(req.url ?? '/', baseUrl);
+    const path = url.pathname;
 
-      if (delay > 0) {
-        await Bun.sleep(delay);
+    if (delay > 0) {
+      await sleep(delay);
+    }
+
+    const feedMatch = path.match(/^\/feed\/([^/]+)\.xml$/);
+    if (feedMatch) {
+      const feedId = feedMatch[1];
+      const articleCount = parseInt(url.searchParams.get('articles') ?? '') || articlesPerFeed;
+      const rss = generateRssFeed(feedId ?? '', articleCount, baseUrl);
+      res.writeHead(200, { 'Content-Type': 'application/xml' });
+      res.end(rss);
+      return;
+    }
+
+    const articleMatch = path.match(/^\/article\/(.+)$/);
+    if (articleMatch) {
+      const queryDelay = parseInt(url.searchParams.get('delay') ?? '');
+      if (queryDelay > 0) {
+        await sleep(queryDelay);
       }
+      const html = getNextArticle();
+      res.writeHead(200, { 'Content-Type': 'text/html' });
+      res.end(html);
+      return;
+    }
 
-      const feedMatch = path.match(/^\/feed\/([^/]+)\.xml$/);
-      if (feedMatch) {
-        const feedId = feedMatch[1];
-        const articleCount = parseInt(url.searchParams.get('articles') ?? '') || articlesPerFeed;
-        const rss = generateRssFeed(feedId ?? '', articleCount, baseUrl);
-        return new Response(rss, {
-          headers: { 'Content-Type': 'application/xml' },
-        });
-      }
-
-      const articleMatch = path.match(/^\/article\/(.+)$/);
-      if (articleMatch) {
-        const queryDelay = parseInt(url.searchParams.get('delay') ?? '');
-        if (queryDelay > 0) {
-          await Bun.sleep(queryDelay);
-        }
-        const html = getNextArticle();
-        return new Response(html, {
-          headers: { 'Content-Type': 'text/html' },
-        });
-      }
-
-      return new Response('Not Found', { status: 404 });
-    },
+    res.writeHead(404);
+    res.end('Not Found');
   });
 
+  server.listen(port);
   console.log(`Mock server started at ${baseUrl}`);
 
   return {
     url: baseUrl,
     close: () => {
-      void server.stop();
+      server.close();
       console.log('Mock server stopped');
     },
   };

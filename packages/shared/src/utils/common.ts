@@ -1,5 +1,3 @@
-/// <reference types="bun-types" />
-
 /**
  * Async timeout utility for delaying execution
  * @param ms - Milliseconds to wait (should be positive)
@@ -13,11 +11,11 @@ export function timeout(ms: number) {
  * Creates a timer object to measure elapsed time
  */
 export function startTimer() {
-  const startTime = Bun.nanoseconds();
+  const startTime = performance.now();
   return {
     elapsed: () => {
-      const endTime = Bun.nanoseconds();
-      return (endTime - startTime) / 1_000_000_000;
+      const endTime = performance.now();
+      return (endTime - startTime) / 1_000;
     },
   };
 }

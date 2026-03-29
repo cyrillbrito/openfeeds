@@ -1,11 +1,11 @@
-#!/usr/bin/env bun
+#!/usr/bin/env tsx
 
 /**
  * Create a draft broadcast in Resend from a React Email template.
  * Review, pick segment, and send from the Resend dashboard.
  *
- * Usage: bun create-broadcast <email-name>
- * Example: bun create-broadcast announcement
+ * Usage: pnpm create-broadcast <email-name>
+ * Example: pnpm create-broadcast announcement
  *
  * The email template must export:
  * - component: React component
@@ -28,7 +28,7 @@ const DEFAULT_SEGMENT_NAME = 'General';
 const emailName = process.argv[2];
 
 if (!emailName) {
-  console.error('Usage: bun create-broadcast <email-name>');
+  console.error('Usage: pnpm create-broadcast <email-name>');
   process.exit(1);
 }
 
