@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.11.1](https://github.com/cyrillbrito/openfeeds/compare/v0.11.0...v0.11.1) (2026-03-29)
+
+
+### Bug Fixes
+
+* switch to pnpm isolated mode and fix vite resolution ([#189](https://github.com/cyrillbrito/openfeeds/issues/189)) ([c3fef4f](https://github.com/cyrillbrito/openfeeds/commit/c3fef4f9b7f596c93d190fa8f9502792300bd285))
+
 ## [0.11.0](https://github.com/cyrillbrito/openfeeds/compare/v0.10.2...v0.11.0) (2026-03-29)
 
 
