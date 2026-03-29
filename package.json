@@ -36,6 +36,9 @@
       "sharp",
       "spawn-sync",
       "workerd"
-    ]
+    ],
+    "patchedDependencies": {
+      "turndown@7.2.2": "patches/turndown@7.2.2.patch"
+    }
   }
 }
