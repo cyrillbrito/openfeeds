@@ -40,7 +40,7 @@ jobs:
         run: pnpx turbo@^2 prune @repo/web
 
       - name: Install dependencies
-        run: pnpm install
+        run: pnpm install --frozen-lockfile
         working-directory: out
 
       - name: Build
@@ -112,7 +112,7 @@ jobs:
         run: pnpx turbo@^2 prune @repo/worker
 
       - name: Install dependencies
-        run: pnpm install
+        run: pnpm install --frozen-lockfile
         working-directory: out
 
       - name: Build dependencies
@@ -168,7 +168,7 @@ jobs:
         run: pnpx turbo@^2 prune @repo/migrator
 
       - name: Install dependencies
-        run: pnpm install
+        run: pnpm install --frozen-lockfile
         working-directory: out
 
       - name: Log in to GitHub Container Registry

@@ -12,6 +12,7 @@
     "postinstall": "wxt prepare"
   },
   "dependencies": {
+    "@repo/discovery": "workspace:*",
     "daisyui": "^5.5.19",
     "solid-js": "^1.9.12",
     "tailwindcss": "^4.2.2"

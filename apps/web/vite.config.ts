@@ -14,7 +14,7 @@ export default defineConfig({
     lucidePreprocess(),
     devtools(),
     viteTsConfigPaths({ projects: ['./tsconfig.json'] }),
-    tailwindcss(),
+    tailwindcss() as any,
     tanstackStart({
       importProtection: {
         client: {
