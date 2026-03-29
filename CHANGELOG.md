@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.11.4](https://github.com/cyrillbrito/openfeeds/compare/v0.11.3...v0.11.4) (2026-03-29)
+
+
+### Bug Fixes
+
+* **web:** restore Nitro for production Node.js/Docker deployment ([#196](https://github.com/cyrillbrito/openfeeds/issues/196)) ([582d2d4](https://github.com/cyrillbrito/openfeeds/commit/582d2d44a84a84a9991707322ba5fa61dbd6a860))
+
 ## [0.11.3](https://github.com/cyrillbrito/openfeeds/compare/v0.11.2...v0.11.3) (2026-03-29)
 
 
