@@ -673,7 +673,7 @@ function FeedRow(props: FeedRowProps) {
         </Show>
 
         {/* Tags inline */}
-        <Show when={props.feed.tags.length > 0}>
+        <Show when={props.feed.tags && props.feed.tags.length > 0}>
           <div class="mt-1.5 flex flex-wrap gap-1">
             <For each={props.feed.tags}>
               {(tag) => (
