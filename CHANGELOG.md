@@ -1,5 +1,35 @@
 # Changelog
 
+## [0.10.0](https://github.com/cyrillbrito/openfeeds/compare/v0.9.0...v0.10.0) (2026-03-28)
+
+
+### Features
+
+* **emails:** add feedback reply email template and send script ([#159](https://github.com/cyrillbrito/openfeeds/issues/159)) ([8238593](https://github.com/cyrillbrito/openfeeds/commit/82385933db9fd13b0c9e93ed06146165433659d0))
+* **premium:** add user plan system with per-plan usage limits (Stage 1) ([#166](https://github.com/cyrillbrito/openfeeds/issues/166)) ([0b037ba](https://github.com/cyrillbrito/openfeeds/commit/0b037ba59694b99ddff2fb8e0d60d14929ade557))
+* **web:** add PostHog MCP server configuration ([#158](https://github.com/cyrillbrito/openfeeds/issues/158)) ([0bcc197](https://github.com/cyrillbrito/openfeeds/commit/0bcc1976ed4d2e7336f3568e76340d768066d52b))
+* **web:** add server file import protection ([#172](https://github.com/cyrillbrito/openfeeds/issues/172)) ([46ede7a](https://github.com/cyrillbrito/openfeeds/commit/46ede7a1bc608feaeddac25e565abdd463cd7bcd))
+
+
+### Bug Fixes
+
+* **checks:** resolve all lint errors and format issues across the monorepo ([#178](https://github.com/cyrillbrito/openfeeds/issues/178)) ([027aba0](https://github.com/cyrillbrito/openfeeds/commit/027aba05034200d2a97688edd19fc727cf547467))
+* **domain:** add defensive userId check in enqueueFeedSync ([#162](https://github.com/cyrillbrito/openfeeds/issues/162)) ([ba4cca7](https://github.com/cyrillbrito/openfeeds/commit/ba4cca7eea3964fbbd4d2ee801dc6365e328154f))
+* **lint:** resolve all lint warnings across the monorepo ([#179](https://github.com/cyrillbrito/openfeeds/issues/179)) ([83bf525](https://github.com/cyrillbrito/openfeeds/commit/83bf525a6b0a8fbd6b5d4351fdfc3a7300bec2f7))
+* **web:** add error handling and buffering UI to audio player ([#169](https://github.com/cyrillbrito/openfeeds/issues/169)) ([0db9d55](https://github.com/cyrillbrito/openfeeds/commit/0db9d552be7f9f037b34db587b8ea12da8d55117))
+* **web:** add error handling to auth session checks ([#160](https://github.com/cyrillbrito/openfeeds/issues/160)) ([e9f20fe](https://github.com/cyrillbrito/openfeeds/commit/e9f20febb41cad3e298290b09344ee6f56f4019f))
+* **web:** add orderBy to limit queries for deterministic results ([#174](https://github.com/cyrillbrito/openfeeds/issues/174)) ([8f6314a](https://github.com/cyrillbrito/openfeeds/commit/8f6314aeb2c22973335290ecc620728011e3a9f5))
+* **web:** decouple archive counts from read status and fix paginated unread counts ([#154](https://github.com/cyrillbrito/openfeeds/issues/154)) ([4b0bb56](https://github.com/cyrillbrito/openfeeds/commit/4b0bb568082552d925795aeb1b83507deae30bdb))
+* **web:** fix crash when opening feed page ([#156](https://github.com/cyrillbrito/openfeeds/issues/156)) ([fcba59b](https://github.com/cyrillbrito/openfeeds/commit/fcba59b491d09ca96068f1d1a505be32cc5fcf02))
+* **web:** show tag content when tag has articles but no feeds ([#171](https://github.com/cyrillbrito/openfeeds/issues/171)) ([417d71c](https://github.com/cyrillbrito/openfeeds/commit/417d71c4741662ca00cce5f830c8a031bdefe735))
+* **web:** stop infinite retry loop on 401 in Electric shape streams ([#161](https://github.com/cyrillbrito/openfeeds/issues/161)) ([93f0204](https://github.com/cyrillbrito/openfeeds/commit/93f020479260f1a0552f9ca0d30a0bf5e2ebfe94))
+* **web:** use fallback chain for YouTube thumbnails ([#157](https://github.com/cyrillbrito/openfeeds/issues/157)) ([03f694a](https://github.com/cyrillbrito/openfeeds/commit/03f694a59f86c1ec6850a2b9a3feb298511a5688))
+
+
+### Performance Improvements
+
+* **db:** add composite index on articles(user_id, guid) ([#163](https://github.com/cyrillbrito/openfeeds/issues/163)) ([e37f461](https://github.com/cyrillbrito/openfeeds/commit/e37f461aa08b76933e490ecbd24dba21894a2cf0))
+
 ## [0.9.0](https://github.com/cyrillbrito/openfeeds/compare/v0.8.3...v0.9.0) (2026-03-08)
 
 
