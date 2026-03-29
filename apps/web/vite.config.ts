@@ -15,8 +15,9 @@ const rootPkg = JSON.parse(readFileSync('../../package.json', 'utf-8'));
 // fail at runtime because .output/ has no node_modules:
 //
 // - turndown (via defuddle): require("@mixmark-io/domino")
-// - css-tree (via jsdom): createRequire()("../data/patch.json"),
+// - css-tree v3 (via jsdom): createRequire()("../data/patch.json"),
 //   createRequire()("mdn-data/css/*.json")
+// - css-tree v2 (via csso): require("./data-patch.cjs")
 //
 // Fix: replace require() calls with ESM imports during the transform phase
 // so the bundler resolves and inlines the dependencies.
@@ -26,6 +27,7 @@ function cjsRequireToImport(): Plugin {
   const replacements: Record<string, { alias: string; style: 'default' | 'namespace' }> = {
     '@mixmark-io/domino': { alias: '__cjs_domino__', style: 'namespace' },
     '../data/patch.json': { alias: '__cjs_patch_json__', style: 'default' },
+    './data-patch.cjs': { alias: '__cjs_patch_cjs__', style: 'namespace' },
     'mdn-data/css/at-rules.json': { alias: '__cjs_mdn_atrules__', style: 'default' },
     'mdn-data/css/properties.json': { alias: '__cjs_mdn_properties__', style: 'default' },
     'mdn-data/css/syntaxes.json': { alias: '__cjs_mdn_syntaxes__', style: 'default' },
