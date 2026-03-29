@@ -1,6 +1,5 @@
 import type { Article } from '@repo/domain/client';
-import type { Ref } from '@tanstack/db';
-import { ilike, useLiveQuery } from '@tanstack/solid-db';
+import { type Ref, ilike, useLiveQuery } from '@tanstack/solid-db';
 import { Link, type LinkProps } from '@tanstack/solid-router';
 import { Video } from 'lucide-solid';
 import { Show } from 'solid-js';

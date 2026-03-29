@@ -1,6 +1,5 @@
 import type { Article } from '@repo/domain/client';
-import type { Ref } from '@tanstack/db';
-import { eq, inArray, or } from '@tanstack/solid-db';
+import { type Ref, eq, inArray, or } from '@tanstack/solid-db';
 import type { ReadStatus } from '~/components/ReadStatusToggle';
 
 /**

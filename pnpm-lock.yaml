@@ -29,6 +29,9 @@ importers:
       '@playwright/test':
         specifier: ^1.58.2
         version: 1.58.2
+      better-auth:
+        specifier: ^1.5.6
+        version: 1.5.6(@cloudflare/workers-types@4.20260329.1)(@opentelemetry/api@1.9.1)(@tanstack/solid-start@1.167.12(solid-js@1.9.12)(vite@8.0.3(@types/node@24.12.0)(esbuild@0.27.4)(jiti@2.6.1)(tsx@4.21.0)))(drizzle-kit@0.31.10)(drizzle-orm@0.45.2(@cloudflare/workers-types@4.20260329.1)(@opentelemetry/api@1.9.1)(kysely@0.28.14)(postgres@3.4.8))(next@16.1.7(@opentelemetry/api@1.9.1)(@playwright/test@1.58.2)(react-dom@19.2.4(react@19.2.4))(react@19.2.4))(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(solid-js@1.9.12)(vitest@3.2.4(@types/debug@4.1.13)(@types/node@24.12.0)(jiti@2.6.1)(jsdom@29.0.1(@noble/hashes@2.0.1))(lightningcss@1.32.0)(tsx@4.21.0))
 
   apps/extension:
     dependencies:
@@ -107,6 +110,9 @@ importers:
       '@better-auth/oauth-provider':
         specifier: ^1.5.6
         version: 1.5.6(cf1d8fb861396e673d8ffa18a28c6dfe)
+      '@better-fetch/fetch':
+        specifier: ^1.1.21
+        version: 1.1.21
       '@dnd-kit/helpers':
         specifier: ^0.3.2
         version: 0.3.2
@@ -167,9 +173,15 @@ importers:
       daisyui:
         specifier: ^5.5.19
         version: 5.5.19
+      drizzle-orm:
+        specifier: ^0.45.2
+        version: 0.45.2(@cloudflare/workers-types@4.20260329.1)(@opentelemetry/api@1.9.1)(kysely@0.28.14)(postgres@3.4.8)
       lucide-solid:
         specifier: ^1.7.0
         version: 1.7.0(solid-js@1.9.12)
+      postgres:
+        specifier: ^3.4.8
+        version: 3.4.8
       posthog-js:
         specifier: ^1.364.1
         version: 1.364.1
