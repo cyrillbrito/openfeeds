@@ -3,7 +3,7 @@
   "type": "module",
   "main": "src/index.ts",
   "scripts": {
-    "migrate": "tsx --env-file=../../.env src/index.ts"
+    "migrate": "tsx --env-file-if-exists=../../.env src/index.ts"
   },
   "dependencies": {
     "@repo/db": "workspace:*"

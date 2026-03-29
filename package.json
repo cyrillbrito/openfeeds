@@ -2,10 +2,9 @@
   "name": "openfeeds",
   "version": "0.11.0",
   "private": true,
-  "type": "module",
   "scripts": {
-    "dev": "turbo dev --filter=@repo/web --filter=@repo/worker",
-    "build": "turbo build",
+    "dev": "turbo run dev --filter=@repo/web --filter=@repo/worker",
+    "build": "turbo run build",
     "lint": "oxlint",
     "format:check": "oxfmt --check .",
     "format": "oxfmt --write .",
@@ -15,8 +14,7 @@
     "create-user": "pnpm --filter @repo/scripts run create-user",
     "test-ui": "pnpm --filter @repo/e2e run test-ui",
     "test-update-snapshots": "pnpm --filter @repo/e2e run test-update-snapshots",
-    "clean-install": "find . -name \"node_modules\" -type d -exec rm -rf {} + && rm pnpm-lock.yaml && pnpm install",
-    "test": "echo '123'"
+    "clean-install": "find . -name \"node_modules\" -type d -exec rm -rf {} + && rm pnpm-lock.yaml && pnpm install"
   },
   "devDependencies": {
     "oxfmt": "^0.42.0",
@@ -25,10 +23,10 @@
     "tsx": "^4.21.0",
     "turbo": "^2.8.21"
   },
+  "packageManager": "pnpm@10.29.3",
   "engines": {
     "node": "^24"
   },
-  "packageManager": "pnpm@10.29.3",
   "pnpm": {
     "onlyBuiltDependencies": [
       "core-js",

@@ -3,9 +3,9 @@
   "type": "module",
   "main": "src/index.ts",
   "scripts": {
-    "dev": "tsx --env-file=../../.env --watch src/index.ts",
-    "start": "tsx --env-file=../../.env src/index.ts",
-    "benchmark": "tsx --env-file=../../.env src/benchmark/index.ts"
+    "dev": "tsx --env-file-if-exists=../../.env --watch src/index.ts",
+    "start": "tsx --env-file-if-exists=../../.env src/index.ts",
+    "benchmark": "tsx --env-file-if-exists=../../.env src/benchmark/index.ts"
   },
   "dependencies": {
     "@repo/db": "workspace:*",
