@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.10.2](https://github.com/cyrillbrito/openfeeds/compare/v0.10.1...v0.10.2) (2026-03-29)
+
+
+### Bug Fixes
+
+* **readability:** declare turndown and domino as explicit dependencies ([#183](https://github.com/cyrillbrito/openfeeds/issues/183)) ([b8c4b92](https://github.com/cyrillbrito/openfeeds/commit/b8c4b92c9ea2aa5649ba3b8e6973d88badc3fed7))
+
 ## [0.10.1](https://github.com/cyrillbrito/openfeeds/compare/v0.10.0...v0.10.1) (2026-03-29)
 
 
