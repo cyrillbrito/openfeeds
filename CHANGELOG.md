@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.11.0](https://github.com/cyrillbrito/openfeeds/compare/v0.10.2...v0.11.0) (2026-03-29)
+
+
+### Features
+
+* migrate from bun to node and pnpm ([#186](https://github.com/cyrillbrito/openfeeds/issues/186)) ([b24712f](https://github.com/cyrillbrito/openfeeds/commit/b24712fc278ba838b6b2e9127de8c93764bc7dc2))
+
 ## [0.10.2](https://github.com/cyrillbrito/openfeeds/compare/v0.10.1...v0.10.2) (2026-03-29)
 
 
