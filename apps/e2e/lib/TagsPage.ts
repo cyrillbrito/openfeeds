@@ -1,7 +1,11 @@
 import type { Page } from '@playwright/test';
 
 export class TagsPage {
-  constructor(private page: Page) {}
+  private page: Page;
+
+  constructor(page: Page) {
+    this.page = page;
+  }
 
   getCreateTagButton() {
     return this.page.getByRole('button', { name: /create tag/i });

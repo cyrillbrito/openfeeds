@@ -1,4 +1,4 @@
-import { describe, expect, test } from 'bun:test';
+import { describe, expect, test } from 'vitest';
 import { discoverFeeds, SERVICES as services } from './server.js';
 
 describe('RSS Discovery Integration', () => {

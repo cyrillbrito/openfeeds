@@ -8,7 +8,7 @@
   "ignorePatterns": [
     "**/build",
     "**/public",
-    "bun.lock",
+    "pnpm-lock.yaml",
     "routeTree.gen.ts",
     "packages/db/drizzle/",
     "*.md",

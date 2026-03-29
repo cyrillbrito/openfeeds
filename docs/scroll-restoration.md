@@ -91,7 +91,7 @@ Both APIs are confirmed available in the current dependency versions:
 
 | API                           | Package                          | Status                              |
 | ----------------------------- | -------------------------------- | ----------------------------------- |
-| `createVirtualizer`           | `@tanstack/solid-virtual`        | Not installed yet — needs `bun add` |
+| `createVirtualizer`           | `@tanstack/solid-virtual`        | Not installed yet — needs `pnpm add` |
 | `useElementScrollRestoration` | `@tanstack/solid-router@1.166.2` | Exported, not used yet              |
 
 **Note:** The Solid adapter uses `createVirtualizer` (not `useVirtualizer` which is React-specific).
@@ -101,7 +101,7 @@ Both APIs are confirmed available in the current dependency versions:
 ### Step 1: Install `@tanstack/solid-virtual`
 
 ```bash
-bun add @tanstack/solid-virtual --cwd apps/web
+pnpm add @tanstack/solid-virtual --filter @repo/web
 ```
 
 ### Step 2: Remove `.limit()` from list queries

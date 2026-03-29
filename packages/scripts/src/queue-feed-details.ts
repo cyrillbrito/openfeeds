@@ -1,8 +1,8 @@
-#!/usr/bin/env bun
+#!/usr/bin/env tsx
 
 /**
  * Script to queue feed detail updates for a specific user
- * Usage: bun queue-feed-details <userId>
+ * Usage: pnpm queue-feed-details <userId>
  */
 import { db } from '@repo/db';
 import { redisConnection } from '@repo/domain';
@@ -70,7 +70,7 @@ async function queueFeedDetailsForUser(userId: string) {
 const userId = process.argv[2];
 
 if (!userId) {
-  console.error('Usage: bun queue-feed-details <userId>');
+  console.error('Usage: node queue-feed-details <userId>');
   process.exit(1);
 }
 

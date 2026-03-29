@@ -1,5 +1,6 @@
 import { feeds } from '@repo/db';
 import { and, eq } from 'drizzle-orm';
+import { HTMLRewriter } from 'htmlrewriter';
 import type { DomainContext } from './domain-context';
 import type { Feed } from './entities/feed';
 import { assert } from './errors';

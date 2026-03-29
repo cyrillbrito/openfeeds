@@ -1,7 +1,7 @@
 # Packaging only — build happens on CI runner
-# turbo prune + bun install + bun build runs on the runner,
+# turbo prune + pnpm install + pnpm build runs on the runner,
 # producing a self-contained pruned monorepo in out/
-FROM oven/bun:1
+FROM node:24-slim
 
 WORKDIR /app
 
@@ -9,6 +9,6 @@ WORKDIR /app
 COPY out/ .
 
 # Run as non-root
-USER bun
+USER node
 
-CMD ["bun", "--bun", "run", "apps/worker/src/index.ts"]
+CMD ["./node_modules/.bin/tsx", "apps/worker/src/index.ts"]

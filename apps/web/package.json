@@ -3,11 +3,11 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "bun --bun --env-file=../../.env vite dev --port 3000",
-    "build": "bun --bun --env-file=../../.env vite build",
-    "preview": "bun --env-file=../../.env vite preview",
-    "test": "vitest run",
-    "start": "bun --env-file=../../.env .output/server/index.mjs"
+    "dev": "node --env-file=../../.env ../../node_modules/vite/bin/vite.js dev --port 3000",
+    "build": "node --env-file=../../.env ../../node_modules/vite/bin/vite.js build",
+    "start": "node --env-file=../../.env .output/server/index.mjs",
+    "preview": "vite preview",
+    "test": "vitest run"
   },
   "dependencies": {
     "@better-auth/drizzle-adapter": "^1.5.6",
@@ -33,7 +33,6 @@
     "better-auth": "^1.5.6",
     "daisyui": "^5.5.19",
     "lucide-solid": "^1.7.0",
-    "nitro": "npm:nitro-nightly@3.0.1-20260227-181935-bfbb207c",
     "posthog-js": "^1.364.1",
     "solid-js": "^1.9.12",
     "tailwind-merge": "^3.5.0",

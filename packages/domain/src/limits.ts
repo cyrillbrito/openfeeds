@@ -1,5 +1,5 @@
 import { articles, db, feeds, filterRules, type Db, type Transaction } from '@repo/db';
-import { and, count, eq, isNull, sql } from 'drizzle-orm';
+import { and, count, eq, gte, isNull } from 'drizzle-orm';
 import { trackEvent } from './analytics';
 import type { DomainContext } from './domain-context';
 import { LimitExceededError } from './errors';
@@ -38,7 +38,7 @@ function countDailyExtractions(userId: string, conn: Db | Transaction) {
   return conn
     .select({ count: count() })
     .from(articles)
-    .where(and(eq(articles.userId, userId), sql`${articles.contentExtractedAt} >= ${oneDayAgo}`))
+    .where(and(eq(articles.userId, userId), gte(articles.contentExtractedAt, oneDayAgo)))
     .then((r) => r[0]?.count ?? 0);
 }
 
@@ -47,9 +47,7 @@ function countMonthlyExtractions(userId: string, conn: Db | Transaction) {
   return conn
     .select({ count: count() })
     .from(articles)
-    .where(
-      and(eq(articles.userId, userId), sql`${articles.contentExtractedAt} >= ${thirtyDaysAgo}`),
-    )
+    .where(and(eq(articles.userId, userId), gte(articles.contentExtractedAt, thirtyDaysAgo)))
     .then((r) => r[0]?.count ?? 0);
 }
 
@@ -58,7 +56,7 @@ function countDailyTts(userId: string, conn: Db | Transaction) {
   return conn
     .select({ count: count() })
     .from(articles)
-    .where(and(eq(articles.userId, userId), sql`${articles.audioGeneratedAt} >= ${oneDayAgo}`))
+    .where(and(eq(articles.userId, userId), gte(articles.audioGeneratedAt, oneDayAgo)))
     .then((r) => r[0]?.count ?? 0);
 }
 
@@ -67,7 +65,7 @@ function countMonthlyTts(userId: string, conn: Db | Transaction) {
   return conn
     .select({ count: count() })
     .from(articles)
-    .where(and(eq(articles.userId, userId), sql`${articles.audioGeneratedAt} >= ${thirtyDaysAgo}`))
+    .where(and(eq(articles.userId, userId), gte(articles.audioGeneratedAt, thirtyDaysAgo)))
     .then((r) => r[0]?.count ?? 0);
 }
 

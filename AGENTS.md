@@ -4,7 +4,7 @@ Local-first RSS reader built with SolidJS + TanStack Start. Client-side TanStack
 
 ## Commands
 
-**Use bun only (not npm/pnpm/yarn).** Run `bun checks` after every change. Ask the user before running `bun migrate`.
+**Use pnpm only (not npm/yarn).** Run `pnpm checks` after every change. Ask the user before running `pnpm migrate`.
 
 For database schema changes and migrations, load the `database` skill.
 
@@ -57,8 +57,9 @@ Commit messages and PR titles must use [Conventional Commits](https://www.conven
 ## Code Quality
 
 - Never modify tsconfig or use `// @ts-ignore`
-- Run `bun checks` after changes (lint + format check, includes type checking)
+- Run `pnpm checks` after changes (lint + format check, includes type checking)
 - TypeScript strict mode enabled
+- `tailwindcss() as any` in vite configs: `@tailwindcss/vite` resolves its `Plugin` type from a nested `vite@8` copy in `node_modules`, while our configs use `vite@7`. The types are structurally identical but TypeScript sees them as incompatible (different `node_modules` paths). `pnpm.overrides` can't fix this because the hoisted root `node_modules/@tailwindcss/vite` always picks up the nested vite for type resolution. Safe to remove once we upgrade to Vite 8.
 
 ## User ID Denormalization
 

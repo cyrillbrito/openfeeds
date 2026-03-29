@@ -24,6 +24,9 @@
     "noUncheckedIndexedAccess": true,
     "noImplicitOverride": true,
 
+    // Ensure all TS syntax is erasable (compatible with Node's --strip-types)
+    "erasableSyntaxOnly": true,
+
     "paths": {
       "~/*": ["./src/*"]
     }
