@@ -5,7 +5,7 @@ One-shot service that runs all database migrations and exits.
 ## Commands
 
 ```bash
-pnpm start        # Run all migrations
+bun start        # Run all migrations
 ```
 
 ## Architecture

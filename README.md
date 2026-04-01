@@ -37,8 +37,8 @@ Tired of algorithmic feeds deciding what you should see? OpenFeeds puts you back
 | Layer        | Technology                                         |
 | ------------ | -------------------------------------------------- |
 | **Frontend** | SolidJS, TanStack Router, Tailwind CSS v4, DaisyUI |
-| **Backend**  | TanStack Start, Node.js, Eden Treaty (E2E type-safe) |
-| **Database** | PostgreSQL, Drizzle ORM                              |
+| **Backend**  | TanStack Start, Bun                                |
+| **Database** | PostgreSQL, Drizzle ORM                            |
 | **Auth**     | Better Auth                                        |
 | **Jobs**     | BullMQ, Redis                                      |
 | **Testing**  | Playwright (E2E + Visual Regression)               |
@@ -55,8 +55,8 @@ Tired of algorithmic feeds deciding what you should see? OpenFeeds puts you back
 ## Quick Start
 
 ```bash
-pnpm install
-pnpm dev
+bun install
+bun dev
 ```
 
 - **Web:** http://localhost:3001

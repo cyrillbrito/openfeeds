@@ -8,38 +8,20 @@
     "lint": "oxlint",
     "format:check": "oxfmt --check .",
     "format": "oxfmt --write .",
-    "checks": "turbo run //#lint && pnpm run format:check",
+    "checks": "turbo run //#lint && bun run format:check",
     "generate:auth-schema": "turbo -F @repo/db generate:auth-schema",
-    "migrate": "pnpm --filter @repo/migrator run migrate",
-    "create-user": "pnpm --filter @repo/scripts run create-user",
-    "test-ui": "pnpm --filter @repo/e2e run test-ui",
-    "test-update-snapshots": "pnpm --filter @repo/e2e run test-update-snapshots",
-    "clean-install": "find . -name \"node_modules\" -type d -exec rm -rf {} + && rm pnpm-lock.yaml && pnpm install"
+    "migrate": "bun --cwd=apps/migrator migrate",
+    "create-user": "bun --cwd=packages/scripts create-user",
+    "test-ui": "bun --cwd=apps/e2e test-ui",
+    "test-update-snapshots": "bun --cwd=apps/e2e test-update-snapshots",
+    "clean-install": "find . -name \"node_modules\" -type d -exec rm -rf {} + && rm bun.lock && bun install"
   },
   "devDependencies": {
+    "@types/bun": "^1.3.11",
     "oxfmt": "^0.42.0",
     "oxlint": "^1.57.0",
     "oxlint-tsgolint": "^0.18.1",
-    "tsx": "^4.21.0",
     "turbo": "^2.8.21"
   },
-  "engines": {
-    "node": "^24"
-  },
-  "packageManager": "pnpm@10.29.3",
-  "pnpm": {
-    "onlyBuiltDependencies": [
-      "core-js",
-      "esbuild",
-      "msgpackr-extract",
-      "protobufjs",
-      "sharp",
-      "spawn-sync",
-      "workerd"
-    ],
-    "patchedDependencies": {
-      "turndown@7.2.2": "patches/turndown@7.2.2.patch",
-      "css-tree@3.2.1": "patches/css-tree@3.2.1.patch"
-    }
-  }
+  "packageManager": "bun@1.3.11"
 }

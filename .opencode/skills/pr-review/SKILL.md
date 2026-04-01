@@ -56,7 +56,7 @@ If unsure about the right approach, ask the user before proceeding.
 Only after user confirms which comments to address:
 
 1. Make the code changes.
-2. Run type checks (`pnpm check-types`) to verify.
+2. Run type checks (`bun check-types`) to verify.
 3. Present the changes to the user.
 4. Ask: "Want me to commit and push these fixes?"
 

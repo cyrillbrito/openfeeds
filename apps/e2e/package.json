@@ -14,7 +14,6 @@
     "report": "playwright show-report"
   },
   "devDependencies": {
-    "@playwright/test": "^1.58.2",
-    "better-auth": "^1.5.6"
+    "@playwright/test": "^1.58.2"
   }
 }

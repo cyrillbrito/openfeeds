@@ -12,8 +12,8 @@ Drizzle ORM + PostgreSQL. Two schemas: user data (`drizzle.config.ts`) and auth/
 1. Define table in `packages/db/src/schema/` with UUIDv7 PK and `user_id` column. Read `references/denormalization-example.md` for the exact code pattern.
 2. Add relations definition in the same schema file.
 3. Update shared Zod schemas in `packages/domain/src/entities/<entity>.schema.ts` to include `userId`.
-4. Suggest migration generation to the user — do not run it directly. Provide the command: `pnpm -C packages/db drizzle-kit generate --name <descriptive-name>`.
-5. After user confirms migration generated, suggest `pnpm migrate` to apply.
+4. Suggest migration generation to the user — do not run it directly. Provide the command: `bun --cwd packages/db drizzle-kit generate --name <descriptive-name>`.
+5. After user confirms migration generated, suggest `bun migrate` to apply.
 6. Update domain functions to pass `ctx.userId` on insert.
 7. Update shape handlers in `apps/web` to filter by `user_id`.
 
@@ -40,14 +40,14 @@ Read `references/denormalization-example.md` when creating any new table.
 ### User schema changes
 
 1. Modify table definitions in `packages/db/src/schema/`.
-2. Suggest to the user: `pnpm -C packages/db drizzle-kit generate --name <descriptive-name>`
-3. Suggest to the user: `pnpm migrate`
+2. Suggest to the user: `bun --cwd packages/db drizzle-kit generate --name <descriptive-name>`
+3. Suggest to the user: `bun migrate`
 4. Commit both schema files and generated migration files.
 
 ### Auth schema changes
 
 1. Update Better Auth config in `apps/web/src/server/auth.ts`.
-2. Suggest to the user: `pnpm generate:auth-schema` then `pnpm migrate`.
+2. Suggest to the user: `bun generate:auth-schema` then `bun migrate`.
 
 ## Domain Context
 

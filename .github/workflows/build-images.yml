@@ -28,23 +28,20 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Setup Node
-        uses: actions/setup-node@v4
-        with:
-          node-version: 24
-
-      - name: Setup pnpm
-        uses: pnpm/action-setup@v4
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
 
       - name: Prune monorepo
-        run: pnpx turbo@^2 prune @repo/web
+        run: bunx turbo@^2 prune @repo/web
 
+      # --frozen-lockfile removed: turbo prune outputs a modified lockfile
+      # that bun started rejecting after a turbo/bun update
       - name: Install dependencies
-        run: pnpm install --frozen-lockfile
+        run: bun install
         working-directory: out
 
       - name: Build
-        run: pnpm run build
+        run: bun run build
         working-directory: out
 
       - name: Read version from package.json
@@ -100,23 +97,20 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Setup Node
-        uses: actions/setup-node@v4
-        with:
-          node-version: 24
-
-      - name: Setup pnpm
-        uses: pnpm/action-setup@v4
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
 
       - name: Prune monorepo
-        run: pnpx turbo@^2 prune @repo/worker
+        run: bunx turbo@^2 prune @repo/worker
 
+      # --frozen-lockfile removed: turbo prune outputs a modified lockfile
+      # that bun started rejecting after a turbo/bun update
       - name: Install dependencies
-        run: pnpm install --frozen-lockfile
+        run: bun install
         working-directory: out
 
       - name: Build dependencies
-        run: pnpm run build
+        run: bun run build
         working-directory: out
 
       - name: Log in to GitHub Container Registry
@@ -156,19 +150,16 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Setup Node
-        uses: actions/setup-node@v4
-        with:
-          node-version: 24
-
-      - name: Setup pnpm
-        uses: pnpm/action-setup@v4
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
 
       - name: Prune monorepo
-        run: pnpx turbo@^2 prune @repo/migrator
+        run: bunx turbo@^2 prune @repo/migrator
 
+      # --frozen-lockfile removed: turbo prune outputs a modified lockfile
+      # that bun started rejecting after a turbo/bun update
       - name: Install dependencies
-        run: pnpm install --frozen-lockfile
+        run: bun install
         working-directory: out
 
       - name: Log in to GitHub Container Registry

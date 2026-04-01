@@ -1,8 +1,8 @@
-import { beforeEach, describe, expect, test, vi } from 'vitest';
+import { beforeEach, describe, expect, mock, test } from 'bun:test';
 import { discoverFeeds } from './server.js';
 
 // Mock fetch for testing
-const mockFetch = vi.fn();
+const mockFetch = mock();
 (global as any).fetch = mockFetch;
 
 describe('RSS Feed Discovery', () => {
@@ -11,8 +11,8 @@ describe('RSS Feed Discovery', () => {
   });
 
   test('should reject unsupported protocols', async () => {
-    await expect(discoverFeeds('chrome://settings')).rejects.toThrow('Unsupported protocol');
-    await expect(discoverFeeds('about:blank')).rejects.toThrow('Unsupported protocol');
+    expect(discoverFeeds('chrome://settings')).rejects.toThrow('Unsupported protocol');
+    expect(discoverFeeds('about:blank')).rejects.toThrow('Unsupported protocol');
   });
 
   test('should discover feeds from known services', async () => {

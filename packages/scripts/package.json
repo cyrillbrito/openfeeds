@@ -2,13 +2,12 @@
   "name": "@repo/scripts",
   "type": "module",
   "scripts": {
-    "create-user": "tsx --env-file-if-exists=../../.env src/create-user.ts",
-    "queue-feed-details": "tsx --env-file-if-exists=../../.env src/queue-feed-details.ts",
-    "generate-curated-feeds": "tsx src/generate-curated-feeds.ts"
+    "create-user": "bun --env-file=../../.env src/create-user.ts",
+    "queue-feed-details": "bun --env-file=../../.env src/queue-feed-details.ts",
+    "generate-curated-feeds": "bun src/generate-curated-feeds.ts"
   },
   "dependencies": {
     "@repo/db": "workspace:*",
-    "@repo/domain": "workspace:*",
     "@t3-oss/env-core": "^0.13.11",
     "better-auth": "^1.5.6",
     "bullmq": "^5.71.1",
@@ -16,7 +15,7 @@
     "zod": "^4.3.6"
   },
   "devDependencies": {
-    "@types/node": "^24",
+    "@types/bun": "^1.3.11",
     "typescript": "^5"
   }
 }

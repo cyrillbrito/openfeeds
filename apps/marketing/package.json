@@ -2,11 +2,11 @@
   "name": "@repo/marketing",
   "type": "module",
   "scripts": {
-    "dev": "astro dev",
-    "build": "astro build",
-    "preview": "astro build && wrangler pages dev",
+    "dev": "bun --env-file=../../.env astro dev",
+    "build": "bun --env-file=../../.env astro build",
+    "preview": "bun --env-file=../../.env astro build && wrangler pages dev",
     "astro": "astro",
-    "deploy": "astro build && wrangler pages deploy",
+    "deploy": "bun --env-file=../../.env astro build && wrangler pages deploy",
     "cf-typegen": "wrangler types"
   },
   "dependencies": {
