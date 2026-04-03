@@ -55,6 +55,7 @@ export function ArticleCard(props: ArticleCardProps) {
         class="absolute inset-0"
         tabIndex={-1}
         aria-hidden="true"
+        resetScroll
         onClick={markAsRead}
       />
       <div class="mb-1.5 flex gap-2 md:gap-3">
@@ -103,6 +104,7 @@ export function ArticleCard(props: ArticleCardProps) {
               to="/articles/$articleId"
               params={{ articleId: props.article.id.toString() }}
               class="relative"
+              resetScroll
               onClick={markAsRead}
             >
               {props.article.title}

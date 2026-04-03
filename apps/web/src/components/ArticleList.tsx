@@ -1,7 +1,7 @@
 import type { Article, Feed, Tag } from '@repo/domain/client';
 import { Link } from '@tanstack/solid-router';
 import { ChevronDown } from 'lucide-solid';
-import { For, Show, type JSX } from 'solid-js';
+import { createEffect, createSignal, For, on, onCleanup, Show, type JSX } from 'solid-js';
 import { ArticleCard } from './ArticleCard';
 import {
   AllCaughtUpIllustration,
@@ -34,6 +34,9 @@ interface ArticleListProps {
 }
 
 export function ArticleList(props: ArticleListProps) {
+  let autoLoadTriggerRef: HTMLDivElement | undefined;
+  const [isAutoLoading, setIsAutoLoading] = createSignal(false);
+
   // Generate contextual empty state based on readStatus and context
   const getContextualEmptyState = (): NonNullable<ArticleListProps['emptyState']> => {
     const readStatus = props.readStatus;
@@ -126,6 +129,34 @@ export function ArticleList(props: ArticleListProps) {
   const hasMoreArticles = () => props.articles.length < props.totalCount;
   const remainingCount = () => props.totalCount - props.articles.length;
 
+  createEffect(
+    on(
+      () => props.articles.length,
+      () => {
+        setIsAutoLoading(false);
+      },
+    ),
+  );
+
+  createEffect(() => {
+    const trigger = autoLoadTriggerRef;
+    if (!trigger || !hasMoreArticles()) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        const visible = entries.some((entry) => entry.isIntersecting);
+        if (!visible || isAutoLoading()) return;
+
+        setIsAutoLoading(true);
+        props.onLoadMore();
+      },
+      { rootMargin: '700px 0px' },
+    );
+
+    observer.observe(trigger);
+    onCleanup(() => observer.disconnect());
+  });
+
   return (
     <Show
       when={props.articles && props.articles.length > 0}
@@ -165,6 +196,7 @@ export function ArticleList(props: ArticleListProps) {
       </div>
 
       <Show when={hasMoreArticles()}>
+        <div ref={(el) => (autoLoadTriggerRef = el)} class="h-px w-full" aria-hidden="true" />
         <div class="mt-6 flex justify-center">
           <button class="btn btn-outline btn-wide gap-2" onClick={props.onLoadMore}>
             <ChevronDown size={20} />

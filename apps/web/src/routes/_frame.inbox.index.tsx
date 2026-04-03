@@ -1,6 +1,6 @@
 import { eq, useLiveQuery } from '@tanstack/solid-db';
 import { createFileRoute } from '@tanstack/solid-router';
-import { createSignal, onMount, Show, Suspense } from 'solid-js';
+import { createEffect, createSignal, on, onMount, Show, Suspense } from 'solid-js';
 import { ArticleList, ARTICLES_PER_PAGE } from '~/components/ArticleList';
 import { ArticleListToolbar } from '~/components/ArticleListToolbar';
 import { CommonErrorBoundary } from '~/components/CommonErrorBoundary';
@@ -16,6 +16,7 @@ import { useTags } from '~/entities/tags';
 import { useSessionRead } from '~/providers/session-read';
 import { useToast } from '~/providers/toast';
 import { readStatusFilter } from '~/utils/article-queries';
+import { getListVisibleCount, setListVisibleCount } from '~/utils/list-view-state';
 import { validateReadStatusSearch } from '~/utils/routing';
 
 export const Route = createFileRoute('/_frame/inbox/')({
@@ -31,8 +32,24 @@ function Inbox() {
 
   onMount(() => setViewKey('inbox'));
 
-  // Pagination state - lifted from ArticleList
-  const [visibleCount, setVisibleCount] = createSignal(ARTICLES_PER_PAGE);
+  const listStateKey = () => `inbox:${readStatus()}:${sortOrder()}`;
+
+  // Pagination state - persisted per list view key
+  const [visibleCount, setVisibleCount] = createSignal(
+    getListVisibleCount(listStateKey(), ARTICLES_PER_PAGE),
+  );
+
+  // Restore visible count when list context changes (read status/sort)
+  createEffect(
+    on(listStateKey, (key) => {
+      setVisibleCount(getListVisibleCount(key, ARTICLES_PER_PAGE));
+    }),
+  );
+
+  // Keep visible count persisted while user scrolls/loads more
+  createEffect(() => {
+    setListVisibleCount(listStateKey(), visibleCount());
+  });
 
   // Query articles with orderBy and limit for pagination
   const articlesQuery = useLiveQuery((q) => {
@@ -42,7 +59,7 @@ function Inbox() {
 
     const filter = readStatusFilter(readStatus(), sessionReadIds());
     if (filter) {
-      query = query.where(({ article }) => filter(article));
+      query = query.where(({ article }) => filter(article as any));
     }
 
     const direction = sortOrder() === 'oldest' ? 'asc' : 'desc';
@@ -57,7 +74,7 @@ function Inbox() {
 
     const filter = readStatusFilter(readStatus(), sessionReadIds());
     if (filter) {
-      query = query.where(({ article }) => filter(article));
+      query = query.where(({ article }) => filter(article as any));
     }
 
     return query.select(({ article }) => ({ id: article.id }));
@@ -182,7 +199,7 @@ function Inbox() {
         <Suspense fallback={<CenterLoader />}>
           <Show when={feedsQuery() && tagsQuery()}>
             <ArticleList
-              articles={filteredArticles()}
+              articles={filteredArticles() as any}
               feeds={feedsQuery()}
               tags={tagsQuery()}
               totalCount={totalCount()}
