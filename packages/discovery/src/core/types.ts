@@ -1,7 +1,8 @@
 /**
- * Represents a discovered RSS/Atom feed
+ * Candidate feed discovered from a URL.
+ * This is intentionally separate from persisted domain feed entities.
  */
-export interface Feed {
+export interface DiscoveredFeed {
   /** The URL of the RSS/Atom feed */
   url: string;
   /** Human-readable title of the feed */
@@ -29,8 +30,13 @@ export interface ServiceResult {
   /** Whether the service matched the provided URL */
   match: boolean;
   /** Array of discovered feeds for this service */
-  feeds: Feed[];
+  feeds: DiscoveredFeed[];
 }
+
+/**
+ * Backward-compatible alias. Prefer DiscoveredFeed in new code.
+ */
+export type Feed = DiscoveredFeed;
 
 /**
  * Options for feed discovery

@@ -9,14 +9,20 @@ import {
   isSupportedProtocol,
   normalizeUrl,
   shouldSkipUrl,
+  type DiscoveredFeed,
   type DiscoveryOptions,
-  type Feed,
 } from './core/index.js';
 
-export type { DiscoveryOptions, Feed, ServiceResult, ExtractOptions } from './core/index.js';
+export type {
+  DiscoveryOptions,
+  DiscoveredFeed,
+  Feed,
+  ServiceResult,
+  ExtractOptions,
+} from './core/index.js';
 export { checkKnownServices, SERVICES } from './core/index.js';
 
-const verificationCache = new Map<string, { value: Feed; expiresAt: number }>();
+const verificationCache = new Map<string, { value: DiscoveredFeed; expiresAt: number }>();
 
 const TRACKING_PARAMS = new Set([
   'utm_source',
@@ -28,7 +34,10 @@ const TRACKING_PARAMS = new Set([
   'gclid',
 ]);
 
-export async function discoverFeeds(url: string, options: DiscoveryOptions = {}): Promise<Feed[]> {
+export async function discoverFeeds(
+  url: string,
+  options: DiscoveryOptions = {},
+): Promise<DiscoveredFeed[]> {
   const mergedOptions = { ...DEFAULT_DISCOVERY_OPTIONS, ...options };
 
   if (!isSupportedProtocol(url)) {
@@ -75,7 +84,7 @@ export async function discoverFeeds(url: string, options: DiscoveryOptions = {})
 export async function discoverFeedsEnhanced(
   url: string,
   options: DiscoveryOptions = {},
-): Promise<Feed[]> {
+): Promise<DiscoveredFeed[]> {
   const mergedOptions = { ...DEFAULT_DISCOVERY_OPTIONS, ...options };
 
   if (!isSupportedProtocol(url)) {
@@ -87,7 +96,7 @@ export async function discoverFeedsEnhanced(
     return [{ ...selfFeed, status: 'verified', confidence: 1, reason: 'self_feed' }];
   }
 
-  const candidates: Feed[] = [];
+  const candidates: DiscoveredFeed[] = [];
 
   const knownServiceResult = checkKnownServices(url);
   if (knownServiceResult && knownServiceResult.feeds.length > 0) {
@@ -148,8 +157,8 @@ export async function discoverFeedsEnhanced(
   return sortFeedsForDisplay(dedupeEquivalentFeeds(verified));
 }
 
-function dedupeAndNormalizeCandidates(candidates: Feed[]): Feed[] {
-  const byCanonicalUrl = new Map<string, Feed>();
+function dedupeAndNormalizeCandidates(candidates: DiscoveredFeed[]): DiscoveredFeed[] {
+  const byCanonicalUrl = new Map<string, DiscoveredFeed>();
 
   for (const candidate of candidates) {
     if (shouldSkipUrl(candidate.url)) continue;
@@ -187,23 +196,25 @@ function canonicalizeFeedUrl(url: string): string {
 }
 
 async function verifyCandidates(
-  candidates: Feed[],
+  candidates: DiscoveredFeed[],
   options: Required<DiscoveryOptions>,
-): Promise<Feed[]> {
+): Promise<DiscoveredFeed[]> {
   const verifiedCandidates = await runWithConcurrency(
     candidates,
     options.verificationConcurrency,
     (candidate) => verifyCandidate(candidate, options),
   );
 
-  const valid = verifiedCandidates.filter((candidate): candidate is Feed => candidate !== null);
+  const valid = verifiedCandidates.filter(
+    (candidate): candidate is DiscoveredFeed => candidate !== null,
+  );
   return valid.filter((candidate) => candidate.status === 'verified');
 }
 
 async function verifyCandidate(
-  candidate: Feed,
+  candidate: DiscoveredFeed,
   options: Required<DiscoveryOptions>,
-): Promise<Feed | null> {
+): Promise<DiscoveredFeed | null> {
   const cacheKey = candidate.url;
   const now = Date.now();
 
@@ -234,7 +245,7 @@ async function verifyCandidate(
     ? await extractSiteMetadata(metadata.siteUrl, options)
     : undefined;
   const icon = metadata.icon || siteMetadata?.icon;
-  const verified: Feed = {
+  const verified: DiscoveredFeed = {
     ...candidate,
     url: response.url ? canonicalizeFeedUrl(response.url) : candidate.url,
     title: metadata.title || candidate.title || candidate.url,
@@ -256,7 +267,7 @@ async function verifyCandidate(
   return verified;
 }
 
-function fallbackLikely(candidate: Feed): Feed | null {
+function fallbackLikely(candidate: DiscoveredFeed): DiscoveredFeed | null {
   if (candidate.reason !== 'known_service' && candidate.reason !== 'html_alternate') {
     return null;
   }
@@ -268,7 +279,7 @@ function fallbackLikely(candidate: Feed): Feed | null {
   };
 }
 
-function sortFeedsForDisplay(feeds: Feed[]): Feed[] {
+function sortFeedsForDisplay(feeds: DiscoveredFeed[]): DiscoveredFeed[] {
   return feeds.toSorted((a, b) => {
     const rankA = a.status === 'verified' ? 2 : a.status === 'likely' ? 1 : 0;
     const rankB = b.status === 'verified' ? 2 : b.status === 'likely' ? 1 : 0;
@@ -277,10 +288,10 @@ function sortFeedsForDisplay(feeds: Feed[]): Feed[] {
   });
 }
 
-function dedupeEquivalentFeeds(feeds: Feed[]): Feed[] {
+function dedupeEquivalentFeeds(feeds: DiscoveredFeed[]): DiscoveredFeed[] {
   if (feeds.length <= 1) return feeds;
 
-  const canonical = new Map<string, Feed>();
+  const canonical = new Map<string, DiscoveredFeed>();
   for (const feed of feeds) {
     const key = canonicalizeFeedUrl(feed.url);
     const existing = canonical.get(key);
@@ -289,7 +300,7 @@ function dedupeEquivalentFeeds(feeds: Feed[]): Feed[] {
     }
   }
 
-  const byMeta = new Map<string, Feed>();
+  const byMeta = new Map<string, DiscoveredFeed>();
   for (const feed of canonical.values()) {
     const key = equivalentMetaKey(feed);
     if (!key) {
@@ -306,7 +317,7 @@ function dedupeEquivalentFeeds(feeds: Feed[]): Feed[] {
   return Array.from(byMeta.values());
 }
 
-function equivalentMetaKey(feed: Feed): string | null {
+function equivalentMetaKey(feed: DiscoveredFeed): string | null {
   try {
     const siteHost = feed.siteUrl ? new URL(feed.siteUrl).hostname.replace(/^www\./, '') : '';
     const parsed = new URL(feed.url);
@@ -336,7 +347,7 @@ function normalizeTypeFamily(type: string): string {
   return lower;
 }
 
-function scoreFeed(feed: Feed): number {
+function scoreFeed(feed: DiscoveredFeed): number {
   const confidence = feed.confidence ?? 0;
   const hasNoQuery = feed.url.includes('?') ? 0 : 0.05;
   const shorter = 1 / Math.max(20, feed.url.length);
@@ -409,7 +420,7 @@ async function fetchHtmlContent(url: string, options: Required<DiscoveryOptions>
 async function checkSelfRssFeed(
   url: string,
   options: Required<DiscoveryOptions>,
-): Promise<Feed | null> {
+): Promise<DiscoveredFeed | null> {
   const response = await fetchWithTimeout(url, options, options.timeout, {
     Accept: 'application/rss+xml,application/atom+xml,application/xml,text/xml,application/json',
   });
@@ -438,7 +449,7 @@ async function checkSelfRssFeed(
 async function tryCommonPaths(
   baseUrl: string,
   options: Required<DiscoveryOptions>,
-): Promise<Feed | null> {
+): Promise<DiscoveredFeed | null> {
   const urlObj = new URL(baseUrl);
 
   for (const path of COMMON_FEED_PATHS) {

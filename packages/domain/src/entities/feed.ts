@@ -1,5 +1,6 @@
 import { db, feeds, type DbFeed, type DbInsertFeed } from '@repo/db';
-import { discoverFeeds } from '@repo/discovery/server';
+import type { DiscoveredFeed } from '@repo/discovery/server';
+import { discoverFeedsEnhanced } from '@repo/discovery/server';
 import { createId } from '@repo/shared/utils';
 import { and, eq, inArray } from 'drizzle-orm';
 import { getDomain, trackEvent } from '../analytics';
@@ -7,7 +8,7 @@ import type { TransactionContext } from '../domain-context';
 import { BadRequestError, NotFoundError } from '../errors';
 import { checkFeedLimit } from '../limits';
 import { enqueueFeedDetail, enqueueFeedSync } from '../queues';
-import type { CreateFeed, DiscoveredFeed, Feed, UpdateFeed } from './feed.schema';
+import type { CreateFeed, Feed, UpdateFeed } from './feed.schema';
 
 // Re-export schemas and types from schema file
 export * from './feed.schema';
@@ -132,7 +133,7 @@ export async function retryFeed(id: string, userId: string): Promise<void> {
 
 export async function discoverRssFeeds(url: string): Promise<DiscoveredFeed[]> {
   try {
-    return await discoverFeeds(url);
+    return await discoverFeedsEnhanced(url);
   } catch (error) {
     console.error('Discovery failed:', error);
     throw new BadRequestError(`Failed to discover feeds: ${String(error)}`);
