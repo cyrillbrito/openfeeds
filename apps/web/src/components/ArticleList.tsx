@@ -254,12 +254,31 @@ export function ArticleList(props: ArticleListProps) {
 
   createEffect(() => {
     const key = listScrollKey();
-    if (restoredKey() === key) return;
-
     const targetScrollY = getListScrollY(key);
     const anchor = getListAnchor(key);
+
+    debugScroll('restore-check', {
+      key,
+      restoredKey: restoredKey(),
+      targetScrollY,
+      currentY: window.scrollY,
+      hasAnchor: Boolean(anchor),
+      loaded: props.articles.length,
+      total: props.totalCount,
+    });
+
+    if (restoredKey() === key && Math.abs(window.scrollY - (targetScrollY ?? 0)) <= 8) {
+      debugScroll('restore-skip-already-restored', {
+        key,
+        currentY: window.scrollY,
+        targetScrollY,
+      });
+      return;
+    }
+
     if (targetScrollY == null) {
       setRestoredKey(key);
+      debugScroll('restore-skip-no-saved-y', { key });
       return;
     }
 
@@ -385,6 +404,14 @@ export function ArticleList(props: ArticleListProps) {
     }
 
     setListScrollY(key, window.scrollY);
+    setRestoredKey('');
+    debugScroll('navigate-to-article', {
+      key,
+      articleId,
+      savedY: window.scrollY,
+      loaded: props.articles.length,
+      total: props.totalCount,
+    });
   };
 
   return (
