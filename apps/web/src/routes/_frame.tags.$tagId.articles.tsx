@@ -1,6 +1,6 @@
 import { eq, useLiveQuery } from '@tanstack/solid-db';
 import { createFileRoute } from '@tanstack/solid-router';
-import { createSignal, onMount, Show, Suspense } from 'solid-js';
+import { createEffect, createSignal, on, onMount, Show, Suspense } from 'solid-js';
 import { ArticleList, ARTICLES_PER_PAGE } from '~/components/ArticleList';
 import { ArticleListToolbar } from '~/components/ArticleListToolbar';
 import { CenterLoader } from '~/components/Loader';
@@ -12,6 +12,7 @@ import { useFeeds } from '~/entities/feeds';
 import { useTags } from '~/entities/tags';
 import { useSessionRead } from '~/providers/session-read';
 import { readStatusFilter } from '~/utils/article-queries';
+import { getListVisibleCount, setListVisibleCount } from '~/utils/list-view-state';
 import { validateReadStatusSearch } from '~/utils/routing';
 
 export const Route = createFileRoute('/_frame/tags/$tagId/articles')({
@@ -28,8 +29,22 @@ function TagArticlesPage() {
 
   onMount(() => setViewKey(`tag:${tagId()}`));
 
+  const listStateKey = () => `tag:${tagId()}:${readStatus()}`;
+
   // Pagination state
-  const [visibleCount, setVisibleCount] = createSignal(ARTICLES_PER_PAGE);
+  const [visibleCount, setVisibleCount] = createSignal(
+    getListVisibleCount(listStateKey(), ARTICLES_PER_PAGE),
+  );
+
+  createEffect(
+    on(listStateKey, (key) => {
+      setVisibleCount(getListVisibleCount(key, ARTICLES_PER_PAGE));
+    }),
+  );
+
+  createEffect(() => {
+    setListVisibleCount(listStateKey(), visibleCount());
+  });
 
   const tagsQuery = useTags();
   const feedsQuery = useFeeds();
@@ -164,6 +179,7 @@ function TagArticlesPage() {
             totalCount={totalCount()}
             onLoadMore={handleLoadMore}
             onUpdateArticle={handleUpdateArticle}
+            scrollStateKey={listStateKey()}
             readStatus={readStatus()}
             context="tag"
           />

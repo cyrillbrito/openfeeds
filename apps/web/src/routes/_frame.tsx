@@ -82,6 +82,7 @@ function FrameLayout() {
                     <Link
                       to="/discover"
                       class="flex items-center gap-3"
+                      resetScroll
                       activeProps={{ class: 'menu-active' }}
                     >
                       <Compass size={20} />
@@ -92,6 +93,7 @@ function FrameLayout() {
                     <Link
                       to="/inbox"
                       class="flex items-center gap-3"
+                      resetScroll
                       activeProps={{ class: 'menu-active' }}
                     >
                       <Inbox size={20} />
@@ -102,6 +104,7 @@ function FrameLayout() {
                     <Link
                       to="/feeds"
                       class="flex items-center gap-3"
+                      resetScroll
                       activeProps={{ class: 'menu-active' }}
                     >
                       <Rss size={20} />

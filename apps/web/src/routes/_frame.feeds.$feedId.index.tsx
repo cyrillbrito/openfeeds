@@ -3,7 +3,7 @@ import type { Feed, TagColor } from '@repo/domain/client';
 import { eq, toArray, useLiveQuery } from '@tanstack/solid-db';
 import { createFileRoute, Link } from '@tanstack/solid-router';
 import { MoreVertical, TriangleAlert } from 'lucide-solid';
-import { createSignal, For, onMount, Show, Suspense } from 'solid-js';
+import { createEffect, createSignal, For, on, onMount, Show, Suspense } from 'solid-js';
 import { ArticleList, ARTICLES_PER_PAGE } from '~/components/ArticleList';
 import { ArticleListToolbar } from '~/components/ArticleListToolbar';
 import { ColorIndicator } from '~/components/ColorIndicator';
@@ -24,6 +24,7 @@ import { $$retryFeed } from '~/entities/feeds.functions';
 import { tagsCollection, useTags } from '~/entities/tags';
 import { useSessionRead } from '~/providers/session-read';
 import { readStatusFilter } from '~/utils/article-queries';
+import { getListVisibleCount, setListVisibleCount } from '~/utils/list-view-state';
 import { validateReadStatusSearch } from '~/utils/routing';
 import { getTagDotColor } from '~/utils/tagColors';
 
@@ -41,8 +42,22 @@ function FeedArticles() {
 
   onMount(() => setViewKey(`feed:${feedId()}`));
 
-  // Pagination state - lifted from ArticleList
-  const [visibleCount, setVisibleCount] = createSignal(ARTICLES_PER_PAGE);
+  const listStateKey = () => `feed:${feedId()}:${readStatus()}`;
+
+  // Pagination state - persisted per list view key
+  const [visibleCount, setVisibleCount] = createSignal(
+    getListVisibleCount(listStateKey(), ARTICLES_PER_PAGE),
+  );
+
+  createEffect(
+    on(listStateKey, (key) => {
+      setVisibleCount(getListVisibleCount(key, ARTICLES_PER_PAGE));
+    }),
+  );
+
+  createEffect(() => {
+    setListVisibleCount(listStateKey(), visibleCount());
+  });
 
   // Query articles with orderBy and limit for pagination
   const articlesQuery = useLiveQuery((q) => {
@@ -287,6 +302,7 @@ function FeedArticles() {
             totalCount={totalCount()}
             onLoadMore={handleLoadMore}
             onUpdateArticle={handleUpdateArticle}
+            scrollStateKey={listStateKey()}
             readStatus={readStatus()}
             context="feed"
           />
