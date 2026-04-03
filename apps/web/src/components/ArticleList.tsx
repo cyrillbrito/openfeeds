@@ -237,7 +237,10 @@ export function ArticleList(props: ArticleListProps) {
             return (
               <div
                 data-index={item.index}
-                ref={rowVirtualizer.measureElement}
+                ref={(el) => {
+                  el.setAttribute('data-index', String(item.index));
+                  rowVirtualizer.measureElement(el);
+                }}
                 class="border-base-300 w-full border-b"
               >
                 <Show when={article()}>
