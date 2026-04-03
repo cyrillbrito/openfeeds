@@ -7,8 +7,8 @@
     "./sanitize": "./src/sanitize.ts"
   },
   "scripts": {
-    "test": "vitest run",
-    "test:watch": "vitest"
+    "test": "bun test",
+    "test:watch": "bun test --watch"
   },
   "dependencies": {
     "@mixmark-io/domino": "^2.2.0",
@@ -18,9 +18,9 @@
     "turndown": "^7.2.0"
   },
   "devDependencies": {
+    "@types/bun": "^1.3.11",
     "@types/jsdom": "^28.0.1",
     "@types/sanitize-html": "^2.16.1",
-    "typescript": "^5",
-    "vitest": "^3.2.3"
+    "typescript": "^5"
   }
 }

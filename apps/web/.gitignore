@@ -2,9 +2,9 @@ node_modules
 .DS_Store
 dist
 dist-ssr
-.output
 *.local
 .env
+.output
+.nitro
 .tanstack
 .wrangler
-__unconfig*

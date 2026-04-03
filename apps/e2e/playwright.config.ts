@@ -74,7 +74,7 @@ export default defineConfig({
 
   /* Mock RSS Server - auto-starts/stops via webServer */
   webServer: {
-    command: 'tsx mock-server/start-server.ts',
+    command: 'bun mock-server/start-server.ts',
     url: 'http://localhost:9999',
     reuseExistingServer: !process.env.CI,
     timeout: 10000,
@@ -82,7 +82,7 @@ export default defineConfig({
 
   /* Run your local dev server before starting the tests */
   // webServer: {
-  //   command: 'pnpm dev',
+  //   command: 'bun dev',
   //   url: 'http://localhost:3000',
   //   reuseExistingServer: !process.env.CI,
   //   cwd: '../../',

@@ -1,192 +1,117 @@
-# Nitro CJS-in-ESM Bundling Issues
+# Nitro Server Bundling: Externalization Strategy
 
-**Date:** 2026-03-29
-**Status:** Active workarounds in place
-**Context:** Production crashes from CJS-in-ESM bundling issues and missing WASM files after Nitro bundles all dependencies into `.output/server/`
+**Date:** 2026-03-29 (updated 2026-04-03)
+**Status:** Active — externalization with `rollupConfig.external` + full `node_modules` in Docker
 
-## The Problem
+## Summary
 
-Nitro (via Vite/Rollup) bundles server-side dependencies into ESM `.mjs` files in `.output/server/`. Some npm packages contain CJS code (`require()`, `module.exports`, `__dirname`, `__filename`) that Rollup fails to fully convert to ESM during bundling. The result: ESM files with leftover CJS patterns that crash at runtime because `require`, `module`, `__dirname`, etc. don't exist in ESM.
+Nitro's Vite builder bundles all server dependencies into `.mjs` chunks. Some packages (jsdom, css-tree, @mixmark-io/domino) break when bundled because they read sibling files at runtime via relative paths. We externalize those packages via `rollupConfig.external` and ship the full pruned monorepo (`out/`) — including `node_modules` — in the Docker image so they resolve naturally.
 
-This is not a bug in our code. It's a known ecosystem-wide CJS/ESM interop problem that affects every Rollup-based bundler (Vite, Nitro, Nuxt, etc.) when consuming CJS packages.
+## Current Strategy
 
-## Why It Happens
+### What happens at build time
 
-1. Rollup's `@rollup/plugin-commonjs` converts top-level `require()` to `import`, but **misses `require()` calls inside function bodies** because it can't statically analyze them. It also leaves behind `module.exports`, `__dirname`, and `__filename` references in some cases.
-2. Nitro outputs `.mjs` files (ESM). In Node.js ESM, `require`, `module`, `__dirname`, and `__filename` are undefined — they're CJS-only globals.
-3. In dev mode this never surfaces because Vite doesn't bundle server code — Node.js loads packages directly from `node_modules` and handles CJS/ESM interop natively.
+1. **Turborepo prune** → produces `out/` with only the packages needed for the target app
+2. **`bun install`** inside `out/` → installs dependencies (hoisted `node_modules/`)
+3. **Vite/Nitro build** → bundles server code into `apps/web/.output/server/`
+4. **Docker `COPY out/ ./`** → the entire pruned monorepo (including `node_modules/`) lands in the image
 
-## Why We Can't Externalize
+### What gets bundled vs externalized
 
-When using `nitro/vite` (the Vite plugin, which TanStack Start uses), Nitro **forces `noExternal: true` for production builds**. This is hardcoded in the Vite builder path:
+| Package | Bundled? | Why |
+|---|---|---|
+| Most deps (uuid, msgpackr, svix, react, solid-js, etc.) | ✅ Bundled into `_libs/*.mjs` | No CJS/asset issues |
+| `jsdom` | ❌ External | Reads companion files at runtime; `__dirname` references break when bundled |
+| `css-tree` | ❌ External | Uses `createRequire` + relative paths to load JSON data files |
+| `@mixmark-io/domino` | ❌ External | Required by turndown via `require()` inside a function body that Rollup can't convert |
 
-```js
-// nitro/dist/vite.mjs
-noExternal: ctx.nitro.options.dev ? [...] : true,
+Externalized packages emit bare `import "jsdom"` / `require("@mixmark-io/domino")` in the output. These resolve from `/app/node_modules/` in the Docker container.
+
+### How externalization works in Nitro's Vite builder
+
+Nitro's Vite builder **hardcodes `noExternal: true`** in production (line 329 of `nitro/dist/vite.mjs`). The `noExternals` option in the `nitro()` Vite plugin config only affects the Rollup builder path — it does nothing for the Vite builder.
+
+The only way to prevent bundling is **`rollupConfig.external`** — this is passed through as `build.rollupOptions.external` to Vite, telling Rollup to emit bare imports instead of inlining the package.
+
+### CJS-in-ESM interop (esmExternals)
+
+Some packages (svix → uuid, msgpackr) are ESM-only but consumed via `require()` in CJS code. Without configuration, `@rollup/plugin-commonjs` generates `import x from "uuid"` (default import), which fails because uuid only has named exports.
+
+Setting `esmExternals: ['uuid', 'msgpackr']` + `requireReturnsDefault: 'namespace'` makes the commonjs plugin generate `import * as x from "uuid"; export default x;` — a namespace import that works.
+
+### Config reference
+
+All bundling config lives in `apps/web/vite.config.ts` inside the `nitro()` plugin call. See inline comments there for specifics.
+
+### Docker deployment
+
+The Dockerfile copies the entire `out/` directory (not just `.output/`). This is consistent with `apps/worker/Dockerfile` and `apps/migrator/Dockerfile`. The CMD runs:
+
+```sh
+bun --bun run apps/web/.output/server/index.mjs
 ```
 
-This means ALL dependencies are bundled into the output — there is no `.output/server/node_modules/`. Externalizing specific packages via `rollupConfig.external` does not help because there's no `node_modules` to resolve them from at runtime.
+Working directory is `/app`, so `node_modules` resolves from `/app/node_modules/` (hoisted by `bunfig.toml`'s `linker = "hoisted"`).
 
-This is different from Nitro's standalone Rollup builder, which has an externals plugin with nft (node-file-trace) to auto-detect, externalize, and copy needed packages. The Vite builder skips all of that.
+### CI pipeline alignment
 
-**Consequence:** any CJS patterns that Rollup fails to convert will be broken in production. We must fix them at the source or patch them during build.
+The GitHub Actions workflow (`.github/workflows/build-images.yml`) does `turbo prune → bun install → bun build → docker build`. The Docker build context is the `out/` directory. Same flow as `build-local.sh` for local testing.
 
-## Affected Dependencies
+## Debugging
 
-| Dependency Chain | CJS Pattern | Fix |
-|---|---|---|
-| `defuddle` → `turndown` → `@mixmark-io/domino` | `require()` in turndown's ESM build | **pnpm patch** on turndown |
-| `css-tree` v3 | `require('../data/patch.json')` relative path | **pnpm patch** on css-tree |
-| `jsdom`, `data-urls`, `whatwg-url`, `debug`, `decimal.js` | `module.exports` | CJS shim plugin |
-| `undici` | `require("node:http2")`, `require("node:tls")` | CJS shim plugin |
-| `ajv`, `ajv-formats` | `require("ajv/dist/...")` (string literals in code-gen, not runtime) | CJS shim plugin (for `module.exports` only) |
-| `@react-email/components` → `react/jsx-dev-runtime` | `createRequire` + `require("react")` | `process.env.NODE_ENV` define (tree-shakes dev runtime) |
-| `jsdom` | `__dirname` | CJS shim plugin |
-| `mixmark-io/domino` | `module.exports` | CJS shim plugin |
-| `htmlrewriter` | `.wasm` file not copied to output | WASM copy plugin |
+1. **`Cannot find module 'X'` in production** — the package is externalized but missing from `node_modules` in the Docker image. Check that `turbo prune` includes it (it must be a dependency of a pruned package).
+
+2. **CJS patterns crash** (`require is not defined`, `module is not defined`) — a CJS package was bundled but Rollup didn't fully convert it. Options:
+   - Add it to `rollupConfig.external` if it has runtime file dependencies
+   - If it's a simple CJS-to-ESM conversion failure, Rollup usually handles it — check if the package has a newer version with proper ESM
+
+3. **Build locally**: `./build-local.sh web` then inspect `apps/web/.output/server/` or `docker run --rm openfeeds-web:local <command>`.
+
+4. **Verify externalization**: grep the output for bare imports — `grep -r "packagename" apps/web/.output/server/ --include="*.mjs"`. External packages appear as `import "X"` (not inlined).
+
+---
+
+## Historical Context
+
+> What follows documents the **previous strategy** (pre-April 2026) where all dependencies were bundled and CJS issues were fixed with build plugins + pnpm patches. This context explains WHY we moved to externalization.
+
+### The old approach (~327 lines in vite.config.ts)
+
+Before externalization, the Dockerfile only copied `.output/server/` — no `node_modules`. Since Nitro forces `noExternal: true`, every dependency had to survive bundling. This required:
+
+- **`cjsShimPlugin()`** (~60 lines) — post-processed all `.mjs` output files, injecting `require` (via `createRequire`), `module`, `__dirname`, `__filename` into any file containing CJS patterns. 11 output files needed this.
+- **`wasmCopyPlugin()`** — copied WASM files that Rollup doesn't follow (htmlrewriter's `.wasm` loaded via `readFileSync`)
+- **pnpm patch on turndown** — replaced `require('@mixmark-io/domino')` with `import` in turndown's ESM build (Rollup can't convert `require()` inside function bodies)
+- **pnpm patch on css-tree** — replaced `createRequire` + relative JSON `require()` with `import ... with { type: 'json' }` so Rollup could inline the JSON
+- **`process.env.NODE_ENV` define** — forced production mode across all Vite environments to tree-shake React's dev runtime (pulled in transitively via `@repo/domain` → `@repo/emails` → `react/jsx-runtime`)
+
+### Why each problem existed
+
+**turndown / @mixmark-io/domino**: turndown's ESM build (`lib/turndown.es.js`) contains a bare `require('@mixmark-io/domino')` — a [known upstream bug](https://github.com/mixmark-io/turndown/issues/502). Rollup eliminates the browser branch (`if (process.browser)`) but can't convert the remaining `require()` to `import` because it's inside a function body. With externalization, this `require()` resolves from `node_modules` at runtime — no patch needed.
+
+**css-tree**: v3's ESM build uses `createRequire(import.meta.url)` to load JSON data files with relative paths. After bundling into `_libs/css-tree.mjs`, the relative path resolves against the wrong directory. With externalization, css-tree runs from `node_modules` with its files intact — no patch needed.
+
+**React jsx-dev-runtime**: `@react-email/components` bundles both prod and dev variants of `react/jsx-runtime`. The dev variant calls `createRequire` + `require("react")` which fails without `node_modules`. The `@repo/domain` barrel re-export pulled this into every server function. With externalization, React is fully bundled into `_libs/react.mjs` (production mode) and the dev variant is tree-shaken — no explicit define needed.
+
+**htmlrewriter WASM**: htmlrewriter loads a `.wasm` file via `readFileSync` relative to `import.meta.url`. Rollup bundles the JS but not the companion WASM. With externalization, htmlrewriter itself is still bundled (no CJS issues), but if it were externalized, its WASM would resolve from `node_modules`.
+
+**General CJS-in-ESM**: Packages like jsdom, undici, ajv have `module.exports`, `__dirname`, lazy `require()` for Node builtins. The CJS shim made these work. With externalization, the worst offenders (jsdom) run from `node_modules` directly; the rest survive Rollup's conversion without a shim.
+
+### Why we moved away
+
+The old strategy was brittle:
+- Every new CJS dependency could introduce a production crash
+- pnpm patches break on upstream version bumps
+- The shim plugin was a build-time hack working around Nitro's `noExternal: true`
+- ~250 lines of build plugins for problems that don't exist when packages run from `node_modules`
+
+Externalization trades a larger Docker image (includes `node_modules`) for zero build plugins and zero patches. The image size increase is acceptable for a VPS deployment (see [VPS decision](./2026-02-07-vps-over-cloudflare-workers.md)).
+
+### Ecosystem issues (still open)
+
+- [nitrojs/nitro#4113](https://github.com/nitrojs/nitro/issues/4113) — Vite builder doesn't set `platform: "node"`, breaking CJS interop
+- [nitrojs/nitro#4053](https://github.com/nitrojs/nitro/issues/4053) — Bundling `readable-stream` (CJS) breaks prototype chains
+- [nitrojs/nitro#3800](https://github.com/nitrojs/nitro/issues/3800) — Externalized packages lose `.js` extensions
+- [mixmark-io/turndown#502](https://github.com/mixmark-io/turndown/issues/502) — turndown's ESM build contains `require()`
 
 Related PRs: #181, #183, #200, #202, #204, #206
-
-## The defuddle/turndown Problem (pnpm patch)
-
-This one is special and can't be fixed by the CJS shim alone.
-
-**Root cause:** turndown's ESM build (`lib/turndown.es.js`) contains a bare `require('@mixmark-io/domino')`. This is a [known bug](https://github.com/mixmark-io/turndown/issues/502) in turndown's Rollup build config. The source code uses `require()` inside a conditional branch (`if (process.browser) ... else { require(...) }`). Rollup correctly dead-code-eliminates the browser branch for the Node.js ESM build, but fails to convert the remaining `require()` to `import` because it's inside a function body, not at the top level.
-
-Replacing `require` with `import` is the correct fix — not a workaround. The `require()` is not conditional, not dynamic, not lazy. After branch elimination it's just a plain unconditional dependency load that should have been an `import` in the ESM build.
-
-**Why the shim isn't enough:** The CJS shim injects `const require = createRequire(import.meta.url)` into the output `.mjs` files, which makes `require()` work syntactically. But `require()` resolves from the **file's location** (`.output/server/`), and `@mixmark-io/domino` is not a separate file there — it was supposed to be bundled inline by Rollup, but Rollup couldn't trace the dynamic `require()` call to bundle it. So `require('@mixmark-io/domino')` fails with `Cannot find module` even with the shim.
-
-**Why patch turndown, not defuddle:** defuddle doesn't declare turndown as a dependency — it bundles turndown into its own dist. But the `require('@mixmark-io/domino')` comes from turndown's source, which defuddle consumes. Patching turndown at the source (replacing `require` with `import` in `lib/turndown.es.js`) fixes it for both direct users and consumers like defuddle.
-
-**Fix:** `pnpm patch turndown` — change the one `require('@mixmark-io/domino')` to an `import` in `lib/turndown.es.js`.
-
-After patching, remove the `cjsRequireToImportPlugin` from `apps/web/vite.config.ts` — it was specifically built to rewrite this one `require()` call.
-
-## The css-tree Problem (pnpm patch)
-
-**Root cause:** css-tree v3's ESM build uses `createRequire(import.meta.url)` to load JSON data files with relative paths (`require('../data/patch.json')`, `require('../package.json')`, and `require()` calls for mdn-data JSON files). In `node_modules` this works because the JSON files exist relative to the source `.js` file. After Nitro bundles the JS into `.output/server/_libs/css-tree.mjs`, the relative path resolves to `.output/server/data/patch.json` which doesn't exist.
-
-**Why the CJS shim doesn't help:** The shim provides a working `require` via `createRequire(import.meta.url)`, but the `import.meta.url` now points to the bundled file's location, not the original source. Relative paths resolve against the wrong directory.
-
-**Why this only crashes on specific page loads:** The css-tree CSS syntax lexer is initialized lazily — only when jsdom/csso processes CSS during content parsing (e.g. feed article extraction). Server startup doesn't trigger it.
-
-**Fix:** `pnpm patch css-tree@3.2.1` — replace `createRequire` + `require()` with `import ... with { type: 'json' }` in `lib/data-patch.js`, `lib/version.js`, and `lib/data.js`. This lets Rollup inline the JSON at bundle time.
-
-## The React jsx-dev-runtime Problem (process.env.NODE_ENV define)
-
-**Root cause:** `@react-email/components` (pre-compiled by tsdown in `packages/emails`) bundles both production and development versions of `react/jsx-runtime`, with a runtime guard:
-
-```js
-"production" !== process.env.NODE_ENV && (function() { ... __require("react") ... })()
-```
-
-The production variant is self-contained. The development variant calls `createRequire(import.meta.url)` + `require("react")` — a bare module require that fails in Docker because there's no `node_modules`.
-
-**Why the development variant was kept:** Nitro's Vite builder sets `define: { "process.env.NODE_ENV": "production" }` for its own server bundle (line 326 of `nitro/dist/vite.mjs`), but this does NOT apply to the **SSR environment** which is managed by TanStack Start. The SSR build used `NODE_ENV=development` (Vite's default for SSR), so Rollup dead-code-eliminated the production path and kept the development path.
-
-**Why the crash is deferred:** `_ssr/index.mjs` is lazily imported via `lazyService(() => import(...))` in `index.mjs`. It only loads on the first SSR request, not at server startup. The `import_jsx_runtime` variable inside is eagerly evaluated at module top level, so the crash happens as soon as any route triggers SSR.
-
-**How React Email reaches the SSR bundle:** The `@repo/domain` barrel (`export * from './email'`) causes every `import ... from '@repo/domain'` to transitively pull in `@repo/emails` → `react` → `react/jsx-runtime`. Even entity function files that only use feed/article domain logic bring in the entire React Email stack.
-
-**Fix:** Add `'process.env.NODE_ENV': JSON.stringify('production')` to the `define` block in `apps/web/vite.config.ts`. This applies to ALL Vite environments (client, SSR, Nitro), ensuring React's development code paths are tree-shaken everywhere. After this fix, zero `__require` calls remain in the SSR bundle.
-
-**Considered alternatives:**
-- **Break the barrel** — remove `export * from './email'` from `@repo/domain/index.ts`. Would eliminate React from the SSR bundle entirely, but is a larger refactor.
-- **pnpm patch the emails package** — remove the dev variant from the pre-compiled output. Fragile, breaks on package updates.
-
-## The CJS Shim Plugin (required, can't remove)
-
-`cjsShimPlugin()` in `apps/web/vite.config.ts` post-processes all `.mjs` files in `.output/server/` after build, injecting CJS compatibility globals into any file that contains CJS patterns.
-
-The shim injects:
-- `require` — via `createRequire(import.meta.url)` from `node:module`
-- `module` — `{ exports: {} }`
-- `__dirname` and `__filename` — via `fileURLToPath` and `dirname`
-
-**Why we can't remove it:** Since `noExternal: true` is hardcoded in Nitro's Vite builder, all deps are bundled. 11 output files currently contain CJS patterns that would crash without the shim. These are not broken ESM builds (like turndown) — they're CJS packages where Rollup's commonjs plugin converted *most* of the code but left behind some patterns it couldn't fully transform (e.g., `module.exports` assignments, lazy `require()` for Node.js builtins, `__dirname` references).
-
-The shim works for these because:
-- `require("node:http2")` and `require("node:tls")` — Node.js builtins, always available via `createRequire`
-- `require("ajv/dist/...")` — these are **string literals** in ajv's code generation pipeline, not runtime `require()` calls. Ajv uses them as code templates when serializing validators to standalone files (via `ajv.standalone()`). During normal runtime, ajv uses the `ref` property (pointing to the bundled in-memory object), not the `code` string. The CJS shim's `require` is never actually called for these. Safe to ignore.
-- `module.exports` — the shim provides a dummy `module` object. The assignments don't crash, and the actual exports use ESM `export` statements that Rollup generated.
-- `__dirname` — jsdom uses it to locate a CSS file. The shim provides the correct directory path.
-
-**This plugin is ~60 lines, runs only at build time, and automatically handles any new CJS dep that Rollup mishandles.** It's the pragmatic solution given Nitro's `noExternal: true` constraint.
-
-## How to Debug Future Occurrences
-
-1. **The error looks like:** `Cannot find module 'X'` or `require is not defined` or `module is not defined` in production logs, with a stack trace pointing to `.output/server/*.mjs`.
-
-2. **Build locally and check:** Run `pnpm build` in `apps/web/`, then `node .output/server/index.mjs` to reproduce locally.
-
-3. **Identify the source:** The stack trace shows which `.mjs` file has the problem. Open it and search for the CJS pattern (`require(`, `module.exports`, `__dirname`).
-
-4. **Determine the fix:**
-   - **If `require('some-package')` and the package isn't available** (like `@mixmark-io/domino`) — the package was supposed to be bundled but Rollup missed it. Fix: **pnpm patch** the upstream package to use `import` instead of `require`. Then add an entry to `cjsRequireToImportPlugin` as a temporary build-time rewrite if you need an immediate fix before patching.
-   - **If the CJS shim should have caught it but didn't** — check that the regex pattern in `cjsShimPlugin` matches the CJS pattern in the file. The shim only injects into files matching `CJS_PATTERN`.
-   - **If the shim is there but `require()` can't find the module** — the module isn't in `node_modules` and isn't bundled. This is the turndown scenario. Must patch the source.
-   - **If `ENOENT` for a `.wasm` file** — Rollup bundled the JS but not the companion WASM. Add the source WASM path to `wasmSources` in `wasmCopyPlugin()` and rebuild.
-
-5. **Verify:** After fixing, rebuild and check `.output/server/` — grep for the pattern, confirm the shim is injected (look for `__cjs_createRequire__`).
-
-## Ecosystem Context
-
-This is not unique to our project. The Nitro v3 Vite builder has systemic CJS interop issues:
-
-- **[nitrojs/nitro#4113](https://github.com/nitrojs/nitro/issues/4113)** — Vite builder doesn't set `platform: "node"`, breaking CJS interop for `@aws-sdk` and others. Open.
-- **[nitrojs/nitro#4053](https://github.com/nitrojs/nitro/issues/4053)** — Bundling `readable-stream` (CJS) breaks prototype chains (`util.inherits`). Open.
-- **[nitrojs/nitro#3800](https://github.com/nitrojs/nitro/issues/3800)** — Externalized packages lose `.js` extensions, breaking Node ESM resolution.
-- **[mixmark-io/turndown#502](https://github.com/mixmark-io/turndown/issues/502)** — turndown's ESM build contains `require()`. No maintainer response.
-
-Common workarounds others use: `rolldownConfig.external`, `nitro({ alias: {...} })`, per-package `pnpm patch`. Nobody has a clean blanket solution. Our CJS shim is actually more robust than most approaches since it handles all CJS deps automatically.
-
-The real fix will come from Nitro/Rolldown improving CJS-to-ESM conversion, or the Vite builder supporting proper externalization with `node_modules` tracing (like the Rollup builder already does).
-
-## The htmlrewriter WASM Problem (wasmCopyPlugin)
-
-`htmlrewriter` (used in `@repo/domain` for HTML meta tag extraction) ships a `.wasm` file that it loads at runtime. When Nitro bundles the JS, the companion WASM file is **not** copied to `.output/server/`, causing `ENOENT: html_rewriter_bg.wasm` at runtime.
-
-### Why It Happens
-
-htmlrewriter has two entry points controlled by Node.js export conditions:
-
-| Condition | Entry | WASM Loading |
-|---|---|---|
-| `"node"` | `node.mjs` | `fs.readFileSync` relative to `import.meta.url` |
-| `"default"` | `default.js` | `import wasm from '...bg.wasm'` |
-
-Nitro resolves the `"node"` condition, bundling `node.mjs`. Rollup inlines the JS but does not follow the `readFileSync` call to copy the WASM file — it's an opaque runtime string, not a static import.
-
-### Alternatives Considered and Rejected
-
-**Alias to `default.js` (the bundler-friendly entry):** Nitro's `alias` config applies to ALL Vite environments via `sharedDuringBuild: true` (line 568 in `nitro/dist/vite.mjs`). The `default.js` entry uses `import wasm from '...bg.wasm'`, which works in the Nitro environment (has `unwasm` plugin) but **fails in the SSR environment** with `"ESM integration proposal for Wasm is not supported"` because SSR does not have `unwasm`.
-
-**Nitro's built-in `unwasm` plugin:** Only intercepts `import '...wasm'` patterns. Does not handle `fs.readFileSync` calls that the `"node"` export condition uses.
-
-**Per-environment Vite plugin with `resolveId`:** Vite plugins need `sharedDuringBuild: true` and `applyToEnvironment` to work across environments. Even then, Nitro has its own resolution pipeline that may override plugin hooks. Too fragile.
-
-### The Fix: wasmCopyPlugin
-
-Same pattern as `cjsShimPlugin`. A `closeBundle` hook that runs after both SSR and Nitro builds complete:
-
-1. Resolves the source WASM file from `node_modules` (via `createRequire` from the `@repo/domain` package, since htmlrewriter is its dependency, not `apps/web`'s).
-2. Scans all `.mjs` files in `.output/server/` for `new URL("...wasm", import.meta.url)` patterns — the runtime WASM loading code that `node.mjs` uses.
-3. Copies the source WASM to the expected relative path in the output directory.
-
-The regex handles both plain `new URL(...)` and Rollup-renamed `new url$1.URL(...)` patterns (Rollup renames `url` to `url$1` etc. using `$` which is not a `\w` character).
-
-Two copies are made because the bundled output has two different relative paths referencing the same WASM file:
-- `html_rewriter_bg.wasm` (from the inline WASM import path)
-- `./dist/html_rewriter_bg.wasm` (from the `node.mjs` `readFileSync` path)
-
-### Adding Support for Other WASM Dependencies
-
-If a new dependency loads WASM via `new URL("...wasm", import.meta.url)`, add its source path to the `wasmSources` map in `wasmCopyPlugin()` (keyed by WASM filename without extension). The plugin will automatically match and copy it.
-
-## Current State of vite.config.ts
-
-- `cjsShimPlugin()` — **keep**, required safety net for all CJS-in-ESM issues. Cannot be removed while Nitro Vite builder uses `noExternal: true`.
-- `wasmCopyPlugin()` — **keep**, copies WASM files that Rollup doesn't bundle. Required for `htmlrewriter` and any future WASM-loading dependencies.
-- `cjsRequireToImportPlugin()` — **removed**, replaced by pnpm patch on turndown.
-- `define: { 'process.env.NODE_ENV': JSON.stringify('production') }` — **keep**, ensures React dev code paths are tree-shaken in the SSR bundle. Required because Nitro only sets this for its own environment, not the SSR environment managed by TanStack Start.

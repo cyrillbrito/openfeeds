@@ -46,12 +46,12 @@ getNameInput(): Locator {
 ## Commands
 
 ```bash
-pnpx playwright test                     # Run all tests
-pnpx playwright test --update-snapshots  # Generate screenshot baselines
-pnpx playwright test --ui                # Debug mode
+bunx playwright test                     # Run all tests
+bunx playwright test --update-snapshots  # Generate screenshot baselines
+bunx playwright test --ui                # Debug mode
 
 # Run specific test file
-pnpx playwright test tests/import-opml.spec.ts
+bunx playwright test tests/import-opml.spec.ts
 ```
 
 ## Mock Server

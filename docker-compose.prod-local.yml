@@ -1,5 +1,6 @@
-# Local development: infrastructure services only
-# App services (web, worker, migrator) run directly via `bun dev`
+# Local production testing: locally-built images + infrastructure
+# Usage: docker compose -f docker-compose.prod-local.yml up
+# Build first: ./build-local.sh
 services:
   postgres:
     image: postgres:18.1-alpine
@@ -17,7 +18,7 @@ services:
       - -c
       - listen_addresses=*
       - -c
-      - wal_level=logical # Required for Electric SQL
+      - wal_level=logical
     healthcheck:
       test: ['CMD-SHELL', 'pg_isready -U postgres -d openfeeds']
       interval: 5s
@@ -33,11 +34,8 @@ services:
     restart: unless-stopped
     command: redis-server --save 60 1 --loglevel warning
 
-  # Electric SQL sync service
   electric:
     image: electricsql/electric:latest
-    ports:
-      - '3060:3000'
     environment:
       DATABASE_URL: postgresql://postgres:postgres@postgres:5432/openfeeds?sslmode=disable
       ELECTRIC_INSECURE: true
@@ -46,7 +44,51 @@ services:
         condition: service_healthy
     restart: unless-stopped
 
-  # Queue management UI
+  migrator:
+    image: openfeeds-migrations:local
+    environment:
+      - DATABASE_URL=postgresql://postgres:postgres@postgres:5432/openfeeds
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: 'no'
+
+  web:
+    image: openfeeds-web:local
+    ports:
+      - '3000:3000'
+    env_file: .env
+    environment:
+      - DATABASE_URL=postgresql://postgres:postgres@postgres:5432/openfeeds
+      - REDIS_HOST=redis
+      - ELECTRIC_URL=http://electric:3000
+      - DATA_PATH=/data
+    volumes:
+      - web_data:/data
+    depends_on:
+      redis:
+        condition: service_started
+      postgres:
+        condition: service_healthy
+      migrator:
+        condition: service_completed_successfully
+    restart: unless-stopped
+
+  worker:
+    image: openfeeds-worker:local
+    env_file: .env
+    environment:
+      - DATABASE_URL=postgresql://postgres:postgres@postgres:5432/openfeeds
+      - REDIS_HOST=redis
+    depends_on:
+      redis:
+        condition: service_started
+      postgres:
+        condition: service_healthy
+      migrator:
+        condition: service_completed_successfully
+    restart: unless-stopped
+
   queuedash:
     image: ghcr.io/alexbudure/queuedash:3.14.0
     ports:
@@ -61,4 +103,6 @@ volumes:
   postgres_data:
     driver: local
   redis_data:
+    driver: local
+  web_data:
     driver: local

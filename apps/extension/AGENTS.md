@@ -7,11 +7,11 @@ Chrome/Firefox extension that detects RSS/Atom feeds on any webpage and subscrib
 ## Commands
 
 ```bash
-pnpm dev          # Dev mode (port 3003)
-pnpm dev:firefox  # Firefox dev mode
-pnpm build        # Production build (Chrome)
-pnpm build:firefox
-pnpm zip          # Distributable ZIP
+bun dev          # Dev mode (port 3003)
+bun dev:firefox  # Firefox dev mode
+bun build        # Production build (Chrome)
+bun build:firefox
+bun zip          # Distributable ZIP
 ```
 
 ## Entrypoints

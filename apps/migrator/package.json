@@ -3,13 +3,13 @@
   "type": "module",
   "main": "src/index.ts",
   "scripts": {
-    "migrate": "tsx --env-file-if-exists=../../.env src/index.ts"
+    "migrate": "bun --env-file=../../.env src/index.ts"
   },
   "dependencies": {
     "@repo/db": "workspace:*"
   },
   "devDependencies": {
-    "@types/node": "^24",
+    "@types/bun": "^1.3.11",
     "typescript": "^5"
   }
 }

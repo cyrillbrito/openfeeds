@@ -5,9 +5,9 @@ Local-first SolidJS app. Data in client-side TanStack Solid DB, synced via Elect
 ## Commands
 
 ```bash
-pnpm dev           # Development server (port 3000)
-pnpm build         # Production build
-pnpm start         # Start production server
+bun dev           # Development server (port 3000)
+bun build         # Production build
+bun start         # Start production server
 ```
 
 ## Directory Structure
@@ -36,7 +36,7 @@ src/
 Two systems work together:
 
 1. **Start compiler** — rewrites `createServerFn`, `createMiddleware`, `createStart`, `createIsomorphicFn` calls. On client, strips `.server()` callback bodies, making server-only imports inside them unused.
-2. **Import-protection plugin** — enforces file patterns (`**/*.server.*`) and specifier patterns (`@repo/db`, `@repo/domain`) at build time. Uses deferral + tree-shaking: replaces violations with mocks, lets tree-shaking remove unused ones, only errors on violations that survive into the final bundle.
+2. **Import-protection plugin** — enforces file patterns (`**/*.server.*`) and specifier patterns (`@repo/db`, `@repo/domain`, `bun`) at build time. Uses deferral + tree-shaking: replaces violations with mocks, lets tree-shaking remove unused ones, only errors on violations that survive into the final bundle.
 
 Key rules:
 - `*.server.*` files are **blocked from client imports** at build time

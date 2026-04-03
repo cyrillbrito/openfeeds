@@ -8,8 +8,8 @@
   },
   "scripts": {
     "build": "tsdown",
-    "create-broadcast": "tsx create-broadcast.tsx",
-    "send-reply": "tsx send-reply.tsx",
+    "create-broadcast": "bun --env-file=../../.env create-broadcast.tsx",
+    "send-reply": "bun --env-file=../../.env send-reply.tsx",
     "dev": "email dev --port 3002",
     "export": "email export",
     "check-types": "tsc --build"

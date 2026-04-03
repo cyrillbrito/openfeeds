@@ -1,10 +1,10 @@
 ## From scratch
 
 ```
-pnpm create cloudflare@latest marketing --framework=astro --platform=pages
-pnpm astro add solid
-pnpm astro add tailwind
-pnpm add resend
+bun create cloudflare@latest marketing --framework=astro --platform=pages
+bun astro add solid
+bun astro add tailwind
+bun add resend
 
-pnpm prettier -w .
+bun prettier -w .
 ```

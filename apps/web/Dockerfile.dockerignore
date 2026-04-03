@@ -1,3 +1,5 @@
-# Web Dockerfile only needs .output (pre-built on CI runner)
+# Keep Docker context minimal but include full pruned runtime output.
+# This is a temporary stability tradeoff while Nitro output has runtime
+# asset/module resolution gaps in production startup.
 *
-!out/apps/web/.output
+!out

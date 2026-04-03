@@ -3,11 +3,11 @@ import { parseFeed } from 'feedsmith';
 export type ParseFeedResult = ReturnType<typeof parseFeed>;
 
 export class HttpFetchError extends Error {
-  readonly status: number;
-
-  constructor(status: number, statusText: string) {
+  constructor(
+    public readonly status: number,
+    statusText: string,
+  ) {
     super(`HTTP ${status}: ${statusText}`);
-    this.status = status;
   }
 }
 
