@@ -65,4 +65,9 @@ export const DEFAULT_DISCOVERY_OPTIONS = {
   timeout: 10000,
   followRedirects: true,
   userAgent: 'RSS-Discovery-Bot/1.0',
+  verificationConcurrency: 5,
+  verificationTimeout: 3000,
+  maxCandidates: 30,
+  enableCache: true,
+  cacheTtlMs: 60 * 60 * 1000,
 } as const;

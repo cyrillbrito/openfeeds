@@ -4,6 +4,7 @@ import { createFileRoute } from '@tanstack/solid-router';
 import {
   BookmarkPlus,
   CircleAlert,
+  ExternalLink,
   FileUp,
   Globe,
   Mail,
@@ -41,6 +42,16 @@ export const Route = createFileRoute('/_frame/discover')({
 });
 
 const OPML_DISMISSED_KEY = 'discover:opml-dismissed';
+
+const formatFeedUrl = (url: string) => {
+  try {
+    const parsed = new URL(url);
+    const path = parsed.pathname === '/' ? '' : parsed.pathname;
+    return `${parsed.host}${path}`;
+  } catch {
+    return url;
+  }
+};
 
 function DiscoverPage() {
   const navigate = Route.useNavigate();
@@ -281,46 +292,84 @@ function DiscoverPage() {
                   {(feed) => {
                     const isAdded = () =>
                       addedFeeds().has(feed.url) || existingFeedUrls().has(feed.url);
+                    const selectedTagIds = () => feedTagSelections()[feed.url] || [];
 
                     return (
                       <Card>
-                        <div class="flex items-center gap-3">
-                          <div class="bg-base-200 flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-lg">
-                            <Rss size={20} class="text-base-content/50" />
-                          </div>
+                        <div class="flex items-start gap-3">
+                          <Show
+                            when={feed.icon}
+                            fallback={
+                              <div class="bg-base-200 flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-lg">
+                                <Rss size={20} class="text-base-content/50" />
+                              </div>
+                            }
+                          >
+                            <img
+                              src={feed.icon}
+                              alt="Feed icon"
+                              class="bg-base-200 h-10 w-10 flex-shrink-0 rounded-lg object-cover"
+                              loading="lazy"
+                            />
+                          </Show>
 
                           <div class="min-w-0 flex-1">
-                            <div class="font-medium">{feed.title || feed.url}</div>
-                            <div class="text-base-content/50 truncate text-sm">{feed.url}</div>
-                          </div>
-
-                          <Show
-                            when={!isAdded()}
-                            fallback={<span class="badge badge-success gap-1">Following</span>}
-                          >
-                            <button
-                              type="button"
-                              class="btn btn-primary btn-sm"
-                              onClick={() => handleFollowFeed(feed)}
+                            <div class="text-base-content text-base font-semibold">
+                              {feed.title || feed.url}
+                            </div>
+                            <Show when={feed.description}>
+                              <div class="text-base-content/65 mt-0.5 line-clamp-2 text-sm leading-snug">
+                                {feed.description}
+                              </div>
+                            </Show>
+                            <a
+                              href={feed.url}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              class="text-base-content/45 hover:text-base-content/65 mt-1 inline-flex max-w-full items-center gap-1.5 text-xs transition-colors"
                             >
-                              Follow
-                            </button>
-                          </Show>
+                              <Globe size={12} class="flex-shrink-0" />
+                              <span class="truncate font-mono">{formatFeedUrl(feed.url)}</span>
+                              <ExternalLink size={11} class="flex-shrink-0" />
+                            </a>
+                          </div>
                         </div>
 
-                        {/* Per-feed tag selector */}
-                        <Show when={tagsQuery()?.length && !isAdded()}>
+                        <Show when={!isAdded()}>
+                          <div class="border-base-300 mt-4 border-t pt-3">
+                            <div class="text-base-content/55 mb-2 flex items-center justify-between text-xs">
+                              <span class="font-medium">Tags (optional)</span>
+                              <Show when={selectedTagIds().length > 0}>
+                                <span>{selectedTagIds().length} selected</span>
+                              </Show>
+                            </div>
+                            <div class="grid gap-2 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center">
+                              <Show when={tagsQuery()?.length}>
+                                <MultiSelectTag
+                                  tags={tagsQuery() || []}
+                                  selectedIds={selectedTagIds()}
+                                  onSelectionChange={(ids) =>
+                                    setFeedTagSelections((prev) => ({
+                                      ...prev,
+                                      [feed.url]: ids,
+                                    }))
+                                  }
+                                />
+                              </Show>
+                              <button
+                                type="button"
+                                class="btn btn-neutral h-10 px-5 sm:min-w-28"
+                                onClick={() => handleFollowFeed(feed)}
+                              >
+                                Follow feed
+                              </button>
+                            </div>
+                          </div>
+                        </Show>
+
+                        <Show when={isAdded()}>
                           <div class="mt-3">
-                            <MultiSelectTag
-                              tags={tagsQuery() || []}
-                              selectedIds={feedTagSelections()[feed.url] || []}
-                              onSelectionChange={(ids) =>
-                                setFeedTagSelections((prev) => ({
-                                  ...prev,
-                                  [feed.url]: ids,
-                                }))
-                              }
-                            />
+                            <span class="badge badge-success gap-1">Following</span>
                           </div>
                         </Show>
                       </Card>

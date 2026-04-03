@@ -7,12 +7,26 @@ import {
   extractFeedLinks,
   extractHeuristicFeeds,
   isSupportedProtocol,
+  normalizeUrl,
+  shouldSkipUrl,
   type DiscoveryOptions,
   type Feed,
 } from './core/index.js';
 
 export type { DiscoveryOptions, Feed, ServiceResult, ExtractOptions } from './core/index.js';
 export { checkKnownServices, SERVICES } from './core/index.js';
+
+const verificationCache = new Map<string, { value: Feed; expiresAt: number }>();
+
+const TRACKING_PARAMS = new Set([
+  'utm_source',
+  'utm_medium',
+  'utm_campaign',
+  'utm_term',
+  'utm_content',
+  'fbclid',
+  'gclid',
+]);
 
 export async function discoverFeeds(url: string, options: DiscoveryOptions = {}): Promise<Feed[]> {
   const mergedOptions = { ...DEFAULT_DISCOVERY_OPTIONS, ...options };
@@ -39,7 +53,6 @@ export async function discoverFeeds(url: string, options: DiscoveryOptions = {})
 
     const linkFeeds = extractFeedLinks(document, { baseUrl: url });
     const heuristicFeeds = extractHeuristicFeeds(document, { baseUrl: url });
-
     const uniqueFeeds = dedupeFeeds([...linkFeeds, ...heuristicFeeds]);
 
     if (uniqueFeeds.length > 0) {
@@ -59,70 +72,367 @@ export async function discoverFeeds(url: string, options: DiscoveryOptions = {})
   return [];
 }
 
-async function fetchHtmlContent(url: string, options: Required<DiscoveryOptions>): Promise<string> {
+export async function discoverFeedsEnhanced(
+  url: string,
+  options: DiscoveryOptions = {},
+): Promise<Feed[]> {
+  const mergedOptions = { ...DEFAULT_DISCOVERY_OPTIONS, ...options };
+
+  if (!isSupportedProtocol(url)) {
+    throw new Error(`Unsupported protocol: ${url}`);
+  }
+
+  const selfFeed = await checkSelfRssFeed(url, mergedOptions);
+  if (selfFeed) {
+    return [{ ...selfFeed, status: 'verified', confidence: 1, reason: 'self_feed' }];
+  }
+
+  const candidates: Feed[] = [];
+
+  const knownServiceResult = checkKnownServices(url);
+  if (knownServiceResult && knownServiceResult.feeds.length > 0) {
+    candidates.push(
+      ...knownServiceResult.feeds.map((feed) => ({
+        ...feed,
+        status: 'likely' as const,
+        confidence: 0.9,
+        reason: 'known_service' as const,
+      })),
+    );
+  }
+
+  let dom: JSDOM | null = null;
+  try {
+    const html = await fetchHtmlContent(url, mergedOptions);
+    dom = new JSDOM(html, { url, runScripts: 'outside-only' });
+    const document = dom.window.document;
+
+    const linkFeeds = extractFeedLinks(document, { baseUrl: url }).map((feed) => ({
+      ...feed,
+      status: 'likely' as const,
+      confidence: 0.85,
+      reason: 'html_alternate' as const,
+    }));
+
+    const heuristicFeeds = extractHeuristicFeeds(document, { baseUrl: url }).map((feed) => ({
+      ...feed,
+      status: 'likely' as const,
+      confidence: 0.55,
+      reason: 'heuristic_link' as const,
+    }));
+
+    candidates.push(...linkFeeds, ...heuristicFeeds);
+  } catch {
+    // Skip HTML failures; fallback candidates below.
+  } finally {
+    dom?.window.close();
+  }
+
+  if (candidates.length === 0) {
+    const urlObj = new URL(url);
+    candidates.push(
+      ...COMMON_FEED_PATHS.map((path) => ({
+        url: urlObj.origin + path,
+        title: urlObj.origin + path,
+        status: 'likely' as const,
+        confidence: 0.35,
+        reason: 'common_path' as const,
+      })),
+    );
+  }
+
+  const normalized = dedupeAndNormalizeCandidates(candidates).slice(0, mergedOptions.maxCandidates);
+  if (normalized.length === 0) return [];
+
+  const verified = await verifyCandidates(normalized, mergedOptions);
+  return sortFeedsForDisplay(dedupeEquivalentFeeds(verified));
+}
+
+function dedupeAndNormalizeCandidates(candidates: Feed[]): Feed[] {
+  const byCanonicalUrl = new Map<string, Feed>();
+
+  for (const candidate of candidates) {
+    if (shouldSkipUrl(candidate.url)) continue;
+
+    const canonicalUrl = canonicalizeFeedUrl(candidate.url);
+    const existing = byCanonicalUrl.get(canonicalUrl);
+    if (!existing || (candidate.confidence ?? 0) > (existing.confidence ?? 0)) {
+      byCanonicalUrl.set(canonicalUrl, { ...candidate, url: canonicalUrl });
+    }
+  }
+
+  return Array.from(byCanonicalUrl.values());
+}
+
+function canonicalizeFeedUrl(url: string): string {
+  try {
+    const parsed = new URL(normalizeUrl(url));
+    parsed.protocol = 'https:';
+    parsed.hash = '';
+    parsed.username = '';
+    parsed.password = '';
+
+    for (const param of TRACKING_PARAMS) {
+      parsed.searchParams.delete(param);
+    }
+
+    if (parsed.pathname.length > 1 && parsed.pathname.endsWith('/')) {
+      parsed.pathname = parsed.pathname.slice(0, -1);
+    }
+
+    return parsed.toString();
+  } catch {
+    return url;
+  }
+}
+
+async function verifyCandidates(
+  candidates: Feed[],
+  options: Required<DiscoveryOptions>,
+): Promise<Feed[]> {
+  const verifiedCandidates = await runWithConcurrency(
+    candidates,
+    options.verificationConcurrency,
+    (candidate) => verifyCandidate(candidate, options),
+  );
+
+  const valid = verifiedCandidates.filter((candidate): candidate is Feed => candidate !== null);
+  return valid.filter((candidate) => candidate.status === 'verified');
+}
+
+async function verifyCandidate(
+  candidate: Feed,
+  options: Required<DiscoveryOptions>,
+): Promise<Feed | null> {
+  const cacheKey = candidate.url;
+  const now = Date.now();
+
+  if (options.enableCache) {
+    const cached = verificationCache.get(cacheKey);
+    if (cached && cached.expiresAt > now) {
+      return cached.value;
+    }
+  }
+
+  const response = await fetchWithTimeout(candidate.url, options, options.verificationTimeout, {
+    Accept:
+      'application/rss+xml,application/atom+xml,application/feed+json,application/xml,text/xml,application/json,text/html;q=0.8,*/*;q=0.5',
+  });
+
+  if (!response || !response.ok || response.status >= 400) {
+    return fallbackLikely(candidate);
+  }
+
+  const content = await response.text();
+  const contentType = response.headers?.get?.('content-type') || candidate.type || '';
+  if (!isValidFeedContent(content, contentType)) {
+    return fallbackLikely(candidate);
+  }
+
+  const metadata = extractFeedMetadata(content, contentType);
+  const siteMetadata = metadata.siteUrl
+    ? await extractSiteMetadata(metadata.siteUrl, options)
+    : undefined;
+  const icon = metadata.icon || siteMetadata?.icon;
+  const verified: Feed = {
+    ...candidate,
+    url: response.url ? canonicalizeFeedUrl(response.url) : candidate.url,
+    title: metadata.title || candidate.title || candidate.url,
+    type: normalizeFeedType(contentType) || candidate.type,
+    status: 'verified',
+    confidence: Math.min(1, Math.max(0.85, (candidate.confidence ?? 0.7) + 0.2)),
+    description: metadata.description || siteMetadata?.description,
+    siteUrl: metadata.siteUrl,
+    icon,
+  };
+
+  if (options.enableCache) {
+    verificationCache.set(cacheKey, {
+      value: verified,
+      expiresAt: now + options.cacheTtlMs,
+    });
+  }
+
+  return verified;
+}
+
+function fallbackLikely(candidate: Feed): Feed | null {
+  if (candidate.reason !== 'known_service' && candidate.reason !== 'html_alternate') {
+    return null;
+  }
+
+  return {
+    ...candidate,
+    status: 'likely',
+    confidence: Math.max(0.4, (candidate.confidence ?? 0.5) - 0.25),
+  };
+}
+
+function sortFeedsForDisplay(feeds: Feed[]): Feed[] {
+  return feeds.toSorted((a, b) => {
+    const rankA = a.status === 'verified' ? 2 : a.status === 'likely' ? 1 : 0;
+    const rankB = b.status === 'verified' ? 2 : b.status === 'likely' ? 1 : 0;
+    if (rankA !== rankB) return rankB - rankA;
+    return (b.confidence ?? 0) - (a.confidence ?? 0);
+  });
+}
+
+function dedupeEquivalentFeeds(feeds: Feed[]): Feed[] {
+  if (feeds.length <= 1) return feeds;
+
+  const canonical = new Map<string, Feed>();
+  for (const feed of feeds) {
+    const key = canonicalizeFeedUrl(feed.url);
+    const existing = canonical.get(key);
+    if (!existing || scoreFeed(feed) > scoreFeed(existing)) {
+      canonical.set(key, feed);
+    }
+  }
+
+  const byMeta = new Map<string, Feed>();
+  for (const feed of canonical.values()) {
+    const key = equivalentMetaKey(feed);
+    if (!key) {
+      byMeta.set(feed.url, feed);
+      continue;
+    }
+
+    const existing = byMeta.get(key);
+    if (!existing || scoreFeed(feed) > scoreFeed(existing)) {
+      byMeta.set(key, feed);
+    }
+  }
+
+  return Array.from(byMeta.values());
+}
+
+function equivalentMetaKey(feed: Feed): string | null {
+  try {
+    const siteHost = feed.siteUrl ? new URL(feed.siteUrl).hostname.replace(/^www\./, '') : '';
+    const parsed = new URL(feed.url);
+    const host = parsed.hostname.replace(/^www\./, '');
+    const title = feed.title.trim().toLowerCase();
+    const type = feed.type ? normalizeTypeFamily(feed.type) : '';
+
+    if (siteHost && title) {
+      return `${siteHost}|${title}|${type}`;
+    }
+
+    if (host && title) {
+      return `${host}|${title}|${type}`;
+    }
+
+    return null;
+  } catch {
+    return null;
+  }
+}
+
+function normalizeTypeFamily(type: string): string {
+  const lower = type.toLowerCase();
+  if (lower.includes('rss')) return 'rss';
+  if (lower.includes('atom')) return 'atom';
+  if (lower.includes('json')) return 'json';
+  return lower;
+}
+
+function scoreFeed(feed: Feed): number {
+  const confidence = feed.confidence ?? 0;
+  const hasNoQuery = feed.url.includes('?') ? 0 : 0.05;
+  const shorter = 1 / Math.max(20, feed.url.length);
+  return confidence + hasNoQuery + shorter;
+}
+
+async function runWithConcurrency<T, R>(
+  items: T[],
+  concurrency: number,
+  handler: (item: T) => Promise<R>,
+): Promise<R[]> {
+  if (items.length === 0) return [];
+
+  const safeConcurrency = Math.max(1, Math.min(concurrency, items.length));
+  const results: (R | undefined)[] = Array.from({ length: items.length });
+  let index = 0;
+
+  async function worker(): Promise<void> {
+    while (index < items.length) {
+      const currentIndex = index;
+      index += 1;
+      const item = items[currentIndex];
+      if (item === undefined) return;
+      results[currentIndex] = await handler(item);
+    }
+  }
+
+  await Promise.all(Array.from({ length: safeConcurrency }, () => worker()));
+  return results.filter((item): item is R => item !== undefined);
+}
+
+async function fetchWithTimeout(
+  url: string,
+  options: Required<DiscoveryOptions>,
+  timeout: number,
+  extraHeaders: Record<string, string>,
+): Promise<Response | null> {
   const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), options.timeout);
+  const timeoutId = setTimeout(() => controller.abort(), timeout);
 
   try {
-    const response = await fetch(url, {
+    return await fetch(url, {
       method: 'GET',
       headers: {
         'User-Agent': options.userAgent,
-        Accept: 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+        ...extraHeaders,
       },
       signal: controller.signal,
       redirect: options.followRedirects ? 'follow' : 'manual',
     });
-
-    if (!response.ok) {
-      throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-    }
-
-    return await response.text();
+  } catch {
+    return null;
   } finally {
     clearTimeout(timeoutId);
   }
+}
+
+async function fetchHtmlContent(url: string, options: Required<DiscoveryOptions>): Promise<string> {
+  const response = await fetchWithTimeout(url, options, options.timeout, {
+    Accept: 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+  });
+
+  if (!response || !response.ok) {
+    throw new Error('Failed to fetch HTML');
+  }
+
+  return await response.text();
 }
 
 async function checkSelfRssFeed(
   url: string,
   options: Required<DiscoveryOptions>,
 ): Promise<Feed | null> {
-  try {
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), options.timeout);
+  const response = await fetchWithTimeout(url, options, options.timeout, {
+    Accept: 'application/rss+xml,application/atom+xml,application/xml,text/xml,application/json',
+  });
 
-    try {
-      const response = await fetch(url, {
-        method: 'GET',
-        headers: {
-          'User-Agent': options.userAgent,
-          Accept:
-            'application/rss+xml,application/atom+xml,application/xml,text/xml,application/json',
-        },
-        signal: controller.signal,
-        redirect: options.followRedirects ? 'follow' : 'manual',
-      });
+  if (!response || !response.ok) {
+    return null;
+  }
 
-      if (response.ok) {
-        const content = await response.text();
-        const contentType = response.headers.get('content-type') || '';
+  const content = await response.text();
+  const contentType = response.headers?.get?.('content-type') || '';
+  if (!isValidFeedContent(content, contentType)) {
+    return null;
+  }
 
-        if (isValidFeedContent(content, contentType)) {
-          const title = extractFeedTitle(content) || url;
-          return {
-            url: url,
-            title: title,
-            type: contentType || undefined,
-          };
-        }
-      }
-    } finally {
-      clearTimeout(timeoutId);
-    }
-  } catch {}
-
-  return null;
+  const metadata = extractFeedMetadata(content, contentType);
+  return {
+    url,
+    title: metadata.title || url,
+    type: normalizeFeedType(contentType),
+    description: metadata.description,
+    siteUrl: metadata.siteUrl,
+    icon: metadata.icon,
+  };
 }
 
 async function tryCommonPaths(
@@ -134,34 +444,21 @@ async function tryCommonPaths(
   for (const path of COMMON_FEED_PATHS) {
     try {
       const feedUrl = urlObj.origin + path;
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), Math.min(options.timeout, 5000));
+      const response = await fetchWithTimeout(feedUrl, options, Math.min(options.timeout, 5000), {
+        Accept: 'application/rss+xml,application/atom+xml,application/xml,text/xml',
+      });
 
-      try {
-        const response = await fetch(feedUrl, {
-          method: 'GET',
-          headers: {
-            'User-Agent': options.userAgent,
-            Accept: 'application/rss+xml,application/atom+xml,application/xml,text/xml',
-          },
-          signal: controller.signal,
-          redirect: options.followRedirects ? 'follow' : 'manual',
-        });
+      if (response && response.ok && response.status >= 200 && response.status < 400) {
+        const content = await response.text();
+        const contentType = response.headers?.get?.('content-type') || '';
 
-        if (response.ok && response.status >= 200 && response.status < 400) {
-          const content = await response.text();
-          const contentType = response.headers.get('content-type') || '';
-
-          if (isValidFeedContent(content, contentType)) {
-            return {
-              url: feedUrl,
-              title: feedUrl,
-              type: contentType || undefined,
-            };
-          }
+        if (isValidFeedContent(content, contentType)) {
+          return {
+            url: feedUrl,
+            title: feedUrl,
+            type: normalizeFeedType(contentType),
+          };
         }
-      } finally {
-        clearTimeout(timeoutId);
       }
     } catch {
       continue;
@@ -179,7 +476,7 @@ function isValidFeedContent(content: string, contentType: string = ''): boolean 
   if (contentType.includes('json') || content.trim().startsWith('{')) {
     try {
       const json = JSON.parse(content);
-      return json.version && json.items && Array.isArray(json.items);
+      return Boolean(json.version && json.items && Array.isArray(json.items));
     } catch {
       return false;
     }
@@ -188,17 +485,137 @@ function isValidFeedContent(content: string, contentType: string = ''): boolean 
   return false;
 }
 
-function extractFeedTitle(content: string): string | null {
-  const cleanContent = content.replaceAll('&lt;', '<').replaceAll('&gt;', '>');
-  const titleMatch = cleanContent.match(/<title>(.*?)<\/title>/is);
+function normalizeFeedType(contentType: string): string | undefined {
+  const lower = contentType.toLowerCase();
+  if (lower.includes('application/rss+xml')) return 'application/rss+xml';
+  if (lower.includes('application/atom+xml')) return 'application/atom+xml';
+  if (lower.includes('application/feed+json')) return 'application/feed+json';
+  if (lower.includes('application/json')) return 'application/json';
+  return contentType || undefined;
+}
 
-  if (titleMatch && titleMatch[1]) {
-    let title = titleMatch[1];
-    title = title.replace(/<!\[CDATA\[(.*?)]]>/gs, '$1');
-    title = title.replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>');
-    title = title.replace(/\s+/g, ' ');
-    return title.trim();
+function extractFeedMetadata(
+  content: string,
+  contentType: string,
+): {
+  title?: string;
+  description?: string;
+  siteUrl?: string;
+  icon?: string;
+} {
+  if (contentType.includes('json') || content.trim().startsWith('{')) {
+    try {
+      const json = JSON.parse(content) as {
+        title?: string;
+        description?: string;
+        home_page_url?: string;
+        favicon?: string;
+      };
+
+      return {
+        title: json.title,
+        description: json.description,
+        siteUrl: json.home_page_url,
+        icon: json.favicon,
+      };
+    } catch {
+      return {};
+    }
   }
 
-  return null;
+  return {
+    title: extractXmlTag(content, 'title') ?? undefined,
+    description:
+      extractXmlTag(content, 'description') ?? extractXmlTag(content, 'subtitle') ?? undefined,
+    siteUrl: extractAtomAlternateLink(content) ?? extractXmlTag(content, 'link') ?? undefined,
+    icon: extractXmlTag(content, 'icon') ?? undefined,
+  };
+}
+
+function extractAtomAlternateLink(content: string): string | undefined {
+  const match = content.match(/<link[^>]*rel=["']alternate["'][^>]*href=["']([^"']+)["'][^>]*>/i);
+  return match?.[1];
+}
+
+async function extractSiteMetadata(
+  siteUrl: string,
+  options: Required<DiscoveryOptions>,
+): Promise<{ icon?: string; description?: string }> {
+  const response = await fetchWithTimeout(siteUrl, options, Math.min(options.timeout, 3000), {
+    Accept: 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+  });
+
+  if (!response || !response.ok) return {};
+
+  const html = await response.text();
+  const descriptionPatterns = [
+    /<meta[^>]*property=["']og:description["'][^>]*content=["']([^"']+)["'][^>]*>/i,
+    /<meta[^>]*name=["']description["'][^>]*content=["']([^"']+)["'][^>]*>/i,
+    /<meta[^>]*name=["']twitter:description["'][^>]*content=["']([^"']+)["'][^>]*>/i,
+  ];
+
+  let description: string | undefined;
+  for (const pattern of descriptionPatterns) {
+    const match = html.match(pattern);
+    if (match?.[1]) {
+      description = decodeHtml(match[1]);
+      break;
+    }
+  }
+
+  const patterns = [
+    /<link[^>]*rel=["']apple-touch-icon(?:-precomposed)?["'][^>]*href=["']([^"']+)["']/i,
+    /<link[^>]*rel=["'](?:shortcut\s+icon|icon)["'][^>]*href=["']([^"']+)["']/i,
+  ];
+
+  for (const pattern of patterns) {
+    const match = html.match(pattern);
+    if (!match?.[1]) continue;
+
+    try {
+      return {
+        icon: new URL(match[1], siteUrl).toString(),
+        description,
+      };
+    } catch {
+      continue;
+    }
+  }
+
+  try {
+    return {
+      icon: `${new URL(siteUrl).origin}/favicon.ico`,
+      description,
+    };
+  } catch {
+    return { description };
+  }
+}
+
+function decodeHtml(value: string): string {
+  return value
+    .replace(/&amp;/g, '&')
+    .replace(/&lt;/g, '<')
+    .replace(/&gt;/g, '>')
+    .replace(/&quot;/g, '"')
+    .replace(/&#39;/g, "'")
+    .trim();
+}
+
+function extractXmlTag(content: string, tagName: string): string | null {
+  const cleanContent = content.replaceAll('&lt;', '<').replaceAll('&gt;', '>');
+  const regex = new RegExp(`<${tagName}[^>]*>([\\s\\S]*?)<\\/${tagName}>`, 'i');
+  const match = cleanContent.match(regex);
+
+  if (!match || !match[1]) {
+    return null;
+  }
+
+  let value = match[1];
+  value = value.replace(/<!\[CDATA\[([\s\S]*?)]]>/g, '$1');
+  value = value.replace(/<[^>]+>/g, ' ');
+  value = value.replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>');
+  value = value.replace(/\s+/g, ' ').trim();
+
+  return value || null;
 }
