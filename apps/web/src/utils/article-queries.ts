@@ -2,6 +2,8 @@ import type { Article } from '@repo/domain/client';
 import { type Ref, eq, inArray, or } from '@tanstack/solid-db';
 import type { ReadStatus } from '~/components/ReadStatusToggle';
 
+type ReadFilterArticleRef = Pick<Ref<Article>, 'id' | 'isRead'>;
+
 /**
  * Builds a read-status where clause that correctly handles session-read tracking.
  *
@@ -17,7 +19,7 @@ import type { ReadStatus } from '~/components/ReadStatusToggle';
 export function readStatusFilter(
   readStatus: ReadStatus,
   sessionReadIds: Set<string>,
-): ((article: Ref<Article>) => any) | null {
+): ((article: ReadFilterArticleRef) => any) | null {
   if (readStatus === 'read') {
     return (article) => eq(article.isRead, true);
   }

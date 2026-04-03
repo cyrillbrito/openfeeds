@@ -1,7 +1,6 @@
 import type { Article, Feed, Tag } from '@repo/domain/client';
 import { Link } from '@tanstack/solid-router';
 import { createWindowVirtualizer } from '@tanstack/solid-virtual';
-import { ChevronDown } from 'lucide-solid';
 import { createEffect, createSignal, For, on, onCleanup, onMount, Show, type JSX } from 'solid-js';
 import {
   getListAnchor,
@@ -53,8 +52,8 @@ export function ArticleList(props: ArticleListProps) {
   const [isAutoLoading, setIsAutoLoading] = createSignal(false);
   const [scrollMargin, setScrollMargin] = createSignal(0);
   const [restoredKey, setRestoredKey] = createSignal('');
-  const [showManualLoadMore, setShowManualLoadMore] = createSignal(false);
   const [isRestoring, setIsRestoring] = createSignal(false);
+  const [restoreLoadMoreCount, setRestoreLoadMoreCount] = createSignal(0);
 
   const rowVirtualizer = createWindowVirtualizer({
     count: props.articles.length,
@@ -155,7 +154,6 @@ export function ArticleList(props: ArticleListProps) {
 
   // Parent controls pagination now - we just show what we receive
   const hasMoreArticles = () => props.articles.length < props.totalCount;
-  const remainingCount = () => props.totalCount - props.articles.length;
   const listScrollKey = () => props.scrollStateKey;
   const virtualItems = () => rowVirtualizer.getVirtualItems().filter((item) => item != null);
   const paddingTop = () => {
@@ -177,7 +175,6 @@ export function ArticleList(props: ArticleListProps) {
 
   onMount(() => {
     updateScrollMargin();
-    setShowManualLoadMore(Boolean((window as any).__OPENFEEDS_SHOW_LOAD_MORE));
 
     window.addEventListener('resize', updateScrollMargin);
     onCleanup(() => window.removeEventListener('resize', updateScrollMargin));
@@ -243,6 +240,19 @@ export function ArticleList(props: ArticleListProps) {
   );
 
   createEffect(() => {
+    if (!import.meta.env.DEV) return;
+    if (!(window as any).__OPENFEEDS_DEBUG_SCROLL) return;
+    if (restoreLoadMoreCount() === 0) return;
+
+    console.debug('[article-list-scroll]', 'restore-load-more-count', {
+      key: listScrollKey(),
+      count: restoreLoadMoreCount(),
+      loaded: props.articles.length,
+      total: props.totalCount,
+    });
+  });
+
+  createEffect(() => {
     const key = listScrollKey();
     if (restoredKey() === key) return;
 
@@ -254,6 +264,7 @@ export function ArticleList(props: ArticleListProps) {
     }
 
     setIsRestoring(true);
+    setRestoreLoadMoreCount(0);
 
     let attempts = 0;
     const maxAttempts = 24;
@@ -274,6 +285,7 @@ export function ArticleList(props: ArticleListProps) {
             total: props.totalCount,
           });
           props.onLoadMore();
+          setRestoreLoadMoreCount((prev) => prev + 1);
           requestAnimationFrame(tryRestore);
           return;
         }
@@ -337,6 +349,7 @@ export function ArticleList(props: ArticleListProps) {
           total: props.totalCount,
         });
         props.onLoadMore();
+        setRestoreLoadMoreCount((prev) => prev + 1);
         requestAnimationFrame(tryRestore);
         return;
       }
@@ -435,14 +448,6 @@ export function ArticleList(props: ArticleListProps) {
 
       <Show when={hasMoreArticles()}>
         <div ref={(el) => (autoLoadTriggerRef = el)} class="h-px w-full" aria-hidden="true" />
-        <Show when={showManualLoadMore()}>
-          <div class="mt-6 flex justify-center">
-            <button class="btn btn-outline btn-wide gap-2" onClick={props.onLoadMore}>
-              <ChevronDown size={20} />
-              Load More ({remainingCount()} remaining)
-            </button>
-          </div>
-        </Show>
       </Show>
     </Show>
   );

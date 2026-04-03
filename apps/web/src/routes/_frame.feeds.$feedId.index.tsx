@@ -67,7 +67,7 @@ function FeedArticles() {
 
     const filter = readStatusFilter(readStatus(), sessionReadIds());
     if (filter) {
-      query = query.where(({ article }) => filter(article as any));
+      query = query.where(({ article }) => filter(article));
     }
 
     return query.orderBy(({ article }) => article.pubDate, 'desc').limit(visibleCount());
@@ -81,7 +81,7 @@ function FeedArticles() {
 
     const filter = readStatusFilter(readStatus(), sessionReadIds());
     if (filter) {
-      query = query.where(({ article }) => filter(article as any));
+      query = query.where(({ article }) => filter(article));
     }
 
     return query.select(({ article }) => ({ id: article.id }));
@@ -296,7 +296,7 @@ function FeedArticles() {
       <Suspense fallback={<CenterLoader />}>
         <Show when={feedsQuery() && tagsQuery()}>
           <ArticleList
-            articles={filteredArticles() as any}
+            articles={filteredArticles()}
             feeds={feedsQuery()}
             tags={tagsQuery()}
             totalCount={totalCount()}
