@@ -25,7 +25,6 @@
     "@solid-primitives/scheduled": "^1.5.3",
     "@t3-oss/env-core": "^0.13.11",
     "@tailwindcss/typography": "^0.5.19",
-    "@tanstack/browser-db-sqlite-persistence": "^0.1.5",
     "@tanstack/electric-db-collection": "^0.2.43",
     "@tanstack/solid-db": "^0.2.15",
     "@tanstack/solid-devtools": "^0.8.0",

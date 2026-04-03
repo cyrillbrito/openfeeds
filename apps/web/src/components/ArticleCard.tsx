@@ -60,6 +60,7 @@ export function ArticleCard(props: ArticleCardProps) {
         params={{ articleId: props.article.id.toString() }}
         class="absolute inset-0"
         tabIndex={-1}
+        aria-label={`Open article: ${props.article.title}`}
         onClick={handleNavigate}
       />
       <div class="mb-1.5 flex gap-2 md:gap-3">

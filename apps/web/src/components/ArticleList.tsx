@@ -54,6 +54,8 @@ export function ArticleList(props: ArticleListProps) {
   const [restoredKey, setRestoredKey] = createSignal('');
   const [isRestoring, setIsRestoring] = createSignal(false);
   const [restoreLoadMoreCount, setRestoreLoadMoreCount] = createSignal(0);
+  const [isRestoreLoadPending, setIsRestoreLoadPending] = createSignal(false);
+  const [lastRestoreLoadedCount, setLastRestoreLoadedCount] = createSignal(0);
 
   const rowVirtualizer = createWindowVirtualizer({
     count: props.articles.length,
@@ -185,6 +187,16 @@ export function ArticleList(props: ArticleListProps) {
       () => props.articles.length,
       () => {
         setIsAutoLoading(false);
+
+        if (
+          isRestoreLoadPending() &&
+          props.articles.length > lastRestoreLoadedCount()
+        ) {
+          setIsRestoreLoadPending(false);
+        }
+
+        setLastRestoreLoadedCount(props.articles.length);
+
         queueMicrotask(updateScrollMargin);
         debugScroll('articles-length-changed', {
           key: listScrollKey(),
@@ -284,11 +296,18 @@ export function ArticleList(props: ArticleListProps) {
 
     setIsRestoring(true);
     setRestoreLoadMoreCount(0);
+    setIsRestoreLoadPending(false);
+    setLastRestoreLoadedCount(props.articles.length);
 
     let attempts = 0;
     const maxAttempts = 24;
 
     const tryRestore = () => {
+      if (isRestoreLoadPending()) {
+        requestAnimationFrame(tryRestore);
+        return;
+      }
+
       attempts += 1;
 
       if (anchor) {
@@ -303,6 +322,8 @@ export function ArticleList(props: ArticleListProps) {
             loaded: props.articles.length,
             total: props.totalCount,
           });
+          setIsRestoreLoadPending(true);
+          setLastRestoreLoadedCount(props.articles.length);
           props.onLoadMore();
           setRestoreLoadMoreCount((prev) => prev + 1);
           requestAnimationFrame(tryRestore);
@@ -367,6 +388,8 @@ export function ArticleList(props: ArticleListProps) {
           loaded: props.articles.length,
           total: props.totalCount,
         });
+        setIsRestoreLoadPending(true);
+        setLastRestoreLoadedCount(props.articles.length);
         props.onLoadMore();
         setRestoreLoadMoreCount((prev) => prev + 1);
         requestAnimationFrame(tryRestore);
