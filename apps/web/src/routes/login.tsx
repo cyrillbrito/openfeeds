@@ -2,7 +2,7 @@ import { BetterFetchError } from '@better-fetch/fetch';
 import { createFileRoute, Link, useNavigate } from '@tanstack/solid-router';
 import { CircleX } from 'lucide-solid';
 import { posthog } from 'posthog-js';
-import { createSignal, Show } from 'solid-js';
+import { createSignal, onMount, Show } from 'solid-js';
 import { Card } from '~/components/Card';
 import { Loader } from '~/components/Loader';
 import { SocialLoginButtons, useLastLoginMethod } from '~/components/SocialLoginButtons';
@@ -28,6 +28,15 @@ function LoginPage() {
   const [error, setError] = createSignal<string | null>(null);
   const [isLoading, setIsLoading] = createSignal(false);
   const lastMethod = useLastLoginMethod();
+
+  onMount(() => {
+    const redirect = search()?.redirect;
+    posthog.capture('auth:login_view', {
+      source: 'login_route',
+      reason: redirect ? 'guard_redirect' : 'direct_visit',
+      redirect_target: redirect ?? null,
+    });
+  });
 
   const handleLogin = async (e: Event) => {
     e.preventDefault();
@@ -60,9 +69,19 @@ function LoginPage() {
     } catch (err) {
       setIsLoading(false);
       if (err instanceof BetterFetchError) {
+        posthog.capture('auth:login_fail', {
+          source: 'login_form',
+          code: err.error?.code ?? null,
+          message: err.error?.message ?? err.message,
+        });
         setError(err.error?.message || err.message);
       } else {
         posthog.captureException(err);
+        posthog.capture('auth:login_fail', {
+          source: 'login_form',
+          code: 'unknown',
+          message: 'Unexpected network error',
+        });
         setError('Unexpected network error');
       }
     }

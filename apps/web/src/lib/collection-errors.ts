@@ -68,10 +68,25 @@ export function shapeErrorHandler(
 
     // 401 = session expired — stop retrying and redirect to login
     if (error instanceof FetchError && error.status === 401) {
+      posthog.capture('auth:session_fail', {
+        source: 'shape_error_handler',
+        context,
+        status: 401,
+        path: window.location.pathname,
+      });
+
       if (!hasToasted) {
         toastService.error('Session expired. Redirecting to login…');
         hasToasted = true;
       }
+
+      posthog.capture('auth:login_view', {
+        source: 'shape_error_handler',
+        reason: 'shape_401',
+        context,
+        path: window.location.pathname,
+      });
+
       window.location.href = '/login';
       return; // stop syncing
     }
@@ -83,11 +98,24 @@ export function shapeErrorHandler(
 
     // Retry other errors a limited number of times
     if (retryCount < MAX_SHAPE_RETRIES) {
+      posthog.capture('sync:shape_fail', {
+        context,
+        retry_count: retryCount + 1,
+        max_retries: MAX_SHAPE_RETRIES,
+        message,
+      });
       retryCount++;
       return {};
     }
 
     // Exhausted retries — stop syncing
+    posthog.capture('sync:shape_fail', {
+      context,
+      retry_count: retryCount,
+      max_retries: MAX_SHAPE_RETRIES,
+      exhausted: true,
+      message,
+    });
     return;
   };
 }
