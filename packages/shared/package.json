@@ -2,10 +2,12 @@
   "name": "@repo/shared",
   "type": "module",
   "exports": {
-    "./utils": "./src/utils/index.ts"
+    "./utils": "./src/utils/index.ts",
+    "./rss": "./src/rss/index.ts"
   },
   "scripts": {},
   "dependencies": {
+    "feedsmith": "^2.9.1",
     "uuidv7": "^1.2.1"
   },
   "devDependencies": {

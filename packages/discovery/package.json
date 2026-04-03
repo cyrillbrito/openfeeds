@@ -10,6 +10,7 @@
     "test:watch": "bun test --watch"
   },
   "dependencies": {
+    "@repo/shared": "workspace:*",
     "jsdom": "^29.0.1"
   },
   "devDependencies": {

@@ -1,6 +1,6 @@
-import { parseFeed } from 'feedsmith';
+import { fetchWithTimeout, parseFeedContent, type ParseFeedResult } from '@repo/shared/rss';
 
-export type ParseFeedResult = ReturnType<typeof parseFeed>;
+export type { ParseFeedResult } from '@repo/shared/rss';
 
 export class HttpFetchError extends Error {
   constructor(
@@ -8,12 +8,6 @@ export class HttpFetchError extends Error {
     statusText: string,
   ) {
     super(`HTTP ${status}: ${statusText}`);
-  }
-}
-
-export class FetchTimeoutError extends Error {
-  constructor(timeoutMs: number) {
-    super(`Feed fetch timed out after ${timeoutMs / 1000}s`);
   }
 }
 
@@ -40,9 +34,6 @@ export type FetchRssResult =
     };
 
 export async function fetchRss(url: string, opts: FetchRssOptions = {}): Promise<FetchRssResult> {
-  const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), FETCH_TIMEOUT_MS);
-
   const headers: Record<string, string> = {};
   if (opts.etag) {
     headers['If-None-Match'] = opts.etag;
@@ -51,34 +42,31 @@ export async function fetchRss(url: string, opts: FetchRssOptions = {}): Promise
     headers['If-Modified-Since'] = opts.lastModified;
   }
 
-  try {
-    const response = await fetch(url, { signal: controller.signal, headers });
-
-    // 304 Not Modified — feed hasn't changed, skip all processing
-    if (response.status === 304) {
-      return { notModified: true };
-    }
-
-    if (!response.ok) {
-      throw new HttpFetchError(response.status, response.statusText);
-    }
-
-    const xmlText = await response.text();
-    const feed = parseFeed(xmlText);
-
-    return {
-      notModified: false,
-      feed,
-      etag: response.headers.get('etag'),
-      lastModified: response.headers.get('last-modified'),
-      httpStatus: response.status,
-    };
-  } catch (err) {
-    if (err instanceof DOMException && err.name === 'AbortError') {
-      throw new FetchTimeoutError(FETCH_TIMEOUT_MS);
-    }
-    throw err;
-  } finally {
-    clearTimeout(timeoutId);
+  const response = await fetchWithTimeout(url, FETCH_TIMEOUT_MS, { headers });
+  if (!response) {
+    throw new Error('Failed to fetch feed');
   }
+
+  // 304 Not Modified — feed hasn't changed, skip all processing
+  if (response.status === 304) {
+    return { notModified: true };
+  }
+
+  if (!response.ok) {
+    throw new HttpFetchError(response.status, response.statusText);
+  }
+
+  const xmlText = await response.text();
+  const feed = parseFeedContent(xmlText);
+  if (!feed) {
+    throw new Error('Failed to parse feed');
+  }
+
+  return {
+    notModified: false,
+    feed,
+    etag: response.headers.get('etag'),
+    lastModified: response.headers.get('last-modified'),
+    httpStatus: response.status,
+  };
 }

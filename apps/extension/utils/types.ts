@@ -1,6 +1,4 @@
-import type { Feed } from '@repo/discovery/browser';
-
-export type DiscoveredFeed = Feed;
+export type { DiscoveredFeed } from '@repo/discovery/browser';
 
 export type MessageType =
   | { type: 'GET_FEEDS' }

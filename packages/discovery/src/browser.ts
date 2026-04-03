@@ -7,7 +7,7 @@ import {
   type DiscoveredFeed,
 } from './core/index.js';
 
-export type { DiscoveredFeed, Feed, ServiceResult, ExtractOptions } from './core/index.js';
+export type { DiscoveredFeed, ServiceResult, ExtractOptions } from './core/index.js';
 export { checkKnownServices, SERVICES } from './core/index.js';
 
 export function discoverFeedsFromDocument(doc: Document = document): DiscoveredFeed[] {

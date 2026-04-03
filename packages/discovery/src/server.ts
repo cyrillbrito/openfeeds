@@ -1,3 +1,11 @@
+import {
+  canonicalizeFeedUrl,
+  extractBasicSiteMetadata,
+  fetchWithTimeout,
+  normalizeFeedTypeFromHeader,
+  parseFeedContent,
+  type ParseFeedResult,
+} from '@repo/shared/rss';
 import { JSDOM } from 'jsdom';
 import {
   checkKnownServices,
@@ -7,7 +15,6 @@ import {
   extractFeedLinks,
   extractHeuristicFeeds,
   isSupportedProtocol,
-  normalizeUrl,
   shouldSkipUrl,
   type DiscoveredFeed,
   type DiscoveryOptions,
@@ -16,7 +23,6 @@ import {
 export type {
   DiscoveryOptions,
   DiscoveredFeed,
-  Feed,
   ServiceResult,
   ExtractOptions,
 } from './core/index.js';
@@ -33,16 +39,6 @@ type DiscoveryCandidate = DiscoveredFeed & {
   score: number;
   source: DiscoverySource;
 };
-
-const TRACKING_PARAMS = new Set([
-  'utm_source',
-  'utm_medium',
-  'utm_campaign',
-  'utm_term',
-  'utm_content',
-  'fbclid',
-  'gclid',
-]);
 
 export async function discoverFeeds(
   url: string,
@@ -179,28 +175,6 @@ function dedupeAndNormalizeCandidates(candidates: DiscoveryCandidate[]): Discove
   return Array.from(byCanonicalUrl.values());
 }
 
-function canonicalizeFeedUrl(url: string): string {
-  try {
-    const parsed = new URL(normalizeUrl(url));
-    parsed.protocol = 'https:';
-    parsed.hash = '';
-    parsed.username = '';
-    parsed.password = '';
-
-    for (const param of TRACKING_PARAMS) {
-      parsed.searchParams.delete(param);
-    }
-
-    if (parsed.pathname.length > 1 && parsed.pathname.endsWith('/')) {
-      parsed.pathname = parsed.pathname.slice(0, -1);
-    }
-
-    return parsed.toString();
-  } catch {
-    return url;
-  }
-}
-
 async function verifyCandidates(
   candidates: DiscoveryCandidate[],
   options: Required<DiscoveryOptions>,
@@ -221,7 +195,7 @@ async function verifyCandidate(
   candidate: DiscoveryCandidate,
   options: Required<DiscoveryOptions>,
 ): Promise<DiscoveryCandidate | null> {
-  const response = await fetchWithTimeout(candidate.url, options, options.timeout, {
+  const response = await fetchDiscoveryUrl(candidate.url, options, options.timeout, {
     Accept:
       'application/rss+xml,application/atom+xml,application/feed+json,application/xml,text/xml,application/json,text/html;q=0.8,*/*;q=0.5',
   });
@@ -231,12 +205,15 @@ async function verifyCandidate(
   }
 
   const content = await response.text();
-  const contentType = response.headers?.get?.('content-type') || candidate.type || '';
-  if (!isValidFeedContent(content, contentType)) {
+  const contentType = response.headers.get('content-type') || candidate.type || '';
+  const parsedFeed = parseFeedContent(content);
+  const isValidXmlFeed = parsedFeed !== null;
+  const isValidJsonFeed = isValidJsonFeedContent(content, contentType);
+  if (!isValidXmlFeed && !isValidJsonFeed) {
     return fallbackLikely(candidate);
   }
 
-  const metadata = extractFeedMetadata(content, contentType);
+  const metadata = extractFeedMetadata(content, contentType, parsedFeed);
   const siteMetadata = metadata.siteUrl
     ? await extractSiteMetadata(metadata.siteUrl, options)
     : undefined;
@@ -245,7 +222,7 @@ async function verifyCandidate(
     ...candidate,
     url: response.url ? canonicalizeFeedUrl(response.url) : candidate.url,
     title: metadata.title || candidate.title || candidate.url,
-    type: normalizeFeedType(contentType) || candidate.type,
+    type: normalizeFeedTypeFromHeader(contentType) || candidate.type,
     score: Math.min(1, Math.max(0.85, candidate.score + 0.2)),
     description: metadata.description || siteMetadata?.description,
     siteUrl: metadata.siteUrl,
@@ -366,34 +343,24 @@ async function runWithConcurrency<T, R>(
   return results.filter((item): item is R => item !== undefined);
 }
 
-async function fetchWithTimeout(
+async function fetchDiscoveryUrl(
   url: string,
   options: Required<DiscoveryOptions>,
   timeout: number,
   extraHeaders: Record<string, string>,
 ): Promise<Response | null> {
-  const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), timeout);
-
-  try {
-    return await fetch(url, {
-      method: 'GET',
-      headers: {
-        'User-Agent': options.userAgent,
-        ...extraHeaders,
-      },
-      signal: controller.signal,
-      redirect: options.followRedirects ? 'follow' : 'manual',
-    });
-  } catch {
-    return null;
-  } finally {
-    clearTimeout(timeoutId);
-  }
+  return fetchWithTimeout(url, timeout, {
+    method: 'GET',
+    headers: {
+      'User-Agent': options.userAgent,
+      ...extraHeaders,
+    },
+    redirect: options.followRedirects ? 'follow' : 'manual',
+  });
 }
 
 async function fetchHtmlContent(url: string, options: Required<DiscoveryOptions>): Promise<string> {
-  const response = await fetchWithTimeout(url, options, options.timeout, {
+  const response = await fetchDiscoveryUrl(url, options, options.timeout, {
     Accept: 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
   });
 
@@ -408,7 +375,7 @@ async function checkSelfRssFeed(
   url: string,
   options: Required<DiscoveryOptions>,
 ): Promise<DiscoveredFeed | null> {
-  const response = await fetchWithTimeout(url, options, options.timeout, {
+  const response = await fetchDiscoveryUrl(url, options, options.timeout, {
     Accept: 'application/rss+xml,application/atom+xml,application/xml,text/xml,application/json',
   });
 
@@ -417,16 +384,19 @@ async function checkSelfRssFeed(
   }
 
   const content = await response.text();
-  const contentType = response.headers?.get?.('content-type') || '';
-  if (!isValidFeedContent(content, contentType)) {
+  const contentType = response.headers.get('content-type') || '';
+  const parsedFeed = parseFeedContent(content);
+  const isValidXmlFeed = parsedFeed !== null;
+  const isValidJsonFeed = isValidJsonFeedContent(content, contentType);
+  if (!isValidXmlFeed && !isValidJsonFeed) {
     return null;
   }
 
-  const metadata = extractFeedMetadata(content, contentType);
+  const metadata = extractFeedMetadata(content, contentType, parsedFeed);
   return {
     url,
     title: metadata.title || url,
-    type: normalizeFeedType(contentType),
+    type: normalizeFeedTypeFromHeader(contentType),
     description: metadata.description,
     siteUrl: metadata.siteUrl,
     icon: metadata.icon,
@@ -442,19 +412,19 @@ async function tryCommonPaths(
   for (const path of COMMON_FEED_PATHS) {
     try {
       const feedUrl = urlObj.origin + path;
-      const response = await fetchWithTimeout(feedUrl, options, Math.min(options.timeout, 5000), {
+      const response = await fetchDiscoveryUrl(feedUrl, options, Math.min(options.timeout, 5000), {
         Accept: 'application/rss+xml,application/atom+xml,application/xml,text/xml',
       });
 
       if (response && response.ok && response.status >= 200 && response.status < 400) {
         const content = await response.text();
-        const contentType = response.headers?.get?.('content-type') || '';
+        const contentType = response.headers.get('content-type') || '';
 
-        if (isValidFeedContent(content, contentType)) {
+        if (parseFeedContent(content) !== null || isValidJsonFeedContent(content, contentType)) {
           return {
             url: feedUrl,
             title: feedUrl,
-            type: normalizeFeedType(contentType),
+            type: normalizeFeedTypeFromHeader(contentType),
           };
         }
       }
@@ -466,35 +436,23 @@ async function tryCommonPaths(
   return null;
 }
 
-function isValidFeedContent(content: string, contentType: string = ''): boolean {
-  if (content.includes('<rss') || content.includes('<feed') || content.includes('<rdf:RDF')) {
-    return true;
+function isValidJsonFeedContent(content: string, contentType: string): boolean {
+  if (!contentType.includes('json') && !content.trim().startsWith('{')) {
+    return false;
   }
 
-  if (contentType.includes('json') || content.trim().startsWith('{')) {
-    try {
-      const json = JSON.parse(content);
-      return Boolean(json.version && json.items && Array.isArray(json.items));
-    } catch {
-      return false;
-    }
+  try {
+    const json = JSON.parse(content) as { version?: unknown; items?: unknown };
+    return typeof json.version === 'string' && Array.isArray(json.items);
+  } catch {
+    return false;
   }
-
-  return false;
-}
-
-function normalizeFeedType(contentType: string): string | undefined {
-  const lower = contentType.toLowerCase();
-  if (lower.includes('application/rss+xml')) return 'application/rss+xml';
-  if (lower.includes('application/atom+xml')) return 'application/atom+xml';
-  if (lower.includes('application/feed+json')) return 'application/feed+json';
-  if (lower.includes('application/json')) return 'application/json';
-  return contentType || undefined;
 }
 
 function extractFeedMetadata(
   content: string,
   contentType: string,
+  parsedFeed?: ParseFeedResult | null,
 ): {
   title?: string;
   description?: string;
@@ -521,99 +479,73 @@ function extractFeedMetadata(
     }
   }
 
-  return {
-    title: extractXmlTag(content, 'title') ?? undefined,
-    description:
-      extractXmlTag(content, 'description') ?? extractXmlTag(content, 'subtitle') ?? undefined,
-    siteUrl: extractAtomAlternateLink(content) ?? extractXmlTag(content, 'link') ?? undefined,
-    icon: extractXmlTag(content, 'icon') ?? undefined,
-  };
-}
+  if (parsedFeed) {
+    if (parsedFeed.format === 'rss') {
+      const rssFeed = parsedFeed.feed;
+      const image = rssFeed.image as { url?: string } | undefined;
 
-function extractAtomAlternateLink(content: string): string | undefined {
-  const match = content.match(/<link[^>]*rel=["']alternate["'][^>]*href=["']([^"']+)["'][^>]*>/i);
-  return match?.[1];
+      return {
+        title: rssFeed.title,
+        description: rssFeed.description,
+        siteUrl: rssFeed.link,
+        icon: image?.url,
+      };
+    }
+
+    if (parsedFeed.format === 'atom') {
+      const atomFeed = parsedFeed.feed;
+      const alternateLink =
+        atomFeed.links?.find((link) => link.rel !== 'self') ?? atomFeed.links?.[0];
+
+      return {
+        title: atomFeed.title,
+        description: atomFeed.subtitle,
+        siteUrl: alternateLink?.href,
+        icon: atomFeed.icon || atomFeed.logo,
+      };
+    }
+  }
+
+  return {
+    title: undefined,
+    description: undefined,
+    siteUrl: undefined,
+    icon: undefined,
+  };
 }
 
 async function extractSiteMetadata(
   siteUrl: string,
   options: Required<DiscoveryOptions>,
 ): Promise<{ icon?: string; description?: string }> {
-  const response = await fetchWithTimeout(siteUrl, options, Math.min(options.timeout, 3000), {
+  const response = await fetchDiscoveryUrl(siteUrl, options, Math.min(options.timeout, 3000), {
     Accept: 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
   });
 
   if (!response || !response.ok) return {};
 
   const html = await response.text();
-  const descriptionPatterns = [
-    /<meta[^>]*property=["']og:description["'][^>]*content=["']([^"']+)["'][^>]*>/i,
-    /<meta[^>]*name=["']description["'][^>]*content=["']([^"']+)["'][^>]*>/i,
-    /<meta[^>]*name=["']twitter:description["'][^>]*content=["']([^"']+)["'][^>]*>/i,
-  ];
+  const dom = new JSDOM(html, { url: siteUrl, runScripts: 'outside-only' });
+  const metadata = extractBasicSiteMetadata(dom.window.document);
+  dom.window.close();
 
-  let description: string | undefined;
-  for (const pattern of descriptionPatterns) {
-    const match = html.match(pattern);
-    if (match?.[1]) {
-      description = decodeHtml(match[1]);
-      break;
-    }
-  }
-
-  const patterns = [
-    /<link[^>]*rel=["']apple-touch-icon(?:-precomposed)?["'][^>]*href=["']([^"']+)["']/i,
-    /<link[^>]*rel=["'](?:shortcut\s+icon|icon)["'][^>]*href=["']([^"']+)["']/i,
-  ];
-
-  for (const pattern of patterns) {
-    const match = html.match(pattern);
-    if (!match?.[1]) continue;
-
+  if (metadata.icon) {
     try {
       return {
-        icon: new URL(match[1], siteUrl).toString(),
-        description,
+        icon: new URL(metadata.icon, siteUrl).toString(),
+        description: metadata.description,
       };
     } catch {
-      continue;
+      return { description: metadata.description };
     }
   }
 
   try {
     return {
       icon: `${new URL(siteUrl).origin}/favicon.ico`,
-      description,
+      description: metadata.description,
     };
   } catch {
-    return { description };
+    return { description: metadata.description };
   }
-}
-
-function decodeHtml(value: string): string {
-  return value
-    .replace(/&amp;/g, '&')
-    .replace(/&lt;/g, '<')
-    .replace(/&gt;/g, '>')
-    .replace(/&quot;/g, '"')
-    .replace(/&#39;/g, "'")
-    .trim();
-}
-
-function extractXmlTag(content: string, tagName: string): string | null {
-  const cleanContent = content.replaceAll('&lt;', '<').replaceAll('&gt;', '>');
-  const regex = new RegExp(`<${tagName}[^>]*>([\\s\\S]*?)<\\/${tagName}>`, 'i');
-  const match = cleanContent.match(regex);
-
-  if (!match || !match[1]) {
-    return null;
-  }
-
-  let value = match[1];
-  value = value.replace(/<!\[CDATA\[([\s\S]*?)]]>/g, '$1');
-  value = value.replace(/<[^>]+>/g, ' ');
-  value = value.replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>');
-  value = value.replace(/\s+/g, ' ').trim();
-
-  return value || null;
 }

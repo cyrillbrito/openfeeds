@@ -28,11 +28,6 @@ export interface ServiceResult {
 }
 
 /**
- * Backward-compatible alias. Prefer DiscoveredFeed in new code.
- */
-export type Feed = DiscoveredFeed;
-
-/**
  * Options for feed discovery
  */
 export interface DiscoveryOptions {
