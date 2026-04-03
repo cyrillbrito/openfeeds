@@ -81,7 +81,6 @@ export const Route = createFileRoute('/api/feeds')({
           if (error instanceof BadRequestError) {
             return Response.json({ message: error.message }, { status: 400, headers });
           }
-          console.error('Failed to create feed:', error);
           handleBoundaryError(error, {
             source: 'server-function',
             userId: session.user.id,
