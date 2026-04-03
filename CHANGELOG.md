@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.11.13](https://github.com/cyrillbrito/openfeeds/compare/v0.11.12...v0.11.13) (2026-04-03)
+
+
+### Bug Fixes
+
+* **web:** switch to Bun and externalize problematic Nitro bundles ([#215](https://github.com/cyrillbrito/openfeeds/issues/215)) ([8ae2fdc](https://github.com/cyrillbrito/openfeeds/commit/8ae2fdc469ea2655dec1861113c43b45e5814118))
+
 ## [0.11.12](https://github.com/cyrillbrito/openfeeds/compare/v0.11.11...v0.11.12) (2026-03-29)
 
 
