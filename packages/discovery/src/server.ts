@@ -10,7 +10,6 @@ import { JSDOM } from 'jsdom';
 import {
   checkKnownServices,
   COMMON_FEED_PATHS,
-  dedupeFeeds,
   DEFAULT_DISCOVERY_OPTIONS,
   extractFeedLinks,
   extractHeuristicFeeds,
@@ -28,66 +27,11 @@ export type {
 } from './core/index.js';
 export { checkKnownServices, SERVICES } from './core/index.js';
 
-type DiscoverySource =
-  | 'self_feed'
-  | 'known_service'
-  | 'html_alternate'
-  | 'heuristic_link'
-  | 'common_path';
-
 type DiscoveryCandidate = DiscoveredFeed & {
   score: number;
-  source: DiscoverySource;
 };
 
 export async function discoverFeeds(
-  url: string,
-  options: DiscoveryOptions = {},
-): Promise<DiscoveredFeed[]> {
-  const mergedOptions = { ...DEFAULT_DISCOVERY_OPTIONS, ...options };
-
-  if (!isSupportedProtocol(url)) {
-    throw new Error(`Unsupported protocol: ${url}`);
-  }
-
-  const knownServiceResult = checkKnownServices(url);
-  if (knownServiceResult && knownServiceResult.feeds.length > 0) {
-    return knownServiceResult.feeds;
-  }
-
-  const selfFeed = await checkSelfRssFeed(url, mergedOptions);
-  if (selfFeed) {
-    return [selfFeed];
-  }
-
-  let dom: JSDOM | null = null;
-  try {
-    const html = await fetchHtmlContent(url, mergedOptions);
-    dom = new JSDOM(html, { url, runScripts: 'outside-only' });
-    const document = dom.window.document;
-
-    const linkFeeds = extractFeedLinks(document, { baseUrl: url });
-    const heuristicFeeds = extractHeuristicFeeds(document, { baseUrl: url });
-    const uniqueFeeds = dedupeFeeds([...linkFeeds, ...heuristicFeeds]);
-
-    if (uniqueFeeds.length > 0) {
-      return uniqueFeeds;
-    }
-  } catch (error) {
-    console.warn(`Failed to fetch HTML from ${url}:`, error);
-  } finally {
-    dom?.window.close();
-  }
-
-  const fallbackFeed = await tryCommonPaths(url, mergedOptions);
-  if (fallbackFeed) {
-    return [fallbackFeed];
-  }
-
-  return [];
-}
-
-export async function discoverFeedsEnhanced(
   url: string,
   options: DiscoveryOptions = {},
 ): Promise<DiscoveredFeed[]> {
@@ -110,7 +54,6 @@ export async function discoverFeedsEnhanced(
       ...knownServiceResult.feeds.map((feed) => ({
         ...feed,
         score: 0.9,
-        source: 'known_service' as const,
       })),
     );
   }
@@ -124,13 +67,11 @@ export async function discoverFeedsEnhanced(
     const linkFeeds = extractFeedLinks(document, { baseUrl: url }).map((feed) => ({
       ...feed,
       score: 0.85,
-      source: 'html_alternate' as const,
     }));
 
     const heuristicFeeds = extractHeuristicFeeds(document, { baseUrl: url }).map((feed) => ({
       ...feed,
       score: 0.55,
-      source: 'heuristic_link' as const,
     }));
 
     candidates.push(...linkFeeds, ...heuristicFeeds);
@@ -147,7 +88,6 @@ export async function discoverFeedsEnhanced(
         url: urlObj.origin + path,
         title: urlObj.origin + path,
         score: 0.35,
-        source: 'common_path' as const,
       })),
     );
   }
@@ -233,7 +173,7 @@ async function verifyCandidate(
 }
 
 function fallbackLikely(candidate: DiscoveryCandidate): DiscoveryCandidate | null {
-  if (candidate.source !== 'known_service' && candidate.source !== 'html_alternate') {
+  if (candidate.score < 0.8) {
     return null;
   }
 
@@ -261,6 +201,7 @@ function dedupeEquivalentFeeds(feeds: DiscoveryCandidate[]): DiscoveryCandidate[
 
   const byMeta = new Map<string, DiscoveryCandidate>();
   for (const feed of canonical.values()) {
+    // TODO: keep this conservative; if false positives appear, include pathname or feed format in key.
     const key = equivalentMetaKey(feed);
     if (!key) {
       byMeta.set(feed.url, feed);
@@ -314,7 +255,7 @@ function scoreFeed(feed: DiscoveryCandidate): number {
 }
 
 function toPublicFeed(candidate: DiscoveryCandidate): DiscoveredFeed {
-  const { score: _score, source: _source, ...publicFeed } = candidate;
+  const { score: _score, ...publicFeed } = candidate;
   return publicFeed;
 }
 
@@ -401,39 +342,6 @@ async function checkSelfRssFeed(
     siteUrl: metadata.siteUrl,
     icon: metadata.icon,
   };
-}
-
-async function tryCommonPaths(
-  baseUrl: string,
-  options: Required<DiscoveryOptions>,
-): Promise<DiscoveredFeed | null> {
-  const urlObj = new URL(baseUrl);
-
-  for (const path of COMMON_FEED_PATHS) {
-    try {
-      const feedUrl = urlObj.origin + path;
-      const response = await fetchDiscoveryUrl(feedUrl, options, Math.min(options.timeout, 5000), {
-        Accept: 'application/rss+xml,application/atom+xml,application/xml,text/xml',
-      });
-
-      if (response && response.ok && response.status >= 200 && response.status < 400) {
-        const content = await response.text();
-        const contentType = response.headers.get('content-type') || '';
-
-        if (parseFeedContent(content) !== null || isValidJsonFeedContent(content, contentType)) {
-          return {
-            url: feedUrl,
-            title: feedUrl,
-            type: normalizeFeedTypeFromHeader(contentType),
-          };
-        }
-      }
-    } catch {
-      continue;
-    }
-  }
-
-  return null;
 }
 
 function isValidJsonFeedContent(content: string, contentType: string): boolean {

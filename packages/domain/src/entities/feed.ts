@@ -1,6 +1,6 @@
 import { db, feeds, type DbFeed, type DbInsertFeed } from '@repo/db';
 import type { DiscoveredFeed } from '@repo/discovery/server';
-import { discoverFeedsEnhanced } from '@repo/discovery/server';
+import { discoverFeeds } from '@repo/discovery/server';
 import { createId } from '@repo/shared/utils';
 import { and, eq, inArray } from 'drizzle-orm';
 import { getDomain, trackEvent } from '../analytics';
@@ -133,7 +133,7 @@ export async function retryFeed(id: string, userId: string): Promise<void> {
 
 export async function discoverRssFeeds(url: string): Promise<DiscoveredFeed[]> {
   try {
-    return await discoverFeedsEnhanced(url);
+    return await discoverFeeds(url);
   } catch (error) {
     console.error('Discovery failed:', error);
     throw new BadRequestError(`Failed to discover feeds: ${String(error)}`);
