@@ -104,7 +104,14 @@ function LoginPage() {
 
         <SocialLoginButtons
           callbackURL={search()?.redirect || '/'}
-          onError={(msg) => setError(msg)}
+          onError={(msg) => {
+            posthog.capture('auth:login_fail', {
+              source: 'social_login',
+              code: 'provider_error',
+              message: msg,
+            });
+            setError(msg);
+          }}
         />
 
         <div class="divider">or</div>

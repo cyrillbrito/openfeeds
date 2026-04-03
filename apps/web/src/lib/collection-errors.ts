@@ -104,7 +104,7 @@ export function shapeErrorHandler(
     // Exhausted retries — stop syncing
     posthog.capture('sync:shape_fail', {
       context,
-      retry_count: retryCount + 1,
+      retry_count: retryCount,
       max_retries: MAX_SHAPE_RETRIES,
       exhausted: true,
       message,
