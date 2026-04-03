@@ -1,4 +1,5 @@
 import { db, feeds, type DbFeed, type DbInsertFeed } from '@repo/db';
+import type { DiscoveredFeed } from '@repo/discovery/server';
 import { discoverFeeds } from '@repo/discovery/server';
 import { createId } from '@repo/shared/utils';
 import { and, eq, inArray } from 'drizzle-orm';
@@ -7,7 +8,7 @@ import type { TransactionContext } from '../domain-context';
 import { BadRequestError, NotFoundError } from '../errors';
 import { checkFeedLimit } from '../limits';
 import { enqueueFeedDetail, enqueueFeedSync } from '../queues';
-import type { CreateFeed, DiscoveredFeed, Feed, UpdateFeed } from './feed.schema';
+import type { CreateFeed, Feed, UpdateFeed } from './feed.schema';
 
 // Re-export schemas and types from schema file
 export * from './feed.schema';

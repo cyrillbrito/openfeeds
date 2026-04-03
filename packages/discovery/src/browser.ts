@@ -4,13 +4,13 @@ import {
   extractFeedLinks,
   extractHeuristicFeeds,
   isSupportedProtocol,
-  type Feed,
+  type DiscoveredFeed,
 } from './core/index.js';
 
-export type { Feed, ServiceResult, ExtractOptions } from './core/index.js';
+export type { DiscoveredFeed, ServiceResult, ExtractOptions } from './core/index.js';
 export { checkKnownServices, SERVICES } from './core/index.js';
 
-export function discoverFeedsFromDocument(doc: Document = document): Feed[] {
+export function discoverFeedsFromDocument(doc: Document = document): DiscoveredFeed[] {
   const baseUrl = doc.location?.href || '';
 
   if (!isSupportedProtocol(baseUrl)) {

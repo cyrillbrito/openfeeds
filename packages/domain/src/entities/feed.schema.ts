@@ -44,10 +44,3 @@ export const UpdateFeedSchema = z.object({
   icon: z.string().nullable().optional(),
 });
 export type UpdateFeed = z.infer<typeof UpdateFeedSchema>;
-
-export const DiscoveredFeedSchema = z.object({
-  url: z.string(),
-  title: z.string(),
-  type: z.string().optional(),
-});
-export type DiscoveredFeed = z.infer<typeof DiscoveredFeedSchema>;

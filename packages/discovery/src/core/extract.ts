@@ -1,9 +1,9 @@
 import { RSS_MIME_TYPES } from './constants.js';
-import type { ExtractOptions, Feed } from './types.js';
+import type { DiscoveredFeed, ExtractOptions } from './types.js';
 import { normalizeUrl, shouldSkipUrl } from './utils.js';
 
-export function extractFeedLinks(document: Document, options: ExtractOptions): Feed[] {
-  const feeds: Feed[] = [];
+export function extractFeedLinks(document: Document, options: ExtractOptions): DiscoveredFeed[] {
+  const feeds: DiscoveredFeed[] = [];
   const links = document.querySelectorAll<HTMLLinkElement>('link[rel="alternate"]');
 
   for (const link of links) {
@@ -28,8 +28,11 @@ export function extractFeedLinks(document: Document, options: ExtractOptions): F
   return feeds;
 }
 
-export function extractHeuristicFeeds(document: Document, options: ExtractOptions): Feed[] {
-  const feeds: Feed[] = [];
+export function extractHeuristicFeeds(
+  document: Document,
+  options: ExtractOptions,
+): DiscoveredFeed[] {
+  const feeds: DiscoveredFeed[] = [];
   const seenUrls = new Set<string>();
   const rssPattern = /([^a-zA-Z]|^)rss([^a-zA-Z]|$)/i;
 

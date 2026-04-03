@@ -1,13 +1,20 @@
 /**
- * Represents a discovered RSS/Atom feed
+ * Candidate feed discovered from a URL.
+ * This is intentionally separate from persisted domain feed entities.
  */
-export interface Feed {
+export interface DiscoveredFeed {
   /** The URL of the RSS/Atom feed */
   url: string;
   /** Human-readable title of the feed */
   title: string;
   /** MIME type of the feed (e.g., 'application/rss+xml') */
   type?: string;
+  /** Feed description when available */
+  description?: string;
+  /** Site URL from the feed metadata */
+  siteUrl?: string;
+  /** Best-effort icon URL */
+  icon?: string;
 }
 
 /**
@@ -17,7 +24,7 @@ export interface ServiceResult {
   /** Whether the service matched the provided URL */
   match: boolean;
   /** Array of discovered feeds for this service */
-  feeds: Feed[];
+  feeds: DiscoveredFeed[];
 }
 
 /**
@@ -30,6 +37,10 @@ export interface DiscoveryOptions {
   followRedirects?: boolean;
   /** Custom User-Agent header */
   userAgent?: string;
+  /** Maximum concurrent candidate verification requests */
+  verificationConcurrency?: number;
+  /** Limit candidate set size before verification */
+  maxCandidates?: number;
 }
 
 /**
