@@ -69,6 +69,10 @@ Tracked via `trackEvent()` in `packages/domain/src/analytics.ts`. Preferred over
 | Event                   | Properties                        | Location                                             |
 | ----------------------- | --------------------------------- | ---------------------------------------------------- |
 | `articles:article_view` | `article_id`, `feed_id`, `source` | `apps/web/src/routes/_frame.articles.$articleId.tsx` |
+| `auth:login_view`       | `source`, `reason`, `redirect_target?` | `apps/web/src/routes/login.tsx`                 |
+| `auth:login_fail`       | `source`, `code`, `message`       | `apps/web/src/routes/login.tsx`                      |
+| `auth:session_fail`     | `source`, `context`, `status`, `path` | `apps/web/src/lib/collection-errors.ts`         |
+| `sync:shape_fail`       | `context`, `retry_count`, `max_retries`, `message`, `exhausted?` | `apps/web/src/lib/collection-errors.ts` |
 
 ### Exception Capture
 
