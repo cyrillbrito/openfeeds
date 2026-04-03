@@ -80,13 +80,6 @@ export function shapeErrorHandler(
         hasToasted = true;
       }
 
-      posthog.capture('auth:login_view', {
-        source: 'shape_error_handler',
-        reason: 'shape_401',
-        context,
-        path: window.location.pathname,
-      });
-
       window.location.href = '/login';
       return; // stop syncing
     }
@@ -98,20 +91,20 @@ export function shapeErrorHandler(
 
     // Retry other errors a limited number of times
     if (retryCount < MAX_SHAPE_RETRIES) {
+      retryCount++;
       posthog.capture('sync:shape_fail', {
         context,
-        retry_count: retryCount + 1,
+        retry_count: retryCount,
         max_retries: MAX_SHAPE_RETRIES,
         message,
       });
-      retryCount++;
       return {};
     }
 
     // Exhausted retries — stop syncing
     posthog.capture('sync:shape_fail', {
       context,
-      retry_count: retryCount,
+      retry_count: retryCount + 1,
       max_retries: MAX_SHAPE_RETRIES,
       exhausted: true,
       message,
