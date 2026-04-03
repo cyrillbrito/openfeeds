@@ -9,8 +9,6 @@ import { TagBadge } from './TagBadge';
 // prevents from being tree-shaken by TS
 void autofocus;
 
-let counter = 0;
-
 interface MultiSelectTagProps {
   tags: Tag[];
   selectedIds: string[];
@@ -20,7 +18,7 @@ interface MultiSelectTagProps {
 
 export function MultiSelectTag(props: MultiSelectTagProps) {
   const id = `multi-select-tag-${createUniqueId()}`;
-  const anchor = `--anchor-${++counter}`;
+  const anchor = `--multi-select-tag-${createUniqueId()}`;
 
   const [isOpen, setIsOpen] = createSignal(false);
 

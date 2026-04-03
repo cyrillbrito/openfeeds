@@ -9,11 +9,9 @@ interface DropdownProps {
   children: JSXElement;
 }
 
-let counter = 0;
-
 export function Dropdown(props: DropdownProps) {
   const id = `dropdown-${createUniqueId()}`;
-  const anchor = `--anchor-${++counter}`;
+  const anchor = `--dropdown-${createUniqueId()}`;
 
   // Close popover when a menu item is clicked
   const handleMenuClick = (e: MouseEvent) => {
