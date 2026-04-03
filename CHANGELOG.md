@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.12.0](https://github.com/cyrillbrito/openfeeds/compare/v0.11.13...v0.12.0) (2026-04-03)
+
+
+### Features
+
+* **web:** improve discovery UX and persistence ([#220](https://github.com/cyrillbrito/openfeeds/issues/220)) ([a27a850](https://github.com/cyrillbrito/openfeeds/commit/a27a8503d6931309d0983244d152a39364de25f8))
+
+
+### Bug Fixes
+
+* **web:** prevent popovers anchoring to wrong controls ([#218](https://github.com/cyrillbrito/openfeeds/issues/218)) ([511ca8b](https://github.com/cyrillbrito/openfeeds/commit/511ca8b4001643b2b47cb7197a411a13394a9f06))
+
 ## [0.11.13](https://github.com/cyrillbrito/openfeeds/compare/v0.11.12...v0.11.13) (2026-04-03)
 
 
