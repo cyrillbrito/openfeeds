@@ -1,3 +1,5 @@
+import type { DiscoveryOptions } from './types.js';
+
 export const RSS_MIME_TYPES = [
   'application/rss+xml',
   'application/atom+xml',
@@ -66,8 +68,5 @@ export const DEFAULT_DISCOVERY_OPTIONS = {
   followRedirects: true,
   userAgent: 'RSS-Discovery-Bot/1.0',
   verificationConcurrency: 5,
-  verificationTimeout: 3000,
   maxCandidates: 30,
-  enableCache: true,
-  cacheTtlMs: 60 * 60 * 1000,
-} as const;
+} as const satisfies Required<DiscoveryOptions>;

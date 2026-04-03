@@ -22,7 +22,17 @@ export type {
 } from './core/index.js';
 export { checkKnownServices, SERVICES } from './core/index.js';
 
-const verificationCache = new Map<string, { value: DiscoveredFeed; expiresAt: number }>();
+type DiscoverySource =
+  | 'self_feed'
+  | 'known_service'
+  | 'html_alternate'
+  | 'heuristic_link'
+  | 'common_path';
+
+type DiscoveryCandidate = DiscoveredFeed & {
+  score: number;
+  source: DiscoverySource;
+};
 
 const TRACKING_PARAMS = new Set([
   'utm_source',
@@ -93,19 +103,18 @@ export async function discoverFeedsEnhanced(
 
   const selfFeed = await checkSelfRssFeed(url, mergedOptions);
   if (selfFeed) {
-    return [{ ...selfFeed, status: 'verified', confidence: 1, reason: 'self_feed' }];
+    return [selfFeed];
   }
 
-  const candidates: DiscoveredFeed[] = [];
+  const candidates: DiscoveryCandidate[] = [];
 
   const knownServiceResult = checkKnownServices(url);
   if (knownServiceResult && knownServiceResult.feeds.length > 0) {
     candidates.push(
       ...knownServiceResult.feeds.map((feed) => ({
         ...feed,
-        status: 'likely' as const,
-        confidence: 0.9,
-        reason: 'known_service' as const,
+        score: 0.9,
+        source: 'known_service' as const,
       })),
     );
   }
@@ -118,16 +127,14 @@ export async function discoverFeedsEnhanced(
 
     const linkFeeds = extractFeedLinks(document, { baseUrl: url }).map((feed) => ({
       ...feed,
-      status: 'likely' as const,
-      confidence: 0.85,
-      reason: 'html_alternate' as const,
+      score: 0.85,
+      source: 'html_alternate' as const,
     }));
 
     const heuristicFeeds = extractHeuristicFeeds(document, { baseUrl: url }).map((feed) => ({
       ...feed,
-      status: 'likely' as const,
-      confidence: 0.55,
-      reason: 'heuristic_link' as const,
+      score: 0.55,
+      source: 'heuristic_link' as const,
     }));
 
     candidates.push(...linkFeeds, ...heuristicFeeds);
@@ -143,9 +150,8 @@ export async function discoverFeedsEnhanced(
       ...COMMON_FEED_PATHS.map((path) => ({
         url: urlObj.origin + path,
         title: urlObj.origin + path,
-        status: 'likely' as const,
-        confidence: 0.35,
-        reason: 'common_path' as const,
+        score: 0.35,
+        source: 'common_path' as const,
       })),
     );
   }
@@ -154,18 +160,18 @@ export async function discoverFeedsEnhanced(
   if (normalized.length === 0) return [];
 
   const verified = await verifyCandidates(normalized, mergedOptions);
-  return sortFeedsForDisplay(dedupeEquivalentFeeds(verified));
+  return sortFeedsForDisplay(dedupeEquivalentFeeds(verified)).map(toPublicFeed);
 }
 
-function dedupeAndNormalizeCandidates(candidates: DiscoveredFeed[]): DiscoveredFeed[] {
-  const byCanonicalUrl = new Map<string, DiscoveredFeed>();
+function dedupeAndNormalizeCandidates(candidates: DiscoveryCandidate[]): DiscoveryCandidate[] {
+  const byCanonicalUrl = new Map<string, DiscoveryCandidate>();
 
   for (const candidate of candidates) {
     if (shouldSkipUrl(candidate.url)) continue;
 
     const canonicalUrl = canonicalizeFeedUrl(candidate.url);
     const existing = byCanonicalUrl.get(canonicalUrl);
-    if (!existing || (candidate.confidence ?? 0) > (existing.confidence ?? 0)) {
+    if (!existing || candidate.score > existing.score) {
       byCanonicalUrl.set(canonicalUrl, { ...candidate, url: canonicalUrl });
     }
   }
@@ -196,9 +202,9 @@ function canonicalizeFeedUrl(url: string): string {
 }
 
 async function verifyCandidates(
-  candidates: DiscoveredFeed[],
+  candidates: DiscoveryCandidate[],
   options: Required<DiscoveryOptions>,
-): Promise<DiscoveredFeed[]> {
+): Promise<DiscoveryCandidate[]> {
   const verifiedCandidates = await runWithConcurrency(
     candidates,
     options.verificationConcurrency,
@@ -206,26 +212,16 @@ async function verifyCandidates(
   );
 
   const valid = verifiedCandidates.filter(
-    (candidate): candidate is DiscoveredFeed => candidate !== null,
+    (candidate): candidate is DiscoveryCandidate => candidate !== null,
   );
-  return valid.filter((candidate) => candidate.status === 'verified');
+  return valid;
 }
 
 async function verifyCandidate(
-  candidate: DiscoveredFeed,
+  candidate: DiscoveryCandidate,
   options: Required<DiscoveryOptions>,
-): Promise<DiscoveredFeed | null> {
-  const cacheKey = candidate.url;
-  const now = Date.now();
-
-  if (options.enableCache) {
-    const cached = verificationCache.get(cacheKey);
-    if (cached && cached.expiresAt > now) {
-      return cached.value;
-    }
-  }
-
-  const response = await fetchWithTimeout(candidate.url, options, options.verificationTimeout, {
+): Promise<DiscoveryCandidate | null> {
+  const response = await fetchWithTimeout(candidate.url, options, options.timeout, {
     Accept:
       'application/rss+xml,application/atom+xml,application/feed+json,application/xml,text/xml,application/json,text/html;q=0.8,*/*;q=0.5',
   });
@@ -245,53 +241,39 @@ async function verifyCandidate(
     ? await extractSiteMetadata(metadata.siteUrl, options)
     : undefined;
   const icon = metadata.icon || siteMetadata?.icon;
-  const verified: DiscoveredFeed = {
+  const verified: DiscoveryCandidate = {
     ...candidate,
     url: response.url ? canonicalizeFeedUrl(response.url) : candidate.url,
     title: metadata.title || candidate.title || candidate.url,
     type: normalizeFeedType(contentType) || candidate.type,
-    status: 'verified',
-    confidence: Math.min(1, Math.max(0.85, (candidate.confidence ?? 0.7) + 0.2)),
+    score: Math.min(1, Math.max(0.85, candidate.score + 0.2)),
     description: metadata.description || siteMetadata?.description,
     siteUrl: metadata.siteUrl,
     icon,
   };
 
-  if (options.enableCache) {
-    verificationCache.set(cacheKey, {
-      value: verified,
-      expiresAt: now + options.cacheTtlMs,
-    });
-  }
-
   return verified;
 }
 
-function fallbackLikely(candidate: DiscoveredFeed): DiscoveredFeed | null {
-  if (candidate.reason !== 'known_service' && candidate.reason !== 'html_alternate') {
+function fallbackLikely(candidate: DiscoveryCandidate): DiscoveryCandidate | null {
+  if (candidate.source !== 'known_service' && candidate.source !== 'html_alternate') {
     return null;
   }
 
   return {
     ...candidate,
-    status: 'likely',
-    confidence: Math.max(0.4, (candidate.confidence ?? 0.5) - 0.25),
+    score: Math.max(0.4, candidate.score - 0.25),
   };
 }
 
-function sortFeedsForDisplay(feeds: DiscoveredFeed[]): DiscoveredFeed[] {
-  return feeds.toSorted((a, b) => {
-    const rankA = a.status === 'verified' ? 2 : a.status === 'likely' ? 1 : 0;
-    const rankB = b.status === 'verified' ? 2 : b.status === 'likely' ? 1 : 0;
-    if (rankA !== rankB) return rankB - rankA;
-    return (b.confidence ?? 0) - (a.confidence ?? 0);
-  });
+function sortFeedsForDisplay(feeds: DiscoveryCandidate[]): DiscoveryCandidate[] {
+  return feeds.toSorted((a, b) => b.score - a.score);
 }
 
-function dedupeEquivalentFeeds(feeds: DiscoveredFeed[]): DiscoveredFeed[] {
+function dedupeEquivalentFeeds(feeds: DiscoveryCandidate[]): DiscoveryCandidate[] {
   if (feeds.length <= 1) return feeds;
 
-  const canonical = new Map<string, DiscoveredFeed>();
+  const canonical = new Map<string, DiscoveryCandidate>();
   for (const feed of feeds) {
     const key = canonicalizeFeedUrl(feed.url);
     const existing = canonical.get(key);
@@ -300,7 +282,7 @@ function dedupeEquivalentFeeds(feeds: DiscoveredFeed[]): DiscoveredFeed[] {
     }
   }
 
-  const byMeta = new Map<string, DiscoveredFeed>();
+  const byMeta = new Map<string, DiscoveryCandidate>();
   for (const feed of canonical.values()) {
     const key = equivalentMetaKey(feed);
     if (!key) {
@@ -317,7 +299,7 @@ function dedupeEquivalentFeeds(feeds: DiscoveredFeed[]): DiscoveredFeed[] {
   return Array.from(byMeta.values());
 }
 
-function equivalentMetaKey(feed: DiscoveredFeed): string | null {
+function equivalentMetaKey(feed: DiscoveryCandidate): string | null {
   try {
     const siteHost = feed.siteUrl ? new URL(feed.siteUrl).hostname.replace(/^www\./, '') : '';
     const parsed = new URL(feed.url);
@@ -347,11 +329,16 @@ function normalizeTypeFamily(type: string): string {
   return lower;
 }
 
-function scoreFeed(feed: DiscoveredFeed): number {
-  const confidence = feed.confidence ?? 0;
+function scoreFeed(feed: DiscoveryCandidate): number {
+  const score = feed.score;
   const hasNoQuery = feed.url.includes('?') ? 0 : 0.05;
   const shorter = 1 / Math.max(20, feed.url.length);
-  return confidence + hasNoQuery + shorter;
+  return score + hasNoQuery + shorter;
+}
+
+function toPublicFeed(candidate: DiscoveryCandidate): DiscoveredFeed {
+  const { score: _score, source: _source, ...publicFeed } = candidate;
+  return publicFeed;
 }
 
 async function runWithConcurrency<T, R>(
