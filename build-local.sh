@@ -56,9 +56,9 @@ build_app() {
   log "[${app}] Pruning monorepo for @repo/${app}..."
   bunx turbo@^2 prune "@repo/${app}"
 
-  # Step 2: Install deps in pruned output (same as CI, no --frozen-lockfile)
+  # Step 2: Install deps in pruned output (same as CI)
   log "[${app}] Installing dependencies in out/..."
-  (cd out && bun install)
+  (cd out && bun install --frozen-lockfile)
 
   # Step 3: Build (migrator skips this, same as CI)
   if [[ "$app" != "migrator" ]]; then
