@@ -205,6 +205,7 @@ function Inbox() {
               totalCount={totalCount()}
               onLoadMore={handleLoadMore}
               onUpdateArticle={handleUpdateArticle}
+              scrollStateKey={listStateKey()}
               readStatus={readStatus()}
               context="inbox"
             />

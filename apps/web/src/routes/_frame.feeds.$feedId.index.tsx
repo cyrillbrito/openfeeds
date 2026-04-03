@@ -302,6 +302,7 @@ function FeedArticles() {
             totalCount={totalCount()}
             onLoadMore={handleLoadMore}
             onUpdateArticle={handleUpdateArticle}
+            scrollStateKey={listStateKey()}
             readStatus={readStatus()}
             context="feed"
           />

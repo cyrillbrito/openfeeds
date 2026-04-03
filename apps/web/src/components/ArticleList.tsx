@@ -3,6 +3,12 @@ import { Link } from '@tanstack/solid-router';
 import { createWindowVirtualizer } from '@tanstack/solid-virtual';
 import { ChevronDown } from 'lucide-solid';
 import { createEffect, createSignal, For, on, onCleanup, onMount, Show, type JSX } from 'solid-js';
+import {
+  getListAnchor,
+  getListScrollY,
+  setListAnchor,
+  setListScrollY,
+} from '~/utils/list-view-state';
 import { ArticleCard } from './ArticleCard';
 import {
   AllCaughtUpIllustration,
@@ -14,6 +20,12 @@ import type { ReadStatus } from './ReadStatusToggle';
 
 export const ARTICLES_PER_PAGE = 20;
 
+function debugScroll(...args: unknown[]) {
+  if (!import.meta.env.DEV) return;
+  if (!(window as any).__OPENFEEDS_DEBUG_SCROLL) return;
+  console.debug('[article-list-scroll]', ...args);
+}
+
 interface ArticleListProps {
   articles: Article[];
   feeds: Feed[];
@@ -21,6 +33,7 @@ interface ArticleListProps {
   totalCount: number; // Total articles available (for "load more" button)
   onLoadMore: () => void; // Callback to load more
   onUpdateArticle: (articleId: string, updates: { isRead?: boolean; isArchived?: boolean }) => void;
+  scrollStateKey: string;
   readStatus?: ReadStatus;
   context?: 'inbox' | 'feed' | 'tag';
   emptyState?: {
@@ -39,6 +52,9 @@ export function ArticleList(props: ArticleListProps) {
   let listRef: HTMLDivElement | undefined;
   const [isAutoLoading, setIsAutoLoading] = createSignal(false);
   const [scrollMargin, setScrollMargin] = createSignal(0);
+  const [restoredKey, setRestoredKey] = createSignal('');
+  const [showManualLoadMore, setShowManualLoadMore] = createSignal(false);
+  const [isRestoring, setIsRestoring] = createSignal(false);
 
   const rowVirtualizer = createWindowVirtualizer({
     count: props.articles.length,
@@ -140,7 +156,8 @@ export function ArticleList(props: ArticleListProps) {
   // Parent controls pagination now - we just show what we receive
   const hasMoreArticles = () => props.articles.length < props.totalCount;
   const remainingCount = () => props.totalCount - props.articles.length;
-  const virtualItems = () => rowVirtualizer.getVirtualItems();
+  const listScrollKey = () => props.scrollStateKey;
+  const virtualItems = () => rowVirtualizer.getVirtualItems().filter((item) => item != null);
   const paddingTop = () => {
     const first = virtualItems()[0];
     if (!first) return 0;
@@ -160,6 +177,8 @@ export function ArticleList(props: ArticleListProps) {
 
   onMount(() => {
     updateScrollMargin();
+    setShowManualLoadMore(Boolean((window as any).__OPENFEEDS_SHOW_LOAD_MORE));
+
     window.addEventListener('resize', updateScrollMargin);
     onCleanup(() => window.removeEventListener('resize', updateScrollMargin));
   });
@@ -170,6 +189,13 @@ export function ArticleList(props: ArticleListProps) {
       () => {
         setIsAutoLoading(false);
         queueMicrotask(updateScrollMargin);
+        debugScroll('articles-length-changed', {
+          key: listScrollKey(),
+          loaded: props.articles.length,
+          total: props.totalCount,
+          savedY: getListScrollY(listScrollKey()),
+          currentY: window.scrollY,
+        });
       },
     ),
   );
@@ -203,6 +229,151 @@ export function ArticleList(props: ArticleListProps) {
     onCleanup(() => observer.disconnect());
   });
 
+  createEffect(
+    on(listScrollKey, (key) => {
+      if (isRestoring()) return;
+      const handleScroll = () => {
+        if (isRestoring()) return;
+        setListScrollY(key, window.scrollY);
+      };
+
+      window.addEventListener('scroll', handleScroll, { passive: true });
+      onCleanup(() => window.removeEventListener('scroll', handleScroll));
+    }),
+  );
+
+  createEffect(() => {
+    const key = listScrollKey();
+    if (restoredKey() === key) return;
+
+    const targetScrollY = getListScrollY(key);
+    const anchor = getListAnchor(key);
+    if (targetScrollY == null) {
+      setRestoredKey(key);
+      return;
+    }
+
+    setIsRestoring(true);
+
+    let attempts = 0;
+    const maxAttempts = 24;
+
+    const tryRestore = () => {
+      attempts += 1;
+
+      if (anchor) {
+        const anchorElement = document.querySelector<HTMLElement>(
+          `[data-article-id="${anchor.articleId}"]`,
+        );
+        if (!anchorElement && hasMoreArticles() && attempts < maxAttempts) {
+          debugScroll('restore-anchor-needs-more', {
+            key,
+            articleId: anchor.articleId,
+            attempts,
+            loaded: props.articles.length,
+            total: props.totalCount,
+          });
+          props.onLoadMore();
+          requestAnimationFrame(tryRestore);
+          return;
+        }
+
+        if (anchorElement) {
+          let alignAttempts = 0;
+          const maxAlignAttempts = 6;
+
+          const alignAnchor = () => {
+            alignAttempts += 1;
+
+            const liveAnchorElement = document.querySelector<HTMLElement>(
+              `[data-article-id="${anchor.articleId}"]`,
+            );
+
+            if (!liveAnchorElement) {
+              setRestoredKey(key);
+              setIsRestoring(false);
+              return;
+            }
+
+            const diff = liveAnchorElement.getBoundingClientRect().top - anchor.delta;
+            if (Math.abs(diff) <= 3 || alignAttempts >= maxAlignAttempts) {
+              const finalScroll = Math.max(0, window.scrollY);
+              setListScrollY(key, finalScroll);
+              setRestoredKey(key);
+              setIsRestoring(false);
+              debugScroll('restore-anchor-applied', {
+                key,
+                articleId: anchor.articleId,
+                delta: anchor.delta,
+                finalScroll,
+                diff,
+                attempts,
+                alignAttempts,
+                loaded: props.articles.length,
+                total: props.totalCount,
+              });
+              return;
+            }
+
+            window.scrollBy({ top: diff });
+            requestAnimationFrame(alignAnchor);
+          };
+
+          requestAnimationFrame(alignAnchor);
+          return;
+        }
+      }
+
+      const maxScrollable = Math.max(0, document.documentElement.scrollHeight - window.innerHeight);
+      const desiredScroll = Math.min(targetScrollY, maxScrollable);
+
+      if (maxScrollable < targetScrollY - 16 && hasMoreArticles() && attempts < maxAttempts) {
+        debugScroll('restore-needs-more', {
+          key,
+          targetScrollY,
+          maxScrollable,
+          attempts,
+          loaded: props.articles.length,
+          total: props.totalCount,
+        });
+        props.onLoadMore();
+        requestAnimationFrame(tryRestore);
+        return;
+      }
+
+      window.scrollTo({ top: desiredScroll });
+      setListScrollY(key, desiredScroll);
+      setRestoredKey(key);
+      setIsRestoring(false);
+      debugScroll('restore-applied', {
+        key,
+        targetScrollY,
+        desiredScroll,
+        maxScrollable,
+        attempts,
+        loaded: props.articles.length,
+        total: props.totalCount,
+      });
+    };
+
+    requestAnimationFrame(tryRestore);
+  });
+
+  const handleNavigateToArticle = (articleId: string, event: MouseEvent) => {
+    const key = listScrollKey();
+    const target = event.currentTarget as HTMLElement | null;
+
+    if (target) {
+      const card = target.closest<HTMLElement>('[data-article-id]');
+      if (card) {
+        const delta = card.getBoundingClientRect().top;
+        setListAnchor(key, articleId, delta);
+      }
+    }
+
+    setListScrollY(key, window.scrollY);
+  };
+
   return (
     <Show
       when={props.articles && props.articles.length > 0}
@@ -232,6 +403,7 @@ export function ArticleList(props: ArticleListProps) {
         <div style={{ height: `${paddingTop()}px` }} aria-hidden="true" />
         <For each={virtualItems()}>
           {(item) => {
+            if (!item) return null;
             const article = () => props.articles[item.index];
 
             return (
@@ -244,12 +416,15 @@ export function ArticleList(props: ArticleListProps) {
                 class="border-base-300 w-full border-b"
               >
                 <Show when={article()}>
-                  <ArticleCard
-                    article={article()!}
-                    feeds={props.feeds}
-                    tags={props.tags}
-                    onUpdateArticle={props.onUpdateArticle}
-                  />
+                  <div data-article-id={article()!.id}>
+                    <ArticleCard
+                      article={article()!}
+                      feeds={props.feeds}
+                      tags={props.tags}
+                      onUpdateArticle={props.onUpdateArticle}
+                      onNavigateToArticle={handleNavigateToArticle}
+                    />
+                  </div>
                 </Show>
               </div>
             );
@@ -260,12 +435,14 @@ export function ArticleList(props: ArticleListProps) {
 
       <Show when={hasMoreArticles()}>
         <div ref={(el) => (autoLoadTriggerRef = el)} class="h-px w-full" aria-hidden="true" />
-        <div class="mt-6 flex justify-center">
-          <button class="btn btn-outline btn-wide gap-2" onClick={props.onLoadMore}>
-            <ChevronDown size={20} />
-            Load More ({remainingCount()} remaining)
-          </button>
-        </div>
+        <Show when={showManualLoadMore()}>
+          <div class="mt-6 flex justify-center">
+            <button class="btn btn-outline btn-wide gap-2" onClick={props.onLoadMore}>
+              <ChevronDown size={20} />
+              Load More ({remainingCount()} remaining)
+            </button>
+          </div>
+        </Show>
       </Show>
     </Show>
   );
