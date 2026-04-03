@@ -18,6 +18,26 @@ const TRACKING_PARAMS = new Set([
   'gclid',
 ]);
 
+const FEED_DISCRIMINATOR_PARAMS = new Set([
+  'alt',
+  'format',
+  'output',
+  'view',
+  'orderby',
+  'order',
+  'max-results',
+  'start-index',
+  'updated-min',
+  'updated-max',
+  'published-min',
+  'published-max',
+  'q',
+  'label',
+  'tag',
+  'cat',
+  'category',
+]);
+
 export async function fetchWithTimeout(
   url: string,
   timeoutMs: number,
@@ -60,6 +80,44 @@ export function canonicalizeFeedUrl(url: string): string {
     return parsed.toString();
   } catch {
     return url;
+  }
+}
+
+export function canonicalizeFeedEquivalenceUrl(url: string): string {
+  try {
+    const parsed = new URL(canonicalizeFeedUrl(url));
+
+    const isBloggerDefaultFeed =
+      (parsed.hostname.endsWith('.blogspot.com') || parsed.hostname.endsWith('.blogger.com')) &&
+      /^\/feeds\/posts\/default\/?$/i.test(parsed.pathname);
+
+    const keptParams = new URLSearchParams();
+    for (const [key, value] of parsed.searchParams.entries()) {
+      const lowerKey = key.toLowerCase();
+
+      if (isBloggerDefaultFeed) {
+        // Blogger often emits duplicate feed URLs that only differ in transport/view params.
+        // Keep only params that change feed scope.
+        if (lowerKey === 'q' || lowerKey === 'label' || lowerKey === 'tag') {
+          keptParams.append(key, value);
+        }
+        continue;
+      }
+
+      if (FEED_DISCRIMINATOR_PARAMS.has(lowerKey)) {
+        keptParams.append(key, value);
+      }
+    }
+
+    const sorted = Array.from(keptParams.entries()).toSorted(([a], [b]) => a.localeCompare(b));
+    parsed.search = '';
+    for (const [key, value] of sorted) {
+      parsed.searchParams.append(key, value);
+    }
+
+    return parsed.toString();
+  } catch {
+    return canonicalizeFeedUrl(url);
   }
 }
 

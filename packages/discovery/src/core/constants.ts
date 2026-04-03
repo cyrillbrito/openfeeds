@@ -64,9 +64,9 @@ export const INVALID_EXTENSIONS_REGEX =
   /\.(jpe?g|png|gif|bmp|mp4|mp3|mkv|css|js|pdf|woff2?|svg|ttf|zip)$/i;
 
 export const DEFAULT_DISCOVERY_OPTIONS = {
-  timeout: 10000,
+  timeout: 3000,
   followRedirects: true,
   userAgent: 'RSS-Discovery-Bot/1.0',
-  verificationConcurrency: 5,
-  maxCandidates: 30,
+  verificationConcurrency: 8,
+  maxCandidates: 20,
 } as const satisfies Required<DiscoveryOptions>;

@@ -1,4 +1,5 @@
 import {
+  canonicalizeFeedEquivalenceUrl,
   canonicalizeFeedUrl,
   extractBasicSiteMetadata,
   fetchWithTimeout,
@@ -192,7 +193,7 @@ function dedupeEquivalentFeeds(feeds: DiscoveryCandidate[]): DiscoveryCandidate[
 
   const canonical = new Map<string, DiscoveryCandidate>();
   for (const feed of feeds) {
-    const key = canonicalizeFeedUrl(feed.url);
+    const key = canonicalizeFeedEquivalenceUrl(feed.url);
     const existing = canonical.get(key);
     if (!existing || scoreFeed(feed) > scoreFeed(existing)) {
       canonical.set(key, feed);
@@ -290,14 +291,18 @@ async function fetchDiscoveryUrl(
   timeout: number,
   extraHeaders: Record<string, string>,
 ): Promise<Response | null> {
-  return fetchWithTimeout(url, timeout, {
-    method: 'GET',
-    headers: {
-      'User-Agent': options.userAgent,
-      ...extraHeaders,
-    },
-    redirect: options.followRedirects ? 'follow' : 'manual',
-  });
+  try {
+    return await fetchWithTimeout(url, timeout, {
+      method: 'GET',
+      headers: {
+        'User-Agent': options.userAgent,
+        ...extraHeaders,
+      },
+      redirect: options.followRedirects ? 'follow' : 'manual',
+    });
+  } catch {
+    return null;
+  }
 }
 
 async function fetchHtmlContent(url: string, options: Required<DiscoveryOptions>): Promise<string> {
