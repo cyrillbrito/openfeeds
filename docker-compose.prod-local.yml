@@ -1,0 +1,108 @@
+# Local production testing: locally-built images + infrastructure
+# Usage: docker compose -f docker-compose.prod-local.yml up
+# Build first: ./build-local.sh
+services:
+  postgres:
+    image: postgres:18.1-alpine
+    ports:
+      - '5432:5432'
+    environment:
+      POSTGRES_DB: openfeeds
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    restart: unless-stopped
+    command:
+      - postgres
+      - -c
+      - listen_addresses=*
+      - -c
+      - wal_level=logical
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U postgres -d openfeeds']
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - '6379:6379'
+    volumes:
+      - redis_data:/data
+    restart: unless-stopped
+    command: redis-server --save 60 1 --loglevel warning
+
+  electric:
+    image: electricsql/electric:latest
+    environment:
+      DATABASE_URL: postgresql://postgres:postgres@postgres:5432/openfeeds?sslmode=disable
+      ELECTRIC_INSECURE: true
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: unless-stopped
+
+  migrator:
+    image: openfeeds-migrations:local
+    environment:
+      - DATABASE_URL=postgresql://postgres:postgres@postgres:5432/openfeeds
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: 'no'
+
+  web:
+    image: openfeeds-web:local
+    ports:
+      - '3000:3000'
+    env_file: .env
+    environment:
+      - DATABASE_URL=postgresql://postgres:postgres@postgres:5432/openfeeds
+      - REDIS_HOST=redis
+      - ELECTRIC_URL=http://electric:3000
+      - DATA_PATH=/data
+    volumes:
+      - web_data:/data
+    depends_on:
+      redis:
+        condition: service_started
+      postgres:
+        condition: service_healthy
+      migrator:
+        condition: service_completed_successfully
+    restart: unless-stopped
+
+  worker:
+    image: openfeeds-worker:local
+    env_file: .env
+    environment:
+      - DATABASE_URL=postgresql://postgres:postgres@postgres:5432/openfeeds
+      - REDIS_HOST=redis
+    depends_on:
+      redis:
+        condition: service_started
+      postgres:
+        condition: service_healthy
+      migrator:
+        condition: service_completed_successfully
+    restart: unless-stopped
+
+  queuedash:
+    image: ghcr.io/alexbudure/queuedash:3.14.0
+    ports:
+      - '3009:3000'
+    environment:
+      - QUEUES_CONFIG_JSON={"queues":[{"name":"feed-sync-orchestrator","displayName":"Feed Sync Orchestrator","type":"bullmq","connectionUrl":"redis://redis:6379"},{"name":"single-feed-sync","displayName":"Single Feed Sync","type":"bullmq","connectionUrl":"redis://redis:6379"},{"name":"feed-detail","displayName":"Feed Details","type":"bullmq","connectionUrl":"redis://redis:6379"},{"name":"auto-archive","displayName":"Auto Archive","type":"bullmq","connectionUrl":"redis://redis:6379"}]}
+    depends_on:
+      - redis
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
+    driver: local
+  redis_data:
+    driver: local
+  web_data:
+    driver: local

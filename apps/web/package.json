@@ -15,6 +15,7 @@
     "@dnd-kit/helpers": "^0.3.2",
     "@dnd-kit/solid": "^0.3.2",
     "@electric-sql/client": "^1.5.13",
+    "@mixmark-io/domino": "^2.2.0",
     "@modelcontextprotocol/sdk": "^1.28.0",
     "@repo/db": "workspace:*",
     "@repo/domain": "workspace:*",

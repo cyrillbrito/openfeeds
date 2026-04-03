@@ -10,31 +10,22 @@ import viteTsConfigPaths from 'vite-tsconfig-paths';
 
 const rootPkg = JSON.parse(readFileSync('../../package.json', 'utf-8'));
 
-/**
- * Packages that nf3 (Nitro's dependency tracer) externalizes and copies to
- * `.output/server/node_modules/`. These are ESM packages required by CJS code
- * (svix → uuid, msgpackr). Without esmExternals + requireReturnsDefault,
- * @rollup/plugin-commonjs generates `import x from "uuid"` (default import)
- * which fails because uuid only has named exports.
- *
- * `esmExternals` tells the commonjs plugin these are ESM packages, and
- * `requireReturnsDefault: "namespace"` makes it generate
- * `import * as x from "uuid"; export default x;` — a namespace import that
- * works with ESM-only packages.
- */
-const ESM_EXTERNAL_PACKAGES = ['uuid', 'msgpackr'];
-
+// Bundling strategy: docs/decisions/2026-03-29-nitro-cjs-esm-bundling.md
 export default defineConfig({
   plugins: [
     lucidePreprocess(),
     devtools(),
     nitro({
       commonJS: {
-        esmExternals: ESM_EXTERNAL_PACKAGES,
+        // ESM packages consumed via require() (svix → uuid, msgpackr).
+        // Tells @rollup/plugin-commonjs to use namespace imports instead of default.
+        esmExternals: ['uuid', 'msgpackr'],
         requireReturnsDefault: 'namespace',
       },
+      // Packages that break when bundled (read sibling files at runtime).
+      // Nitro hardcodes noExternal:true — only rollupConfig.external works.
       rollupConfig: {
-        external: ESM_EXTERNAL_PACKAGES,
+        external: ['jsdom', 'css-tree', '@mixmark-io/domino'],
       },
     }),
     viteTsConfigPaths({ projects: ['./tsconfig.json'] }),
