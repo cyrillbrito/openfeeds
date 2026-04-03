@@ -183,11 +183,6 @@ export async function importOpmlFeeds(
 
       imported++;
     } catch (error) {
-      console.error(error, {
-        operation: 'import_feed',
-        feedTitle: feed.title,
-        feedUrl: feed.xmlUrl,
-      });
       captureException(error as Error, {
         operation: 'import_feed',
         feedTitle: feed.title,

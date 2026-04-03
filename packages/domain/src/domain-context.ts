@@ -1,4 +1,5 @@
 import type { Db, Transaction } from '@repo/db';
+import { captureException } from './error-tracking';
 import { type Plan, parsePlan } from './limits.schema';
 
 // ---------------------------------------------------------------------------
@@ -45,12 +46,14 @@ export async function withTransaction<T>(
     return fn(ctx);
   });
 
-  // Transaction committed — flush deferred effects (failures are logged, not thrown,
+  // Transaction committed — flush deferred effects (failures are reported, not thrown,
   // since the DB transaction already committed and callers shouldn't see phantom errors).
   await Promise.all(
     pendingEffects.map((effect) =>
       effect().catch((err) => {
-        console.error('afterCommit effect failed', err);
+        captureException(err instanceof Error ? err : new Error(String(err)), {
+          source: 'afterCommit',
+        });
       }),
     ),
   );

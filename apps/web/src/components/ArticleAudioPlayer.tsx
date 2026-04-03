@@ -106,7 +106,7 @@ export function ArticleAudioPlayer(props: ArticleAudioPlayerProps) {
         audio.setAudioState('ready');
       }
     } catch {
-      // Audio doesn't exist yet, that's fine
+      // Audio doesn't exist yet — expected for articles without generated audio
     }
   });
 

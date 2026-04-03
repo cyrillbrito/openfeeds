@@ -52,7 +52,7 @@ export function UserMenu() {
       posthog.reset();
       window.location.href = '/login';
     } catch (error) {
-      console.error('Sign out error:', error);
+      posthog.captureException(error);
     }
   };
 
