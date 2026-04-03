@@ -11,6 +11,12 @@ export class HttpFetchError extends Error {
   }
 }
 
+export class FetchTimeoutError extends Error {
+  constructor(timeoutMs: number) {
+    super(`Feed fetch timed out after ${timeoutMs / 1000}s`);
+  }
+}
+
 const FETCH_TIMEOUT_MS = 30_000;
 
 export interface FetchRssOptions {
@@ -69,7 +75,7 @@ export async function fetchRss(url: string, opts: FetchRssOptions = {}): Promise
     };
   } catch (err) {
     if (err instanceof DOMException && err.name === 'AbortError') {
-      throw new Error(`Feed fetch timed out after ${FETCH_TIMEOUT_MS / 1000}s`, { cause: err });
+      throw new FetchTimeoutError(FETCH_TIMEOUT_MS);
     }
     throw err;
   } finally {

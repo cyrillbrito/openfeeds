@@ -3,6 +3,7 @@ import {
   LimitExceededError,
   ConflictError,
   BadRequestError,
+  handleBoundaryError,
   withTransaction,
   createFeeds,
 } from '@repo/domain';
@@ -81,6 +82,11 @@ export const Route = createFileRoute('/api/feeds')({
             return Response.json({ message: error.message }, { status: 400, headers });
           }
           console.error('Failed to create feed:', error);
+          handleBoundaryError(error, {
+            source: 'server-function',
+            userId: session.user.id,
+            operation: 'api_create_feed',
+          });
           return Response.json({ message: 'Internal server error' }, { status: 500, headers });
         }
       },

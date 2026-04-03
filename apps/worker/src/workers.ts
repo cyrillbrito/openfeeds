@@ -20,8 +20,7 @@ import { env } from './env';
 export function createFeedSyncOrchestratorWorker() {
   return new Worker(
     QUEUE_NAMES.FEED_SYNC_ORCHESTRATOR,
-    async (job) => {
-      console.log(`Starting feed sync orchestrator job ${job.id}`);
+    async () => {
       await enqueueStaleFeeds();
     },
     {
@@ -35,9 +34,6 @@ export function createSingleFeedSyncWorker() {
   const worker = new Worker<FeedSyncJobData>(
     QUEUE_NAMES.SINGLE_FEED_SYNC,
     async (job) => {
-      console.log(
-        `Starting single feed sync job ${job.id} for feed ${job.data.feedId} (attempt ${job.attemptsMade + 1})`,
-      );
       const { feedId, userId } = job.data;
       const ctx = createDomainContext(db, userId);
       // Throws FeedSyncError on failure — BullMQ retries with exponential backoff.
@@ -111,9 +107,6 @@ export function createFeedDetailsWorker() {
   return new Worker<UserFeedJobData>(
     QUEUE_NAMES.FEED_DETAIL,
     async (job) => {
-      console.log(
-        `Starting feed details job ${job.id} for user ${job.data.userId}, feed ${job.data.feedId}`,
-      );
       const { userId, feedId } = job.data;
       const ctx = createDomainContext(db, userId);
       await updateFeedMetadata(ctx, feedId);
@@ -128,8 +121,7 @@ export function createFeedDetailsWorker() {
 export function createAutoArchiveWorker() {
   return new Worker(
     QUEUE_NAMES.AUTO_ARCHIVE,
-    async (job: Job) => {
-      console.log(`Starting auto archive job ${job.id}`);
+    async () => {
       await autoArchiveForAllUsers();
     },
     {

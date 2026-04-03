@@ -6,6 +6,7 @@ import { createDomainContext, type DomainContext } from './domain-context';
 import { shouldMarkAsRead } from './entities/filter-rule';
 import { getAutoArchiveCutoffDate } from './entities/settings';
 import { captureException } from './error-tracking';
+import { NotFoundError } from './errors';
 import { enqueueFeedSync } from './queues';
 import { fetchRss, HttpFetchError, type ParseFeedResult } from './rss-fetch';
 
@@ -70,6 +71,7 @@ export async function syncFeedArticles(
 ): Promise<{
   created: number;
   updated: number;
+  failed: number;
 }> {
   // optional, so when doing many this avoids repeated fetches
   autoArchiveCutoffDate ??= await getAutoArchiveCutoffDate(ctx.userId);
@@ -77,6 +79,7 @@ export async function syncFeedArticles(
   const counts = {
     created: 0,
     updated: 0,
+    failed: 0,
   };
 
   // Get items based on feed format and normalize them
@@ -167,16 +170,12 @@ export async function syncFeedArticles(
       counts.created++;
     } catch (error) {
       const err = error instanceof Error ? error : new Error(String(error));
-      console.error(err, {
-        feedId,
-        guid: item.guid,
-        title: item.title?.slice(0, 100),
-      });
       captureException(err, {
         feedId,
         guid: item.guid,
         title: item.title?.slice(0, 100),
       });
+      counts.failed++;
     }
   }
 
@@ -211,7 +210,7 @@ export async function syncSingleFeed(
   });
 
   if (!feed) {
-    throw new Error(`Feed ${feedId} not found`);
+    throw new NotFoundError(`Feed ${feedId} not found`);
   }
 
   const fetchResult = await fetchRss(feed.feedUrl, {
@@ -320,7 +319,7 @@ export async function recordFeedSyncFailure(
     columns: { title: true, feedUrl: true },
   });
 
-  console.error(error, {
+  captureException(error, {
     operation: 'sync_feed_exhausted',
     feedId,
     feedTitle: feed?.title,
@@ -372,13 +371,9 @@ export async function enqueueStaleFeeds(): Promise<void> {
     return;
   }
 
-  console.log(`[SYNC] Enqueueing ${feedsToSync.length} feeds for sync`);
-
   for (const feed of feedsToSync) {
     await enqueueFeedSync(feed.userId, feed.id);
   }
-
-  console.log(`[SYNC] Successfully enqueued ${feedsToSync.length} feed sync jobs`);
 }
 
 /**

@@ -4,8 +4,7 @@
   "main": "src/index.ts",
   "scripts": {
     "dev": "bun --env-file=../../.env run --hot src/index.ts",
-    "start": "bun --env-file=../../.env run src/index.ts",
-    "benchmark": "bun --env-file=../../.env run src/benchmark/index.ts"
+    "start": "bun --env-file=../../.env run src/index.ts"
   },
   "dependencies": {
     "@repo/db": "workspace:*",
