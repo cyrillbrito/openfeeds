@@ -1,7 +1,8 @@
 import type { Article, Feed, Tag } from '@repo/domain/client';
 import { Link } from '@tanstack/solid-router';
+import { createWindowVirtualizer } from '@tanstack/solid-virtual';
 import { ChevronDown } from 'lucide-solid';
-import { createEffect, createSignal, For, on, onCleanup, Show, type JSX } from 'solid-js';
+import { createEffect, createSignal, For, on, onCleanup, onMount, Show, type JSX } from 'solid-js';
 import { ArticleCard } from './ArticleCard';
 import {
   AllCaughtUpIllustration,
@@ -35,7 +36,18 @@ interface ArticleListProps {
 
 export function ArticleList(props: ArticleListProps) {
   let autoLoadTriggerRef: HTMLDivElement | undefined;
+  let listRef: HTMLDivElement | undefined;
   const [isAutoLoading, setIsAutoLoading] = createSignal(false);
+  const [scrollMargin, setScrollMargin] = createSignal(0);
+
+  const rowVirtualizer = createWindowVirtualizer({
+    count: props.articles.length,
+    estimateSize: () => 260,
+    overscan: 6,
+    scrollMargin: 0,
+    getItemKey: (index) => props.articles[index]?.id ?? index,
+    measureElement: (element) => element.getBoundingClientRect().height,
+  });
 
   // Generate contextual empty state based on readStatus and context
   const getContextualEmptyState = (): NonNullable<ArticleListProps['emptyState']> => {
@@ -128,15 +140,49 @@ export function ArticleList(props: ArticleListProps) {
   // Parent controls pagination now - we just show what we receive
   const hasMoreArticles = () => props.articles.length < props.totalCount;
   const remainingCount = () => props.totalCount - props.articles.length;
+  const virtualItems = () => rowVirtualizer.getVirtualItems();
+  const paddingTop = () => {
+    const first = virtualItems()[0];
+    if (!first) return 0;
+    return Math.max(0, first.start - scrollMargin());
+  };
+  const paddingBottom = () => {
+    const items = virtualItems();
+    const last = items[items.length - 1];
+    if (!last) return 0;
+    return Math.max(0, rowVirtualizer.getTotalSize() - last.end);
+  };
+
+  const updateScrollMargin = () => {
+    if (!listRef) return;
+    setScrollMargin(listRef.offsetTop);
+  };
+
+  onMount(() => {
+    updateScrollMargin();
+    window.addEventListener('resize', updateScrollMargin);
+    onCleanup(() => window.removeEventListener('resize', updateScrollMargin));
+  });
 
   createEffect(
     on(
       () => props.articles.length,
       () => {
         setIsAutoLoading(false);
+        queueMicrotask(updateScrollMargin);
       },
     ),
   );
+
+  createEffect(() => {
+    rowVirtualizer.setOptions({
+      ...rowVirtualizer.options,
+      count: props.articles.length,
+      scrollMargin: scrollMargin(),
+      getItemKey: (index) => props.articles[index]?.id ?? index,
+    });
+    rowVirtualizer.measure();
+  });
 
   createEffect(() => {
     const trigger = autoLoadTriggerRef;
@@ -182,17 +228,31 @@ export function ArticleList(props: ArticleListProps) {
         </div>
       }
     >
-      <div class="divide-base-300 w-full divide-y">
-        <For each={props.articles}>
-          {(article) => (
-            <ArticleCard
-              article={article}
-              feeds={props.feeds}
-              tags={props.tags}
-              onUpdateArticle={props.onUpdateArticle}
-            />
-          )}
+      <div ref={(el) => (listRef = el)} class="w-full">
+        <div style={{ height: `${paddingTop()}px` }} aria-hidden="true" />
+        <For each={virtualItems()}>
+          {(item) => {
+            const article = () => props.articles[item.index];
+
+            return (
+              <div
+                data-index={item.index}
+                ref={rowVirtualizer.measureElement}
+                class="border-base-300 w-full border-b"
+              >
+                <Show when={article()}>
+                  <ArticleCard
+                    article={article()!}
+                    feeds={props.feeds}
+                    tags={props.tags}
+                    onUpdateArticle={props.onUpdateArticle}
+                  />
+                </Show>
+              </div>
+            );
+          }}
         </For>
+        <div style={{ height: `${paddingBottom()}px` }} aria-hidden="true" />
       </div>
 
       <Show when={hasMoreArticles()}>
