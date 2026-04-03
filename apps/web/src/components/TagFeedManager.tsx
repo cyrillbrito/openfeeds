@@ -9,8 +9,6 @@ import { TagsIllustration } from './Icons';
 // prevents from being tree-shaken by TS
 void autofocus;
 
-let counter = 0;
-
 interface TagFeedsTabProps {
   tagId: string;
   feeds: Feed[];
@@ -131,7 +129,7 @@ interface AddFeedsSectionProps {
 
 function AddFeedsSection(props: AddFeedsSectionProps) {
   const id = `add-feeds-${createUniqueId()}`;
-  const anchor = `--anchor-add-feeds-${++counter}`;
+  const anchor = `--anchor-add-feeds-${createUniqueId()}`;
   const [pendingIds, setPendingIds] = createSignal<Set<string>>(new Set<string>());
 
   const commitSelections = () => {
