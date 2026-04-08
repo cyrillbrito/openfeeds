@@ -344,7 +344,7 @@ function FeedHeader(props: { feed: FeedWithTags }) {
         </p>
 
         {/* Tags */}
-        <Show when={props.feed.tags.length > 0}>
+        <Show when={props.feed.tags && props.feed.tags.length > 0}>
           <div class="mb-3 flex flex-wrap gap-1.5">
             <For each={props.feed.tags}>
               {(tag) => (
