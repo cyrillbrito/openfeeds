@@ -14,6 +14,7 @@ interface ArticleCardProps {
   feeds: Feed[];
   tags: Tag[];
   onUpdateArticle: (articleId: string, updates: { isRead?: boolean; isArchived?: boolean }) => void;
+  onNavigateToArticle?: (articleId: string, event: MouseEvent) => void;
 }
 
 export function ArticleCard(props: ArticleCardProps) {
@@ -26,6 +27,11 @@ export function ArticleCard(props: ArticleCardProps) {
     if (!props.article.isRead) {
       props.onUpdateArticle(props.article.id, { isRead: true });
     }
+  };
+
+  const handleNavigate = (event: MouseEvent) => {
+    props.onNavigateToArticle?.(props.article.id, event);
+    markAsRead();
   };
 
   const isVideo = () => props.article.url && isYouTubeUrl(props.article.url);
@@ -54,8 +60,8 @@ export function ArticleCard(props: ArticleCardProps) {
         params={{ articleId: props.article.id.toString() }}
         class="absolute inset-0"
         tabIndex={-1}
-        aria-hidden="true"
-        onClick={markAsRead}
+        aria-label={`Open article: ${props.article.title}`}
+        onClick={handleNavigate}
       />
       <div class="mb-1.5 flex gap-2 md:gap-3">
         <Show
@@ -103,7 +109,7 @@ export function ArticleCard(props: ArticleCardProps) {
               to="/articles/$articleId"
               params={{ articleId: props.article.id.toString() }}
               class="relative"
-              onClick={markAsRead}
+              onClick={handleNavigate}
             >
               {props.article.title}
             </Link>
