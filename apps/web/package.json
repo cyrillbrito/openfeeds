@@ -39,7 +39,9 @@
     "lucide-solid": "^1.7.0",
     "nitro": "npm:nitro-nightly@3.0.1-20260227-181935-bfbb207c",
     "posthog-js": "^1.364.1",
+    "remark-gfm": "^4.0.1",
     "solid-js": "^1.9.12",
+    "solid-markdown": "^2.1.1",
     "tailwind-merge": "^3.5.0",
     "tailwindcss": "^4.2.2",
     "zod": "^4.3.6"
