@@ -21,6 +21,7 @@ import { Route as ApiChatRouteImport } from './routes/api/chat'
 import { Route as FrameSettingsRouteImport } from './routes/_frame.settings'
 import { Route as FrameDiscoverRouteImport } from './routes/_frame.discover'
 import { Route as FrameChatRouteImport } from './routes/_frame.chat'
+import { Route as FrameAiRouteImport } from './routes/_frame.ai'
 import { Route as FrameTagsIndexRouteImport } from './routes/_frame.tags.index'
 import { Route as FrameInboxIndexRouteImport } from './routes/_frame.inbox.index'
 import { Route as FrameFeedsIndexRouteImport } from './routes/_frame.feeds.index'
@@ -38,6 +39,7 @@ import { Route as FrameSettingsUsageRouteImport } from './routes/_frame.settings
 import { Route as FrameSettingsGeneralRouteImport } from './routes/_frame.settings.general'
 import { Route as FrameSettingsConnectionsRouteImport } from './routes/_frame.settings.connections'
 import { Route as FrameArticlesArticleIdRouteImport } from './routes/_frame.articles.$articleId'
+import { Route as FrameAiSessionIdRouteImport } from './routes/_frame.ai_.$sessionId'
 import { Route as FrameInboxShortsIndexRouteImport } from './routes/_frame.inbox.shorts.index'
 import { Route as FrameFeedsFeedIdIndexRouteImport } from './routes/_frame.feeds.$feedId.index'
 import { Route as ApiArticlesArticleIdAudioRouteImport } from './routes/api/articles/$articleId/audio'
@@ -102,6 +104,11 @@ const FrameDiscoverRoute = FrameDiscoverRouteImport.update({
 const FrameChatRoute = FrameChatRouteImport.update({
   id: '/chat',
   path: '/chat',
+  getParentRoute: () => FrameRoute,
+} as any)
+const FrameAiRoute = FrameAiRouteImport.update({
+  id: '/ai',
+  path: '/ai',
   getParentRoute: () => FrameRoute,
 } as any)
 const FrameTagsIndexRoute = FrameTagsIndexRouteImport.update({
@@ -190,6 +197,11 @@ const FrameArticlesArticleIdRoute = FrameArticlesArticleIdRouteImport.update({
   path: '/articles/$articleId',
   getParentRoute: () => FrameRoute,
 } as any)
+const FrameAiSessionIdRoute = FrameAiSessionIdRouteImport.update({
+  id: '/ai_/$sessionId',
+  path: '/ai/$sessionId',
+  getParentRoute: () => FrameRoute,
+} as any)
 const FrameInboxShortsIndexRoute = FrameInboxShortsIndexRouteImport.update({
   id: '/inbox/shorts/',
   path: '/inbox/shorts/',
@@ -229,12 +241,14 @@ export interface FileRoutesByFullPath {
   '/login': typeof LoginRoute
   '/reset-password': typeof ResetPasswordRoute
   '/signup': typeof SignupRoute
+  '/ai': typeof FrameAiRoute
   '/chat': typeof FrameChatRoute
   '/discover': typeof FrameDiscoverRoute
   '/settings': typeof FrameSettingsRouteWithChildren
   '/api/chat': typeof ApiChatRoute
   '/api/feeds': typeof ApiFeedsRoute
   '/oauth/consent': typeof OauthConsentRoute
+  '/ai/$sessionId': typeof FrameAiSessionIdRoute
   '/articles/$articleId': typeof FrameArticlesArticleIdRoute
   '/settings/connections': typeof FrameSettingsConnectionsRoute
   '/settings/general': typeof FrameSettingsGeneralRoute
@@ -265,12 +279,14 @@ export interface FileRoutesByTo {
   '/login': typeof LoginRoute
   '/reset-password': typeof ResetPasswordRoute
   '/signup': typeof SignupRoute
+  '/ai': typeof FrameAiRoute
   '/chat': typeof FrameChatRoute
   '/discover': typeof FrameDiscoverRoute
   '/settings': typeof FrameSettingsRouteWithChildren
   '/api/chat': typeof ApiChatRoute
   '/api/feeds': typeof ApiFeedsRoute
   '/oauth/consent': typeof OauthConsentRoute
+  '/ai/$sessionId': typeof FrameAiSessionIdRoute
   '/articles/$articleId': typeof FrameArticlesArticleIdRoute
   '/settings/connections': typeof FrameSettingsConnectionsRoute
   '/settings/general': typeof FrameSettingsGeneralRoute
@@ -303,12 +319,14 @@ export interface FileRoutesById {
   '/login': typeof LoginRoute
   '/reset-password': typeof ResetPasswordRoute
   '/signup': typeof SignupRoute
+  '/_frame/ai': typeof FrameAiRoute
   '/_frame/chat': typeof FrameChatRoute
   '/_frame/discover': typeof FrameDiscoverRoute
   '/_frame/settings': typeof FrameSettingsRouteWithChildren
   '/api/chat': typeof ApiChatRoute
   '/api/feeds': typeof ApiFeedsRoute
   '/oauth/consent': typeof OauthConsentRoute
+  '/_frame/ai_/$sessionId': typeof FrameAiSessionIdRoute
   '/_frame/articles/$articleId': typeof FrameArticlesArticleIdRoute
   '/_frame/settings/connections': typeof FrameSettingsConnectionsRoute
   '/_frame/settings/general': typeof FrameSettingsGeneralRoute
@@ -341,12 +359,14 @@ export interface FileRouteTypes {
     | '/login'
     | '/reset-password'
     | '/signup'
+    | '/ai'
     | '/chat'
     | '/discover'
     | '/settings'
     | '/api/chat'
     | '/api/feeds'
     | '/oauth/consent'
+    | '/ai/$sessionId'
     | '/articles/$articleId'
     | '/settings/connections'
     | '/settings/general'
@@ -377,12 +397,14 @@ export interface FileRouteTypes {
     | '/login'
     | '/reset-password'
     | '/signup'
+    | '/ai'
     | '/chat'
     | '/discover'
     | '/settings'
     | '/api/chat'
     | '/api/feeds'
     | '/oauth/consent'
+    | '/ai/$sessionId'
     | '/articles/$articleId'
     | '/settings/connections'
     | '/settings/general'
@@ -414,12 +436,14 @@ export interface FileRouteTypes {
     | '/login'
     | '/reset-password'
     | '/signup'
+    | '/_frame/ai'
     | '/_frame/chat'
     | '/_frame/discover'
     | '/_frame/settings'
     | '/api/chat'
     | '/api/feeds'
     | '/oauth/consent'
+    | '/_frame/ai_/$sessionId'
     | '/_frame/articles/$articleId'
     | '/_frame/settings/connections'
     | '/_frame/settings/general'
@@ -553,6 +577,13 @@ declare module '@tanstack/solid-router' {
       preLoaderRoute: typeof FrameChatRouteImport
       parentRoute: typeof FrameRoute
     }
+    '/_frame/ai': {
+      id: '/_frame/ai'
+      path: '/ai'
+      fullPath: '/ai'
+      preLoaderRoute: typeof FrameAiRouteImport
+      parentRoute: typeof FrameRoute
+    }
     '/_frame/tags/': {
       id: '/_frame/tags/'
       path: '/tags'
@@ -672,6 +703,13 @@ declare module '@tanstack/solid-router' {
       preLoaderRoute: typeof FrameArticlesArticleIdRouteImport
       parentRoute: typeof FrameRoute
     }
+    '/_frame/ai_/$sessionId': {
+      id: '/_frame/ai_/$sessionId'
+      path: '/ai/$sessionId'
+      fullPath: '/ai/$sessionId'
+      preLoaderRoute: typeof FrameAiSessionIdRouteImport
+      parentRoute: typeof FrameRoute
+    }
     '/_frame/inbox/shorts/': {
       id: '/_frame/inbox/shorts/'
       path: '/inbox/shorts'
@@ -748,9 +786,11 @@ const FrameTagsTagIdRouteWithChildren = FrameTagsTagIdRoute._addFileChildren(
 )
 
 interface FrameRouteChildren {
+  FrameAiRoute: typeof FrameAiRoute
   FrameChatRoute: typeof FrameChatRoute
   FrameDiscoverRoute: typeof FrameDiscoverRoute
   FrameSettingsRoute: typeof FrameSettingsRouteWithChildren
+  FrameAiSessionIdRoute: typeof FrameAiSessionIdRoute
   FrameArticlesArticleIdRoute: typeof FrameArticlesArticleIdRoute
   FrameTagsTagIdRoute: typeof FrameTagsTagIdRouteWithChildren
   FrameFeedsIndexRoute: typeof FrameFeedsIndexRoute
@@ -762,9 +802,11 @@ interface FrameRouteChildren {
 }
 
 const FrameRouteChildren: FrameRouteChildren = {
+  FrameAiRoute: FrameAiRoute,
   FrameChatRoute: FrameChatRoute,
   FrameDiscoverRoute: FrameDiscoverRoute,
   FrameSettingsRoute: FrameSettingsRouteWithChildren,
+  FrameAiSessionIdRoute: FrameAiSessionIdRoute,
   FrameArticlesArticleIdRoute: FrameArticlesArticleIdRoute,
   FrameTagsTagIdRoute: FrameTagsTagIdRouteWithChildren,
   FrameFeedsIndexRoute: FrameFeedsIndexRoute,

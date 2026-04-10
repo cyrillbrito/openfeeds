@@ -8,7 +8,7 @@ export const Route = createFileRoute('/api/chat')({
         const { anthropicText } = await import('@tanstack/ai-anthropic');
         const { auth } = await import('~/server/auth.server');
         const { createTools } = await import('~/server/ai-tools.server');
-        const { SYSTEM_PROMPT } = await import('~/server/ai-system-prompt.server');
+        const { getSystemPrompt } = await import('~/server/ai-system-prompt.server');
         const { env } = await import('~/env');
 
         if (!env.ANTHROPIC_API_KEY) {
@@ -26,7 +26,7 @@ export const Route = createFileRoute('/api/chat')({
         const tools = createTools(session.user.id, session.user.plan ?? 'free');
 
         // Build context-aware system prompt
-        const contextLines: string[] = [SYSTEM_PROMPT];
+        const contextLines: string[] = [getSystemPrompt()];
         if (context) {
           const parts: string[] = [];
           if (context.feedTitle)
@@ -45,6 +45,7 @@ export const Route = createFileRoute('/api/chat')({
             systemPrompts: contextLines,
             messages,
             tools,
+            maxTokens: 4096,
           }),
         );
       },

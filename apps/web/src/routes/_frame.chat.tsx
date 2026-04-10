@@ -1,6 +1,7 @@
-import { createFileRoute } from '@tanstack/solid-router';
-import { ChatPage } from '~/components/chat/ChatPage';
+import { createFileRoute, redirect } from '@tanstack/solid-router';
 
 export const Route = createFileRoute('/_frame/chat')({
-  component: ChatPage,
+  beforeLoad: () => {
+    throw redirect({ to: '/ai' });
+  },
 });

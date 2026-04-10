@@ -16,13 +16,13 @@ interface ChatContextValue {
   // useChat state
   messages: Accessor<UIMessage[]>;
   isLoading: Accessor<boolean>;
+  error: Accessor<Error | undefined>;
   setMessages: (msgs: UIMessage[]) => void;
   sendMessage: (text: string) => Promise<void>;
 
   // Session state
   sessionId: Accessor<string>;
-  showHistory: Accessor<boolean>;
-  setShowHistory: (v: boolean) => void;
+  currentTitle: Accessor<string>;
   sessions: Accessor<ChatSessionSummary[] | undefined>;
   refetchSessions: () => void;
 
@@ -36,18 +36,23 @@ const ChatContext = createContext<ChatContextValue>();
 
 export function ChatProvider(props: { children: JSX.Element }) {
   const [sessionId, setSessionId] = createSignal(createId());
-  const [showHistory, setShowHistory] = createSignal(false);
 
   const [sessions, { refetch: refetchSessions }] = createResource(async () => {
     return $$listChatSessions();
   });
 
-  const { messages, sendMessage, isLoading, setMessages } = useChat({
+  const { messages, sendMessage, isLoading, setMessages, error } = useChat({
     connection: fetchServerSentEvents('/api/chat'),
     onFinish: () => {
       void saveCurrentSession();
     },
   });
+
+  const currentTitle = () => {
+    const msgs = messages();
+    if (msgs.length === 0) return 'New chat';
+    return deriveTitle(msgs);
+  };
 
   async function saveCurrentSession() {
     const msgs = messages();
@@ -74,7 +79,6 @@ export function ChatProvider(props: { children: JSX.Element }) {
 
     setSessionId(id);
     setMessages(result.messages.map(storedToUi));
-    setShowHistory(false);
   }
 
   async function deleteSession(id: string) {
@@ -88,18 +92,17 @@ export function ChatProvider(props: { children: JSX.Element }) {
   function startNewChat() {
     setSessionId(createId());
     setMessages([]);
-    setShowHistory(false);
   }
 
   const value: ChatContextValue = {
     messages,
     isLoading,
+    error,
     setMessages,
     sendMessage,
     sessionId,
-    showHistory,
-    setShowHistory,
-    sessions,
+    currentTitle,
+    sessions: () => sessions.latest,
     refetchSessions: () => void refetchSessions(),
     startNewChat,
     loadSession,

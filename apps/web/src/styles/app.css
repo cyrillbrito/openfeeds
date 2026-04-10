@@ -73,18 +73,92 @@ html {
   max-height: var(--modal-vh, 100dvh);
 }
 
-/* AI chat bubble markdown */
-.prose-chat code {
-  background: oklch(0.5 0 0 / 0.12);
-  padding: 0.1em 0.35em;
+/* AI chat — prose overrides for tighter spacing in chat context */
+.ai-chat-area .prose {
+  --tw-prose-body: var(--color-base-content);
+  --tw-prose-headings: var(--color-base-content);
+  --tw-prose-links: var(--color-primary);
+  --tw-prose-code: var(--color-base-content);
+  font-size: 0.875rem;
+  line-height: 1.625;
+}
+
+.ai-chat-area .prose :first-child {
+  margin-top: 0;
+}
+
+.ai-chat-area .prose :last-child {
+  margin-bottom: 0;
+}
+
+.ai-chat-area .prose p {
+  margin-top: 0.5em;
+  margin-bottom: 0.5em;
+}
+
+.ai-chat-area .prose ul,
+.ai-chat-area .prose ol {
+  margin-top: 0.375em;
+  margin-bottom: 0.375em;
+  padding-left: 1.25em;
+}
+
+.ai-chat-area .prose li {
+  margin-top: 0.125em;
+  margin-bottom: 0.125em;
+}
+
+.ai-chat-area .prose pre {
+  margin-top: 0.5em;
+  margin-bottom: 0.5em;
+  font-size: 0.8125rem;
+}
+
+.ai-chat-area .prose code:not(pre code) {
+  background: oklch(0.5 0 0 / 0.1);
+  padding: 0.15em 0.35em;
   border-radius: 0.25rem;
   font-size: 0.85em;
+  font-weight: 500;
 }
-.prose-chat ul {
-  padding-left: 1.2em;
-  margin: 0.25em 0;
-  list-style: disc;
+
+.ai-chat-area .prose code:not(pre code)::before,
+.ai-chat-area .prose code:not(pre code)::after {
+  content: none;
 }
-.prose-chat li {
-  margin: 0.1em 0;
+
+.ai-chat-area .prose h1,
+.ai-chat-area .prose h2,
+.ai-chat-area .prose h3 {
+  margin-top: 0.75em;
+  margin-bottom: 0.375em;
 }
+
+/* Streaming markdown — last block-level child fades in while streaming */
+@keyframes md-fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.markdown-streaming > :first-child > p:last-child,
+.markdown-streaming > :first-child > li:last-child,
+.markdown-streaming > :first-child > h1:last-child,
+.markdown-streaming > :first-child > h2:last-child,
+.markdown-streaming > :first-child > h3:last-child,
+.markdown-streaming > :first-child > h4:last-child,
+.markdown-streaming > :first-child > pre:last-child,
+.markdown-streaming > :first-child > blockquote:last-child,
+.markdown-streaming > :first-child > table:last-child,
+.markdown-streaming > :first-child > ul:last-child,
+.markdown-streaming > :first-child > ol:last-child,
+.markdown-streaming > :first-child > hr:last-child {
+  animation: md-fade-in 0.3s ease-out both;
+}
+
+

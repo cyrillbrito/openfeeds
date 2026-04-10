@@ -1,19 +1,6 @@
 import type { StoredMessage } from '@repo/domain/client';
 import type { UIMessage } from '@tanstack/ai';
 
-/** Lightweight markdown renderer (escapes HTML, then applies inline formatting) */
-export function renderMarkdown(text: string): string {
-  return text
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/`([^`]+)`/g, '<code>$1</code>')
-    .replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>')
-    .replace(/\*([^*]+)\*/g, '<em>$1</em>')
-    .replace(/^- (.+)$/gm, '<li>$1</li>')
-    .replace(/(<li>.*<\/li>\n?)+/g, '<ul>$&</ul>');
-}
-
 /** Derive a title from the first user message */
 export function deriveTitle(msgs: UIMessage[]): string {
   const firstUser = msgs.find((m) => m.role === 'user');
@@ -24,6 +11,22 @@ export function deriveTitle(msgs: UIMessage[]): string {
 
   const text = (textPart as { content: string }).content.trim();
   return text.length > 80 ? `${text.slice(0, 77)}...` : text;
+}
+
+/** Download the current chat session as a JSON file */
+export function downloadSession(sessionId: string, messages: UIMessage[]) {
+  const payload = {
+    sessionId,
+    exportedAt: new Date().toISOString(),
+    messages: messages.map(uiToStored),
+  };
+  const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `chat-${sessionId.slice(0, 8)}-${Date.now()}.json`;
+  a.click();
+  URL.revokeObjectURL(url);
 }
 
 /** Convert UIMessage to StoredMessage for persistence */
@@ -52,6 +55,34 @@ export function storedToUi(msg: StoredMessage): UIMessage {
     parts: msg.parts as UIMessage['parts'],
     createdAt: msg.createdAt ?? new Date(),
   };
+}
+
+/** Group chat sessions by time period */
+export function groupByTimePeriod<T extends { updatedAt: Date | string }>(
+  items: T[],
+): { label: string; items: T[] }[] {
+  const now = new Date();
+  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const weekAgo = new Date(today.getTime() - 7 * 86400000);
+
+  const todayGroup: { label: string; items: T[] } = { label: 'Today', items: [] };
+  const weekGroup: { label: string; items: T[] } = { label: 'Previous 7 days', items: [] };
+  const olderGroup: { label: string; items: T[] } = { label: 'Older', items: [] };
+
+  for (const item of items) {
+    const d = typeof item.updatedAt === 'string' ? new Date(item.updatedAt) : item.updatedAt;
+    if (d >= today) {
+      todayGroup.items.push(item);
+    } else if (d >= weekAgo) {
+      weekGroup.items.push(item);
+    } else {
+      olderGroup.items.push(item);
+    }
+  }
+
+  const groups = [todayGroup, weekGroup, olderGroup];
+
+  return groups.filter((g) => g.items.length > 0);
 }
 
 /** Simple relative date formatting */

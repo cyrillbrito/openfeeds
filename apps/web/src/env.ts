@@ -30,6 +30,8 @@ export const env = createEnv({
     APPLE_CLIENT_SECRET: z.string().optional(),
     // AI Chat (Anthropic)
     ANTHROPIC_API_KEY: z.string().optional(),
+    // Brave Search (for AI topic-based feed discovery)
+    BRAVE_API_KEY: z.string().optional(),
   },
   runtimeEnv: process.env,
   emptyStringAsUndefined: true,

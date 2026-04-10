@@ -7,14 +7,14 @@ import { z } from 'zod';
  */
 export function createTools(userId: string, plan: string | null | undefined) {
   // -------------------------------------------------------------------------
-  // discover_feeds — find RSS/Atom feeds at a URL
+  // discover_feeds — find feeds at a URL
   // -------------------------------------------------------------------------
   const discoverFeeds = toolDefinition({
     name: 'discover_feeds',
     description:
-      'Find RSS/Atom feeds at a given URL. Use when the user wants to subscribe to a website. Returns a list of discovered feed URLs with titles.',
+      'Find available RSS/Atom feeds at a given URL. Use when the user wants to subscribe to a website or content source. Accepts any website URL and returns all discoverable feed URLs with their titles and descriptions. Call this before follow_feeds to show the user what feeds are available at a site.',
     inputSchema: z.object({
-      url: z.string().url().describe('The website URL to search for RSS/Atom feeds'),
+      url: z.string().url().describe('The website URL to search for feeds'),
     }),
   }).server(async ({ url }) => {
     const { discoverRssFeeds } = await import('@repo/domain');
@@ -30,12 +30,12 @@ export function createTools(userId: string, plan: string | null | undefined) {
   });
 
   // -------------------------------------------------------------------------
-  // follow_feeds — subscribe to RSS feeds
+  // follow_feeds — subscribe to feeds
   // -------------------------------------------------------------------------
   const followFeeds = toolDefinition({
     name: 'follow_feeds',
     description:
-      'Subscribe to one or more RSS feeds. Use after discover_feeds to subscribe. Optionally assign tags.',
+      'Subscribe the user to one or more feeds. Use after discover_feeds to subscribe. Accepts feed URLs (from discover_feeds results) and optionally assigns tags to all new feeds. Tags are created automatically if they do not already exist. Returns the count and titles of newly subscribed feeds.',
     inputSchema: z.object({
       feeds: z
         .array(
@@ -92,7 +92,7 @@ export function createTools(userId: string, plan: string | null | undefined) {
   const unfollowFeeds = toolDefinition({
     name: 'unfollow_feeds',
     description:
-      "Unfollow/unsubscribe from RSS feeds. WARNING: This permanently removes the feed and all its articles from the user's library. Always confirm with the user before calling this tool — repeat back exactly which feed(s) will be removed and ask for explicit confirmation.",
+      "Unfollow/unsubscribe from feeds. WARNING: This permanently removes the feed and all its articles from the user's library. Always confirm with the user before calling this tool — repeat back exactly which feed(s) will be removed and ask for explicit confirmation. Requires feed IDs, which can be obtained from list_feeds.",
     inputSchema: z.object({
       feedIds: z.array(z.string()).min(1).describe('Feed IDs to unsubscribe from'),
     }),
@@ -113,7 +113,7 @@ export function createTools(userId: string, plan: string | null | undefined) {
   const updateArticles = toolDefinition({
     name: 'update_articles',
     description:
-      'Update article properties. Can mark as read/unread, archived/unarchived. Set isRead=true to mark read, isRead=false to mark unread, isArchived=true to archive, isArchived=false to unarchive.',
+      'Update article properties in bulk. Can mark articles as read/unread or archived/unarchived. Accepts one or more article IDs (from list_articles) and the changes to apply. Set isRead=true to mark read, isRead=false to mark unread, isArchived=true to archive, isArchived=false to unarchive. You can combine both changes in a single call.',
     inputSchema: z.object({
       articleIds: z.array(z.string()).min(1).describe('Article IDs to update'),
       changes: z.object({
@@ -140,7 +140,8 @@ export function createTools(userId: string, plan: string | null | undefined) {
   // -------------------------------------------------------------------------
   const manageTags = toolDefinition({
     name: 'manage_tags',
-    description: 'Create, rename, or delete tags. For delete, confirm with the user first.',
+    description:
+      "Create, rename, or delete tags. For 'create', provide a name (and optional color). For 'update', provide the tag ID and the new name/color. For 'delete', provide the tag ID. Always confirm with the user before deleting tags. Tag IDs can be obtained from list_tags.",
     inputSchema: z.object({
       action: z.enum(['create', 'update', 'delete']),
       tags: z.array(
@@ -208,7 +209,8 @@ export function createTools(userId: string, plan: string | null | undefined) {
   // -------------------------------------------------------------------------
   const manageFeedTags = toolDefinition({
     name: 'manage_feed_tags',
-    description: 'Assign or remove tags on feeds.',
+    description:
+      'Assign or remove tags on feeds. Use action "assign" to tag feeds and "remove" to untag them. Both feed IDs (from list_feeds) and tag IDs (from list_tags) are required. You can assign/remove multiple feed-tag pairs in a single call.',
     inputSchema: z.object({
       action: z.enum(['assign', 'remove']),
       assignments: z.array(
@@ -270,7 +272,7 @@ export function createTools(userId: string, plan: string | null | undefined) {
   const getUsage = toolDefinition({
     name: 'get_usage',
     description:
-      "Check the user's current plan usage and limits (feeds, saved articles, filter rules, etc.).",
+      "Check the user's current plan usage and limits. Returns counts for feeds, saved articles, filter rules, and other plan-gated features along with their maximums. Use this when the user asks about their plan, remaining quota, or if they can add more feeds.",
     inputSchema: z.object({}),
   }).server(async () => {
     const { getUserUsage } = await import('@repo/domain');
@@ -283,60 +285,45 @@ export function createTools(userId: string, plan: string | null | undefined) {
   const listFeeds = toolDefinition({
     name: 'list_feeds',
     description:
-      "List the user's subscribed feeds. Returns feed ID, title, URL, and sync status. Use this to look up feed IDs for other operations.",
+      "List all of the user's subscribed feeds. Returns every feed with its ID, title, site URL, feed URL, and sync status. Use this to look up feed IDs before calling other tools like list_articles, unfollow_feeds, or manage_feed_tags. Supports an optional search filter to narrow by title or URL. Returns the full list (no pagination) since users typically have a manageable number of feeds.",
     inputSchema: z.object({
-      search: z.string().optional().describe('Optional search term to filter by title or URL'),
+      search: z
+        .string()
+        .optional()
+        .describe('Optional search term to filter feeds by title, feed URL, or site URL (case-insensitive)'),
     }),
   }).server(async ({ search }) => {
     const { db, feeds } = await import('@repo/db');
-    const { eq, ilike, and, or } = await import('drizzle-orm');
+    const { eq, ilike, and, or, asc } = await import('drizzle-orm');
 
-    let query = db
+    const conditions = [eq(feeds.userId, userId)];
+
+    if (search) {
+      const pattern = `%${search}%`;
+      conditions.push(
+        or(
+          ilike(feeds.title, pattern),
+          ilike(feeds.feedUrl, pattern),
+          ilike(feeds.url, pattern),
+        )!,
+      );
+    }
+
+    const rows = await db
       .select({
         id: feeds.id,
         title: feeds.title,
         feedUrl: feeds.feedUrl,
         url: feeds.url,
         syncStatus: feeds.syncStatus,
-        icon: feeds.icon,
       })
       .from(feeds)
-      .where(eq(feeds.userId, userId));
+      .where(and(...conditions))
+      .orderBy(asc(feeds.title));
 
-    if (search) {
-      const pattern = `%${search}%`;
-      query = db
-        .select({
-          id: feeds.id,
-          title: feeds.title,
-          feedUrl: feeds.feedUrl,
-          url: feeds.url,
-          syncStatus: feeds.syncStatus,
-          icon: feeds.icon,
-        })
-        .from(feeds)
-        .where(
-          and(
-            eq(feeds.userId, userId),
-            or(
-              ilike(feeds.title, pattern),
-              ilike(feeds.feedUrl, pattern),
-              ilike(feeds.url, pattern),
-            ),
-          ),
-        );
-    }
-
-    const rows = await query.limit(50);
     return {
-      feeds: rows.map((f) => ({
-        id: f.id,
-        title: f.title,
-        feedUrl: f.feedUrl,
-        url: f.url,
-        syncStatus: f.syncStatus,
-      })),
-      count: rows.length,
+      feeds: rows,
+      totalCount: rows.length,
     };
   });
 
@@ -346,68 +333,160 @@ export function createTools(userId: string, plan: string | null | undefined) {
   const listArticles = toolDefinition({
     name: 'list_articles',
     description:
-      "Query the user's articles. Can filter by feed, read/unread status, archived status. Returns article ID, title, feed info, and status. Limited to 30 results.",
+      "Query the user's articles with filtering and pagination. Results are ordered by publication date (newest first). Default limit is 50; use offset to paginate. The response includes totalCount and hasMore for pagination. Use 'fields' to control which fields are returned — only request what you need. For digests/summaries of many articles, use fields: ['title', 'feedTitle', 'pubDate']. For actions like marking read, include 'id'. Requesting fewer fields saves context and avoids errors on large result sets.",
     inputSchema: z.object({
       feedId: z.string().optional().describe('Filter by feed ID'),
       isRead: z.boolean().optional().describe('Filter by read status'),
       isArchived: z.boolean().optional().describe('Filter by archived status'),
-      search: z.string().optional().describe('Search by article title'),
-      limit: z.number().min(1).max(30).optional().describe('Max results (default 20)'),
+      search: z.string().optional().describe('Search by article title (case-insensitive)'),
+      dateFrom: z
+        .string()
+        .optional()
+        .describe('ISO 8601 date string — only return articles published on or after this date'),
+      dateTo: z
+        .string()
+        .optional()
+        .describe('ISO 8601 date string — only return articles published on or before this date'),
+      limit: z
+        .number()
+        .min(1)
+        .max(200)
+        .optional()
+        .describe('Max results per page (default 50, max 200)'),
+      offset: z.number().min(0).optional().describe('Number of results to skip (default 0)'),
+      fields: z
+        .array(
+          z.enum([
+            'id',
+            'title',
+            'pubDate',
+            'feedId',
+            'feedTitle',
+            'isRead',
+            'isArchived',
+            'description',
+            'url',
+            'author',
+          ]),
+        )
+        .optional()
+        .describe(
+          'Fields to include per article. Default: all base fields (id, title, pubDate, feedId, feedTitle, isRead, isArchived). For digests/overviews, use [title, feedTitle, pubDate] to minimize context. Add id when you need to reference articles in follow-up tool calls. Add description for content summaries (auto-truncated for large batches).',
+        ),
     }),
-  }).server(async ({ feedId, isRead, isArchived, search, limit: maxResults }) => {
-    const { db, articles } = await import('@repo/db');
-    const { eq, and, ilike, desc } = await import('drizzle-orm');
+  }).server(
+    async ({ feedId, isRead, isArchived, search, dateFrom, dateTo, limit: maxResults, offset, fields }) => {
+      const { db, articles, feeds } = await import('@repo/db');
+      const { eq, and, ilike, desc, gte, lte, count } = await import('drizzle-orm');
 
-    const conditions = [eq(articles.userId, userId)];
+      const conditions = [eq(articles.userId, userId)];
 
-    if (feedId) {
-      conditions.push(eq(articles.feedId, feedId));
-    }
-    if (isRead !== undefined) {
-      conditions.push(eq(articles.isRead, isRead));
-    }
-    if (isArchived !== undefined) {
-      conditions.push(eq(articles.isArchived, isArchived));
-    }
-    if (search) {
-      conditions.push(ilike(articles.title, `%${search}%`));
-    }
+      if (feedId) {
+        conditions.push(eq(articles.feedId, feedId));
+      }
+      if (isRead !== undefined) {
+        conditions.push(eq(articles.isRead, isRead));
+      }
+      if (isArchived !== undefined) {
+        conditions.push(eq(articles.isArchived, isArchived));
+      }
+      if (search) {
+        conditions.push(ilike(articles.title, `%${search}%`));
+      }
+      if (dateFrom) {
+        conditions.push(gte(articles.pubDate, new Date(dateFrom)));
+      }
+      if (dateTo) {
+        conditions.push(lte(articles.pubDate, new Date(dateTo)));
+      }
 
-    const rows = await db
-      .select({
-        id: articles.id,
-        title: articles.title,
-        url: articles.url,
-        feedId: articles.feedId,
-        isRead: articles.isRead,
-        isArchived: articles.isArchived,
-        pubDate: articles.pubDate,
-      })
-      .from(articles)
-      .where(and(...conditions))
-      .orderBy(desc(articles.pubDate))
-      .limit(maxResults ?? 20);
+      const whereClause = and(...conditions);
+      const limit = maxResults ?? 50;
+      const skip = offset ?? 0;
 
-    return {
-      articles: rows.map((a) => ({
-        id: a.id,
-        title: a.title,
-        url: a.url,
-        feedId: a.feedId,
-        isRead: a.isRead,
-        isArchived: a.isArchived,
-        pubDate: a.pubDate?.toISOString() ?? null,
-      })),
-      count: rows.length,
-    };
-  });
+      // Run count + data queries in parallel
+      const [countResult, rows] = await Promise.all([
+        db.select({ value: count() }).from(articles).where(whereClause),
+        db
+          .select({
+            id: articles.id,
+            title: articles.title,
+            url: articles.url,
+            description: articles.description,
+            author: articles.author,
+            feedId: articles.feedId,
+            feedTitle: feeds.title,
+            isRead: articles.isRead,
+            isArchived: articles.isArchived,
+            pubDate: articles.pubDate,
+          })
+          .from(articles)
+          .leftJoin(feeds, eq(articles.feedId, feeds.id))
+          .where(whereClause)
+          .orderBy(desc(articles.pubDate))
+          .limit(limit)
+          .offset(skip),
+      ]);
+
+      const totalCount = countResult[0]?.value ?? 0;
+
+      // If fields is specified, only return those fields. Otherwise return all base fields.
+      const allBaseFields = ['id', 'title', 'pubDate', 'feedId', 'feedTitle', 'isRead', 'isArchived'] as const;
+      const requestedFields = new Set(fields ?? allBaseFields);
+
+      // Scale description length inversely with batch size to prevent context overflow.
+      const maxDescLength =
+        rows.length <= 10
+          ? 800
+          : rows.length <= 50
+            ? 300
+            : rows.length <= 100
+              ? 150
+              : 0;
+
+      return {
+        articles: rows.map((a) => {
+          const entry: Record<string, unknown> = {};
+          if (requestedFields.has('id')) entry.id = a.id;
+          if (requestedFields.has('title')) entry.title = a.title;
+          if (requestedFields.has('pubDate')) {
+            // Use short date for large batches to save tokens
+            entry.pubDate = rows.length > 100
+              ? (a.pubDate?.toISOString()?.slice(0, 10) ?? null)
+              : (a.pubDate?.toISOString() ?? null);
+          }
+          if (requestedFields.has('feedId')) entry.feedId = a.feedId;
+          if (requestedFields.has('feedTitle')) entry.feedTitle = a.feedTitle ?? null;
+          if (requestedFields.has('isRead')) entry.isRead = a.isRead;
+          if (requestedFields.has('isArchived')) entry.isArchived = a.isArchived;
+          if (requestedFields.has('url')) entry.url = a.url;
+          if (requestedFields.has('author')) entry.author = a.author ?? null;
+          if (requestedFields.has('description') && maxDescLength > 0) {
+            let desc = a.description ?? null;
+            // Strip HTML tags — they waste tokens and add no information for the AI
+            if (desc) desc = desc.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim();
+            entry.description =
+              desc && desc.length > maxDescLength
+                ? `${desc.slice(0, maxDescLength)}...`
+                : desc;
+          }
+          return entry;
+        }),
+        totalCount,
+        offset: skip,
+        limit,
+        hasMore: skip + rows.length < totalCount,
+      };
+    },
+  );
 
   // -------------------------------------------------------------------------
   // list_tags — query user's tags
   // -------------------------------------------------------------------------
   const listTags = toolDefinition({
     name: 'list_tags',
-    description: "List all of the user's tags with their IDs, names, and colors.",
+    description:
+      "List all of the user's tags with their IDs, names, colors, and sort order. Use this to look up tag IDs before calling manage_tags, manage_feed_tags, or filtering articles. Returns the complete list of tags since users typically have a small number.",
     inputSchema: z.object({}),
   }).server(async () => {
     const { db, tags } = await import('@repo/db');
@@ -427,7 +506,8 @@ export function createTools(userId: string, plan: string | null | undefined) {
     return { tags: rows, count: rows.length };
   });
 
-  return [
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const allTools: any[] = [
     discoverFeeds,
     followFeeds,
     unfollowFeeds,
@@ -439,4 +519,71 @@ export function createTools(userId: string, plan: string | null | undefined) {
     listArticles,
     listTags,
   ];
+
+  // -------------------------------------------------------------------------
+  // web_search — search the web for feeds and content sources
+  // Only registered when BRAVE_API_KEY is configured.
+  // -------------------------------------------------------------------------
+  if (process.env.BRAVE_API_KEY) {
+    const webSearch = toolDefinition({
+      name: 'search_web',
+      description:
+        'Search the web to find websites, blogs, YouTube channels, podcasts, and other content sources by topic. Use this when the user asks to find feeds about a topic (e.g. "find cooking blogs", "hermitcraft members") rather than providing a specific URL. Returns search result titles, URLs, and descriptions. After getting results, use discover_feeds on promising URLs to find their RSS feeds.',
+      inputSchema: z.object({
+        query: z
+          .string()
+          .describe(
+            'The search query. Be specific — include terms like "blog", "youtube channel", "podcast", "RSS" to find content sources rather than generic pages.',
+          ),
+      }),
+    }).server(async ({ query }) => {
+      const { env } = await import('~/env');
+
+      const url = new URL('https://api.search.brave.com/res/v1/web/search');
+      url.searchParams.set('q', query);
+      url.searchParams.set('count', '10');
+
+      const response = await fetch(url.toString(), {
+        headers: {
+          Accept: 'application/json',
+          'X-Subscription-Token': env.BRAVE_API_KEY!,
+        },
+      });
+
+      if (!response.ok) {
+        return { error: `Search failed (${response.status})` };
+      }
+
+      const data = (await response.json()) as {
+        web?: { results?: Array<{ title?: string; url?: string; description?: string }> };
+      };
+
+      const results = (data.web?.results ?? []).map((r) => ({
+        title: r.title ?? null,
+        url: r.url ?? null,
+        description: r.description ?? null,
+      }));
+
+      return { results, count: results.length };
+    });
+    allTools.push(webSearch);
+  }
+
+  // Dev-only tool to test error handling with large payloads
+  if (process.env.NODE_ENV !== 'production') {
+    const stressTest = toolDefinition({
+      name: 'stress_test',
+      description:
+        'DEV ONLY: Generate a large text payload to test context limits. Use when the user asks to test context overflow or stress test.',
+      inputSchema: z.object({
+        sizeKb: z.number().min(1).max(1000).describe('Payload size in KB (default 500)'),
+      }),
+    }).server(({ sizeKb }) => {
+      const size = (sizeKb ?? 500) * 1024;
+      return { data: 'x'.repeat(size), sizeKb };
+    });
+    allTools.push(stressTest);
+  }
+
+  return allTools;
 }
