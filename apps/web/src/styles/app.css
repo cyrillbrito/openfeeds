@@ -72,3 +72,19 @@ html {
 .modal .modal-box {
   max-height: var(--modal-vh, 100dvh);
 }
+
+/* AI chat bubble markdown */
+.prose-chat code {
+  background: oklch(0.5 0 0 / 0.12);
+  padding: 0.1em 0.35em;
+  border-radius: 0.25rem;
+  font-size: 0.85em;
+}
+.prose-chat ul {
+  padding-left: 1.2em;
+  margin: 0.25em 0;
+  list-style: disc;
+}
+.prose-chat li {
+  margin: 0.1em 0;
+}

@@ -1,0 +1,62 @@
+import { Bot, History, Plus } from 'lucide-solid';
+import { Show } from 'solid-js';
+import { ChatProvider, useChatContext } from './chat-context';
+import { ChatHistory } from './ChatHistory';
+import { ChatInputAutoFocus } from './ChatInput';
+import { ChatMessages } from './ChatMessages';
+
+export function ChatPage() {
+  return (
+    <ChatProvider>
+      <ChatPageInner />
+    </ChatProvider>
+  );
+}
+
+function ChatPageInner() {
+  const chat = useChatContext();
+
+  return (
+    <div class="flex h-dvh flex-col">
+      {/* Header */}
+      <div class="border-base-300 flex items-center justify-between border-b px-4 py-3">
+        <div class="flex items-center gap-2">
+          <Bot size={18} class="text-primary" />
+          <span class="text-sm font-semibold">AI Assistant</span>
+        </div>
+        <div class="flex items-center gap-1">
+          <button
+            class="btn btn-ghost btn-sm btn-circle"
+            onClick={() => chat.startNewChat()}
+            title="New chat"
+          >
+            <Plus size={16} />
+          </button>
+          <button
+            class="btn btn-ghost btn-sm btn-circle"
+            classList={{ 'btn-active': chat.showHistory() }}
+            onClick={() => chat.setShowHistory(!chat.showHistory())}
+            title="Chat history"
+          >
+            <History size={16} />
+          </button>
+        </div>
+      </div>
+
+      {/* Session history overlay */}
+      <Show when={chat.showHistory()}>
+        <ChatHistory />
+      </Show>
+
+      {/* Messages */}
+      <Show when={!chat.showHistory()}>
+        <ChatMessages />
+      </Show>
+
+      {/* Input */}
+      <Show when={!chat.showHistory()}>
+        <ChatInputAutoFocus />
+      </Show>
+    </div>
+  );
+}

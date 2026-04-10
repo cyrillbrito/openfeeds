@@ -28,6 +28,8 @@ export const env = createEnv({
     GOOGLE_CLIENT_SECRET: z.string().optional(),
     APPLE_CLIENT_ID: z.string().optional(),
     APPLE_CLIENT_SECRET: z.string().optional(),
+    // AI Chat (Anthropic)
+    ANTHROPIC_API_KEY: z.string().optional(),
   },
   runtimeEnv: process.env,
   emptyStringAsUndefined: true,
