@@ -23,6 +23,8 @@ export const Route = createFileRoute('/api/chat')({
         const body = await request.json();
         const { messages, context } = body;
 
+        const { createAnalyticsMiddleware } = await import('~/server/ai-analytics.server');
+
         const tools = createTools(session.user.id, session.user.plan ?? 'free');
 
         // Build context-aware system prompt
@@ -46,6 +48,7 @@ export const Route = createFileRoute('/api/chat')({
             messages,
             tools,
             maxTokens: 4096,
+            middleware: [createAnalyticsMiddleware(session.user.id)],
           }),
         );
       },

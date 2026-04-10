@@ -19,6 +19,7 @@ interface ChatContextValue {
   error: Accessor<Error | undefined>;
   setMessages: (msgs: UIMessage[]) => void;
   sendMessage: (text: string) => Promise<void>;
+  stop: () => void;
 
   // Session state
   sessionId: Accessor<string>;
@@ -41,7 +42,7 @@ export function ChatProvider(props: { children: JSX.Element }) {
     return $$listChatSessions();
   });
 
-  const { messages, sendMessage, isLoading, setMessages, error } = useChat({
+  const { messages, sendMessage, isLoading, setMessages, error, stop } = useChat({
     connection: fetchServerSentEvents('/api/chat'),
     onFinish: () => {
       void saveCurrentSession();
@@ -100,6 +101,7 @@ export function ChatProvider(props: { children: JSX.Element }) {
     error,
     setMessages,
     sendMessage,
+    stop,
     sessionId,
     currentTitle,
     sessions: () => sessions.latest,

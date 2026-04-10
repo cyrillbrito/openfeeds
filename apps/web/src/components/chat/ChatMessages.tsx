@@ -73,7 +73,7 @@ export function ChatMessages() {
   });
 
   return (
-    <div class="ai-chat-area min-h-0 flex-1 space-y-5 overflow-y-auto overscroll-contain px-4 py-4">
+    <div class="ai-chat-area min-h-0 flex-1 space-y-5 overflow-y-auto overscroll-contain py-4 pl-4 pr-2">
       <Show when={chat.messages().length === 0}>
         <div class="flex h-full items-center justify-center">
           <div class="text-base-content/60 text-center">
@@ -119,16 +119,18 @@ export function ChatMessages() {
       </Show>
 
       <Show when={chat.messages().length > 0}>
-        <div class="flex justify-center pb-1">
-          <button
-            class="btn btn-ghost btn-xs text-base-content/40 gap-1"
-            onClick={() => downloadSession(chat.sessionId(), chat.messages())}
-            title="Download session as JSON"
-          >
-            <Download size={12} />
-            <span>Export session</span>
-          </button>
-        </div>
+        <Show when={import.meta.env.DEV}>
+          <div class="flex justify-center pb-1">
+            <button
+              class="btn btn-ghost btn-xs text-base-content/40 gap-1"
+              onClick={() => downloadSession(chat.sessionId(), chat.messages())}
+              title="Download session as JSON"
+            >
+              <Download size={12} />
+              <span>Export session</span>
+            </button>
+          </div>
+        </Show>
         <div ref={(el) => (messagesEndRef = el)} />
       </Show>
     </div>
@@ -161,7 +163,7 @@ function UserMessage(props: { message: UIMessage }) {
   return (
     <Show when={textContent()}>
       <div class="flex justify-end">
-        <div class="bg-primary text-primary-content max-w-[85%] rounded-2xl rounded-br-sm px-3.5 py-2 text-sm">
+        <div class="bg-primary text-primary-content max-w-[85%] rounded-2xl rounded-tr-sm px-3.5 py-2 text-sm">
           <span class="break-words whitespace-pre-wrap">{textContent()}</span>
         </div>
       </div>

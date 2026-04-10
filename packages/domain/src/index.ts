@@ -23,7 +23,7 @@ export * from './rule-evaluation';
 export * from './tts';
 
 // Infrastructure
-export { shutdownDomain, redisConnection, QUEUE_NAMES } from './config';
+export { posthog, shutdownDomain, redisConnection, QUEUE_NAMES } from './config';
 export { captureException, type ExceptionMetadata } from './error-tracking';
 export {
   handleBoundaryError,
