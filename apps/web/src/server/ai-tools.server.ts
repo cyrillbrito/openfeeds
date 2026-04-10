@@ -520,55 +520,6 @@ export function createTools(userId: string, plan: string | null | undefined) {
     listTags,
   ];
 
-  // -------------------------------------------------------------------------
-  // web_search — search the web for feeds and content sources
-  // Only registered when BRAVE_API_KEY is configured.
-  // -------------------------------------------------------------------------
-  if (process.env.BRAVE_API_KEY) {
-    const webSearch = toolDefinition({
-      name: 'search_web',
-      description:
-        'Search the web to find websites, blogs, YouTube channels, podcasts, and other content sources by topic. Use this when the user asks to find feeds about a topic (e.g. "find cooking blogs", "hermitcraft members") rather than providing a specific URL. Returns search result titles, URLs, and descriptions. After getting results, use discover_feeds on promising URLs to find their RSS feeds.',
-      inputSchema: z.object({
-        query: z
-          .string()
-          .describe(
-            'The search query. Be specific — include terms like "blog", "youtube channel", "podcast", "RSS" to find content sources rather than generic pages.',
-          ),
-      }),
-    }).server(async ({ query }) => {
-      const { env } = await import('~/env');
-
-      const url = new URL('https://api.search.brave.com/res/v1/web/search');
-      url.searchParams.set('q', query);
-      url.searchParams.set('count', '10');
-
-      const response = await fetch(url.toString(), {
-        headers: {
-          Accept: 'application/json',
-          'X-Subscription-Token': env.BRAVE_API_KEY!,
-        },
-      });
-
-      if (!response.ok) {
-        return { error: `Search failed (${response.status})` };
-      }
-
-      const data = (await response.json()) as {
-        web?: { results?: Array<{ title?: string; url?: string; description?: string }> };
-      };
-
-      const results = (data.web?.results ?? []).map((r) => ({
-        title: r.title ?? null,
-        url: r.url ?? null,
-        description: r.description ?? null,
-      }));
-
-      return { results, count: results.length };
-    });
-    allTools.push(webSearch);
-  }
-
   // Dev-only tool to test error handling with large payloads
   if (process.env.NODE_ENV !== 'production') {
     const stressTest = toolDefinition({

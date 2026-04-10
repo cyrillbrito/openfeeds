@@ -37,7 +37,6 @@ import { Route as ApiAuthSplatRouteImport } from './routes/api/auth/$'
 import { Route as FrameTagsTagIdRouteImport } from './routes/_frame.tags.$tagId'
 import { Route as FrameSettingsUsageRouteImport } from './routes/_frame.settings.usage'
 import { Route as FrameSettingsGeneralRouteImport } from './routes/_frame.settings.general'
-import { Route as FrameSettingsDebugRouteImport } from './routes/_frame.settings.debug'
 import { Route as FrameSettingsConnectionsRouteImport } from './routes/_frame.settings.connections'
 import { Route as FrameArticlesArticleIdRouteImport } from './routes/_frame.articles.$articleId'
 import { Route as FrameAiSessionIdRouteImport } from './routes/_frame.ai_.$sessionId'
@@ -187,11 +186,6 @@ const FrameSettingsGeneralRoute = FrameSettingsGeneralRouteImport.update({
   path: '/general',
   getParentRoute: () => FrameSettingsRoute,
 } as any)
-const FrameSettingsDebugRoute = FrameSettingsDebugRouteImport.update({
-  id: '/debug',
-  path: '/debug',
-  getParentRoute: () => FrameSettingsRoute,
-} as any)
 const FrameSettingsConnectionsRoute =
   FrameSettingsConnectionsRouteImport.update({
     id: '/connections',
@@ -257,7 +251,6 @@ export interface FileRoutesByFullPath {
   '/ai/$sessionId': typeof FrameAiSessionIdRoute
   '/articles/$articleId': typeof FrameArticlesArticleIdRoute
   '/settings/connections': typeof FrameSettingsConnectionsRoute
-  '/settings/debug': typeof FrameSettingsDebugRoute
   '/settings/general': typeof FrameSettingsGeneralRoute
   '/settings/usage': typeof FrameSettingsUsageRoute
   '/tags/$tagId': typeof FrameTagsTagIdRouteWithChildren
@@ -296,7 +289,6 @@ export interface FileRoutesByTo {
   '/ai/$sessionId': typeof FrameAiSessionIdRoute
   '/articles/$articleId': typeof FrameArticlesArticleIdRoute
   '/settings/connections': typeof FrameSettingsConnectionsRoute
-  '/settings/debug': typeof FrameSettingsDebugRoute
   '/settings/general': typeof FrameSettingsGeneralRoute
   '/settings/usage': typeof FrameSettingsUsageRoute
   '/tags/$tagId': typeof FrameTagsTagIdRouteWithChildren
@@ -337,7 +329,6 @@ export interface FileRoutesById {
   '/_frame/ai_/$sessionId': typeof FrameAiSessionIdRoute
   '/_frame/articles/$articleId': typeof FrameArticlesArticleIdRoute
   '/_frame/settings/connections': typeof FrameSettingsConnectionsRoute
-  '/_frame/settings/debug': typeof FrameSettingsDebugRoute
   '/_frame/settings/general': typeof FrameSettingsGeneralRoute
   '/_frame/settings/usage': typeof FrameSettingsUsageRoute
   '/_frame/tags/$tagId': typeof FrameTagsTagIdRouteWithChildren
@@ -378,7 +369,6 @@ export interface FileRouteTypes {
     | '/ai/$sessionId'
     | '/articles/$articleId'
     | '/settings/connections'
-    | '/settings/debug'
     | '/settings/general'
     | '/settings/usage'
     | '/tags/$tagId'
@@ -417,7 +407,6 @@ export interface FileRouteTypes {
     | '/ai/$sessionId'
     | '/articles/$articleId'
     | '/settings/connections'
-    | '/settings/debug'
     | '/settings/general'
     | '/settings/usage'
     | '/tags/$tagId'
@@ -457,7 +446,6 @@ export interface FileRouteTypes {
     | '/_frame/ai_/$sessionId'
     | '/_frame/articles/$articleId'
     | '/_frame/settings/connections'
-    | '/_frame/settings/debug'
     | '/_frame/settings/general'
     | '/_frame/settings/usage'
     | '/_frame/tags/$tagId'
@@ -701,13 +689,6 @@ declare module '@tanstack/solid-router' {
       preLoaderRoute: typeof FrameSettingsGeneralRouteImport
       parentRoute: typeof FrameSettingsRoute
     }
-    '/_frame/settings/debug': {
-      id: '/_frame/settings/debug'
-      path: '/debug'
-      fullPath: '/settings/debug'
-      preLoaderRoute: typeof FrameSettingsDebugRouteImport
-      parentRoute: typeof FrameSettingsRoute
-    }
     '/_frame/settings/connections': {
       id: '/_frame/settings/connections'
       path: '/connections'
@@ -776,14 +757,12 @@ declare module '@tanstack/solid-router' {
 
 interface FrameSettingsRouteChildren {
   FrameSettingsConnectionsRoute: typeof FrameSettingsConnectionsRoute
-  FrameSettingsDebugRoute: typeof FrameSettingsDebugRoute
   FrameSettingsGeneralRoute: typeof FrameSettingsGeneralRoute
   FrameSettingsUsageRoute: typeof FrameSettingsUsageRoute
 }
 
 const FrameSettingsRouteChildren: FrameSettingsRouteChildren = {
   FrameSettingsConnectionsRoute: FrameSettingsConnectionsRoute,
-  FrameSettingsDebugRoute: FrameSettingsDebugRoute,
   FrameSettingsGeneralRoute: FrameSettingsGeneralRoute,
   FrameSettingsUsageRoute: FrameSettingsUsageRoute,
 }
