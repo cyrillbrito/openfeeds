@@ -1,6 +1,7 @@
 // Entity modules - schemas, types, and CRUD functions
 export * from './entities/article';
 export * from './entities/article-tag';
+export * from './entities/chat-session';
 export * from './entities/feed';
 export * from './entities/feed-tag';
 export * from './entities/filter-rule';

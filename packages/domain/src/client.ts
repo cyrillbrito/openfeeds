@@ -4,6 +4,7 @@
  */
 export * from './entities/article.schema';
 export * from './entities/article-tag.schema';
+export * from './entities/chat-session.schema';
 export * from './entities/feed.schema';
 export * from './entities/feed-tag.schema';
 export * from './entities/filter-rule.schema';

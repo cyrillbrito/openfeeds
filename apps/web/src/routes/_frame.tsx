@@ -1,7 +1,15 @@
-import { ClientOnly, createFileRoute, Link, Outlet, useLocation } from '@tanstack/solid-router';
-import { Compass, Inbox, Plus, Rss } from 'lucide-solid';
+import {
+  ClientOnly,
+  createFileRoute,
+  Link,
+  Outlet,
+  useLocation,
+  useNavigate,
+} from '@tanstack/solid-router';
+import { Compass, Inbox, MessageSquare, Plus, Rss } from 'lucide-solid';
 import { posthog } from 'posthog-js';
-import { createEffect, For, on, onMount, Suspense } from 'solid-js';
+import { createEffect, createSignal, For, on, onMount, Suspense } from 'solid-js';
+import { ChatDrawer } from '~/components/chat/ChatDrawer';
 import { ColorIndicator } from '~/components/ColorIndicator';
 import type { ModalController } from '~/components/LazyModal';
 import { CenterLoader, Loader } from '~/components/Loader';
@@ -21,7 +29,9 @@ export const Route = createFileRoute('/_frame')({
 
 function FrameLayout() {
   const location = useLocation();
+  const navigate = useNavigate();
   const session = authClient.useSession();
+  const [chatOpen, setChatOpen] = createSignal(false);
 
   // Identify user for PostHog when session is available
   createEffect(
@@ -116,11 +126,34 @@ function FrameLayout() {
               </div>
 
               <div class="divider"></div>
+              <div class="flex items-center gap-2 px-2">
+                <button
+                  class="btn btn-ghost btn-sm flex-1 justify-start gap-3"
+                  onClick={() => {
+                    // Desktop (sidebar visible at lg:1024px) → open drawer
+                    // Mobile → navigate to full-screen chat route
+                    if (window.innerWidth >= 1024) {
+                      setChatOpen(true);
+                    } else {
+                      void navigate({ to: '/chat' });
+                    }
+                  }}
+                  title="Open AI chat assistant"
+                >
+                  <MessageSquare size={18} />
+                  AI Chat
+                </button>
+              </div>
+              <div class="divider"></div>
               <UserMenu />
             </ClientOnly>
           </aside>
         </div>
       </div>
+
+      <ClientOnly>
+        <ChatDrawer open={chatOpen()} onClose={() => setChatOpen(false)} />
+      </ClientOnly>
     </>
   );
 }
