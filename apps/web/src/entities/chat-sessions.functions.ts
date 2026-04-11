@@ -19,10 +19,10 @@ export const $$saveChatSession = createServerFn({ method: 'POST' })
 /** Delete a session */
 export const $$deleteChatSession = createServerFn({ method: 'POST' })
   .middleware([authMiddleware])
-  .inputValidator(z.object({ id: z.string() }))
-  .handler(async ({ context, data }) => {
+  .inputValidator(z.uuidv7())
+  .handler(async ({ context, data: id }) => {
     return await withTransaction(db, context.user.id, context.user.plan, async (ctx) => {
-      await domain.deleteChatSession(ctx, data.id);
+      await domain.deleteChatSession(ctx, id);
       return { txid: await getTxId(ctx.conn) };
     });
   });

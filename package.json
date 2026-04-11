@@ -1,16 +1,11 @@
 {
   "name": "openfeeds",
   "version": "0.11.13",
-  "devDependencies": {
-    "@types/bun": "^1.3.11",
-    "oxfmt": "^0.42.0",
-    "oxlint": "^1.57.0",
-    "oxlint-tsgolint": "^0.18.1",
-    "remark-breaks": "^4.0.0",
-    "turbo": "^2.8.21"
-  },
-  "packageManager": "bun@1.3.11",
   "private": true,
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
   "scripts": {
     "dev": "turbo run dev --filter=@repo/web --filter=@repo/worker",
     "build": "turbo run build",
@@ -25,8 +20,13 @@
     "test-update-snapshots": "bun --cwd=apps/e2e test-update-snapshots",
     "clean-install": "find . -name \"node_modules\" -type d -exec rm -rf {} + && rm bun.lock && bun install"
   },
-  "workspaces": [
-    "apps/*",
-    "packages/*"
-  ]
+  "devDependencies": {
+    "@types/bun": "^1.3.11",
+    "oxfmt": "^0.42.0",
+    "oxlint": "^1.57.0",
+    "oxlint-tsgolint": "^0.18.1",
+    "remark-breaks": "^4.0.0",
+    "turbo": "^2.8.21"
+  },
+  "packageManager": "bun@1.3.11"
 }
