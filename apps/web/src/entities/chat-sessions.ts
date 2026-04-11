@@ -1,7 +1,7 @@
 import { snakeCamelMapper } from '@electric-sql/client';
 import { ChatSessionSchema } from '@repo/domain/client';
 import { electricCollectionOptions } from '@tanstack/electric-db-collection';
-import { createCollection, useLiveQuery } from '@tanstack/solid-db';
+import { BasicIndex, createCollection } from '@tanstack/solid-db';
 import { collectionErrorHandler, shapeErrorHandler } from '~/lib/collection-errors';
 import { getShapeUrl, timestampParser } from '~/lib/electric-client';
 import { $$deleteChatSession, $$saveChatSession } from './chat-sessions.functions';
@@ -11,6 +11,12 @@ export const chatSessionsCollection = createCollection(
     id: 'chat-sessions',
     schema: ChatSessionSchema,
     getKey: (item) => item.id,
+
+    // autoIndex: 'eager' restores the pre-0.6 default, which was changed to 'off'.
+    // It auto-creates B-tree indexes for fields used in orderBy/where at query time.
+    autoIndex: 'eager' as const,
+    defaultIndexType: BasicIndex,
+
     shapeOptions: {
       url: getShapeUrl('chat-sessions'),
       parser: timestampParser,
@@ -18,33 +24,40 @@ export const chatSessionsCollection = createCollection(
       onError: shapeErrorHandler('chat-sessions.shape'),
     },
     onInsert: collectionErrorHandler('chat-sessions.onInsert', async ({ transaction }) => {
-      const mutation = transaction.mutations[0];
-      const session = mutation.modified;
-      return await $$saveChatSession({
-        data: {
-          id: mutation.key as string,
-          title: session.title,
-          messages: session.messages,
-        },
-      });
+      const results = await Promise.all(
+        transaction.mutations.map((mutation) =>
+          $$saveChatSession({
+            data: {
+              id: mutation.key as string,
+              title: mutation.modified.title,
+              messages: mutation.modified.messages,
+            },
+          }),
+        ),
+      );
+      return results[results.length - 1];
     }),
     onUpdate: collectionErrorHandler('chat-sessions.onUpdate', async ({ transaction }) => {
-      const mutation = transaction.mutations[0];
-      const session = mutation.modified;
-      return await $$saveChatSession({
-        data: { id: mutation.key as string, title: session.title, messages: session.messages },
-      });
+      const results = await Promise.all(
+        transaction.mutations.map((mutation) =>
+          $$saveChatSession({
+            data: {
+              id: mutation.key as string,
+              title: mutation.modified.title,
+              messages: mutation.modified.messages,
+            },
+          }),
+        ),
+      );
+      return results[results.length - 1];
     }),
     onDelete: collectionErrorHandler('chat-sessions.onDelete', async ({ transaction }) => {
-      const id = transaction.mutations[0].key as string;
-      return await $$deleteChatSession({ data: { id } });
+      const results = await Promise.all(
+        transaction.mutations.map((mutation) =>
+          $$deleteChatSession({ data: mutation.key as string }),
+        ),
+      );
+      return results[results.length - 1];
     }),
   }),
 );
-
-/** Live query for session summaries, ordered by most recent */
-export function useChatSessions() {
-  return useLiveQuery((q) =>
-    q.from({ session: chatSessionsCollection }).orderBy(({ session }) => session.updatedAt, 'desc'),
-  );
-}
