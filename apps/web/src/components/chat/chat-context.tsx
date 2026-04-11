@@ -1,17 +1,16 @@
 import { createId } from '@repo/shared/utils';
 import type { UIMessage } from '@tanstack/ai';
 import { fetchServerSentEvents, useChat } from '@tanstack/ai-solid';
-import { type Accessor, createContext, createSignal, useContext } from 'solid-js';
+import { type Accessor, createContext, createMemo, createSignal, useContext } from 'solid-js';
 import type { JSX } from 'solid-js';
 import { chatSessionsCollection } from '~/entities/chat-sessions';
 import { deriveTitle, storedToUi, uiToStored } from './chat-utils';
 
 interface ChatContextValue {
-  // useChat state
+  // Displayed messages — the viewed session, or live stream if viewing the active one
   messages: Accessor<UIMessage[]>;
   isLoading: Accessor<boolean>;
   error: Accessor<Error | undefined>;
-  setMessages: (msgs: UIMessage[]) => void;
   sendMessage: (text: string) => Promise<void>;
   stop: () => void;
 
@@ -28,13 +27,30 @@ interface ChatContextValue {
 const ChatContext = createContext<ChatContextValue>();
 
 export function ChatProvider(props: { children: JSX.Element }) {
-  const [sessionId, setSessionId] = createSignal(createId());
+  // The session the user is currently viewing
+  const [viewSessionId, setViewSessionId] = createSignal(createId());
+  // The session the active stream belongs to (set when sendMessage is called)
+  const [streamSessionId, setStreamSessionId] = createSignal<string | null>(null);
+  // Messages for the currently viewed non-streaming session
+  const [viewedMessages, setViewedMessages] = createSignal<UIMessage[]>([]);
 
-  const { messages, sendMessage, isLoading, setMessages, error, stop } = useChat({
+  const {
+    messages: streamMessages,
+    sendMessage: rawSendMessage,
+    isLoading,
+    setMessages,
+    error,
+    stop,
+  } = useChat({
     connection: fetchServerSentEvents('/api/chat'),
     onFinish: () => {
-      saveCurrentSession();
+      saveStreamSession();
     },
+  });
+
+  // What to show: live stream if viewing the streaming session, otherwise the loaded snapshot
+  const messages = createMemo(() => {
+    return viewSessionId() === streamSessionId() ? streamMessages() : viewedMessages();
   });
 
   const currentTitle = () => {
@@ -43,39 +59,43 @@ export function ChatProvider(props: { children: JSX.Element }) {
     return deriveTitle(msgs);
   };
 
-  function saveCurrentSession() {
-    const msgs = messages();
+  function saveStreamSession() {
+    const msgs = streamMessages();
     if (msgs.length === 0) return;
 
-    const title = deriveTitle(msgs);
-    const id = sessionId();
-    const storedMessages = msgs.map(uiToStored);
+    const id = streamSessionId();
+    if (!id) return;
 
-    // Check if session already exists in the collection
+    const title = deriveTitle(msgs);
+    const storedMsgs = msgs.map(uiToStored);
+
     const existing = chatSessionsCollection.get(id);
     if (existing) {
       chatSessionsCollection.update(id, (draft) => {
         draft.title = title;
-        draft.messages = storedMessages;
+        draft.messages = storedMsgs;
       });
     } else {
       chatSessionsCollection.insert({
         id,
-        userId: '', // Server will set the real userId
+        userId: '',
         title,
-        messages: storedMessages,
+        messages: storedMsgs,
         createdAt: new Date(),
         updatedAt: new Date(),
       });
     }
   }
 
+  async function sendMessage(text: string) {
+    // Attach the stream to the current view session before sending
+    setStreamSessionId(viewSessionId());
+    await rawSendMessage(text);
+  }
+
   function loadSession(id: string) {
     const session = chatSessionsCollection.get(id);
     if (!session) return;
-
-    // Cancel any in-flight stream before switching sessions
-    stop();
 
     // Electric sends jsonb columns as JSON strings — defensively parse if needed
     const msgs =
@@ -83,31 +103,35 @@ export function ChatProvider(props: { children: JSX.Element }) {
         ? (JSON.parse(session.messages as string) as typeof session.messages)
         : session.messages;
 
-    setSessionId(id);
-    setMessages(msgs.map(storedToUi));
+    setViewSessionId(id);
+    setViewedMessages(msgs.map(storedToUi));
   }
 
   function deleteSession(id: string) {
     chatSessionsCollection.delete(id);
-    if (id === sessionId()) {
+    if (id === viewSessionId()) {
       startNewChat();
     }
   }
 
   function startNewChat() {
-    stop();
-    setSessionId(createId());
-    setMessages([]);
+    const newId = createId();
+    setViewSessionId(newId);
+    setViewedMessages([]);
+    // Only stop + reset the stream if it's idle — don't kill an active stream
+    if (!isLoading()) {
+      setStreamSessionId(null);
+      setMessages([]);
+    }
   }
 
   const value: ChatContextValue = {
     messages,
     isLoading,
     error,
-    setMessages,
     sendMessage,
     stop,
-    sessionId,
+    sessionId: viewSessionId,
     currentTitle,
     startNewChat,
     loadSession,
