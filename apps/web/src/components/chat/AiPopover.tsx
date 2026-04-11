@@ -1,11 +1,10 @@
 import { useNavigate } from '@tanstack/solid-router';
-import { ChevronDown, Maximize2, Plus, Sparkles, X } from 'lucide-solid';
-import { createEffect, createSignal, on, onCleanup, Show } from 'solid-js';
-import { useClickOutside } from '~/utils/useClickOutside';
+import { Maximize2, Plus, X } from 'lucide-solid';
+import { onCleanup } from 'solid-js';
 import { useChatContext } from './chat-context';
 import { ChatInput } from './ChatInput';
 import { ChatMessages } from './ChatMessages';
-import { ConversationSwitcher } from './ConversationSwitcher';
+import { ChatTitleSwitcher } from './ChatTitleSwitcher';
 
 interface AiPopoverProps {
   open: boolean;
@@ -15,33 +14,11 @@ interface AiPopoverProps {
 export function AiPopover(props: AiPopoverProps) {
   const chat = useChatContext();
   const navigate = useNavigate();
-  const [switcherOpen, setSwitcherOpen] = createSignal(false);
-  const [switcherRef, setSwitcherRef] = createSignal<HTMLDivElement>();
-
-  useClickOutside(switcherRef, () => {
-    if (switcherOpen()) setSwitcherOpen(false);
-  });
-
-  // Refetch sessions when popover opens
-  createEffect(
-    on(
-      () => props.open,
-      (open) => {
-        if (open) {
-          chat.refetchSessions();
-        }
-      },
-    ),
-  );
 
   // Handle Escape
   const handleEscape = (e: KeyboardEvent) => {
     if (e.key === 'Escape' && props.open) {
-      if (switcherOpen()) {
-        setSwitcherOpen(false);
-      } else {
-        props.onClose();
-      }
+      props.onClose();
     }
   };
 
@@ -86,28 +63,7 @@ export function AiPopover(props: AiPopoverProps) {
       >
         {/* Title bar */}
         <div class="border-base-300 relative flex items-center justify-between border-b px-3 py-2">
-          <div ref={setSwitcherRef} class="relative">
-            <button
-              class="hover:bg-base-200 flex items-center gap-1.5 rounded-lg px-2 py-1 transition-colors"
-              onClick={() => {
-                setSwitcherOpen(!switcherOpen());
-              }}
-              title="Switch conversation"
-            >
-              <Sparkles size={14} class="text-primary shrink-0" />
-              <span class="max-w-48 truncate text-sm font-medium">{chat.currentTitle()}</span>
-              <ChevronDown
-                size={14}
-                class="text-base-content/50 shrink-0 transition-transform"
-                classList={{ 'rotate-180': switcherOpen() }}
-              />
-            </button>
-
-            {/* Conversation switcher dropdown */}
-            <Show when={switcherOpen()}>
-              <ConversationSwitcher onClose={() => setSwitcherOpen(false)} class="max-w-[calc(28rem-1.5rem)]" />
-            </Show>
-          </div>
+          <ChatTitleSwitcher size="sm" dropdownClass="max-w-[calc(28rem-1.5rem)]" />
 
           <div class="flex items-center gap-0.5">
             <button

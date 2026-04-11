@@ -1,8 +1,9 @@
-import type { ChatSessionSummary } from '@repo/domain/client';
+import type { ChatSession } from '@repo/domain/client';
 import { Trash2 } from 'lucide-solid';
 import { For, Show } from 'solid-js';
+import { TimeAgo } from '~/components/TimeAgo';
 import { useChatContext } from './chat-context';
-import { formatRelativeDate, groupByTimePeriod } from './chat-utils';
+import { groupByTimePeriod } from './chat-utils';
 
 /** Grouped chat history list (for full-page sidebar) */
 export function ChatHistory() {
@@ -31,8 +32,8 @@ export function ChatHistory() {
                   <SessionItem
                     session={session}
                     isActive={session.id === chat.sessionId()}
-                    onSelect={() => void chat.loadSession(session.id)}
-                    onDelete={() => void chat.deleteSession(session.id)}
+                    onSelect={() => chat.loadSession(session.id)}
+                    onDelete={() => chat.deleteSession(session.id)}
                   />
                 )}
               </For>
@@ -45,7 +46,7 @@ export function ChatHistory() {
 }
 
 function SessionItem(props: {
-  session: ChatSessionSummary;
+  session: ChatSession;
   isActive: boolean;
   onSelect: () => void;
   onDelete: () => void;
@@ -60,7 +61,7 @@ function SessionItem(props: {
         <p class="truncate text-sm" classList={{ 'font-medium': props.isActive }}>
           {props.session.title}
         </p>
-        <p class="text-base-content/40 text-xs">{formatRelativeDate(props.session.updatedAt)}</p>
+        <TimeAgo date={props.session.updatedAt} class="text-base-content/40 text-xs" />
       </div>
       <button
         class="btn btn-ghost btn-xs btn-circle shrink-0 opacity-0 transition-opacity group-hover:opacity-100"

@@ -5,6 +5,11 @@ interface AiFabProps {
   onClick: () => void;
 }
 
+function shortcutLabel() {
+  if (typeof navigator === 'undefined') return '⌘J';
+  return navigator.platform?.includes('Mac') ? '⌘J' : 'Ctrl+J';
+}
+
 export function AiFab(props: AiFabProps) {
   const navigate = useNavigate();
 
@@ -20,9 +25,9 @@ export function AiFab(props: AiFabProps) {
 
   return (
     <button
-      class="btn btn-primary btn-circle fixed right-4 bottom-4 z-20 shadow-lg size-14"
+      class="btn btn-primary btn-circle fixed right-4 bottom-4 z-20 size-14 shadow-lg"
       onClick={handleClick}
-      title="Open AI chat (⌘J)"
+      title={`Open AI chat (${shortcutLabel()})`}
     >
       <Sparkles size={24} />
     </button>

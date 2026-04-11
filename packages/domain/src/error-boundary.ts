@@ -27,7 +27,7 @@ export function isDomainError(error: unknown): error is Error {
   return DOMAIN_ERRORS.some((cls) => error instanceof cls);
 }
 
-export type ErrorSource = 'server-function' | 'worker';
+export type ErrorSource = 'server-function' | 'api-route' | 'worker';
 
 export interface BoundaryErrorOptions {
   source: ErrorSource;

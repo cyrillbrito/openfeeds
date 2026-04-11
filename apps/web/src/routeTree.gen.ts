@@ -30,6 +30,7 @@ import { Route as ApiShapesSettingsRouteImport } from './routes/api/shapes/setti
 import { Route as ApiShapesFilterRulesRouteImport } from './routes/api/shapes/filter-rules'
 import { Route as ApiShapesFeedsRouteImport } from './routes/api/shapes/feeds'
 import { Route as ApiShapesFeedTagsRouteImport } from './routes/api/shapes/feed-tags'
+import { Route as ApiShapesChatSessionsRouteImport } from './routes/api/shapes/chat-sessions'
 import { Route as ApiShapesArticlesRouteImport } from './routes/api/shapes/articles'
 import { Route as ApiShapesArticleTagsRouteImport } from './routes/api/shapes/article-tags'
 import { Route as ApiMcpSplatRouteImport } from './routes/api/mcp/$'
@@ -151,6 +152,11 @@ const ApiShapesFeedTagsRoute = ApiShapesFeedTagsRouteImport.update({
   path: '/api/shapes/feed-tags',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiShapesChatSessionsRoute = ApiShapesChatSessionsRouteImport.update({
+  id: '/api/shapes/chat-sessions',
+  path: '/api/shapes/chat-sessions',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiShapesArticlesRoute = ApiShapesArticlesRouteImport.update({
   id: '/api/shapes/articles',
   path: '/api/shapes/articles',
@@ -258,6 +264,7 @@ export interface FileRoutesByFullPath {
   '/api/mcp/$': typeof ApiMcpSplatRoute
   '/api/shapes/article-tags': typeof ApiShapesArticleTagsRoute
   '/api/shapes/articles': typeof ApiShapesArticlesRoute
+  '/api/shapes/chat-sessions': typeof ApiShapesChatSessionsRoute
   '/api/shapes/feed-tags': typeof ApiShapesFeedTagsRoute
   '/api/shapes/feeds': typeof ApiShapesFeedsRoute
   '/api/shapes/filter-rules': typeof ApiShapesFilterRulesRoute
@@ -296,6 +303,7 @@ export interface FileRoutesByTo {
   '/api/mcp/$': typeof ApiMcpSplatRoute
   '/api/shapes/article-tags': typeof ApiShapesArticleTagsRoute
   '/api/shapes/articles': typeof ApiShapesArticlesRoute
+  '/api/shapes/chat-sessions': typeof ApiShapesChatSessionsRoute
   '/api/shapes/feed-tags': typeof ApiShapesFeedTagsRoute
   '/api/shapes/feeds': typeof ApiShapesFeedsRoute
   '/api/shapes/filter-rules': typeof ApiShapesFilterRulesRoute
@@ -336,6 +344,7 @@ export interface FileRoutesById {
   '/api/mcp/$': typeof ApiMcpSplatRoute
   '/api/shapes/article-tags': typeof ApiShapesArticleTagsRoute
   '/api/shapes/articles': typeof ApiShapesArticlesRoute
+  '/api/shapes/chat-sessions': typeof ApiShapesChatSessionsRoute
   '/api/shapes/feed-tags': typeof ApiShapesFeedTagsRoute
   '/api/shapes/feeds': typeof ApiShapesFeedsRoute
   '/api/shapes/filter-rules': typeof ApiShapesFilterRulesRoute
@@ -376,6 +385,7 @@ export interface FileRouteTypes {
     | '/api/mcp/$'
     | '/api/shapes/article-tags'
     | '/api/shapes/articles'
+    | '/api/shapes/chat-sessions'
     | '/api/shapes/feed-tags'
     | '/api/shapes/feeds'
     | '/api/shapes/filter-rules'
@@ -414,6 +424,7 @@ export interface FileRouteTypes {
     | '/api/mcp/$'
     | '/api/shapes/article-tags'
     | '/api/shapes/articles'
+    | '/api/shapes/chat-sessions'
     | '/api/shapes/feed-tags'
     | '/api/shapes/feeds'
     | '/api/shapes/filter-rules'
@@ -453,6 +464,7 @@ export interface FileRouteTypes {
     | '/api/mcp/$'
     | '/api/shapes/article-tags'
     | '/api/shapes/articles'
+    | '/api/shapes/chat-sessions'
     | '/api/shapes/feed-tags'
     | '/api/shapes/feeds'
     | '/api/shapes/filter-rules'
@@ -483,6 +495,7 @@ export interface RootRouteChildren {
   ApiMcpSplatRoute: typeof ApiMcpSplatRoute
   ApiShapesArticleTagsRoute: typeof ApiShapesArticleTagsRoute
   ApiShapesArticlesRoute: typeof ApiShapesArticlesRoute
+  ApiShapesChatSessionsRoute: typeof ApiShapesChatSessionsRoute
   ApiShapesFeedTagsRoute: typeof ApiShapesFeedTagsRoute
   ApiShapesFeedsRoute: typeof ApiShapesFeedsRoute
   ApiShapesFilterRulesRoute: typeof ApiShapesFilterRulesRoute
@@ -638,6 +651,13 @@ declare module '@tanstack/solid-router' {
       path: '/api/shapes/feed-tags'
       fullPath: '/api/shapes/feed-tags'
       preLoaderRoute: typeof ApiShapesFeedTagsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/shapes/chat-sessions': {
+      id: '/api/shapes/chat-sessions'
+      path: '/api/shapes/chat-sessions'
+      fullPath: '/api/shapes/chat-sessions'
+      preLoaderRoute: typeof ApiShapesChatSessionsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/shapes/articles': {
@@ -833,6 +853,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiMcpSplatRoute: ApiMcpSplatRoute,
   ApiShapesArticleTagsRoute: ApiShapesArticleTagsRoute,
   ApiShapesArticlesRoute: ApiShapesArticlesRoute,
+  ApiShapesChatSessionsRoute: ApiShapesChatSessionsRoute,
   ApiShapesFeedTagsRoute: ApiShapesFeedTagsRoute,
   ApiShapesFeedsRoute: ApiShapesFeedsRoute,
   ApiShapesFilterRulesRoute: ApiShapesFilterRulesRoute,

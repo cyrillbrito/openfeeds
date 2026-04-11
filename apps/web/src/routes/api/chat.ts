@@ -1,12 +1,16 @@
 import { createFileRoute } from '@tanstack/solid-router';
+import type { AuthContext } from '~/server/middleware/auth';
+import { authRequestMiddleware } from '~/server/middleware/auth';
 
 export const Route = createFileRoute('/api/chat')({
   server: {
+    middleware: [authRequestMiddleware],
     handlers: {
-      POST: async ({ request }) => {
+      POST: async ({ request, context }) => {
+        const { user } = context as unknown as AuthContext;
+
         const { chat, toServerSentEventsResponse } = await import('@tanstack/ai');
         const { anthropicText } = await import('@tanstack/ai-anthropic');
-        const { auth } = await import('~/server/auth.server');
         const { createTools } = await import('~/server/ai-tools.server');
         const { getSystemPrompt } = await import('~/server/ai-system-prompt.server');
         const { env } = await import('~/env');
@@ -15,27 +19,24 @@ export const Route = createFileRoute('/api/chat')({
           return new Response('AI chat is not configured', { status: 503 });
         }
 
-        const session = await auth.api.getSession({ headers: request.headers });
-        if (!session?.user) {
-          return new Response('Unauthorized', { status: 401 });
-        }
-
         const body = await request.json();
-        const { messages, context } = body;
+        const { messages, context: chatContext } = body;
 
         const { createAnalyticsMiddleware } = await import('~/server/ai-analytics.server');
 
-        const tools = createTools(session.user.id, session.user.plan ?? 'free');
+        const tools = createTools(user.id, user.plan ?? 'free');
 
         // Build context-aware system prompt
         const contextLines: string[] = [getSystemPrompt()];
-        if (context) {
+        if (chatContext) {
           const parts: string[] = [];
-          if (context.feedTitle)
-            parts.push(`Viewing feed: "${context.feedTitle}" (id: ${context.feedId})`);
-          if (context.articleTitle)
-            parts.push(`Viewing article: "${context.articleTitle}" (id: ${context.articleId})`);
-          if (context.currentRoute) parts.push(`Current page: ${context.currentRoute}`);
+          if (chatContext.feedTitle)
+            parts.push(`Viewing feed: "${chatContext.feedTitle}" (id: ${chatContext.feedId})`);
+          if (chatContext.articleTitle)
+            parts.push(
+              `Viewing article: "${chatContext.articleTitle}" (id: ${chatContext.articleId})`,
+            );
+          if (chatContext.currentRoute) parts.push(`Current page: ${chatContext.currentRoute}`);
           if (parts.length > 0) {
             contextLines.push(`\nUser's current context:\n${parts.join('\n')}`);
           }
@@ -48,7 +49,7 @@ export const Route = createFileRoute('/api/chat')({
             messages,
             tools,
             maxTokens: 4096,
-            middleware: [createAnalyticsMiddleware(session.user.id)],
+            middleware: [createAnalyticsMiddleware(user.id)],
           }),
         );
       },

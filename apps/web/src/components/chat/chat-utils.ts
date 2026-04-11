@@ -13,22 +13,6 @@ export function deriveTitle(msgs: UIMessage[]): string {
   return text.length > 80 ? `${text.slice(0, 77)}...` : text;
 }
 
-/** Download the current chat session as a JSON file */
-export function downloadSession(sessionId: string, messages: UIMessage[]) {
-  const payload = {
-    sessionId,
-    exportedAt: new Date().toISOString(),
-    messages: messages.map(uiToStored),
-  };
-  const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = `chat-${sessionId.slice(0, 8)}-${Date.now()}.json`;
-  a.click();
-  URL.revokeObjectURL(url);
-}
-
 /** Convert UIMessage to StoredMessage for persistence */
 export function uiToStored(msg: UIMessage): StoredMessage {
   return {
@@ -83,20 +67,4 @@ export function groupByTimePeriod<T extends { updatedAt: Date | string }>(
   const groups = [todayGroup, weekGroup, olderGroup];
 
   return groups.filter((g) => g.items.length > 0);
-}
-
-/** Simple relative date formatting */
-export function formatRelativeDate(date: Date | string): string {
-  const d = typeof date === 'string' ? new Date(date) : date;
-  const now = new Date();
-  const diffMs = now.getTime() - d.getTime();
-  const diffMins = Math.floor(diffMs / 60000);
-  const diffHours = Math.floor(diffMs / 3600000);
-  const diffDays = Math.floor(diffMs / 86400000);
-
-  if (diffMins < 1) return 'just now';
-  if (diffMins < 60) return `${diffMins}m ago`;
-  if (diffHours < 24) return `${diffHours}h ago`;
-  if (diffDays < 7) return `${diffDays}d ago`;
-  return d.toLocaleDateString();
 }

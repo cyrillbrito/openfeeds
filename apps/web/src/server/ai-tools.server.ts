@@ -290,7 +290,9 @@ export function createTools(userId: string, plan: string | null | undefined) {
       search: z
         .string()
         .optional()
-        .describe('Optional search term to filter feeds by title, feed URL, or site URL (case-insensitive)'),
+        .describe(
+          'Optional search term to filter feeds by title, feed URL, or site URL (case-insensitive)',
+        ),
     }),
   }).server(async ({ search }) => {
     const { db, feeds } = await import('@repo/db');
@@ -301,11 +303,7 @@ export function createTools(userId: string, plan: string | null | undefined) {
     if (search) {
       const pattern = `%${search}%`;
       conditions.push(
-        or(
-          ilike(feeds.title, pattern),
-          ilike(feeds.feedUrl, pattern),
-          ilike(feeds.url, pattern),
-        )!,
+        or(ilike(feeds.title, pattern), ilike(feeds.feedUrl, pattern), ilike(feeds.url, pattern))!,
       );
     }
 
@@ -375,7 +373,17 @@ export function createTools(userId: string, plan: string | null | undefined) {
         ),
     }),
   }).server(
-    async ({ feedId, isRead, isArchived, search, dateFrom, dateTo, limit: maxResults, offset, fields }) => {
+    async ({
+      feedId,
+      isRead,
+      isArchived,
+      search,
+      dateFrom,
+      dateTo,
+      limit: maxResults,
+      offset,
+      fields,
+    }) => {
       const { db, articles, feeds } = await import('@repo/db');
       const { eq, and, ilike, desc, gte, lte, count } = await import('drizzle-orm');
 
@@ -431,18 +439,20 @@ export function createTools(userId: string, plan: string | null | undefined) {
       const totalCount = countResult[0]?.value ?? 0;
 
       // If fields is specified, only return those fields. Otherwise return all base fields.
-      const allBaseFields = ['id', 'title', 'pubDate', 'feedId', 'feedTitle', 'isRead', 'isArchived'] as const;
+      const allBaseFields = [
+        'id',
+        'title',
+        'pubDate',
+        'feedId',
+        'feedTitle',
+        'isRead',
+        'isArchived',
+      ] as const;
       const requestedFields = new Set(fields ?? allBaseFields);
 
       // Scale description length inversely with batch size to prevent context overflow.
       const maxDescLength =
-        rows.length <= 10
-          ? 800
-          : rows.length <= 50
-            ? 300
-            : rows.length <= 100
-              ? 150
-              : 0;
+        rows.length <= 10 ? 800 : rows.length <= 50 ? 300 : rows.length <= 100 ? 150 : 0;
 
       return {
         articles: rows.map((a) => {
@@ -451,9 +461,10 @@ export function createTools(userId: string, plan: string | null | undefined) {
           if (requestedFields.has('title')) entry.title = a.title;
           if (requestedFields.has('pubDate')) {
             // Use short date for large batches to save tokens
-            entry.pubDate = rows.length > 100
-              ? (a.pubDate?.toISOString()?.slice(0, 10) ?? null)
-              : (a.pubDate?.toISOString() ?? null);
+            entry.pubDate =
+              rows.length > 100
+                ? (a.pubDate?.toISOString()?.slice(0, 10) ?? null)
+                : (a.pubDate?.toISOString() ?? null);
           }
           if (requestedFields.has('feedId')) entry.feedId = a.feedId;
           if (requestedFields.has('feedTitle')) entry.feedTitle = a.feedTitle ?? null;
@@ -462,13 +473,17 @@ export function createTools(userId: string, plan: string | null | undefined) {
           if (requestedFields.has('url')) entry.url = a.url;
           if (requestedFields.has('author')) entry.author = a.author ?? null;
           if (requestedFields.has('description') && maxDescLength > 0) {
-            let desc = a.description ?? null;
+            let descText = a.description ?? null;
             // Strip HTML tags — they waste tokens and add no information for the AI
-            if (desc) desc = desc.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim();
+            if (descText)
+              descText = descText
+                .replace(/<[^>]+>/g, ' ')
+                .replace(/\s+/g, ' ')
+                .trim();
             entry.description =
-              desc && desc.length > maxDescLength
-                ? `${desc.slice(0, maxDescLength)}...`
-                : desc;
+              descText && descText.length > maxDescLength
+                ? `${descText.slice(0, maxDescLength)}...`
+                : descText;
           }
           return entry;
         }),
