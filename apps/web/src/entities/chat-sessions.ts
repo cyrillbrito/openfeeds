@@ -1,10 +1,20 @@
 import { snakeCamelMapper } from '@electric-sql/client';
+import type { StoredMessage } from '@repo/domain/client';
 import { ChatSessionSchema } from '@repo/domain/client';
 import { electricCollectionOptions } from '@tanstack/electric-db-collection';
 import { BasicIndex, createCollection } from '@tanstack/solid-db';
 import { collectionErrorHandler, shapeErrorHandler } from '~/lib/collection-errors';
 import { getShapeUrl, timestampParser } from '~/lib/electric-client';
 import { $$deleteChatSession, $$saveChatSession } from './chat-sessions.functions';
+
+/**
+ * Electric sends jsonb columns as raw JSON strings — parse defensively.
+ * The `parser` option should handle this, but the collection's optimistic
+ * state (locally inserted rows echoed back) may bypass it.
+ */
+function parseMessages(value: StoredMessage[] | string): StoredMessage[] {
+  return typeof value === 'string' ? JSON.parse(value) : value;
+}
 
 export const chatSessionsCollection = createCollection(
   electricCollectionOptions({
@@ -34,7 +44,7 @@ export const chatSessionsCollection = createCollection(
             data: {
               id: mutation.key as string,
               title: mutation.modified.title,
-              messages: mutation.modified.messages,
+              messages: parseMessages(mutation.modified.messages),
             },
           }),
         ),
@@ -48,7 +58,7 @@ export const chatSessionsCollection = createCollection(
             data: {
               id: mutation.key as string,
               title: mutation.modified.title,
-              messages: mutation.modified.messages,
+              messages: parseMessages(mutation.modified.messages),
             },
           }),
         ),

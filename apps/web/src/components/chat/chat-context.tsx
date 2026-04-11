@@ -74,8 +74,14 @@ export function ChatProvider(props: { children: JSX.Element }) {
     const session = chatSessionsCollection.get(id);
     if (!session) return;
 
+    // Electric sends jsonb columns as JSON strings — defensively parse if needed
+    const messages =
+      typeof session.messages === 'string'
+        ? (JSON.parse(session.messages as string) as typeof session.messages)
+        : session.messages;
+
     setSessionId(id);
-    setMessages(session.messages.map(storedToUi));
+    setMessages(messages.map(storedToUi));
   }
 
   function deleteSession(id: string) {
