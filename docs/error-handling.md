@@ -64,6 +64,8 @@ throw NotFoundError()    →    passes through (domain)    →    Worker try-cat
                                                               instanceof works (same process)
 ```
 
+**DB connection retry:** `ERR_POSTGRES_CONNECTION_CLOSED` errors (dropped connections mid-query) are retried up to 3 times with exponential backoff (100 ms → 200 ms → 400 ms) in `packages/db/src/config.ts` before propagating as a `DrizzleQueryError`. All other errors propagate immediately.
+
 ## Error Boundary (`packages/domain/src/error-boundary.ts`)
 
 The error boundary sits between the domain layer and each transport. It classifies errors into two categories:
@@ -99,11 +101,15 @@ The boundary ensures:
 
 Each transport wires the boundary at its own level:
 
-| Transport         | Wiring                                          | File                         |
-| ----------------- | ----------------------------------------------- | ---------------------------- |
-| Server functions  | Global `functionMiddleware` via `createStart()` | `apps/web/src/start.ts`      |
-| API routes (Hono) | `app.onError()` global handler                  | `packages/api/` (future)     |
-| Workers           | `worker.on('failed')` handler                   | `apps/worker/src/workers.ts` |
+| Transport         | Wiring                                          | File                                      |
+| ----------------- | ----------------------------------------------- | ----------------------------------------- |
+| Server functions  | Global `functionMiddleware` via `createStart()` | `apps/web/src/start.ts`                   |
+| API routes (Hono) | `app.onError()` global handler                  | `packages/api/` (future)                  |
+| Workers           | `worker.on('failed')` handler                   | `apps/worker/src/workers.ts`              |
+| Auth layer        | `onAPIError.onError` in Better Auth config      | `apps/web/src/server/auth.server.ts`      |
+| Auth middleware   | `captureException` in each middleware/guard     | `apps/web/src/server/middleware/auth.ts`, `apps/web/src/lib/guards.ts` |
+
+**Note on double-reporting:** Auth middleware and guards call `captureException` then re-throw `UnexpectedError` (a domain error) — not the raw infra error. This prevents the global boundary in `start.ts` from reporting the same error a second time, since domain errors pass through unchanged.
 
 ## Web App: Server Functions
 
@@ -224,8 +230,13 @@ See [feed-sync.md](./feed-sync.md) for the full feed sync retry and health track
 **PostHog** captures exceptions across all layers:
 
 - **Server-side (error boundary):** `handleBoundaryError` catches infrastructure errors at each transport boundary. Reports the full error with `.cause` chain to PostHog via `captureException` before sanitizing. This is the primary source of truth for production errors.
-- **Server-side (manual):** `captureException(error, metadata)` called explicitly in feed sync, OPML import, and worker error handlers for expected per-item failures.
+- **Server-side (Better Auth):** `onAPIError.onError` in the Better Auth config captures all errors thrown internally by Better Auth (login DB failures, session lookups, OAuth callbacks). Tagged with `source: 'better-auth'`.
+- **Server-side (manual):** `captureException(error, metadata)` called explicitly in auth middleware/guards (tagged with `source`), feed sync, OPML import, and worker error handlers for expected per-item failures.
 - **Client-side:** `posthog.captureException(err)` in `collectionErrorHandler` / `shapeErrorHandler` for client-visible errors. These only see the post-serialization error (no `.cause`), so server-side capture is preferred.
+
+### Error cause chain
+
+`captureException` automatically walks the `.cause` chain and attaches it as `error_cause_chain` in the PostHog event properties. This ensures the full `DrizzleQueryError → PostgresError` chain is visible in PostHog even after the outer error message has been sanitized.
 
 ## Adding New Domain Errors
 
