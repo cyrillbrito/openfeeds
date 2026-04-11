@@ -2,6 +2,7 @@ import { drizzleAdapter } from '@better-auth/drizzle-adapter';
 import { oauthProvider } from '@better-auth/oauth-provider';
 import { db } from '@repo/db';
 import {
+  captureException,
   createSettings,
   sendPasswordResetEmail,
   sendVerificationEmail,
@@ -19,6 +20,12 @@ export const auth = betterAuth({
   trustedOrigins: [...env.TRUSTED_ORIGINS, 'https://appleid.apple.com'],
   // Required by oauthProvider — the plugin provides its own /token endpoint
   disabledPaths: ['/token'],
+  onAPIError: {
+    onError: (error) => {
+      const err = error instanceof Error ? error : new Error(String(error));
+      captureException(err, { source: 'better-auth' });
+    },
+  },
   user: {
     additionalFields: {
       plan: {
