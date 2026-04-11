@@ -7,7 +7,7 @@ import { authClient } from '~/lib/auth-client';
 export const hasSession = createIsomorphicFn()
   .server(async () => {
     const { auth } = await import('~/server/auth.server');
-    const { captureException } = await import('@repo/domain');
+    const { captureException, UnexpectedError } = await import('@repo/domain');
     const headers = getRequestHeaders();
     try {
       const session = await auth.api.getSession({ headers });
@@ -15,7 +15,8 @@ export const hasSession = createIsomorphicFn()
     } catch (error) {
       const err = error instanceof Error ? error : new Error(String(error));
       captureException(err, { source: 'auth-guard', type: 'getSession' });
-      throw error;
+      // Re-throw as UnexpectedError so the transport boundary doesn't double-report
+      throw new UnexpectedError();
     }
   })
   .client(async () => {

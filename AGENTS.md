@@ -60,6 +60,25 @@ Commit messages and PR titles must use [Conventional Commits](https://www.conven
 - Run `bun checks` after changes (lint + format check, includes type checking)
 - TypeScript strict mode enabled
 
+## Documentation Index
+
+Load the relevant doc when working in these areas. Docs are in `docs/`.
+
+- `docs/error-handling.md` — Adding error types, changing error boundaries, auth errors, PostHog exception capture, or DB error handling
+- `docs/posthog.md` — Adding analytics events, exception capture, or changing PostHog setup
+- `docs/data-layer.md` — Working with TanStack DB collections, Electric SQL sync, or optimistic mutations
+- `docs/domain-context.md` — Writing domain functions that mutate data, using transactions, or wiring `withTransaction`
+- `docs/feed-sync.md` — Working on feed sync jobs, retry logic, or feed health tracking
+- `docs/oauth-mcp.md` — Working on OAuth 2.1 / MCP server, consent flow, or Better Auth OAuth provider plugin
+- `docs/migration-architecture.md` — Running or writing database migrations
+- `docs/premium-plan.md` — Working on plan limits, billing, or free vs paid feature gating
+- `docs/onboarding-emails.md` — Working on email sequences, React Email templates, or post-signup flows
+- `docs/session-read-tracking.md` — Working on article read state or session-based tracking
+- `docs/scroll-restoration.md` — Working on article list navigation or scroll position persistence
+- `docs/recommendation-system.md` — Working on article ranking, recommendations, or personalisation
+- `docs/ai-chat.md` — Working on the AI chat feature, tool calling, or conversation persistence
+- `docs/tanstack-db-0.6-upgrade-notes.md` — Upgrading or debugging TanStack DB collection behaviour after a version bump
+
 ## User ID Denormalization
 
 **Every table must have a `user_id` column with an index.** Electric SQL shapes cannot JOIN/subquery, so all tables need `user_id` directly for per-user filtering. Load the `database` skill for the full checklist and code examples.

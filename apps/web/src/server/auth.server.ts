@@ -2,13 +2,14 @@ import { drizzleAdapter } from '@better-auth/drizzle-adapter';
 import { oauthProvider } from '@better-auth/oauth-provider';
 import { db } from '@repo/db';
 import {
+  captureException,
   createSettings,
   sendPasswordResetEmail,
   sendVerificationEmail,
   trackEvent,
 } from '@repo/domain';
 import { betterAuth } from 'better-auth';
-import { createAuthMiddleware } from 'better-auth/api';
+import { createAuthMiddleware, isAPIError } from 'better-auth/api';
 import { jwt, lastLoginMethod } from 'better-auth/plugins';
 import { tanstackStartCookies } from 'better-auth/tanstack-start/solid';
 import { env } from '~/env';
@@ -19,6 +20,13 @@ export const auth = betterAuth({
   trustedOrigins: [...env.TRUSTED_ORIGINS, 'https://appleid.apple.com'],
   // Required by oauthProvider — the plugin provides its own /token endpoint
   disabledPaths: ['/token'],
+  onAPIError: {
+    onError: (error) => {
+      if (isAPIError(error)) return;
+      const err = error instanceof Error ? error : new Error(String(error));
+      captureException(err, { source: 'better-auth' });
+    },
+  },
   user: {
     additionalFields: {
       plan: {

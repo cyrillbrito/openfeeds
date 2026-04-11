@@ -21,8 +21,9 @@ export const authMiddleware = createMiddleware().server(async ({ request, next }
     session = await auth.api.getSession({ headers });
   } catch (error) {
     const err = error instanceof Error ? error : new Error(String(error));
+    const { UnexpectedError } = await import('@repo/domain');
     captureException(err, { source: 'auth-middleware', type: 'getSession' });
-    throw error;
+    throw new UnexpectedError();
   }
 
   if (!session) {
@@ -49,8 +50,9 @@ export const guestMiddleware = createMiddleware().server(async ({ next }) => {
     session = await auth.api.getSession({ headers });
   } catch (error) {
     const err = error instanceof Error ? error : new Error(String(error));
+    const { UnexpectedError } = await import('@repo/domain');
     captureException(err, { source: 'guest-middleware', type: 'getSession' });
-    throw error;
+    throw new UnexpectedError();
   }
 
   if (session) {
