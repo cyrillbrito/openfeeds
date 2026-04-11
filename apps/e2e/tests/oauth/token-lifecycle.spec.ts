@@ -10,7 +10,7 @@ import {
 test.describe('Token Lifecycle', () => {
   test.setTimeout(30_000);
 
-  // Skipped: getTokensViaConsent times out — depends on full consent flow working
+  // Skipped: token endpoint returns 500 when offline_access scope is included (server-side bug)
   test.skip('refresh token grants a new access token', async ({ page, request, user }) => {
     const { tokens, clientId } = await getTokensViaConsent(page, request);
     expect(tokens.refresh_token).toBeDefined();
@@ -65,7 +65,7 @@ test.describe('Token Lifecycle', () => {
     expect(data.active).toBe(false);
   });
 
-  // Skipped: getTokensViaConsent times out — depends on full consent flow working
+  // Skipped: token endpoint returns 500 when offline_access scope is included (server-side bug)
   test.skip('revoked refresh token prevents new access tokens', async ({ page, request, user }) => {
     const { tokens, clientId } = await getTokensViaConsent(page, request);
     expect(tokens.refresh_token).toBeDefined();

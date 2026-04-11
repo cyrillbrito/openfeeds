@@ -15,8 +15,7 @@ import {
 test.describe('Consent Page', () => {
   test.setTimeout(30_000);
 
-  // Skipped: consent page times out when navigating — "Authorize Application" heading not found
-  test.skip('displays client info and requested scopes', async ({ page, request, user }) => {
+  test('displays client info and requested scopes', async ({ page, request, user }) => {
     const { data: client } = await registerPublicClient(request, {
       redirectUri: TEST_REDIRECT_URI,
       clientName: 'Consent Test App',
@@ -45,15 +44,16 @@ test.describe('Consent Page', () => {
     await expect(page.getByText('Verify your identity')).toBeVisible();
     await expect(page.getByText('View your name and profile picture')).toBeVisible();
     await expect(page.getByText('View your email address')).toBeVisible();
-    await expect(page.getByText('Use tools on your behalf')).toBeVisible();
+    await expect(
+      page.getByText('Use MCP tools to manage your feeds, articles, and tags'),
+    ).toBeVisible();
 
     // Verify action buttons are present
     await expect(page.getByRole('button', { name: 'Allow' })).toBeVisible();
     await expect(page.getByRole('button', { name: 'Deny' })).toBeVisible();
   });
 
-  // Skipped: redirect to external callback URL causes net::ERR_ABORTED — page.route intercept not catching the redirect
-  test.skip('denying consent redirects with error', async ({ page, request, user }) => {
+  test('denying consent redirects with error', async ({ page, request, user }) => {
     const { data: client } = await registerPublicClient(request, {
       redirectUri: TEST_REDIRECT_URI,
     });
@@ -80,14 +80,15 @@ test.describe('Consent Page', () => {
     // Deny the consent
     await page.getByRole('button', { name: 'Deny' }).click();
 
-    // Should redirect to callback with an error
-    await page.waitForURL('**/oauth/callback**');
-    const { error } = extractCodeFromUrl(callbackUrl ?? page.url());
+    // Wait for the route handler to capture the callback URL
+    await expect(async () => {
+      expect(callbackUrl).toBeDefined();
+    }).toPass({ timeout: 10_000 });
+    const { error } = extractCodeFromUrl(callbackUrl!);
     expect(error).toBe('access_denied');
   });
 
-  // Skipped: consentAndGetCode times out — consent page interaction failing
-  test.skip('previously consented client skips consent on re-authorization', async ({
+  test('previously consented client skips consent on re-authorization', async ({
     page,
     request,
     user,
@@ -142,8 +143,7 @@ test.describe('Consent Page', () => {
     expect(result.code).toBeDefined();
   });
 
-  // Skipped: consent page times out + screenshot baseline outdated
-  test.skip('consent page visual regression', async ({ page, request, user }) => {
+  test('consent page visual regression', async ({ page, request, user }) => {
     const { data: client } = await registerPublicClient(request, {
       redirectUri: TEST_REDIRECT_URI,
       clientName: 'Visual Test App',

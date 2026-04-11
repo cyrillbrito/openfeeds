@@ -22,8 +22,7 @@ test.describe('MCP Endpoint Access Control', () => {
     expect(response.status()).toBeGreaterThanOrEqual(400);
   });
 
-  // Skipped: getTokensViaConsent times out — depends on full consent flow working
-  test.skip('rejects tokens without mcp:tools scope', async ({ page, request, user }) => {
+  test('rejects tokens without mcp:tools scope', async ({ page, request, user }) => {
     // Deliberately request openid+profile only — no mcp:tools
     const { tokens } = await getTokensViaConsent(page, request, {
       scope: 'openid profile',
@@ -39,8 +38,7 @@ test.describe('MCP Endpoint Access Control', () => {
     expect(mcpResponse.status()).toBeGreaterThanOrEqual(400);
   });
 
-  // Skipped: getTokensViaConsent times out — depends on full consent flow working
-  test.skip('rejects token issued without the MCP resource audience', async ({
+  test('rejects token issued without the MCP resource audience', async ({
     page,
     request,
     user,
@@ -62,8 +60,7 @@ test.describe('MCP Endpoint Access Control', () => {
     expect(mcpResponse.status()).toBeGreaterThanOrEqual(400);
   });
 
-  // Skipped: getTokensViaConsent times out — depends on full consent flow working
-  test.skip('accepts valid token and returns tool results', async ({ page, request, user }) => {
+  test('accepts valid token and returns tool results', async ({ page, request, user }) => {
     const { tokens } = await getTokensViaConsent(page, request, {
       scope: 'openid profile mcp:tools',
     });
@@ -81,12 +78,7 @@ test.describe('MCP Endpoint Access Control', () => {
     expect((initResult.result as Record<string, unknown>).protocolVersion).toBeDefined();
   });
 
-  // Skipped: getTokensViaConsent times out — depends on full consent flow working
-  test.skip('tool call returns correct response through auth layer', async ({
-    page,
-    request,
-    user,
-  }) => {
+  test('tool call returns correct response through auth layer', async ({ page, request, user }) => {
     const { tokens } = await getTokensViaConsent(page, request, {
       scope: 'openid profile mcp:tools',
     });

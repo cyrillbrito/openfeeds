@@ -19,8 +19,7 @@ test.describe('OAuth Authorization Flow', () => {
   // These tests involve multiple redirects and network round trips
   test.setTimeout(30_000);
 
-  // Skipped: consentAndGetCode times out — consent page redirect or "Allow" button interaction failing
-  test.skip('complete flow: register → authorize → consent → token → MCP tool call', async ({
+  test('complete flow: register → authorize → consent → token → MCP tool call', async ({
     page,
     request,
     user,
@@ -104,7 +103,7 @@ test.describe('OAuth Authorization Flow', () => {
     await expect(page.getByRole('heading', { name: 'Welcome Back' })).not.toBeVisible();
   });
 
-  // Skipped: getTokensViaConsent times out — depends on full consent flow working
+  // Skipped: token endpoint returns 500 when offline_access scope is included (server-side bug)
   test.skip('flow with offline_access scope returns refresh token', async ({
     page,
     request,
