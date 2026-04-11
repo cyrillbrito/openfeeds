@@ -15,14 +15,78 @@ test.describe('OAuth Security', () => {
   test.setTimeout(30_000);
 
   // Skipped: consentAndGetCode times out — consent page interaction failing
-  test.skip('authorization code cannot be reused (single-use)', async ({
-    page,
-    request,
-    user,
-  }) => {});
+  test.skip('authorization code cannot be reused (single-use)', async ({ page, request, user }) => {
+    const { data: client } = await registerPublicClient(request, {
+      redirectUri: TEST_REDIRECT_URI,
+    });
+    const { codeVerifier, codeChallenge } = await generatePKCE();
+    const state = generateState();
+    const mcpResource = await getMcpResource(request);
+
+    const authorizeUrl = buildAuthorizeUrl({
+      clientId: client.client_id,
+      redirectUri: TEST_REDIRECT_URI,
+      scope: 'openid profile mcp:tools',
+      codeChallenge,
+      state,
+      resource: mcpResource,
+    });
+
+    const { code } = await consentAndGetCode(page, authorizeUrl);
+    expect(code).toBeDefined();
+
+    // First exchange — should succeed
+    const { response: firstResponse } = await exchangeCodeForTokens(request, {
+      code: code!,
+      clientId: client.client_id,
+      redirectUri: TEST_REDIRECT_URI,
+      codeVerifier,
+      resource: mcpResource,
+    });
+    expect(firstResponse.ok()).toBeTruthy();
+
+    // Second exchange with the same code — must fail
+    const { response: replayResponse } = await exchangeCodeForTokens(request, {
+      code: code!,
+      clientId: client.client_id,
+      redirectUri: TEST_REDIRECT_URI,
+      codeVerifier,
+      resource: mcpResource,
+    });
+    expect(replayResponse.ok()).toBeFalsy();
+  });
 
   // Skipped: consentAndGetCode times out — consent page interaction failing
-  test.skip('wrong PKCE code_verifier is rejected', async ({ page, request, user }) => {});
+  test.skip('wrong PKCE code_verifier is rejected', async ({ page, request, user }) => {
+    const { data: client } = await registerPublicClient(request, {
+      redirectUri: TEST_REDIRECT_URI,
+    });
+    const { codeChallenge } = await generatePKCE();
+    const state = generateState();
+    const mcpResource = await getMcpResource(request);
+
+    const authorizeUrl = buildAuthorizeUrl({
+      clientId: client.client_id,
+      redirectUri: TEST_REDIRECT_URI,
+      scope: 'openid profile mcp:tools',
+      codeChallenge,
+      state,
+      resource: mcpResource,
+    });
+
+    const { code } = await consentAndGetCode(page, authorizeUrl);
+    expect(code).toBeDefined();
+
+    // Send a wrong code_verifier — server must reject
+    const { response } = await exchangeCodeForTokens(request, {
+      code: code!,
+      clientId: client.client_id,
+      redirectUri: TEST_REDIRECT_URI,
+      codeVerifier: 'deliberately-wrong-verifier-that-does-not-match-the-challenge',
+      resource: mcpResource,
+    });
+    expect(response.ok()).toBeFalsy();
+  });
 
   test('unknown client_id at authorize returns an error', async ({ page, request, user }) => {
     const { codeChallenge } = await generatePKCE();

@@ -30,10 +30,7 @@ export default defineConfig({
     trace: 'on-first-retry',
   },
 
-  timeout: 15000,
-  expect: {
-    timeout: 10000,
-  },
+  timeout: 5000,
 
   snapshotPathTemplate: './screenshots/{testFilePath}/{arg}-{projectName}-{platform}{ext}',
 

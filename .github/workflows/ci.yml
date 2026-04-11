@@ -25,8 +25,11 @@ jobs:
     name: E2E Tests
     runs-on: ubuntu-latest
     services:
+      # Uses Electric SQL's public Postgres image with wal_level=logical pre-configured.
+      # This avoids the need to ALTER SYSTEM + restart Postgres at runtime.
+      # See: https://github.com/electric-sql/electric/blob/main/.github/workflows/build_postgres_image.yml
       postgres:
-        image: postgres:18.1-alpine
+        image: ghcr.io/electric-sql/electric/postgres:18-alpine-logical
         env:
           POSTGRES_DB: openfeeds_test
           POSTGRES_USER: postgres
@@ -56,6 +59,11 @@ jobs:
           ELECTRIC_INSECURE: 'true'
         ports:
           - 3060:3000
+        options: >-
+          --health-cmd "curl -sf http://localhost:3000/v1/health || exit 1"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 10
 
     env:
       DATABASE_URL: postgresql://postgres:postgres@localhost:5432/openfeeds_test
@@ -82,37 +90,11 @@ jobs:
         run: bunx playwright install chromium --with-deps
         working-directory: apps/e2e
 
-      - name: Enable logical replication for Electric SQL
-        run: |
-          psql "$DATABASE_URL" -c "ALTER SYSTEM SET wal_level = logical;"
-          # Restart Postgres to apply wal_level change (requires restart)
-          docker restart $(docker ps -q --filter "ancestor=postgres:18.1-alpine")
-          # Wait for Postgres to be ready again
-          for i in $(seq 1 15); do
-            if pg_isready -h localhost -U postgres -d openfeeds_test 2>/dev/null; then
-              echo "Postgres restarted with wal_level=logical"
-              exit 0
-            fi
-            sleep 2
-          done
-          echo "Postgres failed to restart"
-          exit 1
-
-      - name: Wait for Electric to be ready
-        run: |
-          for i in $(seq 1 30); do
-            if curl -s http://localhost:3060/v1/health > /dev/null 2>&1; then
-              echo "Electric is ready"
-              exit 0
-            fi
-            echo "Waiting for Electric... ($i/30)"
-            sleep 2
-          done
-          echo "Electric failed to start"
-          exit 1
-
       - name: Run migrations
         run: bun --cwd=apps/migrator src/index.ts
+
+      - name: Build @repo/emails
+        run: bun run --cwd packages/emails build
 
       - name: Start web server
         run: bun --cwd=apps/web --bun vite dev --port 3000 &
