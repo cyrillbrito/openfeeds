@@ -2,11 +2,16 @@ name: CI
 
 on:
   pull_request:
-    types: [opened, synchronize, reopened]
+    types: [opened, synchronize, reopened, closed]
+
+permissions:
+  contents: write
+  pull-requests: write
 
 jobs:
   lint:
     name: Lint
+    if: github.event.action != 'closed'
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -23,6 +28,7 @@ jobs:
 
   e2e:
     name: E2E Tests
+    if: github.event.action != 'closed'
     runs-on: ubuntu-latest
     services:
       # Uses Electric SQL's public Postgres image with wal_level=logical pre-configured.
@@ -116,10 +122,48 @@ jobs:
         run: bunx playwright test
         working-directory: apps/e2e
 
-      - name: Upload test report
-        uses: actions/upload-artifact@v4
+      - name: Publish report to GitHub Pages
         if: ${{ !cancelled() }}
+        run: |
+          PR_DIR="playwright-report/pr-${{ github.event.pull_request.number }}"
+          # Clone gh-pages into a separate directory to avoid conflicts with working tree
+          git clone --single-branch --branch gh-pages "https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}.git" gh-pages-deploy
+          cd gh-pages-deploy
+          rm -rf "$PR_DIR"
+          mkdir -p "$PR_DIR"
+          cp -r "$GITHUB_WORKSPACE/apps/e2e/playwright-report/"* "$PR_DIR/"
+          git add "$PR_DIR"
+          git -c user.name="github-actions" -c user.email="github-actions@github.com" \
+            commit -m "chore: update playwright report for PR #${{ github.event.pull_request.number }}" --allow-empty
+          git push
+
+      - name: Post report comment
+        if: ${{ !cancelled() }}
+        uses: daun/playwright-report-summary@v3
         with:
-          name: playwright-report
-          path: apps/e2e/playwright-report/
-          retention-days: 14
+          report-file: apps/e2e/results.json
+          comment-title: 'Playwright E2E Report'
+          report-url: 'https://cyrillbrito.github.io/openfeeds/playwright-report/pr-${{ github.event.pull_request.number }}/'
+
+  # Clean up GitHub Pages report when PR is closed/merged
+  cleanup-report:
+    name: Cleanup Report
+    if: github.event.action == 'closed'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout gh-pages
+        uses: actions/checkout@v4
+        with:
+          ref: gh-pages
+
+      - name: Remove PR report
+        run: |
+          if [ -d "playwright-report/pr-${{ github.event.pull_request.number }}" ]; then
+            rm -rf "playwright-report/pr-${{ github.event.pull_request.number }}"
+            git add -A
+            git -c user.name="github-actions" -c user.email="github-actions@github.com" \
+              commit -m "chore: remove playwright report for PR #${{ github.event.pull_request.number }}" --allow-empty
+            git push origin gh-pages
+          else
+            echo "No report found for PR #${{ github.event.pull_request.number }}, skipping"
+          fi
