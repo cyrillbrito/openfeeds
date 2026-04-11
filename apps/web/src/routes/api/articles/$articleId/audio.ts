@@ -1,4 +1,6 @@
 import { createFileRoute } from '@tanstack/solid-router';
+import type { AuthContext } from '~/server/middleware/auth';
+import { authRequestMiddleware } from '~/server/middleware/auth';
 
 /**
  * Streaming endpoint for audio files.
@@ -14,20 +16,17 @@ import { createFileRoute } from '@tanstack/solid-router';
  */
 export const Route = createFileRoute('/api/articles/$articleId/audio')({
   server: {
+    middleware: [authRequestMiddleware],
     handlers: {
-      GET: async ({ request, params }: { request: Request; params: { articleId: string } }) => {
+      GET: async ({ params, context }) => {
+        const { user } = context as unknown as AuthContext;
+
         // Dynamic imports to keep server-only modules out of the client bundle.
         // See: https://github.com/TanStack/router/issues/2783
-        const { auth } = await import('~/server/auth.server');
         const { getArticleAudioBuffer } = await import('@repo/domain');
 
-        const session = await auth.api.getSession({ headers: request.headers });
-        if (!session) {
-          return Response.json({ message: 'Unauthorized' }, { status: 401 });
-        }
-
         const { articleId } = params;
-        const audioBuffer = await getArticleAudioBuffer(session.user.id, articleId);
+        const audioBuffer = await getArticleAudioBuffer(user.id, articleId);
 
         if (!audioBuffer) {
           return Response.json({ message: 'Audio not found' }, { status: 404 });
