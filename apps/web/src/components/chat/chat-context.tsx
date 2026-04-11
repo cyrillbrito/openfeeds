@@ -74,14 +74,17 @@ export function ChatProvider(props: { children: JSX.Element }) {
     const session = chatSessionsCollection.get(id);
     if (!session) return;
 
+    // Cancel any in-flight stream before switching sessions
+    stop();
+
     // Electric sends jsonb columns as JSON strings — defensively parse if needed
-    const messages =
+    const msgs =
       typeof session.messages === 'string'
         ? (JSON.parse(session.messages as string) as typeof session.messages)
         : session.messages;
 
     setSessionId(id);
-    setMessages(messages.map(storedToUi));
+    setMessages(msgs.map(storedToUi));
   }
 
   function deleteSession(id: string) {
@@ -92,6 +95,7 @@ export function ChatProvider(props: { children: JSX.Element }) {
   }
 
   function startNewChat() {
+    stop();
     setSessionId(createId());
     setMessages([]);
   }
