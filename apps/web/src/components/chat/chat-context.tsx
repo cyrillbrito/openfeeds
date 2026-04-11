@@ -1,10 +1,9 @@
-import type { ChatSession } from '@repo/domain/client';
 import { createId } from '@repo/shared/utils';
 import type { UIMessage } from '@tanstack/ai';
 import { fetchServerSentEvents, useChat } from '@tanstack/ai-solid';
-import { type Accessor, createContext, createMemo, createSignal, useContext } from 'solid-js';
+import { type Accessor, createContext, createSignal, useContext } from 'solid-js';
 import type { JSX } from 'solid-js';
-import { chatSessionsCollection, useChatSessions } from '~/entities/chat-sessions';
+import { chatSessionsCollection } from '~/entities/chat-sessions';
 import { deriveTitle, storedToUi, uiToStored } from './chat-utils';
 
 interface ChatContextValue {
@@ -19,7 +18,6 @@ interface ChatContextValue {
   // Session state
   sessionId: Accessor<string>;
   currentTitle: Accessor<string>;
-  sessions: Accessor<ChatSession[] | undefined>;
 
   // Actions
   startNewChat: () => void;
@@ -31,9 +29,6 @@ const ChatContext = createContext<ChatContextValue>();
 
 export function ChatProvider(props: { children: JSX.Element }) {
   const [sessionId, setSessionId] = createSignal(createId());
-  const sessionsQuery = useChatSessions();
-
-  const sessions = createMemo(() => sessionsQuery());
 
   const { messages, sendMessage, isLoading, setMessages, error, stop } = useChat({
     connection: fetchServerSentEvents('/api/chat'),
@@ -77,7 +72,7 @@ export function ChatProvider(props: { children: JSX.Element }) {
 
   function loadSession(id: string) {
     const session = chatSessionsCollection.get(id);
-    if (!session || session.messages.length === 0) return;
+    if (!session) return;
 
     setSessionId(id);
     setMessages(session.messages.map(storedToUi));
@@ -104,7 +99,6 @@ export function ChatProvider(props: { children: JSX.Element }) {
     stop,
     sessionId,
     currentTitle,
-    sessions,
     startNewChat,
     loadSession,
     deleteSession,
