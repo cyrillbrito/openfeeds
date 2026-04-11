@@ -191,6 +191,20 @@ Same as v1 — inline indicators showing tool name + state (running/done). But r
 - Title auto-generation (after first AI response, ask model for a short title)
 - Read tools for AI context (list feeds, search articles — domain functions needed)
 
+## Ideas / Future Exploration
+
+### Code Mode for Token-Efficient Digest Queries
+
+For prompts like "give me a digest of the last month", the current approach dumps all article data into context, causing token overflow. TanStack AI's [Code Mode](https://tanstack.com/blog/tanstack-ai-code-mode) could solve this: instead of feeding raw data to the LLM, the model writes TypeScript that runs in a sandbox — fetching only relevant fields (title, summary, feed), filtering by date range, and aggregating in JS (not in the model). Only the final condensed result enters the context window.
+
+**Why it fits OpenFeeds:**
+- Digest/summary queries over large date ranges — data reduction before context
+- Feed analytics (article counts, read ratios, most active feeds) — math runs in JS runtime, not hallucinated
+- "What topics did I read most?" — parallel fetches + `.reduce()` in sandbox
+- Skills feature: digest logic persists as reusable TypeScript programs, improving over time
+
+**Not starting now** — `@tanstack/ai` is still alpha. Revisit when stable.
+
 ## References
 
 - **Linear:** Popover with minimize/expand/close, bottom-bar AI tabs for conversation history

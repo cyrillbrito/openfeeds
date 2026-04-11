@@ -1,11 +1,10 @@
 import { useLocation, useNavigate, useParams } from '@tanstack/solid-router';
-import { ChevronDown, Menu, Plus, Sparkles } from 'lucide-solid';
-import { createEffect, createSignal, on, Show } from 'solid-js';
-import { useClickOutside } from '~/utils/useClickOutside';
+import { Menu, Plus } from 'lucide-solid';
+import { createEffect, on } from 'solid-js';
 import { useChatContext } from './chat-context';
 import { ChatInput } from './ChatInput';
 import { ChatMessages } from './ChatMessages';
-import { ConversationSwitcher } from './ConversationSwitcher';
+import { ChatTitleSwitcher } from './ChatTitleSwitcher';
 
 /** Full-page AI chat — centered column with max-width */
 export function ChatPage() {
@@ -13,12 +12,6 @@ export function ChatPage() {
   const navigate = useNavigate();
   const location = useLocation();
   const params = useParams({ strict: false });
-  const [switcherOpen, setSwitcherOpen] = createSignal(false);
-  const [switcherRef, setSwitcherRef] = createSignal<HTMLDivElement>();
-
-  useClickOutside(switcherRef, () => {
-    if (switcherOpen()) setSwitcherOpen(false);
-  });
 
   const sessionIdParam = () => (params() as { sessionId?: string }).sessionId;
 
@@ -26,7 +19,7 @@ export function ChatPage() {
   createEffect(
     on(sessionIdParam, (sessionId) => {
       if (sessionId && sessionId !== chat.sessionId()) {
-        void chat.loadSession(sessionId);
+        chat.loadSession(sessionId);
       } else if (!sessionId && chat.messages().length > 0) {
         // Navigated to /ai without a session ID — start fresh
         chat.startNewChat();
@@ -50,8 +43,7 @@ export function ChatPage() {
     ),
   );
 
-  // Refetch sessions when page mounts
-  chat.refetchSessions();
+  // Sessions are synced automatically via Electric
 
   const handleNewChat = () => {
     chat.startNewChat();
@@ -68,35 +60,15 @@ export function ChatPage() {
               <Menu size={24} />
             </label>
 
-            {/* Conversation switcher */}
-            <div ref={setSwitcherRef} class="relative">
-              <button
-                class="hover:bg-base-200 flex items-center gap-1.5 rounded-lg px-2 py-1 transition-colors"
-                onClick={() => setSwitcherOpen(!switcherOpen())}
-                title="Switch conversation"
-              >
-                <Sparkles size={16} class="text-primary shrink-0" />
-                <span class="max-w-64 truncate text-lg font-semibold">{chat.currentTitle()}</span>
-                <ChevronDown
-                  size={16}
-                  class="text-base-content/50 shrink-0 transition-transform"
-                  classList={{ 'rotate-180': switcherOpen() }}
-                />
-              </button>
-
-              <Show when={switcherOpen()}>
-                <ConversationSwitcher
-                  onClose={() => setSwitcherOpen(false)}
-                  onSessionSelected={(id) => {
-                    void navigate({
-                      to: '/ai/$sessionId',
-                      params: { sessionId: id },
-                      replace: true,
-                    });
-                  }}
-                />
-              </Show>
-            </div>
+            <ChatTitleSwitcher
+              onSessionSelected={(id) => {
+                void navigate({
+                  to: '/ai/$sessionId',
+                  params: { sessionId: id },
+                  replace: true,
+                });
+              }}
+            />
           </div>
 
           <button class="btn btn-ghost btn-sm btn-circle" onClick={handleNewChat} title="New chat">

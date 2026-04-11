@@ -1,4 +1,4 @@
-import type { ChatSessionSummary } from '@repo/domain/client';
+import type { ChatSession } from '@repo/domain/client';
 import { Check, Trash2 } from 'lucide-solid';
 import { For, Show } from 'solid-js';
 import { useChatContext } from './chat-context';
@@ -22,7 +22,9 @@ export function ConversationSwitcher(props: ConversationSwitcherProps) {
   };
 
   return (
-    <div class={`border-base-300 bg-base-100 absolute top-full left-0 z-50 max-h-72 min-w-72 overflow-y-auto rounded-b-lg border shadow-md ${props.class ?? ''}`}>
+    <div
+      class={`border-base-300 bg-base-100 absolute top-full left-0 z-50 max-h-72 min-w-72 overflow-y-auto rounded-b-lg border shadow-md ${props.class ?? ''}`}
+    >
       <Show
         when={groups().length > 0}
         fallback={<p class="text-base-content/40 py-6 text-center text-sm">No conversations yet</p>}
@@ -39,11 +41,11 @@ export function ConversationSwitcher(props: ConversationSwitcherProps) {
                     session={session}
                     isActive={session.id === chat.sessionId()}
                     onSelect={() => {
-                      void chat.loadSession(session.id);
+                      chat.loadSession(session.id);
                       props.onSessionSelected?.(session.id);
                       props.onClose();
                     }}
-                    onDelete={() => void chat.deleteSession(session.id)}
+                    onDelete={() => chat.deleteSession(session.id)}
                   />
                 )}
               </For>
@@ -56,7 +58,7 @@ export function ConversationSwitcher(props: ConversationSwitcherProps) {
 }
 
 function ConversationItem(props: {
-  session: ChatSessionSummary;
+  session: ChatSession;
   isActive: boolean;
   onSelect: () => void;
   onDelete: () => void;
@@ -67,26 +69,25 @@ function ConversationItem(props: {
       classList={{ 'bg-base-200/50': props.isActive }}
       onClick={() => props.onSelect()}
     >
-      <Show when={props.isActive}>
-        <Check size={14} class="text-primary shrink-0" />
-      </Show>
       <div class="min-w-0 flex-1">
         <p class="truncate text-sm" classList={{ 'font-medium': props.isActive }}>
           {props.session.title}
         </p>
       </div>
-      <Show when={!props.isActive}>
-        <button
-          class="btn btn-ghost btn-xs btn-circle shrink-0 opacity-0 transition-opacity group-hover:opacity-100"
-          onClick={(e) => {
-            e.stopPropagation();
-            props.onDelete();
-          }}
-          title="Delete"
-        >
-          <Trash2 size={12} />
-        </button>
-      </Show>
+      <div class="flex size-6 shrink-0 items-center justify-center">
+        <Show when={!props.isActive} fallback={<Check size={14} class="text-primary" />}>
+          <button
+            class="btn btn-ghost btn-xs btn-circle opacity-0 transition-opacity group-hover:opacity-100"
+            onClick={(e) => {
+              e.stopPropagation();
+              props.onDelete();
+            }}
+            title="Delete"
+          >
+            <Trash2 size={12} />
+          </button>
+        </Show>
+      </div>
     </button>
   );
 }

@@ -92,9 +92,7 @@ async function captureGeneration(data: GenerationData): Promise<void> {
     .filter((m) => m.role !== 'assistant')
     .map((m) => ({ role: m.role, content: m.content }));
 
-  const outputChoices = data.content
-    ? [{ role: 'assistant', content: data.content }]
-    : [];
+  const outputChoices = data.content ? [{ role: 'assistant', content: data.content }] : [];
 
   posthog.capture({
     distinctId: data.userId,
@@ -112,7 +110,10 @@ async function captureGeneration(data: GenerationData): Promise<void> {
       $ai_max_tokens: 4096,
       $ai_is_error: data.isError,
       ...(data.error != null
-        ? { $ai_error: data.error instanceof Error ? data.error.message : JSON.stringify(data.error) }
+        ? {
+            $ai_error:
+              data.error instanceof Error ? data.error.message : JSON.stringify(data.error),
+          }
         : {}),
       ...(data.toolNames != null
         ? {

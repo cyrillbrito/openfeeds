@@ -1,11 +1,10 @@
 import type { ToolCallPart, UIMessage } from '@tanstack/ai';
-import { AlertTriangle, Download, Sparkles } from 'lucide-solid';
+import { AlertTriangle, Sparkles } from 'lucide-solid';
 import remarkBreaks from 'remark-breaks';
 import remarkGfm from 'remark-gfm';
 import { createEffect, createMemo, Index, on, Show, Switch, Match } from 'solid-js';
 import { SolidMarkdown } from 'solid-markdown';
 import { useChatContext } from './chat-context';
-import { downloadSession } from './chat-utils';
 
 /** Extract a human-readable error message from API errors. */
 function friendlyError(err: Error): string {
@@ -73,7 +72,7 @@ export function ChatMessages() {
   });
 
   return (
-    <div class="ai-chat-area min-h-0 flex-1 space-y-5 overflow-y-auto overscroll-contain py-4 pl-4 pr-2">
+    <div class="ai-chat-area min-h-0 flex-1 space-y-5 overflow-y-auto overscroll-contain py-4 pr-2 pl-4">
       <Show when={chat.messages().length === 0}>
         <div class="flex h-full items-center justify-center">
           <div class="text-base-content/60 text-center">
@@ -114,23 +113,14 @@ export function ChatMessages() {
       <Show when={!chat.isLoading() && !chat.error() && emptyLastAssistant()}>
         <div class="text-warning/80 flex items-start gap-1.5 text-xs">
           <AlertTriangle size={14} class="mt-0.5 shrink-0" />
-          <span>Response was empty — the model may have hit a limit. Try rephrasing or starting a new chat.</span>
+          <span>
+            Response was empty — the model may have hit a limit. Try rephrasing or starting a new
+            chat.
+          </span>
         </div>
       </Show>
 
       <Show when={chat.messages().length > 0}>
-        <Show when={import.meta.env.DEV}>
-          <div class="flex justify-center pb-1">
-            <button
-              class="btn btn-ghost btn-xs text-base-content/40 gap-1"
-              onClick={() => downloadSession(chat.sessionId(), chat.messages())}
-              title="Download session as JSON"
-            >
-              <Download size={12} />
-              <span>Export session</span>
-            </button>
-          </div>
-        </Show>
         <div ref={(el) => (messagesEndRef = el)} />
       </Show>
     </div>
