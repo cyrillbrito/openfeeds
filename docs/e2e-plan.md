@@ -32,67 +32,64 @@ Most failures are timeout errors — page object locators don't match the curren
 
 ---
 
-## Test Data Strategy
+## Test Data Strategy: Fresh User Per Test
 
-### Option A: Fresh user per test (current approach, recommended)
-- Auth fixture creates a new user via signup for each test
-- **Pros**: No cleanup needed, full isolation, simple, Playwright-recommended
-- **Cons**: Accumulates garbage users in DB, can't run against production
+**Decision: fresh user per test, no cleanup.** Each test creates a unique user via the auth fixture. Tests are fully isolated because each user can only see their own data (all queries filter by `user_id`).
 
-### Option B: Zero-trace testing (cleanup after each test)
+This is the Playwright-recommended approach ("start from scratch" over "cleanup in between") and is already partially implemented in the auth fixture. Playwright explicitly warns against per-test cleanup: *"it can be easy to forget to clean up and some things are impossible to clean up. State from one test can leak into the next test."*
 
-Each test cleans up all data it creates via API calls.
+**Data accumulation:** Not a problem in CI (ephemeral DB). For local dev, if it ever matters, a single batch cleanup query handles everything thanks to cascade deletes: `DELETE FROM "user" WHERE email LIKE '%@e2e-test.local' AND created_at < NOW() - INTERVAL '24 hours'`. All tables cascade from `user_id`.
 
-**Pros:**
-- Can run against any environment including staging/production
-- No data accumulation, DB stays clean
-- Forces well-defined API boundaries (delete endpoints exist for everything)
-- Catches cascade/orphan bugs early
+See [appendix](#appendix-test-data-strategy-options-considered) for the full comparison of strategies considered.
 
-**Cons:**
-- Need cleanup API endpoints for every entity (don't exist yet)
-- More complex fixtures — every fixture needs teardown logic
-- Cleanup failures leave orphaned data and cause cascading test failures
-- Cleanup bugs are silent — one test breaks, a different test fails (hardest debugging pattern)
-- "Impossible to clean up" some things (e.g. visited links, audit logs, analytics events)
-- Cleanup code is untested code that rots
-- Every new entity/relationship requires updating cleanup routines
-- Parallel test interference — two tests cleaning up concurrently can step on each other
+---
 
-**Effort estimate:**
-- Build `deleteUser` server function + API endpoint (~1-2 hours)
-- Since all tables have `ON DELETE CASCADE` from `user_id`, deleting the user cascades everything — so per-entity cleanup isn't needed IF we always create isolated users
-- Add teardown to auth fixture (~30 min)
-- But: if tests create data without the auth fixture (e.g. OAuth API tests), each needs its own cleanup
-- Ongoing maintenance: every new entity/flow needs cleanup consideration
+## Existing Tests: Fix vs Rewrite
 
-**What Playwright officially says:**
-> "There are two different strategies: start from scratch or cleanup in between. The problem with cleaning up is that it can be easy to forget to clean up and some things are impossible to clean up. State from one test can leak into the next test which could cause your test to fail and make debugging harder as the problem comes from another test."
-> — [Playwright Isolation docs](https://playwright.dev/docs/browser-contexts)
+### Assessment
 
-**Playwright recommends "start from scratch", not "cleanup after".**
+**Recommendation: fix, don't rewrite.** The infrastructure (auth fixture, utils, mock server, POM pattern, config) is solid and reusable. The failures are locator drift and invalid assumptions about local-first behavior, not structural problems.
 
-Martin Fowler agrees: *"If a test fails because it didn't build up the initial state properly, it's easy to see which test contains the bug. With clean-up, one test will contain the bug, but another test will fail — so it's hard to find the real problem."*
+### What's salvageable
 
-**Industry reality:** No major framework or authority recommends per-test cleanup as the primary isolation strategy. Successful teams use fresh DB, fresh users, transaction rollback, or test containers — not per-test teardown.
+| Component | Status | Effort to fix |
+|---|---|---|
+| Auth fixture (`auth-fixture.ts`) | **Works** — `page.evaluate` calls to `/api/auth/sign-up/email` and `/api/auth/sign-in/email` are still valid | None |
+| Utils (creds, network, oauth, auth-client) | **All work** | None |
+| Mock RSS server | **Works** | None |
+| POM pattern/structure | **Good** — matches AGENTS.md conventions | None |
+| `SigninPage.ts` | 2 string changes: "Sign In" → "Log In", "Signing In..." → "Logging In..." | 15 min |
+| `SignupPage.ts` | 1 string change: "Sign in" → "Log in" link text | 10 min |
+| `Drawer.ts` | Nav items changed: "All Articles" gone, "Manage Feeds" → "Feeds", new "Discover"/"AI Chat" | 1 hr |
+| `TagsPage.ts` | Tags are now list rows (not `.card`), tag name is `<span>` not heading, `modal-open` → `dialog[open]`, dropdown structure changed | 2 hr |
+| `FeedsPage.ts` | Feed rows instead of cards, "Add Feed" button gone (now `/discover` route), empty state text changed, "Delete" → "Unfollow" | 2 hr |
+| `AddFeedModal.ts` | **Delete entirely** — feed adding moved to `/discover` route. Replace with `DiscoverPage.ts` | 2 hr |
+| `EditFeedModal.ts` | Title "Edit Feed" → "Edit", no save/reset buttons (auto-save), checkboxes → MultiSelectTag | 1 hr |
+| `DeleteFeedModal.ts` | "Delete Feed" → "Unfollow Feed", confirm text changed, no loading state (local-first) | 1 hr |
 
-### Option C: Dedicated test database (reset per run)
-- Separate DB for e2e, wiped/seeded before each test run
-- **Pros**: Clean slate every time, no cleanup code needed, fastest tests
-- **Cons**: Can't test against production, need DB management in CI, different from real environment
+### Tests to delete (no longer valid)
 
-### Option D: Hybrid — fresh users + periodic batch cleanup
-- Keep fresh-user-per-test for simplicity
-- Add a periodic cleanup: `DELETE FROM "user" WHERE email LIKE '%@e2e-test.local' AND created_at < NOW() - INTERVAL '24 hours'`
-- All tables cascade from `user_id`, so one query cleans everything
-- **Pros**: Simple test code, no per-test cleanup, works in CI, DB stays clean over time
-- **Cons**: Still can't safely run against production, needs a cleanup script/cron
+These test scenarios are invalid due to the local-first architecture shift:
+- All **loading state** assertions for tags/feeds (local-first operations are instant, no async)
+- All **network error** tests for tags/feeds (no API calls — data goes to local TanStack DB)
+- **Duplicate tag name detection** tests (no client-side validation for this)
+- Everything using `AddFeedModal` (the modal doesn't exist; feed discovery is a separate route)
 
-### Recommendation
+### Estimated effort
 
-Start with **Option A** (fresh user per test) — it's what Playwright recommends, it's simple, and it's already partially implemented. Add **Option D** (periodic batch cleanup) when data accumulation becomes a problem — it's a single SQL query thanks to cascade deletes.
+- **Fix approach:** ~2-3 days (update POMs, prune invalid tests, verify)
+- **Rewrite approach:** ~5-7 days for the same end result, plus risk of losing edge case coverage
 
-Zero-trace (Option B) is explicitly discouraged by Playwright and the effort/fragility ratio is poor. The only scenario where it matters is testing against production, which we shouldn't be doing with e2e tests anyway.
+### Action plan
+
+1. Fix `SigninPage`/`SignupPage` POMs (30 min) — gets auth tests green
+2. Update `Drawer.ts` for new nav structure (1 hr)
+3. Rewrite `FeedsPage.ts` for list-row layout (2 hr)
+4. Replace `AddFeedModal.ts` with `DiscoverPage.ts` (2 hr)
+5. Update `TagsPage.ts` selectors + delete invalid tests (3 hr)
+6. Update `EditFeedModal.ts` / `DeleteFeedModal.ts` (2 hr)
+7. Fix all test files referencing changed POMs (2 hr)
+8. Update screenshots (`--update-snapshots`)
 
 ---
 
@@ -141,25 +138,32 @@ We use **`agent-browser`** (v0.25.3, installed via Homebrew) as our single brows
 
 `agent-browser` is for **exploring the app interactively** — discovering selectors, verifying flows, debugging failures. The actual test code is standard Playwright (`@playwright/test`).
 
-### Playwright Test Agents (official)
+### Playwright Test Agents (installed)
 
-Playwright now ships **three official AI test agents** via `npx playwright init-agents`:
+`bunx playwright init-agents --loop=opencode` has been run. It generated:
 
-| Agent | Purpose |
-|---|---|
-| **Planner** | Explores the app via browser, produces a Markdown test plan in `specs/` |
-| **Generator** | Transforms the Markdown plan into Playwright test files in `tests/` |
-| **Healer** | Runs failing tests, inspects UI, auto-repairs locators/waits/assertions |
+**Files created in `apps/e2e/`:**
+- `.opencode/prompts/playwright-test-planner.md` — planner agent instructions
+- `.opencode/prompts/playwright-test-generator.md` — generator agent instructions
+- `.opencode/prompts/playwright-test-healer.md` — healer agent instructions
+- `opencode.json` — MCP server config + agent definitions with tool permissions
+- `tests/seed.spec.ts` — empty seed test (needs our auth setup)
+- `specs/README.md` — directory for test plans
 
-Setup: `npx playwright init-agents --loop=opencode`
+**How it works:**
+- Registers a `playwright-test` MCP server (`npx playwright run-test-mcp-server`) that provides browser automation tools
+- Defines 3 OpenCode agents as subagents with scoped tool access:
+  - **Planner**: browser navigation + snapshot tools + `planner_save_plan`
+  - **Generator**: browser interaction tools + `generator_setup_page` + `generator_write_test`
+  - **Healer**: browser inspection tools + `test_run` + `test_debug` + file edit tools
 
-This generates agent definitions (instructions + MCP tools) that OpenCode can use. The workflow is:
-1. Write a **seed test** (`seed.spec.ts`) that sets up auth/navigation
-2. **Planner** explores the app and writes `specs/*.md` test plans
-3. **Generator** converts specs into `tests/*.spec.ts` files
-4. **Healer** runs tests and auto-fixes failures
-
-This is the official Playwright approach for AI-assisted test writing. Agent definitions should be regenerated whenever Playwright is updated.
+**What still needs to happen:**
+- [x] Run `bunx playwright init-agents --loop=opencode`
+- [ ] Update `seed.spec.ts` with our auth fixture (so planner/generator start authenticated)
+- [ ] Remove `.opencode/skills/playwright-cli/` (replaced by Playwright Test Agents)
+- [ ] Update `apps/e2e/AGENTS.md` with the new agent workflow
+- [ ] Test the planner/generator/healer workflow end-to-end
+- [ ] Consider: does `opencode.json` in `apps/e2e/` get picked up by OpenCode at the repo root? May need to move or merge config.
 
 ### Playwright best practices (from official docs)
 
@@ -173,13 +177,14 @@ Key practices to encode in our AGENTS.md / skills:
 - **Mock third-party dependencies**: Use `page.route()` for external APIs
 - **Chromium-only on CI is fine**: Faster, cheaper, cross-browser is optional
 
-### What to set up
+### Remaining setup
 
-- [ ] Run `npx playwright init-agents --loop=opencode` to install official test agent definitions
-- [ ] Remove or deprecate `.opencode/skills/playwright-cli/` (redundant with agent-browser + Playwright agents)
-- [ ] Create a `seed.spec.ts` that handles auth setup for the planner/generator
-- [ ] Update `apps/e2e/AGENTS.md` with the new agent workflow and best practices
-- [ ] Upgrade `@playwright/test` to latest (currently 1.58.2) to get agent support
+- [ ] Update `seed.spec.ts` with auth fixture
+- [ ] Remove `.opencode/skills/playwright-cli/`
+- [ ] Verify `opencode.json` in `apps/e2e/` is picked up by OpenCode
+- [ ] Update `apps/e2e/AGENTS.md` with new workflow + fresh-user-per-test decision
+- [ ] Test the planner → generator → healer pipeline end-to-end
+- [ ] Upgrade `@playwright/test` if needed (currently 1.58.2, agents may need newer)
 
 ---
 
@@ -219,3 +224,29 @@ Key practices to encode in our AGENTS.md / skills:
 3. Should OAuth tests live in e2e or be integration tests in the domain package?
 4. How important is cross-browser testing? Chromium-only is much faster.
 5. Do we want to test against a real running app or mock the backend?
+
+---
+
+## Appendix: Test Data Strategy Options Considered
+
+### Zero-trace testing (cleanup after each test)
+
+Each test cleans up all data it creates via API calls.
+
+**Pros:** Can run against any environment including staging/production. No data accumulation. Forces well-defined API boundaries. Catches cascade/orphan bugs early.
+
+**Cons:** Need cleanup API endpoints for every entity (don't exist yet). More complex fixtures. Cleanup failures leave orphaned data and cause cascading test failures. Cleanup bugs are silent — one test breaks, a different test fails. "Impossible to clean up" some things (visited links, audit logs). Cleanup code is untested code that rots. Every new entity/relationship requires updating cleanup routines. Parallel test interference.
+
+**Effort:** ~2-3 hours initial (deleteUser endpoint + fixture teardown) since cascade deletes handle most entities. But ongoing maintenance for every new entity/flow.
+
+**Rejected because:** Playwright explicitly recommends against it. Martin Fowler agrees: *"With clean-up, one test will contain the bug, but another test will fail."* No major framework recommends this as primary isolation strategy.
+
+### Dedicated test database (reset per run)
+
+Separate DB for e2e, wiped/seeded before each test run.
+
+**Pros:** Clean slate every time. No cleanup code. Fastest tests.
+
+**Cons:** Can't test against production. Need DB management in CI. Different from real environment.
+
+**Rejected because:** Adds infrastructure complexity. Fresh-user-per-test achieves the same isolation with less setup.

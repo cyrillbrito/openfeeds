@@ -33,7 +33,7 @@ export class SignupPage {
   }
 
   getSignInLink() {
-    return this.page.getByRole('link', { name: 'Sign in' });
+    return this.page.getByRole('link', { name: 'Log in' });
   }
 
   getErrorAlert() {

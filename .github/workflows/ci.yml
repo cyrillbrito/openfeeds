@@ -2,11 +2,16 @@ name: CI
 
 on:
   pull_request:
-    types: [opened, synchronize, reopened]
+    types: [opened, synchronize, reopened, closed]
+
+permissions:
+  contents: write
+  pull-requests: write
 
 jobs:
   lint:
     name: Lint
+    if: github.event.action != 'closed'
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -20,3 +25,145 @@ jobs:
 
       - name: Lint
         run: bun checks
+
+  e2e:
+    name: E2E Tests
+    if: github.event.action != 'closed'
+    runs-on: ubuntu-latest
+    services:
+      # Uses Electric SQL's public Postgres image with wal_level=logical pre-configured.
+      # This avoids the need to ALTER SYSTEM + restart Postgres at runtime.
+      # See: https://github.com/electric-sql/electric/blob/main/.github/workflows/build_postgres_image.yml
+      postgres:
+        image: ghcr.io/electric-sql/electric/postgres:18-alpine-logical
+        env:
+          POSTGRES_DB: openfeeds_test
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres -d openfeeds_test"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 5
+
+      redis:
+        image: redis:7-alpine
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 5
+
+      electric:
+        image: electricsql/electric:latest
+        env:
+          DATABASE_URL: postgresql://postgres:postgres@postgres:5432/openfeeds_test?sslmode=disable
+          ELECTRIC_INSECURE: 'true'
+        ports:
+          - 3060:3000
+        options: >-
+          --health-cmd "curl -sf http://localhost:3000/v1/health || exit 1"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 10
+
+    env:
+      DATABASE_URL: postgresql://postgres:postgres@localhost:5432/openfeeds_test
+      REDIS_HOST: localhost
+      REDIS_PORT: 6379
+      BASE_URL: http://localhost:3000
+      TRUSTED_ORIGINS: http://localhost:3000
+      BETTER_AUTH_SECRET: e2e-test-secret-not-for-production-use-only
+      SIMPLE_AUTH: 'true'
+      ELECTRIC_URL: http://localhost:3060
+      CI: 'true'
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+
+      - name: Install dependencies
+        run: bun install --frozen-lockfile
+
+      - name: Install Playwright browsers
+        run: bunx playwright install chromium --with-deps
+        working-directory: apps/e2e
+
+      - name: Run migrations
+        run: bun --cwd=apps/migrator src/index.ts
+
+      - name: Build @repo/emails
+        run: bun run --cwd packages/emails build
+
+      - name: Start web server
+        run: bun --cwd=apps/web --bun vite dev --port 3000 &
+
+      - name: Wait for web server
+        run: |
+          for i in $(seq 1 30); do
+            if curl -s http://localhost:3000 > /dev/null 2>&1; then
+              echo "Web server is ready"
+              exit 0
+            fi
+            echo "Waiting for web server... ($i/30)"
+            sleep 2
+          done
+          echo "Web server failed to start"
+          exit 1
+
+      - name: Run E2E tests
+        run: bunx playwright test
+        working-directory: apps/e2e
+
+      - name: Publish report to GitHub Pages
+        if: ${{ !cancelled() }}
+        run: |
+          PR_DIR="playwright-report/pr-${{ github.event.pull_request.number }}"
+          # Clone gh-pages into a separate directory to avoid conflicts with working tree
+          git clone --single-branch --branch gh-pages "https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}.git" gh-pages-deploy
+          cd gh-pages-deploy
+          rm -rf "$PR_DIR"
+          mkdir -p "$PR_DIR"
+          cp -r "$GITHUB_WORKSPACE/apps/e2e/playwright-report/"* "$PR_DIR/"
+          git add "$PR_DIR"
+          git -c user.name="github-actions" -c user.email="github-actions@github.com" \
+            commit -m "chore: update playwright report for PR #${{ github.event.pull_request.number }}" --allow-empty
+          git push
+
+      - name: Post report comment
+        if: ${{ !cancelled() }}
+        uses: daun/playwright-report-summary@v3
+        with:
+          report-file: apps/e2e/results.json
+          comment-title: 'Playwright E2E Report'
+          report-url: 'https://cyrillbrito.github.io/openfeeds/playwright-report/pr-${{ github.event.pull_request.number }}/'
+
+  # Clean up GitHub Pages report when PR is closed/merged
+  cleanup-report:
+    name: Cleanup Report
+    if: github.event.action == 'closed'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout gh-pages
+        uses: actions/checkout@v4
+        with:
+          ref: gh-pages
+
+      - name: Remove PR report
+        run: |
+          if [ -d "playwright-report/pr-${{ github.event.pull_request.number }}" ]; then
+            rm -rf "playwright-report/pr-${{ github.event.pull_request.number }}"
+            git add -A
+            git -c user.name="github-actions" -c user.email="github-actions@github.com" \
+              commit -m "chore: remove playwright report for PR #${{ github.event.pull_request.number }}" --allow-empty
+            git push origin gh-pages
+          else
+            echo "No report found for PR #${{ github.event.pull_request.number }}, skipping"
+          fi

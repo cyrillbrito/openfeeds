@@ -21,7 +21,7 @@ export class SigninPage {
   }
 
   getSignInButton() {
-    return this.page.getByRole('button', { name: 'Sign In' });
+    return this.page.getByRole('button', { name: 'Log In' });
   }
 
   getSignUpLink() {
@@ -37,7 +37,7 @@ export class SigninPage {
   }
 
   getLoadingButton() {
-    return this.page.getByRole('button', { name: 'Signing In...' });
+    return this.page.getByRole('button', { name: 'Logging In...' });
   }
 
   // Actions

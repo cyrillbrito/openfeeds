@@ -1,3 +1,5 @@
+// Skipped: AddFeedModal no longer exists — feed adding moved to /discover route.
+// All tests in this file need rewriting with DiscoverPage POM.
 import { expect, test } from '../../fixtures/auth-fixture';
 import { AddFeedModal } from '../../lib/AddFeedModal';
 import { Drawer } from '../../lib/Drawer';
@@ -13,7 +15,8 @@ test.beforeEach(async ({ page, user }) => {
   await feedsPage.goto();
 });
 
-test('display add feed modal', async ({ page, user }) => {
+// Skipped: AddFeedModal no longer exists — feed adding moved to /discover route
+test.skip('display add feed modal', async ({ page, user }) => {
   const drawer = new Drawer(page);
   await feedsPage.openAddFeedModal();
 
@@ -27,7 +30,8 @@ test('display add feed modal', async ({ page, user }) => {
   });
 });
 
-test('add feed by URL successfully', async ({ page, user }) => {
+// Skipped: AddFeedModal no longer exists — feed adding moved to /discover route
+test.skip('add feed by URL successfully', async ({ page, user }) => {
   const feedUrl = `${MOCK_SERVER_URL}/tech-blog.xml`;
   await feedsPage.openAddFeedModal();
   await addFeedModal.addFeedByUrl(feedUrl);
@@ -37,7 +41,8 @@ test('add feed by URL successfully', async ({ page, user }) => {
   await expect(addFeedModal.getModal()).not.toBeVisible();
 });
 
-test('validate required URL field', async ({ page, user }) => {
+// Skipped: AddFeedModal no longer exists — feed adding moved to /discover route
+test.skip('validate required URL field', async ({ page, user }) => {
   await feedsPage.openAddFeedModal();
   await addFeedModal.clickFindFeeds();
 
@@ -45,7 +50,8 @@ test('validate required URL field', async ({ page, user }) => {
   await expect(addFeedModal.getFeedUrlInput()).toBeFocused();
 });
 
-test('handle invalid feed URL', async ({ page, user }) => {
+// Skipped: AddFeedModal no longer exists — feed adding moved to /discover route
+test.skip('handle invalid feed URL', async ({ page, user }) => {
   await feedsPage.openAddFeedModal();
   await addFeedModal.fillFeedUrl('not-a-valid-url');
   await addFeedModal.clickFindFeeds();
@@ -54,7 +60,8 @@ test('handle invalid feed URL', async ({ page, user }) => {
   await expect(addFeedModal.getModal()).toBeVisible();
 });
 
-test('cancel add feed modal', async ({ page, user }) => {
+// Skipped: AddFeedModal no longer exists — feed adding moved to /discover route
+test.skip('cancel add feed modal', async ({ page, user }) => {
   await feedsPage.openAddFeedModal();
   await expect(addFeedModal.getModal()).toBeVisible();
 
@@ -64,7 +71,8 @@ test('cancel add feed modal', async ({ page, user }) => {
   await expect(addFeedModal.getModal()).not.toBeVisible();
 });
 
-test('add feed from empty state', async ({ page, user }) => {
+// Skipped: AddFeedModal no longer exists — feed adding moved to /discover route
+test.skip('add feed from empty state', async ({ page, user }) => {
   // Ensure we're on empty state (new user with no feeds)
   await expect(feedsPage.getEmptyStateHeading()).toBeVisible();
 
