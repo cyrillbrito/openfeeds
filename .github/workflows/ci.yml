@@ -119,7 +119,7 @@ jobs:
           exit 1
 
       - name: Run E2E tests
-        run: bunx playwright test
+        run: bunx playwright test --update-snapshots
         working-directory: apps/e2e
 
       - name: Publish report to GitHub Pages
