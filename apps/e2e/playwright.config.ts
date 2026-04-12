@@ -38,6 +38,12 @@ export default defineConfig({
     trace: 'on-first-retry',
   },
 
+  /* CI is the source of truth for visual snapshots (linux baselines).
+   * Locally, use a loose threshold so darwin font rendering doesn't cause failures. */
+  expect: {
+    toHaveScreenshot: { maxDiffPixelRatio: process.env.CI ? 0 : 0.2 },
+  },
+
   timeout: 5000,
 
   snapshotPathTemplate: './screenshots/{testFilePath}/{arg}-{projectName}-{platform}{ext}',
