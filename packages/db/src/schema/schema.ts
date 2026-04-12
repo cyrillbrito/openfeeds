@@ -3,6 +3,7 @@ import {
   boolean,
   index,
   integer,
+  jsonb,
   pgTable,
   text,
   timestamp,
@@ -339,6 +340,35 @@ export const feedSyncLogsRelations = relations(feedSyncLogs, ({ one }) => ({
   }),
 }));
 
+/** AI chat sessions with message history */
+export const chatSessions = pgTable(
+  'chat_sessions',
+  {
+    id: uuid()
+      .default(sql`uuidv7()`)
+      .primaryKey(),
+    userId: text('user_id')
+      .notNull()
+      .references(() => user.id, { onDelete: 'cascade' }),
+    title: text('title').notNull(),
+    /** Full message history (UIMessage[] from @tanstack/ai) */
+    messages: jsonb('messages').notNull().default([]),
+    createdAt: timestamp('created_at').notNull().defaultNow(),
+    updatedAt: timestamp('updated_at')
+      .$onUpdate(() => new Date())
+      .notNull()
+      .defaultNow(),
+  },
+  (table) => [index('chat_sessions_user_id_idx').on(table.userId)],
+);
+
+export const chatSessionsRelations = relations(chatSessions, ({ one }) => ({
+  user: one(user, {
+    fields: [chatSessions.userId],
+    references: [user.id],
+  }),
+}));
+
 // Types derived from schema
 export type DbFeed = typeof feeds.$inferSelect;
 export type DbInsertFeed = typeof feeds.$inferInsert;
@@ -351,3 +381,5 @@ export type DbInsertSettings = typeof settings.$inferInsert;
 export type DbFilterRule = typeof filterRules.$inferSelect;
 export type DbFeedSyncLog = typeof feedSyncLogs.$inferSelect;
 export type DbInsertFeedSyncLog = typeof feedSyncLogs.$inferInsert;
+export type DbChatSession = typeof chatSessions.$inferSelect;
+export type DbInsertChatSession = typeof chatSessions.$inferInsert;

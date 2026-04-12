@@ -64,6 +64,13 @@
       "when": 1773514661987,
       "tag": "0008_add-user-plan-column",
       "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1775683423673,
+      "tag": "0009_add-chat-sessions",
+      "breakpoints": true
     }
   ]
 }

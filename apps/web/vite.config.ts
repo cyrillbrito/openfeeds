@@ -47,6 +47,11 @@ export default defineConfig({
   define: {
     __APP_VERSION__: JSON.stringify(rootPkg.version),
   },
+  optimizeDeps: {
+    // solid-markdown's transitive deps include CJS packages that Vite's
+    // dev server can't serve as ESM without pre-bundling.
+    include: ['debug', 'ms', 'extend', 'style-to-object', 'inline-style-parser'],
+  },
   build: {
     sourcemap: 'hidden',
   },

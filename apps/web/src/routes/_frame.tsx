@@ -1,7 +1,17 @@
-import { ClientOnly, createFileRoute, Link, Outlet, useLocation } from '@tanstack/solid-router';
-import { Compass, Inbox, Plus, Rss } from 'lucide-solid';
+import {
+  ClientOnly,
+  createFileRoute,
+  Link,
+  Outlet,
+  useLocation,
+  useNavigate,
+} from '@tanstack/solid-router';
+import { Compass, Inbox, Plus, Rss, Sparkles } from 'lucide-solid';
 import { posthog } from 'posthog-js';
-import { createEffect, For, on, onMount, Suspense } from 'solid-js';
+import { createEffect, createSignal, For, on, onCleanup, onMount, Show, Suspense } from 'solid-js';
+import { AiFab } from '~/components/chat/AiFab';
+import { AiPopover } from '~/components/chat/AiPopover';
+import { ChatProvider } from '~/components/chat/chat-context';
 import { ColorIndicator } from '~/components/ColorIndicator';
 import type { ModalController } from '~/components/LazyModal';
 import { CenterLoader, Loader } from '~/components/Loader';
@@ -21,7 +31,9 @@ export const Route = createFileRoute('/_frame')({
 
 function FrameLayout() {
   const location = useLocation();
+  const navigate = useNavigate();
   const session = authClient.useSession();
+  const [popoverOpen, setPopoverOpen] = createSignal(false);
 
   // Identify user for PostHog when session is available
   createEffect(
@@ -38,10 +50,10 @@ function FrameLayout() {
     ),
   );
 
-  // Close drawer on navigation (mobile only) - runs only on client
+  // Close sidebar drawer on navigation (mobile only) - runs only on client
   onMount(() => {
     createEffect(() => {
-      void location().pathname; // Track pathname changes
+      void location().pathname;
       const drawerCheckbox = document.getElementById('my-drawer') as HTMLInputElement;
       if (drawerCheckbox) {
         drawerCheckbox.checked = false;
@@ -49,26 +61,49 @@ function FrameLayout() {
     });
   });
 
+  // Cmd+J / Ctrl+J to toggle popover
+  onMount(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key === 'j') {
+        e.preventDefault();
+        if (window.innerWidth < 1024) {
+          void navigate({ to: '/ai' });
+          return;
+        }
+        setPopoverOpen((prev) => !prev);
+      }
+    };
+    document.addEventListener('keydown', handleKeyDown);
+    onCleanup(() => document.removeEventListener('keydown', handleKeyDown));
+  });
+
+  // Hide FAB when popover is open or on /ai route
+  const showFab = () => !popoverOpen() && !location().pathname.startsWith('/ai');
+
+  const handleFabClick = () => {
+    setPopoverOpen(true);
+  };
+
   return (
-    <>
+    <ChatProvider>
       <div class="drawer lg:drawer-open">
         <input id="my-drawer" type="checkbox" class="drawer-toggle" />
-        {/* min-h-dvh instead of min-h-screen to handle mobile browser UI (address bar) correctly on rotation */}
-        <div class="drawer-content flex min-h-dvh flex-col">
-          <ClientOnly fallback={<CenterLoader />}>
-            <Suspense fallback={<CenterLoader />}>
-              <Outlet />
-            </Suspense>
-          </ClientOnly>
+        <div class="drawer-content flex min-h-dvh">
+          {/* Main content */}
+          <div class="flex min-w-0 flex-1 flex-col">
+            <ClientOnly fallback={<CenterLoader />}>
+              <Suspense fallback={<CenterLoader />}>
+                <Outlet />
+              </Suspense>
+            </ClientOnly>
+          </div>
         </div>
 
         <div class="drawer-side z-10 shadow-sm">
           <label for="my-drawer" aria-label="close sidebar" class="drawer-overlay"></label>
-          {/* h-dvh instead of h-screen to handle mobile browser UI correctly on rotation */}
           <aside class="menu bg-base-100 border-base-300 flex h-dvh w-80 flex-col flex-nowrap border-r px-4 pt-4 pb-2">
             <ClientOnly fallback={<CenterLoader />}>
               {/* Menu Header */}
-
               <div class="mt-2 flex items-center justify-center gap-2">
                 <img src="/logo.svg" class="h-10 w-10" alt="OpenFeeds logo" />
                 <h2 class="text-lg font-bold">OpenFeeds</h2>
@@ -108,6 +143,16 @@ function FrameLayout() {
                       Feeds
                     </Link>
                   </li>
+                  <li>
+                    <Link
+                      to="/ai"
+                      class="flex items-center gap-3"
+                      activeProps={{ class: 'menu-active' }}
+                    >
+                      <Sparkles size={20} />
+                      AI Chat
+                    </Link>
+                  </li>
                 </ul>
 
                 <div class="divider"></div>
@@ -121,7 +166,15 @@ function FrameLayout() {
           </aside>
         </div>
       </div>
-    </>
+
+      {/* AI surfaces */}
+      <ClientOnly>
+        <Show when={showFab()}>
+          <AiFab onClick={handleFabClick} />
+        </Show>
+        <AiPopover open={popoverOpen()} onClose={() => setPopoverOpen(false)} />
+      </ClientOnly>
+    </ChatProvider>
   );
 }
 

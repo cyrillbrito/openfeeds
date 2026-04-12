@@ -25,6 +25,7 @@
     "oxfmt": "^0.42.0",
     "oxlint": "^1.57.0",
     "oxlint-tsgolint": "^0.18.1",
+    "remark-breaks": "^4.0.0",
     "turbo": "^2.8.21"
   },
   "packageManager": "bun@1.3.11"
