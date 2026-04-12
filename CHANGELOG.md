@@ -1,5 +1,20 @@
 # Changelog
 
+## [0.12.0](https://github.com/cyrillbrito/openfeeds/compare/v0.11.13...v0.12.0) (2026-04-12)
+
+
+### Features
+
+* **web:** improve discovery UX and persistence ([#220](https://github.com/cyrillbrito/openfeeds/issues/220)) ([a27a850](https://github.com/cyrillbrito/openfeeds/commit/a27a8503d6931309d0983244d152a39364de25f8))
+
+
+### Bug Fixes
+
+* **docker:** update postgres data volume path for v18 ([#224](https://github.com/cyrillbrito/openfeeds/issues/224)) ([67ed388](https://github.com/cyrillbrito/openfeeds/commit/67ed388038af8cfe2c0590c2ded9caf42a4a409c))
+* improve error visibility and add DB connection retry ([#227](https://github.com/cyrillbrito/openfeeds/issues/227)) ([3950cf1](https://github.com/cyrillbrito/openfeeds/commit/3950cf1b5da84d6bb968d3dd96f04d650352b3fb))
+* **web:** guard null feed tags before accessing length ([#223](https://github.com/cyrillbrito/openfeeds/issues/223)) ([eb1b572](https://github.com/cyrillbrito/openfeeds/commit/eb1b5723019cc6d5e73f602042cb3ebdfa9ffa3c))
+* **web:** prevent popovers anchoring to wrong controls ([#218](https://github.com/cyrillbrito/openfeeds/issues/218)) ([511ca8b](https://github.com/cyrillbrito/openfeeds/commit/511ca8b4001643b2b47cb7197a411a13394a9f06))
+
 ## [0.11.13](https://github.com/cyrillbrito/openfeeds/compare/v0.11.12...v0.11.13) (2026-04-03)
 
 
