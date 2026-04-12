@@ -306,9 +306,15 @@ export async function consentAndGetCode(page: Page, authorizeUrl: string) {
   await page.goto(authorizeUrl);
   await expect(page.getByRole('heading', { name: 'Authorize Application' })).toBeVisible();
   await page.getByRole('button', { name: 'Allow' }).click();
-  await page.waitForURL('**/oauth/callback**');
 
-  const result = extractCodeFromUrl(callbackUrl ?? page.url());
+  // Poll until the route handler captures the callback URL.
+  // Using waitForURL here causes net::ERR_ABORTED because the route intercept
+  // fulfills the request before Playwright's navigation lifecycle completes.
+  await expect(async () => {
+    expect(callbackUrl).toBeDefined();
+  }).toPass({ timeout: 10_000 });
+
+  const result = extractCodeFromUrl(callbackUrl!);
   return result;
 }
 
