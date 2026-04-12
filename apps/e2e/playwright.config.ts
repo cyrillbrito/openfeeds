@@ -36,6 +36,10 @@ export default defineConfig({
 
     /* Collect trace when retrying the failed test. See https://playwright.dev/docs/trace-viewer */
     trace: 'on-first-retry',
+
+    /* CI is the source of truth for visual snapshots (linux baselines).
+     * Locally, use a loose threshold so darwin font rendering doesn't cause failures. */
+    toHaveScreenshot: process.env.CI ? {} : { maxDiffPixelRatio: 0.2 },
   },
 
   timeout: 5000,
