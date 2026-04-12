@@ -1,22 +1,13 @@
 import { z } from 'zod';
 
-/** Stored message part — simplified for persistence (mirrors @tanstack/ai UIMessage structure) */
-const StoredMessagePartSchema = z.object({
-  type: z.string(),
-  content: z.string().optional(),
-  id: z.string().optional(),
-  name: z.string().optional(),
-  arguments: z.unknown().optional(),
-  state: z.string().optional(),
-  output: z.unknown().optional(),
-});
-
-const StoredMessageSchema = z.object({
-  id: z.string(),
-  role: z.enum(['user', 'assistant']),
-  parts: z.array(StoredMessagePartSchema),
-  createdAt: z.coerce.date().optional(),
-});
+/**
+ * A stored message is a ModelMessage from @tanstack/ai, persisted as-is.
+ * We use z.record(z.unknown()) to avoid coupling to the @tanstack/ai types
+ * here (this file is client-safe and @tanstack/ai types may not be available).
+ * The full ModelMessage structure is preserved in the JSON column so nothing
+ * is ever dropped on persistence.
+ */
+const StoredMessageSchema = z.record(z.string(), z.unknown());
 export type StoredMessage = z.infer<typeof StoredMessageSchema>;
 
 export const ChatSessionSchema = z.object({

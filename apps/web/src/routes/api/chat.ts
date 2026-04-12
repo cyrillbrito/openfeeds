@@ -20,11 +20,19 @@ export const Route = createFileRoute('/api/chat')({
         }
 
         const body = await request.json();
+        // sessionId is sent as a per-message body override, which the ChatClient
+        // places under body.data — fall back to top-level for forward compat.
         const { messages, context: chatContext } = body;
+        const sessionId: string | undefined = body.sessionId ?? body.data?.sessionId;
+
+        if (!sessionId || typeof sessionId !== 'string') {
+          return new Response('Missing sessionId', { status: 400 });
+        }
 
         const { createAnalyticsMiddleware } = await import('~/server/ai-analytics.server');
+        const { createPersistenceMiddleware } = await import('~/server/ai-persistence.server');
 
-        const tools = createTools(user.id, user.plan ?? 'free');
+        const tools = createTools({ id: user.id, plan: user.plan });
 
         // Build context-aware system prompt
         const contextLines: string[] = [getSystemPrompt()];
@@ -42,14 +50,21 @@ export const Route = createFileRoute('/api/chat')({
           }
         }
 
+        // Build middleware — persistence runs server-side so messages are saved
+        // even if the client closes the tab mid-stream.
+        const middleware = [
+          createAnalyticsMiddleware(user.id),
+          createPersistenceMiddleware(user.id, sessionId),
+        ];
+
         return toServerSentEventsResponse(
           chat({
-            adapter: anthropicText('claude-sonnet-4-5'),
+            adapter: anthropicText('claude-haiku-4-5'),
             systemPrompts: contextLines,
             messages,
             tools,
             maxTokens: 4096,
-            middleware: [createAnalyticsMiddleware(user.id)],
+            middleware,
           }),
         );
       },

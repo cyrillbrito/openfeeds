@@ -186,7 +186,7 @@ function ImportResultView(props: { result: ImportResult }) {
             </Show>
             <Show when={props.result.failed.length > 0}>
               <div class="flex items-center gap-1.5">
-                <TriangleAlert size={14} class="text-warning" />
+                <TriangleAlert size={14} class="text-amber-600 dark:text-amber-400" />
                 <span>{props.result.failed.length} failed</span>
               </div>
             </Show>

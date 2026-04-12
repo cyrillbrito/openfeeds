@@ -21,7 +21,7 @@ export function DefaultCatchBoundary({ error }: ErrorComponentProps) {
       <div class="hero-content text-center">
         <div class="w-full max-w-lg">
           <div class="mb-8 flex flex-col items-center gap-4">
-            <TriangleAlert class="text-warning size-16" />
+            <TriangleAlert class="size-16 text-amber-600 dark:text-amber-400" />
             <h1 class="text-base-content text-2xl font-bold">Something went wrong</h1>
           </div>
 

@@ -73,48 +73,39 @@ html {
   max-height: var(--modal-vh, 100dvh);
 }
 
-/* AI chat — prose overrides for tighter spacing in chat context */
-.ai-chat-area .prose {
-  --tw-prose-body: var(--color-base-content);
-  --tw-prose-headings: var(--color-base-content);
-  --tw-prose-links: var(--color-primary);
-  --tw-prose-code: var(--color-base-content);
-  font-size: 0.875rem;
-  line-height: 1.625;
-}
-
-.ai-chat-area .prose :first-child {
+/* AI chat — tighter spacing + inline code style (colors handled via prose-* utilities on the element) */
+.prose-chat :first-child {
   margin-top: 0;
 }
 
-.ai-chat-area .prose :last-child {
+.prose-chat :last-child {
   margin-bottom: 0;
 }
 
-.ai-chat-area .prose p {
+.prose-chat p {
   margin-top: 0.5em;
   margin-bottom: 0.5em;
 }
 
-.ai-chat-area .prose ul,
-.ai-chat-area .prose ol {
+.prose-chat ul,
+.prose-chat ol {
   margin-top: 0.375em;
   margin-bottom: 0.375em;
   padding-left: 1.25em;
 }
 
-.ai-chat-area .prose li {
+.prose-chat li {
   margin-top: 0.125em;
   margin-bottom: 0.125em;
 }
 
-.ai-chat-area .prose pre {
+.prose-chat pre {
   margin-top: 0.5em;
   margin-bottom: 0.5em;
   font-size: 0.8125rem;
 }
 
-.ai-chat-area .prose code:not(pre code) {
+.prose-chat code:not(pre code) {
   background: oklch(0.5 0 0 / 0.1);
   padding: 0.15em 0.35em;
   border-radius: 0.25rem;
@@ -122,14 +113,14 @@ html {
   font-weight: 500;
 }
 
-.ai-chat-area .prose code:not(pre code)::before,
-.ai-chat-area .prose code:not(pre code)::after {
+.prose-chat code:not(pre code)::before,
+.prose-chat code:not(pre code)::after {
   content: none;
 }
 
-.ai-chat-area .prose h1,
-.ai-chat-area .prose h2,
-.ai-chat-area .prose h3 {
+.prose-chat h1,
+.prose-chat h2,
+.prose-chat h3 {
   margin-top: 0.75em;
   margin-bottom: 0.375em;
 }

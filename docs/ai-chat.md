@@ -1,375 +1,300 @@
-# AI Chat: TanStack AI Integration Plan
+# AI Chat
 
-## Overview
-
-Add an AI assistant to OpenFeeds that can perform actions on behalf of the user — subscribe to feeds, organize tags, mark articles, etc. Uses **TanStack AI** (`@tanstack/ai`) with the **Anthropic adapter** and the SolidJS-specific `@tanstack/ai-solid` package.
-
-TanStack AI is headless (no pre-built UI). We build the chat interface ourselves using DaisyUI's [`chat` component](https://daisyui.com/components/chat/) classes.
+AI assistant integrated into OpenFeeds. Uses TanStack AI with Anthropic (Claude Sonnet) for streaming chat with tool calling. Conversations are persisted server-side and synced to clients via Electric SQL.
 
 ## Architecture
 
 ```
-┌─────────────────────────────────────┐
-│  AiChat component (SolidJS)         │
-│  useChat() hook from @tanstack/ai-solid │
-│  DaisyUI chat bubbles + input       │
-└──────────────┬──────────────────────┘
-               │ SSE stream (POST /api/ai/chat)
+┌─────────────────────────────────────────┐
+│  Frontend (SolidJS)                     │
+│  ChatProvider → ChatClient              │
+│  Popover / Full-page / FAB              │
+│  Electric SQL ← chat_sessions sync      │
+└──────────────┬──────────────────────────┘
+               │ SSE stream (POST /api/chat)
+               │ body: { messages, sessionId, context }
                ▼
-┌─────────────────────────────────────┐
-│  /api/ai/chat route handler         │
-│  TanStack Start file route          │
-│  auth via authMiddleware pattern     │
-│  chat() + anthropicText() adapter   │
-│  tools = server tool definitions    │
-└──────────────┬──────────────────────┘
+┌─────────────────────────────────────────┐
+│  /api/chat route handler                │
+│  Auth: Better Auth session cookie       │
+│  chat() + anthropicText() adapter       │
+│  Middleware: persistence + analytics     │
+│  Tools: 10 server-side tool definitions │
+└──────────────┬──────────────────────────┘
                │ tool execute() calls
                ▼
-┌─────────────────────────────────────┐
-│  @repo/domain functions (existing)  │
-│  withTransaction / createDomainContext │
-│  No changes needed                  │
-└──────────────┬──────────────────────┘
+┌─────────────────────────────────────────┐
+│  @repo/domain + @repo/db                │
+│  Write tools → withTransaction()        │
+│  Read tools → direct Drizzle queries    │
+└──────────────┬──────────────────────────┘
                ▼
-         PostgreSQL / BullMQ
+         PostgreSQL
 ```
 
-## Packages to Install
+## Packages
 
-```bash
-bun add @tanstack/ai @tanstack/ai-solid @tanstack/ai-anthropic
-```
+- `@tanstack/ai` — core chat engine, SSE streaming, tool definitions
+- `@tanstack/ai-solid` — SolidJS SSE client (`fetchServerSentEvents`)
+- `@tanstack/ai-anthropic` — Anthropic adapter (`anthropicText`)
+- `@tanstack/ai-client` — `ChatClient` class (used directly for session control)
 
-## New Files
+## API Endpoint
 
-```
-apps/web/src/
-  routes/api/ai/chat.ts          # SSE endpoint (TanStack Start route)
-  ai/
-    tools.ts                      # Tool definitions (wires to @repo/domain)
-    system-prompt.ts              # System prompt with app context
-  components/AiChat.tsx           # Chat panel UI (DaisyUI chat bubbles)
-```
+**`POST /api/chat`** — `apps/web/src/routes/api/chat.ts`
 
-Estimated: **~200-350 lines of new code**, near-zero changes to existing code.
+SSE streaming endpoint. Uses TanStack Start file route with raw request/response handlers (not `createServerFn`) because TanStack AI needs SSE control.
 
-## Server: API Route
+**Request body:**
 
-`apps/web/src/routes/api/ai/chat.ts`
-
-```ts
-import { chat, toServerSentEventsResponse } from '@tanstack/ai';
-import { anthropicText } from '@tanstack/ai-anthropic';
-import { createFileRoute } from '@tanstack/solid-router';
-import { tools } from '~/ai/tools';
-import { SYSTEM_PROMPT } from '~/ai/system-prompt';
-
-export const Route = createFileRoute('/api/ai/chat')({
-  server: {
-    handlers: {
-      POST: async ({ request }) => {
-        // Dynamic import for server-only deps (import-protection)
-        const { auth } = await import('~/server/auth.server');
-        const session = await auth.api.getSession({ headers: request.headers });
-        if (!session?.user) {
-          return new Response('Unauthorized', { status: 401 });
-        }
-
-        const { messages } = await request.json();
-
-        // Build tools bound to this user's context
-        const userTools = tools(session.user.id, session.user.plan ?? 'free');
-
-        return toServerSentEventsResponse(
-          chat({
-            adapter: anthropicText(),
-            model: 'claude-sonnet-4-20250514',
-            systemPrompts: [SYSTEM_PROMPT],
-            messages,
-            tools: userTools,
-          }),
-        );
-      },
-    },
-  },
-});
-```
-
-> **Note:** This uses the API route pattern (not `createServerFn`) because TanStack AI needs raw request/response control for SSE streaming.
-
-## Server: Tool Definitions
-
-`apps/web/src/ai/tools.ts`
-
-Tools are defined with `toolDefinition()` from `@tanstack/ai`. Each tool has a Zod schema for input/output and a `.server()` execute function that calls existing `@repo/domain` functions.
-
-```ts
-import { toolDefinition } from '@tanstack/ai';
-import { z } from 'zod';
-
-// Factory: returns tools bound to the authenticated user
-export function tools(userId: string, plan: string) {
-  const discoverFeeds = toolDefinition({
-    name: 'discover_feeds',
-    description: 'Find RSS/Atom feeds at a given URL. Use when the user wants to subscribe to a website.',
-    inputSchema: z.object({ url: z.string().url() }),
-    outputSchema: z.object({
-      feeds: z.array(z.object({ url: z.string(), title: z.string().optional() })),
-    }),
-  }).server(async ({ url }) => {
-    const { discoverRssFeeds } = await import('@repo/domain');
-    const result = await discoverRssFeeds(url);
-    return { feeds: result.feeds };
-  });
-
-  const followFeed = toolDefinition({
-    name: 'follow_feed',
-    description: 'Subscribe to an RSS feed. Optionally assign tags. Use after discover_feeds.',
-    inputSchema: z.object({
-      feedUrl: z.string().url(),
-      tagNames: z.array(z.string()).optional(),
-    }),
-    outputSchema: z.object({ success: z.boolean() }),
-  }).server(async ({ feedUrl, tagNames }) => {
-    const { followFeedsWithTags } = await import('@repo/domain');
-    const { db } = await import('@repo/db');
-    const { withTransaction } = await import('@repo/domain');
-    await withTransaction(db, userId, plan, async (ctx) => {
-      await followFeedsWithTags(ctx, {
-        feeds: [{ url: feedUrl }],
-        tags: tagNames?.map((name) => ({ name })) ?? [],
-      });
-    });
-    return { success: true };
-  });
-
-  const markArticlesRead = toolDefinition({
-    name: 'mark_articles_read',
-    description: 'Mark articles as read or unread.',
-    inputSchema: z.object({
-      articleIds: z.array(z.string()),
-      isRead: z.boolean(),
-    }),
-    outputSchema: z.object({ count: z.number() }),
-  }).server(async ({ articleIds, isRead }) => {
-    const { updateArticles } = await import('@repo/domain');
-    const { db } = await import('@repo/db');
-    const { withTransaction } = await import('@repo/domain');
-    await withTransaction(db, userId, plan, async (ctx) => {
-      await updateArticles(ctx, articleIds.map((id) => ({ id, isRead })));
-    });
-    return { count: articleIds.length };
-  });
-
-  // ... more tools
-
-  return [discoverFeeds, followFeed, markArticlesRead];
-}
-```
-
-### Proposed Initial Tools
-
-| Tool | Domain function | Purpose |
+| Field | Type | Description |
 |---|---|---|
-| `discover_feeds` | `discoverRssFeeds(url)` | Find feeds at a URL |
-| `follow_feed` | `followFeedsWithTags(ctx, data)` | Subscribe + tag |
-| `unfollow_feeds` | `deleteFeeds(ctx, ids)` | Unsubscribe |
-| `create_tags` | `createTags(ctx, data)` | Create new tags |
-| `tag_feeds` | `createFeedTags(ctx, data)` | Assign tags to feeds |
-| `mark_articles_read` | `updateArticles(ctx, data)` | Mark read/unread |
-| `save_article` | `createArticles(ctx, [{url}])` | Save from URL |
-| `get_usage` | `getUserUsage(userId, plan)` | Check plan limits |
-| `create_filter_rule` | `createFilterRules(ctx, data)` | Auto-read rules |
+| `messages` | `ModelMessage[]` | Conversation history |
+| `sessionId` | `string` | UUID for the conversation session |
+| `context` | `object?` | Current page context (feed, article, route) |
 
-## Client: Chat UI
+**Auth:** `authRequestMiddleware` — reads Better Auth session from request headers. Returns 401 if unauthenticated.
 
-`apps/web/src/components/AiChat.tsx`
+**Env guard:** Returns 503 if `ANTHROPIC_API_KEY` is not configured.
 
-DaisyUI has a built-in [`chat` component](https://daisyui.com/components/chat/) with `chat-start`, `chat-end`, `chat-bubble`, `chat-header`, `chat-footer` classes. This covers bubbles, alignment, colors, and avatars — no custom CSS needed for the basic layout.
+**Model:** `anthropicText('claude-sonnet-4-5')`, max 4096 tokens.
 
-```tsx
-import { createSignal, For, Show } from 'solid-js';
-import { useChat, fetchServerSentEvents } from '@tanstack/ai-solid';
+**Context injection:** The base system prompt is extended with per-request page context (which feed/article the user is currently viewing). This lets the AI understand "this feed" or "this article" references.
 
-export function AiChat() {
-  const [input, setInput] = createSignal('');
+**Middleware pipeline:** Two `ChatMiddleware` instances are attached to every `chat()` call:
 
-  const { messages, sendMessage, isLoading } = useChat({
-    connection: fetchServerSentEvents('/api/ai/chat'),
-  });
+1. **Persistence middleware** (`ai-persistence.server.ts`) — saves conversation on finish/error/abort
+2. **Analytics middleware** (`ai-analytics.server.ts`) — captures PostHog `$ai_generation` events
 
-  const handleSubmit = (e: Event) => {
-    e.preventDefault();
-    const text = input().trim();
-    if (text && !isLoading()) {
-      sendMessage(text);
-      setInput('');
-    }
-  };
+Both use `ctx.defer()` so they never block the SSE stream.
 
-  return (
-    <div class="flex flex-col h-full">
-      {/* Messages */}
-      <div class="flex-1 overflow-y-auto p-4 space-y-2">
-        <For each={messages()}>
-          {(message) => (
-            <div class={`chat ${message.role === 'user' ? 'chat-end' : 'chat-start'}`}>
-              <div class="chat-header">{message.role === 'user' ? 'You' : 'AI'}</div>
-              <div class={`chat-bubble ${message.role === 'assistant' ? 'chat-bubble-primary' : ''}`}>
-                <For each={message.parts}>
-                  {(part) => (
-                    <Show when={part.type === 'text'}>{part.content}</Show>
-                    {/* Tool call states — see section below */}
-                  )}
-                </For>
-              </div>
-            </div>
-          )}
-        </For>
-        <Show when={isLoading()}>
-          <div class="chat chat-start">
-            <div class="chat-bubble chat-bubble-primary">
-              <span class="loading loading-dots loading-sm" />
-            </div>
-          </div>
-        </Show>
-      </div>
+## Server-Side Persistence
 
-      {/* Input */}
-      <form onSubmit={handleSubmit} class="p-4 border-t border-base-300">
-        <div class="flex gap-2">
-          <input
-            type="text"
-            class="input input-bordered flex-1"
-            placeholder="Ask me anything..."
-            value={input()}
-            onInput={(e) => setInput(e.currentTarget.value)}
-            disabled={isLoading()}
-          />
-          <button type="submit" class="btn btn-primary" disabled={isLoading()}>
-            Send
-          </button>
-        </div>
-      </form>
-    </div>
-  );
-}
-```
+**File:** `apps/web/src/server/ai-persistence.server.ts`
 
-### Tool Call Display States
+Messages are saved to the database **on the server**, not the client. The persistence middleware hooks into three lifecycle events:
 
-TanStack AI streams tool call lifecycle states. Each tool call part has a `state`:
+- `onFinish` — normal completion, saves full message array
+- `onError` — saves partial conversation (what was received before the error)
+- `onAbort` — saves partial conversation (user cancelled)
 
-| State | Meaning | UI suggestion |
+Saves via `withTransaction` → `saveChatSession(ctx, { id, title, messages })`. Title is derived from the first user message (truncated to 80 chars).
+
+The server is the **single source of truth**. The client sees persisted sessions only after Electric SQL syncs the change back.
+
+## Analytics
+
+**File:** `apps/web/src/server/ai-analytics.server.ts`
+
+Captures PostHog `$ai_generation` events with:
+
+- Model, provider, latency
+- Input/output message counts, token usage (prompt + completion)
+- Tool calls: name, duration, success/failure
+- Finish reason, errors
+
+Collected via `onAfterToolCall` (per-tool metrics) and fired on `onFinish` or `onError`.
+
+## Tools
+
+**File:** `apps/web/src/server/ai-tools.server.ts`
+
+`createTools(userId, plan)` — factory returning tools scoped to the authenticated user. Each tool uses `toolDefinition().server()` from `@tanstack/ai` with Zod input schemas.
+
+### Write Tools (use `withTransaction`)
+
+| Tool | Purpose | Domain function |
 |---|---|---|
-| `awaiting-input` | LLM started a tool call | Show spinner + tool name |
-| `input-streaming` | Arguments streaming in | Show tool name + "preparing..." |
-| `input-complete` | Arguments ready, executing | Show tool name + "running..." |
-| (has `output`) | Execution finished | Show success/result badge |
+| `follow_feeds` | Subscribe to feeds, optionally with tags | `followFeedsWithTags` |
+| `unfollow_feeds` | Unsubscribe (requires confirmation) | `deleteFeeds` |
+| `update_articles` | Mark read/unread, archive/unarchive | `updateArticles` |
+| `manage_tags` | Create, rename, delete tags | `createTags`, `updateTags`, `deleteTags` |
+| `manage_feed_tags` | Assign/remove tags on feeds | `createFeedTags`, `deleteFeedTags` |
 
-```tsx
-function ToolCallBubble(props: { part: ToolCallPart }) {
-  return (
-    <div class="flex items-center gap-2 text-sm opacity-70">
-      <Show when={!props.part.output}>
-        <span class="loading loading-spinner loading-xs" />
-      </Show>
-      <Show when={props.part.output}>
-        <span class="badge badge-success badge-xs">done</span>
-      </Show>
-      <span>{props.part.name}</span>
-    </div>
-  );
-}
-```
+### Read Tools (direct Drizzle queries)
 
-## Where to Place the Chat Panel
+| Tool | Purpose | Notes |
+|---|---|---|
+| `discover_feeds` | Find RSS/Atom feeds at a URL | Uses `discoverRssFeeds` from `@repo/domain` |
+| `list_feeds` | Query user's feeds | Optional search filter |
+| `list_articles` | Query articles with filtering + pagination | Selective `fields` param, HTML stripping, description truncation |
+| `list_tags` | List all user tags | — |
+| `get_usage` | Check plan limits and usage | Uses `getUserUsage` |
 
-Options to decide:
-
-1. **Drawer/sidebar** — slide-in panel from the right (like a support chat). Uses DaisyUI `drawer` component. Non-intrusive.
-2. **Modal** — full-screen or large modal. Follows existing `LazyModal` pattern.
-3. **Dedicated page** — `/ai` route. Simplest to build but least integrated.
-4. **Floating button + popover** — FAB in the corner that expands into a chat panel.
-
-> **Question:** Which approach fits the app's UX best? Option 1 (drawer) feels most natural for an assistant that operates alongside the feed reader.
+`list_articles` is the most sophisticated — it accepts a `fields` parameter so the AI can request only needed columns, strips HTML from descriptions, and truncates based on batch size to manage token usage.
 
 ## System Prompt
 
-`apps/web/src/ai/system-prompt.ts`
+**File:** `apps/web/src/server/ai-system-prompt.server.ts`
 
-The system prompt tells the AI what it can do and gives it context about the app:
+`getSystemPrompt()` returns a dynamic string (injects today's date). Key directives:
 
-```ts
-export const SYSTEM_PROMPT = `You are an AI assistant for OpenFeeds, an RSS reader application.
-You can help users manage their feeds, articles, and tags.
+- Identity and capabilities overview
+- Context awareness: use per-message page context to resolve "this feed" / "this article"
+- Data guidance: use `fields` parameter on `list_articles`, max 2 pagination rounds, prefer date ranges
+- Response style: concise, markdown, brief confirmations after tool calls
+- Links: in-app routes only (`/feeds/:id`, `/articles/:id`, etc.), never external URLs
+- Scope: OpenFeeds assistant only — decline unrelated questions (exception: questions about the article being viewed)
+- Safety: confirm destructive actions, never fabricate URLs
 
-Available actions:
-- Discover and subscribe to RSS feeds from URLs
-- Organize feeds with tags
-- Mark articles as read/unread
-- Save articles from URLs
-- Create filter rules to auto-mark articles
-- Check usage and plan limits
+## Database
 
-Guidelines:
-- When the user asks to subscribe to a feed, first use discover_feeds, then confirm which feed to follow.
-- Be concise — this is a chat panel, not a document.
-- If a tool call fails, explain the error clearly and suggest alternatives.
-- Never fabricate feed URLs or article content.
-`;
+### Schema
+
+**Table:** `chat_sessions` — `packages/db/src/schema/schema.ts`
+
+| Column | Type | Notes |
+|---|---|---|
+| `id` | `uuid` | PK, UUIDv7 default |
+| `user_id` | `text` | FK → `user.id`, ON DELETE CASCADE, indexed |
+| `title` | `text` | Not null |
+| `messages` | `jsonb` | Full `ModelMessage[]` array, default `[]` |
+| `created_at` | `timestamp` | Default now |
+| `updated_at` | `timestamp` | Auto-updated via `$onUpdate` |
+
+Messages are stored as a single JSONB blob per session — no separate messages table. This simplifies sync and avoids per-message row overhead.
+
+### Domain Layer
+
+**File:** `packages/domain/src/entities/chat-session.ts`
+
+- `saveChatSession(ctx, data)` — upsert (INSERT ... ON CONFLICT DO UPDATE)
+- `deleteChatSession(ctx, id)` — delete, user-scoped
+
+**File:** `packages/domain/src/entities/chat-session.schema.ts`
+
+Client-safe schemas (exported from `@repo/domain/client`):
+
+- `ChatSessionSchema` — full session with messages
+- `ChatSessionSummarySchema` — session without messages (for listing)
+- `SaveChatSessionSchema` — upsert input
+- `StoredMessage` — `z.record(z.string(), z.unknown())` (loose typing, avoids coupling to `@tanstack/ai` wire format)
+
+### Electric SQL Collection
+
+**File:** `apps/web/src/entities/chat-sessions.ts`
+
+`chatSessionsCollection` — Electric collection with:
+
+- Shape: `/api/shapes/chat-sessions` (auth-protected, filtered by `user_id`)
+- Custom JSONB parser (Electric sends JSONB as raw strings)
+- `snakeCamelMapper()` for column names
+- `onDelete` → calls `$$deleteChatSession` server function
+- No `onInsert`/`onUpdate` — persistence is server-side; Electric syncs back automatically
+
+### Server Functions
+
+**File:** `apps/web/src/entities/chat-sessions.functions.ts`
+
+- `$$saveChatSession` — upsert via `createServerFn` (used by client for explicit saves if needed)
+- `$$deleteChatSession` — delete via `createServerFn` (called by collection's `onDelete`)
+
+## Frontend
+
+### Component Structure
+
+```
+apps/web/src/components/chat/
+  chat-context.tsx         # ChatProvider — central state, ChatClient, session management
+  ChatPage.tsx             # Full-page view at /ai and /ai/$sessionId
+  ChatMessages.tsx         # Message rendering (markdown, tool calls, errors)
+  ChatInput.tsx            # Auto-resizing textarea, send/stop buttons
+  AiFab.tsx                # Floating action button (bottom-right)
+  AiPopover.tsx            # Desktop popover panel (fixed, 28rem × 65vh)
+  ChatTitleSwitcher.tsx    # Dropdown trigger showing current chat title
+  ConversationSwitcher.tsx # Session list grouped by time period
+  chat-utils.ts            # deriveTitle, storedToUi, groupByTimePeriod
 ```
 
-## Env Changes
+### ChatProvider
 
-`apps/web/src/env.ts` — add:
+**File:** `apps/web/src/components/chat/chat-context.tsx`
 
-```ts
-ANTHROPIC_API_KEY: z.string().min(1),
-```
+Wraps the entire `_frame` layout (single instance). Uses `ChatClient` directly (not `useChat`) to support per-message `sessionId` body overrides for session switching.
 
-## Open Questions
+**Key state:**
 
-### Architecture
+- `viewSessionId` — which session the UI displays
+- `streamSessionId` — which session owns the active SSE stream
+- Allows viewing a past session while a stream runs in the background
 
-- **Auth in the SSE endpoint:** The example above does manual session checking. Should this use a shared auth helper, or is the raw `auth.api.getSession()` pattern fine for API routes?
-- **Rate limiting:** AI calls are expensive. Need per-user rate limiting. Where? Middleware in the route? A domain-level check? A separate rate limit service?
-- **Plan gating:** Should AI chat be free-tier or pro-only? If pro-only, where to enforce — route-level or show a disabled state in the UI?
-- **Conversation persistence:** TanStack AI's `useChat` is ephemeral (in-memory). Should conversations be persisted to the database? If yes, that's a new entity (conversations + messages tables). Could be a v2 feature.
-- **Streaming vs. batched tool calls:** TanStack AI supports parallel tool calls (LLM can call multiple tools at once). The tool factory pattern above handles this, but the UI needs to render multiple in-flight tool calls simultaneously.
+**Message display logic:**
 
-### Tools & Data Access
+- If viewing the streaming session → live `streamMessages` from ChatClient
+- If viewing a different session → `viewedMessages` from Electric SQL sync (`useLiveQuery`)
 
-- **Read tools need new domain functions.** Currently, lists of feeds/articles/tags are synced to the client via Electric SQL — there are no server-side `listFeeds(userId)` or `searchArticles(userId, query)` functions. For the AI to answer "what feeds am I subscribed to?" or "show me unread articles about AI", we need to either:
-  1. Add read/query functions to `@repo/domain` (preferred — keeps domain as single source of truth)
-  2. Query `@repo/db` directly in tool execute functions (faster to build, bypasses domain)
-  3. Use client-side tools that query TanStack DB collections (avoids server roundtrip but moves logic to client)
-- **Tool context pattern:** The factory function `tools(userId, plan)` closes over user info. Is there a cleaner pattern? Could use a middleware-like approach or a context object.
-- **Which tools first?** The table above lists 9 tools. For MVP, probably just: `discover_feeds`, `follow_feed`, `mark_articles_read`, `get_usage`. Expand from there.
-- **Tool error handling:** Domain functions throw typed errors (see `docs/error-handling.md`). How should these surface in the chat? Catch and return a friendly message? Let TanStack AI handle the error?
+**Key methods:**
 
-### Frontend
+- `sendMessage(text)` — restores history into ChatClient buffer if switching sessions, sends with `sessionId` body override
+- `stop()` — abort the current stream
+- `loadSession(id)` — switch view, reactive query populates messages from Electric
+- `deleteSession(id)` — optimistic delete via collection, starts new chat if deleting current
+- `startNewChat()` — new UUID, clear messages, reset stream buffer if idle
 
-- **No pre-built chat UI exists for SolidJS.** We have to build it. DaisyUI `chat` classes cover the bubble layout (alignment, colors, avatars, headers/footers). What we still need to build manually:
-  - Scrolling container with auto-scroll to bottom
-  - Tool call progress indicators (spinner/badge inline in bubbles)
-  - Markdown rendering in assistant messages (we already have `@tailwindcss/typography` — use `prose` class)
-  - Keyboard shortcuts (Enter to send, Shift+Enter for newline)
-  - Chat panel open/close state
-  - Empty state ("Ask me anything about your feeds")
-- **Panel placement:** Drawer vs. modal vs. floating? See options above.
-- **Mobile:** A drawer sidebar works on desktop but may need full-screen on mobile.
+### Surfaces
 
-### Cost & Operations
+**Popover** (`AiPopover.tsx`) — desktop floating panel, bottom-right. Backdrop scrim, title bar with conversation switcher + expand/close controls. CSS transitions.
 
-- **Token costs:** Claude Sonnet with tool calling. Each conversation could be 1-5k tokens. At scale, this adds up. Need monitoring.
-- **Anthropic API key management:** Single shared key? Per-user keys? (Almost certainly single shared key.)
-- **Error states:** What happens when Anthropic is down? Rate limited? Show a toast? Disable the chat?
-- **Logging/observability:** Log conversations for debugging? Privacy implications?
+**Full page** (`ChatPage.tsx`) — at `/ai` and `/ai/$sessionId`. Centered column, syncs URL ↔ session ID bidirectionally. Header with conversation switcher + new chat button.
 
-### Relationship to Existing MCP Endpoint
+**FAB** (`AiFab.tsx`) — fixed bottom-right button. Mobile: navigates to `/ai`. Desktop: opens popover. Shows keyboard shortcut tooltip.
 
-The project already has an MCP endpoint at `/api/mcp/` (OAuth 2.1, external clients). The AI chat is a **separate, internal** feature:
+### Message Rendering
+
+- **User messages:** right-aligned primary-colored bubbles
+- **AI messages:** full-width prose (no bubble), markdown via `solid-markdown` + `remark-gfm` + `remark-breaks`
+- **Tool calls:** inline indicators — spinner while running, checkmark when done, human-readable name
+- **Errors:** parses Anthropic error JSON, friendly messages for 429/413/5xx
+- **Empty responses:** detects empty assistant messages, suggests rephrasing
+
+### Routes
+
+- `/_frame/ai` → `ChatPage` (auth-guarded via `_frame` layout)
+- `/_frame/ai_/$sessionId` → `ChatPage` with specific session
+
+### Frame Integration
+
+**File:** `apps/web/src/routes/_frame.tsx`
+
+- `<ChatProvider>` wraps all frame children
+- Keyboard shortcut: `Cmd+J` / `Ctrl+J` toggles popover (desktop) or navigates to `/ai` (mobile)
+- `<AiFab>` visible when popover is closed and not on `/ai` route
+- `<AiPopover>` always rendered (visibility toggled)
+- Sidebar nav includes "AI Chat" link with sparkles icon
+
+## Data Flow
+
+### Sending a Message
+
+1. User types in `ChatInput` → `sendMessage(text)` on context
+2. `ChatProvider` restores history into ChatClient buffer if needed, sets `streamSessionId`
+3. `ChatClient` POSTs to `/api/chat` with `{ messages, sessionId, context }`
+4. Server authenticates via Better Auth session cookie
+5. Server builds context-aware system prompt (base + page context)
+6. `chat()` streams via `anthropicText('claude-sonnet-4-5')` with tools + middlewares
+7. Tool calls execute against `@repo/domain` / `@repo/db`
+8. SSE events stream back → `ChatClient.onMessagesChange` → `streamMessages` signal → UI re-renders
+9. On finish/error/abort: persistence middleware saves full `ModelMessage[]` to `chat_sessions` (deferred)
+10. Analytics middleware captures PostHog event (deferred)
+11. Electric SQL detects DB change → syncs updated `chat_sessions` row to client
+12. If viewing a different session, `useLiveQuery` updates `viewedMessages` reactively
+
+### Loading a Past Session
+
+1. User clicks session in `ConversationSwitcher` → `loadSession(id)`
+2. `viewSessionId` updates → `useLiveQuery` re-filters for new session
+3. Electric collection already has the data → `viewedMessages` populates
+4. `messages()` memo returns `viewedMessages` (since view !== stream session)
+
+### Deleting a Session
+
+1. `deleteSession(id)` → `chatSessionsCollection.delete(id)` (optimistic)
+2. Collection `onDelete` → `$$deleteChatSession` server function → `domain.deleteChatSession`
+3. Electric syncs deletion to all connected clients
+
+## MCP vs AI Chat
+
+The project has a separate MCP endpoint at `/api/mcp/` for external clients. AI chat is an **internal** feature:
 
 | | MCP endpoint | AI chat |
 |---|---|---|
@@ -378,15 +303,68 @@ The project already has an MCP endpoint at `/api/mcp/` (OAuth 2.1, external clie
 | Protocol | MCP SDK (JSON-RPC) | TanStack AI (SSE) |
 | Tools | MCP `registerTool()` | TanStack AI `toolDefinition()` |
 
-The tool definitions could share schemas/logic, but the wiring is different. Consider extracting shared tool schemas to `apps/web/src/ai/shared-tools.ts` if both endpoints grow.
+## Future Ideas
 
-## Implementation Order
+### Right Panel Layout
 
-1. Install packages, add `ANTHROPIC_API_KEY` to env
-2. Create `/api/ai/chat` route with 1-2 tools (discover + follow)
-3. Build minimal chat component with DaisyUI bubbles
-4. Add tool call state display
-5. Add more tools incrementally
-6. Polish UI (markdown, auto-scroll, keyboard shortcuts)
-7. Add rate limiting and plan gating
-8. Consider conversation persistence (v2)
+Side-by-side layout where AI panel sits to the right of the main content. Similar to Google Docs Gemini panel.
+
+**When it could work:** Content area is narrow by design, so a right panel wouldn't steal too much space. Good for "ask about this article" contextual queries.
+
+**When it doesn't work:** On narrower viewports (<~1200px), panel compresses main content too much.
+
+**Trigger:** AI icon in top-right of app header. Toggles panel open/closed.
+
+**Decision:** Ship both popover and right-panel behind a setting or test both. They share the same chat component — the difference is only the container.
+
+**Implementation:**
+
+- [ ] AI icon in app header/toolbar
+- [ ] Resizable right panel container
+- [ ] Panel toggle state (persisted in local storage)
+- [ ] Responsive: auto-collapse below breakpoint
+- [ ] Article context injection — "ask about this article" prefills context
+
+### Smart UI Widgets
+
+Interactive cards rendered by AI inside the chat — e.g., a feed subscription card with a "Subscribe" button, an article list with inline actions. Instead of the AI returning plain text describing feeds, it renders actionable UI.
+
+### Reference System
+
+`@mention` articles, feeds, tags in prompts. Autocomplete dropdown when typing `@`. Mentioned entities get injected into the message context for the AI.
+
+### Contextual Awareness Improvements
+
+AI knows what page/article the user is currently viewing (basic version exists via `context` field). Future: deeper awareness — selected text, scroll position, currently visible articles, recent navigation history.
+
+### Code Mode for Digest Queries
+
+For prompts like "give me a digest of the last month", the current approach dumps article data into context, causing token overflow. TanStack AI's [Code Mode](https://tanstack.com/blog/tanstack-ai-code-mode) could solve this: the model writes TypeScript that runs in a sandbox — fetching only relevant fields, filtering by date, aggregating in JS. Only the final result enters the context window.
+
+**Fits OpenFeeds well for:**
+
+- Digest/summary queries over large date ranges
+- Feed analytics (article counts, read ratios, most active feeds)
+- "What topics did I read most?" — parallel fetches + `.reduce()` in sandbox
+- Skills: digest logic persists as reusable programs
+
+**Blocked on:** `@tanstack/ai` is still alpha. Revisit when stable.
+
+### Voice Input
+
+Mobile voice input for sending messages. Useful on the full-page `/ai` view.
+
+### Streaming Markdown Rendering
+
+Progressive markdown rendering during streaming (render partial markdown as it arrives, not after complete). Current implementation renders complete messages with `solid-markdown`.
+
+### Message Feedback
+
+Thumbs up/down on AI responses. Could inform prompt tuning or model selection.
+
+### Design References
+
+- **Linear:** Popover with minimize/expand/close, conversation tabs
+- **Notion:** FAB trigger, conversation switcher grouped by time
+- **Google Docs:** Right-panel Gemini, full-width AI response, header icon trigger
+- **PostHog:** Top-right AI icon triggering side panel

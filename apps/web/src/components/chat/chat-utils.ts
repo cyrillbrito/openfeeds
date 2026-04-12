@@ -1,5 +1,6 @@
 import type { StoredMessage } from '@repo/domain/client';
 import type { UIMessage } from '@tanstack/ai';
+import { modelMessagesToUIMessages } from '@tanstack/ai';
 
 /** Derive a title from the first user message */
 export function deriveTitle(msgs: UIMessage[]): string {
@@ -13,32 +14,15 @@ export function deriveTitle(msgs: UIMessage[]): string {
   return text.length > 80 ? `${text.slice(0, 77)}...` : text;
 }
 
-/** Convert UIMessage to StoredMessage for persistence */
-export function uiToStored(msg: UIMessage): StoredMessage {
-  return {
-    id: msg.id,
-    role: msg.role as 'user' | 'assistant',
-    parts: msg.parts.map((p) => {
-      const part: StoredMessage['parts'][number] = { type: p.type };
-      if ('content' in p) part.content = (p as { content: string }).content;
-      if ('id' in p) part.id = (p as { id: string }).id;
-      if ('name' in p) part.name = (p as { name: string }).name;
-      if ('arguments' in p) part.arguments = (p as { arguments: unknown }).arguments;
-      if ('state' in p) part.state = (p as { state: string }).state;
-      if ('output' in p) part.output = (p as { output: unknown }).output;
-      return part;
-    }),
-  };
-}
-
-/** Convert StoredMessage back to UIMessage for useChat */
-export function storedToUi(msg: StoredMessage): UIMessage {
-  return {
-    id: msg.id,
-    role: msg.role,
-    parts: msg.parts as UIMessage['parts'],
-    createdAt: msg.createdAt ?? new Date(),
-  };
+/**
+ * Convert stored ModelMessage[] back to UIMessage[] for rendering.
+ * Uses modelMessagesToUIMessages so tool-result messages are correctly merged
+ * into the preceding assistant message's parts array.
+ */
+export function storedToUi(msgs: StoredMessage[]): UIMessage[] {
+  return modelMessagesToUIMessages(
+    msgs as unknown as Parameters<typeof modelMessagesToUIMessages>[0],
+  );
 }
 
 /** Group chat sessions by time period */

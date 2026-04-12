@@ -1,11 +1,16 @@
 import { toolDefinition } from '@tanstack/ai';
 import { z } from 'zod';
 
+interface AiUser {
+  id: string;
+  plan: string | null | undefined;
+}
+
 /**
  * Creates AI chat tools scoped to a specific user.
  * All tool handlers use dynamic imports to keep server deps lazy.
  */
-export function createTools(userId: string, plan: string | null | undefined) {
+export function createTools(user: AiUser) {
   // -------------------------------------------------------------------------
   // discover_feeds — find feeds at a URL
   // -------------------------------------------------------------------------
@@ -76,7 +81,7 @@ export function createTools(userId: string, plan: string | null | undefined) {
       })),
     );
 
-    await withTransaction(db, userId, plan, async (ctx) => {
+    await withTransaction(db, user.id, user.plan, async (ctx) => {
       await followFeedsWithTags(ctx, { feeds: feedData, newTags, feedTags });
     });
 
@@ -100,7 +105,7 @@ export function createTools(userId: string, plan: string | null | undefined) {
     const { db } = await import('@repo/db');
     const { deleteFeeds, withTransaction } = await import('@repo/domain');
 
-    await withTransaction(db, userId, plan, async (ctx) => {
+    await withTransaction(db, user.id, user.plan, async (ctx) => {
       await deleteFeeds(ctx, feedIds);
     });
 
@@ -125,7 +130,7 @@ export function createTools(userId: string, plan: string | null | undefined) {
     const { db } = await import('@repo/db');
     const { updateArticles: domainUpdateArticles, withTransaction } = await import('@repo/domain');
 
-    await withTransaction(db, userId, plan, async (ctx) => {
+    await withTransaction(db, user.id, user.plan, async (ctx) => {
       await domainUpdateArticles(
         ctx,
         articleIds.map((id) => ({ id, ...changes })),
@@ -178,7 +183,7 @@ export function createTools(userId: string, plan: string | null | undefined) {
     const domain = await import('@repo/domain');
     const { withTransaction } = domain;
 
-    await withTransaction(db, userId, plan, async (ctx) => {
+    await withTransaction(db, user.id, user.plan, async (ctx) => {
       switch (action) {
         case 'create':
           await domain.createTags(
@@ -226,7 +231,7 @@ export function createTools(userId: string, plan: string | null | undefined) {
     const { withTransaction } = domain;
     const { createId } = await import('@repo/shared/utils');
 
-    await withTransaction(db, userId, plan, async (ctx) => {
+    await withTransaction(db, user.id, user.plan, async (ctx) => {
       if (action === 'assign') {
         await domain.createFeedTags(
           ctx,
@@ -242,7 +247,7 @@ export function createTools(userId: string, plan: string | null | undefined) {
           .from(feedTagsTable)
           .where(
             and(
-              eq(feedTagsTable.userId, userId),
+              eq(feedTagsTable.userId, user.id),
               inArray(
                 feedTagsTable.feedId,
                 assignments.map((a) => a.feedId),
@@ -276,7 +281,7 @@ export function createTools(userId: string, plan: string | null | undefined) {
     inputSchema: z.object({}),
   }).server(async () => {
     const { getUserUsage } = await import('@repo/domain');
-    return await getUserUsage(userId, plan);
+    return await getUserUsage(user.id, user.plan);
   });
 
   // -------------------------------------------------------------------------
@@ -298,7 +303,7 @@ export function createTools(userId: string, plan: string | null | undefined) {
     const { db, feeds } = await import('@repo/db');
     const { eq, ilike, and, or, asc } = await import('drizzle-orm');
 
-    const conditions = [eq(feeds.userId, userId)];
+    const conditions = [eq(feeds.userId, user.id)];
 
     if (search) {
       const pattern = `%${search}%`;
@@ -387,7 +392,7 @@ export function createTools(userId: string, plan: string | null | undefined) {
       const { db, articles, feeds } = await import('@repo/db');
       const { eq, and, ilike, desc, gte, lte, count } = await import('drizzle-orm');
 
-      const conditions = [eq(articles.userId, userId)];
+      const conditions = [eq(articles.userId, user.id)];
 
       if (feedId) {
         conditions.push(eq(articles.feedId, feedId));
@@ -515,7 +520,7 @@ export function createTools(userId: string, plan: string | null | undefined) {
         order: tags.order,
       })
       .from(tags)
-      .where(eq(tags.userId, userId))
+      .where(eq(tags.userId, user.id))
       .orderBy(asc(tags.order));
 
     return { tags: rows, count: rows.length };

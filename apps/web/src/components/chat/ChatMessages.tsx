@@ -72,7 +72,7 @@ export function ChatMessages() {
   });
 
   return (
-    <div class="ai-chat-area min-h-0 flex-1 space-y-5 overflow-y-auto overscroll-contain py-4 pr-2 pl-4">
+    <div class="min-h-0 flex-1 space-y-5 overflow-y-auto overscroll-contain py-4 pr-2 pl-4">
       <Show when={chat.messages().length === 0}>
         <div class="flex h-full items-center justify-center">
           <div class="text-base-content/60 text-center">
@@ -111,7 +111,7 @@ export function ChatMessages() {
       </Show>
 
       <Show when={!chat.isLoading() && !chat.error() && emptyLastAssistant()}>
-        <div class="text-warning/80 flex items-start gap-1.5 text-xs">
+        <div class="flex items-start gap-1.5 text-xs text-amber-600 dark:text-amber-400">
           <AlertTriangle size={14} class="mt-0.5 shrink-0" />
           <span>
             Response was empty — the model may have hit a limit. Try rephrasing or starting a new
@@ -195,7 +195,7 @@ const remarkPlugins = [remarkGfm, remarkBreaks];
 function MarkdownPart(props: { content: string; isStreaming: boolean }) {
   return (
     <div
-      class="prose prose-sm max-w-none break-words"
+      class="prose prose-sm prose-chat text-base-content prose-headings:text-base-content prose-a:text-primary prose-code:text-base-content max-w-none break-words"
       classList={{ 'markdown-streaming': props.isStreaming }}
     >
       <SolidMarkdown renderingStrategy="reconcile" remarkPlugins={remarkPlugins}>

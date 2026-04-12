@@ -269,7 +269,10 @@ export function ArticleAudioPlayer(props: ArticleAudioPlayerProps) {
             </div>
 
             <Show when={buffering()}>
-              <span class="text-warning flex items-center gap-1 text-xs" title="Slow connection">
+              <span
+                class="flex items-center gap-1 text-xs text-amber-600 dark:text-amber-400"
+                title="Slow connection"
+              >
                 <Wifi size={14} />
                 Buffering...
               </span>

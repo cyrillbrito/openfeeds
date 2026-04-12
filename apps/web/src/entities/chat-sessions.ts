@@ -1,20 +1,10 @@
 import { snakeCamelMapper } from '@electric-sql/client';
-import type { StoredMessage } from '@repo/domain/client';
 import { ChatSessionSchema } from '@repo/domain/client';
 import { electricCollectionOptions } from '@tanstack/electric-db-collection';
 import { BasicIndex, createCollection } from '@tanstack/solid-db';
 import { collectionErrorHandler, shapeErrorHandler } from '~/lib/collection-errors';
 import { getShapeUrl, timestampParser } from '~/lib/electric-client';
-import { $$deleteChatSession, $$saveChatSession } from './chat-sessions.functions';
-
-/**
- * Electric sends jsonb columns as raw JSON strings — parse defensively.
- * The `parser` option should handle this, but the collection's optimistic
- * state (locally inserted rows echoed back) may bypass it.
- */
-function parseMessages(value: StoredMessage[] | string): StoredMessage[] {
-  return typeof value === 'string' ? JSON.parse(value) : value;
-}
+import { $$deleteChatSession } from './chat-sessions.functions';
 
 export const chatSessionsCollection = createCollection(
   electricCollectionOptions({
@@ -37,34 +27,9 @@ export const chatSessionsCollection = createCollection(
       columnMapper: snakeCamelMapper(),
       onError: shapeErrorHandler('chat-sessions.shape'),
     },
-    onInsert: collectionErrorHandler('chat-sessions.onInsert', async ({ transaction }) => {
-      const results = await Promise.all(
-        transaction.mutations.map((mutation) =>
-          $$saveChatSession({
-            data: {
-              id: mutation.key as string,
-              title: mutation.modified.title,
-              messages: parseMessages(mutation.modified.messages),
-            },
-          }),
-        ),
-      );
-      return results[results.length - 1];
-    }),
-    onUpdate: collectionErrorHandler('chat-sessions.onUpdate', async ({ transaction }) => {
-      const results = await Promise.all(
-        transaction.mutations.map((mutation) =>
-          $$saveChatSession({
-            data: {
-              id: mutation.key as string,
-              title: mutation.modified.title,
-              messages: parseMessages(mutation.modified.messages),
-            },
-          }),
-        ),
-      );
-      return results[results.length - 1];
-    }),
+    // Persistence is handled server-side by the AI middleware (ai-persistence.server.ts).
+    // Electric syncs the saved session back to the client automatically.
+    // Only deletes are client-initiated and need a server function.
     onDelete: collectionErrorHandler('chat-sessions.onDelete', async ({ transaction }) => {
       const results = await Promise.all(
         transaction.mutations.map((mutation) =>
