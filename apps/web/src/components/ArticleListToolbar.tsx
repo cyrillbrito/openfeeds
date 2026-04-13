@@ -5,8 +5,7 @@ import type { ReadStatus } from './ReadStatusToggle';
 
 interface ArticleListToolbarProps {
   leftContent: JSXElement;
-  rightContent?: JSXElement;
-  mobileMenuContent?: JSXElement;
+  menuContent?: JSXElement;
   unreadCount?: number;
   totalCount?: number;
   readStatus?: ReadStatus;
@@ -37,18 +36,10 @@ export function ArticleListToolbar(props: ArticleListToolbarProps) {
           </Show>
         </div>
 
-        {/* Desktop: Show buttons directly */}
-        <Show when={props.rightContent}>
-          <div class="hidden flex-wrap items-center gap-2 md:flex">{props.rightContent}</div>
-        </Show>
-
-        {/* Mobile: Show dropdown menu */}
-        <Show when={props.mobileMenuContent}>
-          <div class="md:hidden">
-            <Dropdown end btnClasses="btn-sm" btnContent={<EllipsisVertical size={20} />}>
-              {props.mobileMenuContent}
-            </Dropdown>
-          </div>
+        <Show when={props.menuContent}>
+          <Dropdown end btnClasses="btn-sm" btnContent={<EllipsisVertical size={20} />}>
+            {props.menuContent}
+          </Dropdown>
         </Show>
       </div>
       <div class="border-base-300/50 mt-2.5 border-t" />
