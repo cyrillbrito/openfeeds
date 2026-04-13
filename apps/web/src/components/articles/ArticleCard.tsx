@@ -5,15 +5,19 @@ import { Show } from 'solid-js';
 import { twMerge } from 'tailwind-merge';
 import { containsHtml, downshiftHeadings } from '~/utils/html';
 import { extractYouTubeVideoId, isYouTubeUrl } from '~/utils/youtube';
+import { TimeAgo } from '~/components/TimeAgo';
+import { YouTubeThumbnail } from '~/components/YouTubeThumbnail';
+import type { ArticleTag } from '@repo/domain/client';
 import { ArticleTagManager } from './ArticleTagManager';
-import { TimeAgo } from './TimeAgo';
-import { YouTubeThumbnail } from './YouTubeThumbnail';
 
 interface ArticleCardProps {
   article: Article;
   feeds: Feed[];
   tags: Tag[];
+  articleTags: ArticleTag[];
   onUpdateArticle: (articleId: string, updates: { isRead?: boolean; isArchived?: boolean }) => void;
+  onAddTag: (articleId: string, tagId: string) => void;
+  onRemoveTag: (articleTagId: string) => void;
 }
 
 export function ArticleCard(props: ArticleCardProps) {
@@ -39,6 +43,8 @@ export function ArticleCard(props: ArticleCardProps) {
     props.onUpdateArticle(props.article.id, { isArchived: !props.article.isArchived });
   };
 
+  const articleTags = () => props.articleTags.filter((at) => at.articleId === props.article.id);
+
   return (
     <article
       class={twMerge(
@@ -51,7 +57,7 @@ export function ArticleCard(props: ArticleCardProps) {
       {/* Stretched link — covers entire card for navigation */}
       <Link
         to="/articles/$articleId"
-        params={{ articleId: props.article.id.toString() }}
+        params={{ articleId: props.article.id }}
         class="absolute inset-0"
         tabIndex={-1}
         aria-hidden="true"
@@ -101,7 +107,7 @@ export function ArticleCard(props: ArticleCardProps) {
           <h2 class="text-base-content line-clamp-2 text-[15px] leading-snug font-medium md:text-lg">
             <Link
               to="/articles/$articleId"
-              params={{ articleId: props.article.id.toString() }}
+              params={{ articleId: props.article.id }}
               class="relative"
               onClick={markAsRead}
             >
@@ -152,7 +158,13 @@ export function ArticleCard(props: ArticleCardProps) {
       {/* Tags */}
       <Show when={props.tags.length > 0}>
         <div class="relative mb-2">
-          <ArticleTagManager articleId={props.article.id} tags={props.tags} />
+          <ArticleTagManager
+            articleId={props.article.id}
+            tags={props.tags}
+            articleTags={articleTags()}
+            onAddTag={(tagId) => props.onAddTag(props.article.id, tagId)}
+            onRemoveTag={props.onRemoveTag}
+          />
         </div>
       </Show>
 

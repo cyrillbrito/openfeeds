@@ -3,27 +3,29 @@ import type { Feed, TagColor } from '@repo/domain/client';
 import { and, eq, toArray, useLiveQuery } from '@tanstack/solid-db';
 import { createFileRoute, Link } from '@tanstack/solid-router';
 import { MoreVertical, TriangleAlert } from 'lucide-solid';
-import { createSignal, For, onMount, Show, Suspense } from 'solid-js';
-import { ArticleList, ARTICLES_PER_PAGE } from '~/components/ArticleList';
-import { ArticleListToolbar } from '~/components/ArticleListToolbar';
+import { createSignal, For, Show, Suspense } from 'solid-js';
+import {
+  ArticleList,
+  ArticleListToolbar,
+  createArticleListState,
+  MarkAllArchivedButton,
+  ReadStatusToggle,
+  ShortsButton,
+} from '~/components/articles';
+import type { ArticleQueryFilter, ReadStatus } from '~/components/articles';
 import { ColorIndicator } from '~/components/ColorIndicator';
 import { DeleteFeedModal } from '~/components/DeleteFeedModal';
 import { Dropdown } from '~/components/Dropdown';
 import { EditFeedModal } from '~/components/EditFeedModal';
 import type { ModalController } from '~/components/LazyModal';
 import { CenterLoader } from '~/components/Loader';
-import { MarkAllArchivedButton } from '~/components/MarkAllArchivedButton';
 import { PageLayout } from '~/components/PageLayout';
-import { ReadStatusToggle, type ReadStatus } from '~/components/ReadStatusToggle';
-import { ShortsButton } from '~/components/ShortsButton';
 import { SyncLogsModal } from '~/components/SyncLogsModal';
 import { articlesCollection } from '~/entities/articles';
 import { feedTagsCollection } from '~/entities/feed-tags';
-import { feedsCollection, useFeeds } from '~/entities/feeds';
+import { feedsCollection } from '~/entities/feeds';
 import { $$retryFeed } from '~/entities/feeds.functions';
-import { tagsCollection, useTags } from '~/entities/tags';
-import { useSessionRead } from '~/providers/session-read';
-import { readStatusFilter } from '~/utils/article-queries';
+import { tagsCollection } from '~/entities/tags';
 import { validateReadStatusSearch } from '~/utils/routing';
 import { getTagDotColor } from '~/utils/tagColors';
 
@@ -37,56 +39,45 @@ function FeedArticles() {
   const search = Route.useSearch();
   const feedId = () => params()?.feedId;
   const readStatus = (): ReadStatus => search()?.readStatus || 'unread';
-  const { sessionReadIds, addSessionRead, setViewKey } = useSessionRead();
 
-  onMount(() => setViewKey(`feed:${feedId()}`));
+  const filter: ArticleQueryFilter = {
+    buildQuery: (q, { readStatusWhere }) =>
+      q
+        .from({ article: articlesCollection })
+        .where(({ article }: any) => {
+          const base = and(eq(article.feedId, feedId()), eq(article.isArchived, false));
+          return readStatusWhere ? and(base, readStatusWhere(article)) : base;
+        })
+        .select(({ article }: any) => ({ ...article })),
+    buildCountQuery: (q, { readStatusWhere }) =>
+      q
+        .from({ article: articlesCollection })
+        .where(({ article }: any) => {
+          const base = and(eq(article.feedId, feedId()), eq(article.isArchived, false));
+          return readStatusWhere ? and(base, readStatusWhere(article)) : base;
+        })
+        .select(({ article }: any) => ({ id: article.id })),
+    buildUnreadQuery: (q) =>
+      q
+        .from({ article: articlesCollection })
+        .where(({ article }: any) =>
+          and(eq(article.feedId, feedId()), eq(article.isArchived, false), eq(article.isRead, false)),
+        )
+        .select(({ article }: any) => ({ id: article.id })),
+    buildArchivableQuery: (q) =>
+      q
+        .from({ article: articlesCollection })
+        .where(({ article }: any) => and(eq(article.feedId, feedId()), eq(article.isArchived, false)))
+        .select(({ article }: any) => ({ id: article.id })),
+  };
 
-  // Pagination state - lifted from ArticleList
-  const [visibleCount, setVisibleCount] = createSignal(ARTICLES_PER_PAGE);
-
-  // Query articles with orderBy and limit for pagination
-  const articlesQuery = useLiveQuery((q) => {
-    const filter = readStatusFilter(readStatus(), sessionReadIds());
-    return q
-      .from({ article: articlesCollection })
-      .where(({ article }) => {
-        const base = and(eq(article.feedId, feedId()), eq(article.isArchived, false));
-        return filter ? and(base, filter(article)) : base;
-      })
-      .orderBy(({ article }) => article.pubDate, 'desc')
-      .limit(visibleCount());
+  const state = createArticleListState({
+    filter,
+    readStatus: () => readStatus(),
+    viewKey: `feed:${feedId()}`,
   });
 
-  // Lightweight count query for current read status filter (no limit)
-  const totalCountQuery = useLiveQuery((q) => {
-    const filter = readStatusFilter(readStatus(), sessionReadIds());
-    return q
-      .from({ article: articlesCollection })
-      .where(({ article }) => {
-        const base = and(eq(article.feedId, feedId()), eq(article.isArchived, false));
-        return filter ? and(base, filter(article)) : base;
-      })
-      .select(({ article }) => ({ id: article.id }));
-  });
-
-  // Count of unread articles (independent of current read status filter)
-  const unreadCountQuery = useLiveQuery((q) =>
-    q
-      .from({ article: articlesCollection })
-      .where(({ article }) =>
-        and(eq(article.feedId, feedId()), eq(article.isArchived, false), eq(article.isRead, false)),
-      )
-      .select(({ article }) => ({ id: article.id })),
-  );
-
-  // Non-archived articles for this feed (for archive button count + action)
-  const archivableQuery = useLiveQuery((q) =>
-    q
-      .from({ article: articlesCollection })
-      .where(({ article }) => and(eq(article.feedId, feedId()), eq(article.isArchived, false)))
-      .select(({ article }) => ({ id: article.id })),
-  );
-
+  // Feed-specific queries (not shared with other pages)
   const feedWithTagsQuery = useLiveQuery((q) =>
     q
       .from({ feed: feedsCollection })
@@ -107,48 +98,12 @@ function FeedArticles() {
         ),
       })),
   );
-  const feedsQuery = useFeeds();
-  const tagsQuery = useTags();
 
   let editFeedModalController!: ModalController;
   let deleteFeedModalController!: ModalController;
   let syncLogsModalController!: ModalController;
 
   const [feedToDelete, setFeedToDelete] = createSignal<FeedWithTags | null>(null);
-
-  const handleMarkAllArchived = async () => {
-    const articleIds = (archivableQuery() || []).map((a) => a.id);
-    if (articleIds.length > 0) {
-      articlesCollection.update(articleIds, (drafts) => {
-        drafts.forEach((d) => (d.isArchived = true));
-      });
-    }
-  };
-
-  const handleUpdateArticle = (
-    articleId: string,
-    updates: { isRead?: boolean; isArchived?: boolean },
-  ) => {
-    // Track session-read articles
-    if (updates.isRead === true) {
-      addSessionRead(articleId);
-    }
-
-    articlesCollection.update(articleId, (draft) => {
-      if (updates.isRead !== undefined) draft.isRead = updates.isRead;
-      if (updates.isArchived !== undefined) draft.isArchived = updates.isArchived;
-    });
-  };
-
-  // Articles are already filtered by the live query (including session-read handling)
-  const filteredArticles = () => articlesQuery() || [];
-  const totalCount = () => (totalCountQuery() || []).length;
-  const unreadCount = () => (unreadCountQuery() || []).length;
-  const archivableCount = () => (archivableQuery() || []).length;
-
-  const handleLoadMore = () => {
-    setVisibleCount((prev) => prev + ARTICLES_PER_PAGE);
-  };
 
   const currentFeed = () => (feedWithTagsQuery() ?? [])[0] ?? null;
 
@@ -158,7 +113,7 @@ function FeedArticles() {
       headerActions={
         <div class="flex flex-wrap gap-2">
           <ShortsButton
-            where={(article) => eq(article.feedId, feedId())}
+            shortsExist={state.shortsExist()}
             linkProps={{
               to: '/feeds/$feedId/shorts',
               params: { feedId: feedId() },
@@ -250,30 +205,33 @@ function FeedArticles() {
       <ArticleListToolbar
         leftContent={<ReadStatusToggle currentStatus={readStatus()} />}
         menuContent={
-          <Show when={archivableCount() > 0}>
+          <Show when={state.archivableCount() > 0}>
             <li>
               <MarkAllArchivedButton
-                totalCount={archivableCount()}
+                totalCount={state.archivableCount()}
                 contextLabel="in this feed"
-                onConfirm={handleMarkAllArchived}
+                onConfirm={state.markAllArchived}
               />
             </li>
           </Show>
         }
-        unreadCount={unreadCount()}
-        totalCount={totalCount()}
+        unreadCount={state.unreadCount()}
+        totalCount={state.totalCount()}
         readStatus={readStatus()}
       />
 
       <Suspense fallback={<CenterLoader />}>
-        <Show when={feedsQuery() && tagsQuery()}>
+        <Show when={state.feeds().length > 0 || state.tags().length > 0 || state.articles().length > 0}>
           <ArticleList
-            articles={filteredArticles()}
-            feeds={feedsQuery()}
-            tags={tagsQuery()}
-            totalCount={totalCount()}
-            onLoadMore={handleLoadMore}
-            onUpdateArticle={handleUpdateArticle}
+            articles={state.articles()}
+            feeds={state.feeds()}
+            tags={state.tags()}
+            articleTags={state.articleTags()}
+            totalCount={state.totalCount()}
+            onLoadMore={state.loadMore}
+            onUpdateArticle={state.updateArticle}
+            onAddTag={state.addTag}
+            onRemoveTag={state.removeTag}
             readStatus={readStatus()}
             context="feed"
           />

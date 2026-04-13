@@ -1,17 +1,17 @@
-import { and, eq, useLiveQuery } from '@tanstack/solid-db';
+import { and, eq } from '@tanstack/solid-db';
 import { createFileRoute } from '@tanstack/solid-router';
-import { createSignal, onMount, Show, Suspense } from 'solid-js';
-import { ArticleList, ARTICLES_PER_PAGE } from '~/components/ArticleList';
-import { ArticleListToolbar } from '~/components/ArticleListToolbar';
+import { Show, Suspense } from 'solid-js';
+import {
+  ArticleList,
+  ArticleListToolbar,
+  createArticleListState,
+  MarkAllArchivedButton,
+  ReadStatusToggle,
+} from '~/components/articles';
+import type { ArticleQueryFilter } from '~/components/articles';
 import { CenterLoader } from '~/components/Loader';
-import { MarkAllArchivedButton } from '~/components/MarkAllArchivedButton';
-import { ReadStatusToggle, type ReadStatus } from '~/components/ReadStatusToggle';
 import { articleTagsCollection } from '~/entities/article-tags';
 import { articlesCollection } from '~/entities/articles';
-import { useFeeds } from '~/entities/feeds';
-import { useTags } from '~/entities/tags';
-import { useSessionRead } from '~/providers/session-read';
-import { readStatusFilter } from '~/utils/article-queries';
 import { validateReadStatusSearch } from '~/utils/routing';
 
 export const Route = createFileRoute('/_frame/tags/$tagId/articles')({
@@ -23,140 +23,95 @@ function TagArticlesPage() {
   const params = Route.useParams();
   const search = Route.useSearch();
   const tagId = () => params()?.tagId;
-  const readStatus = (): ReadStatus => search()?.readStatus || 'unread';
-  const { sessionReadIds, addSessionRead, setViewKey } = useSessionRead();
+  const readStatus = () => search()?.readStatus || 'unread';
 
-  onMount(() => setViewKey(`tag:${tagId()}`));
+  const filter: ArticleQueryFilter = {
+    buildQuery: (q, { readStatusWhere }) =>
+      q
+        .from({ article: articlesCollection })
+        .innerJoin({ articleTag: articleTagsCollection }, ({ article, articleTag }: any) =>
+          eq(article.id, articleTag.articleId),
+        )
+        .where(({ article, articleTag }: any) => {
+          const base = and(eq(articleTag.tagId, tagId()), eq(article.isArchived, false));
+          return readStatusWhere ? and(base, readStatusWhere(article)) : base;
+        })
+        .select(({ article }: any) => ({ ...article })),
+    buildCountQuery: (q, { readStatusWhere }) =>
+      q
+        .from({ article: articlesCollection })
+        .innerJoin({ articleTag: articleTagsCollection }, ({ article, articleTag }: any) =>
+          eq(article.id, articleTag.articleId),
+        )
+        .where(({ article, articleTag }: any) => {
+          const base = and(eq(articleTag.tagId, tagId()), eq(article.isArchived, false));
+          return readStatusWhere ? and(base, readStatusWhere(article)) : base;
+        })
+        .select(({ article }: any) => ({ id: article.id })),
+    buildUnreadQuery: (q) =>
+      q
+        .from({ article: articlesCollection })
+        .innerJoin({ articleTag: articleTagsCollection }, ({ article, articleTag }: any) =>
+          eq(article.id, articleTag.articleId),
+        )
+        .where(({ article, articleTag }: any) =>
+          and(
+            eq(articleTag.tagId, tagId()),
+            eq(article.isArchived, false),
+            eq(article.isRead, false),
+          ),
+        )
+        .select(({ article }: any) => ({ id: article.id })),
+    buildArchivableQuery: (q) =>
+      q
+        .from({ article: articlesCollection })
+        .innerJoin({ articleTag: articleTagsCollection }, ({ article, articleTag }: any) =>
+          eq(article.id, articleTag.articleId),
+        )
+        .where(({ article, articleTag }: any) =>
+          and(eq(articleTag.tagId, tagId()), eq(article.isArchived, false)),
+        )
+        .select(({ article }: any) => ({ id: article.id })),
+  };
 
-  // Pagination state
-  const [visibleCount, setVisibleCount] = createSignal(ARTICLES_PER_PAGE);
-
-  const tagsQuery = useTags();
-  const feedsQuery = useFeeds();
-
-  // Query articles with join, orderBy, and limit for pagination
-  const articlesQuery = useLiveQuery((q) => {
-    const filter = readStatusFilter(readStatus(), sessionReadIds());
-    return q
-      .from({ article: articlesCollection })
-      .innerJoin({ articleTag: articleTagsCollection }, ({ article, articleTag }) =>
-        eq(article.id, articleTag.articleId),
-      )
-      .where(({ article, articleTag }) => {
-        const base = and(eq(articleTag.tagId, tagId()), eq(article.isArchived, false));
-        return filter ? and(base, filter(article)) : base;
-      })
-      .select(({ article }) => ({ ...article }))
-      .orderBy(({ article }) => article.pubDate, 'desc')
-      .limit(visibleCount());
+  const state = createArticleListState({
+    filter,
+    readStatus: () => readStatus(),
+    viewKey: `tag:${tagId()}`,
   });
-
-  // Lightweight count query for current read status filter (no limit)
-  const totalCountQuery = useLiveQuery((q) => {
-    const filter = readStatusFilter(readStatus(), sessionReadIds());
-    return q
-      .from({ article: articlesCollection })
-      .innerJoin({ articleTag: articleTagsCollection }, ({ article, articleTag }) =>
-        eq(article.id, articleTag.articleId),
-      )
-      .where(({ article, articleTag }) => {
-        const base = and(eq(articleTag.tagId, tagId()), eq(article.isArchived, false));
-        return filter ? and(base, filter(article)) : base;
-      })
-      .select(({ article }) => ({ id: article.id }));
-  });
-
-  // Count of unread articles (independent of current read status filter)
-  const unreadCountQuery = useLiveQuery((q) =>
-    q
-      .from({ article: articlesCollection })
-      .innerJoin({ articleTag: articleTagsCollection }, ({ article, articleTag }) =>
-        eq(article.id, articleTag.articleId),
-      )
-      .where(({ article, articleTag }) =>
-        and(
-          eq(articleTag.tagId, tagId()),
-          eq(article.isArchived, false),
-          eq(article.isRead, false),
-        ),
-      )
-      .select(({ article }) => ({ id: article.id })),
-  );
-
-  // Non-archived articles for this tag (for archive button count + action)
-  const archivableQuery = useLiveQuery((q) =>
-    q
-      .from({ article: articlesCollection })
-      .innerJoin({ articleTag: articleTagsCollection }, ({ article, articleTag }) =>
-        eq(article.id, articleTag.articleId),
-      )
-      .where(({ article, articleTag }) =>
-        and(eq(articleTag.tagId, tagId()), eq(article.isArchived, false)),
-      )
-      .select(({ article }) => ({ id: article.id })),
-  );
-
-  const handleMarkAllArchived = async () => {
-    const articleIds = (archivableQuery() || []).map((a) => a.id);
-    if (articleIds.length > 0) {
-      articlesCollection.update(articleIds, (drafts) => {
-        drafts.forEach((d) => (d.isArchived = true));
-      });
-    }
-  };
-
-  const handleUpdateArticle = (
-    articleId: string,
-    updates: { isRead?: boolean; isArchived?: boolean },
-  ) => {
-    if (updates.isRead === true) {
-      addSessionRead(articleId);
-    }
-
-    articlesCollection.update(articleId, (draft) => {
-      if (updates.isRead !== undefined) draft.isRead = updates.isRead;
-      if (updates.isArchived !== undefined) draft.isArchived = updates.isArchived;
-    });
-  };
-
-  const filteredArticles = () => articlesQuery() || [];
-  const totalCount = () => (totalCountQuery() || []).length;
-  const unreadCount = () => (unreadCountQuery() || []).length;
-  const archivableCount = () => (archivableQuery() || []).length;
-
-  const handleLoadMore = () => {
-    setVisibleCount((prev) => prev + ARTICLES_PER_PAGE);
-  };
 
   return (
     <>
       <ArticleListToolbar
         leftContent={<ReadStatusToggle currentStatus={readStatus()} />}
         menuContent={
-          <Show when={archivableCount() > 0}>
+          <Show when={state.archivableCount() > 0}>
             <li>
               <MarkAllArchivedButton
-                totalCount={archivableCount()}
+                totalCount={state.archivableCount()}
                 contextLabel="in this tag"
-                onConfirm={handleMarkAllArchived}
+                onConfirm={state.markAllArchived}
               />
             </li>
           </Show>
         }
-        unreadCount={unreadCount()}
-        totalCount={totalCount()}
+        unreadCount={state.unreadCount()}
+        totalCount={state.totalCount()}
         readStatus={readStatus()}
       />
 
       <Suspense fallback={<CenterLoader />}>
-        <Show when={feedsQuery() && tagsQuery()}>
+        <Show when={state.feeds().length > 0 || state.tags().length > 0 || state.articles().length > 0}>
           <ArticleList
-            articles={filteredArticles()}
-            feeds={feedsQuery()}
-            tags={tagsQuery()}
-            totalCount={totalCount()}
-            onLoadMore={handleLoadMore}
-            onUpdateArticle={handleUpdateArticle}
+            articles={state.articles()}
+            feeds={state.feeds()}
+            tags={state.tags()}
+            articleTags={state.articleTags()}
+            totalCount={state.totalCount()}
+            onLoadMore={state.loadMore}
+            onUpdateArticle={state.updateArticle}
+            onAddTag={state.addTag}
+            onRemoveTag={state.removeTag}
             readStatus={readStatus()}
             context="tag"
           />

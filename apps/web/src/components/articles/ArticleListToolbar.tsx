@@ -1,6 +1,6 @@
 import { EllipsisVertical } from 'lucide-solid';
 import { Show, type JSXElement } from 'solid-js';
-import { Dropdown } from './Dropdown';
+import { Dropdown } from '~/components/Dropdown';
 import type { ReadStatus } from './ReadStatusToggle';
 
 interface ArticleListToolbarProps {
