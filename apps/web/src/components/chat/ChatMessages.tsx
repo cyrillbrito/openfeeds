@@ -4,7 +4,7 @@ import remarkBreaks from 'remark-breaks';
 import remarkGfm from 'remark-gfm';
 import { createEffect, createMemo, Index, on, Show, Switch, Match } from 'solid-js';
 import { SolidMarkdown } from 'solid-markdown';
-import { useChatContext } from './chat-context';
+import { useChatContext } from './chat-context.shared';
 
 /** Extract a human-readable error message from API errors. */
 function friendlyError(err: Error): string {

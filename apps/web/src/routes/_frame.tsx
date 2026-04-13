@@ -81,6 +81,10 @@ function FrameLayout() {
   const showFab = () => !popoverOpen() && !location().pathname.startsWith('/ai');
 
   const handleFabClick = () => {
+    if (typeof window !== 'undefined' && window.innerWidth < 1024) {
+      void navigate({ to: '/ai' });
+      return;
+    }
     setPopoverOpen(true);
   };
 
@@ -172,7 +176,17 @@ function FrameLayout() {
         <Show when={showFab()}>
           <AiFab onClick={handleFabClick} />
         </Show>
-        <AiPopover open={popoverOpen()} onClose={() => setPopoverOpen(false)} />
+        <AiPopover
+          open={popoverOpen()}
+          onClose={() => setPopoverOpen(false)}
+          onExpand={(sessionId, hasMessages) => {
+            if (hasMessages) {
+              void navigate({ to: '/ai/$sessionId', params: { sessionId } });
+            } else {
+              void navigate({ to: '/ai' });
+            }
+          }}
+        />
       </ClientOnly>
     </ChatProvider>
   );

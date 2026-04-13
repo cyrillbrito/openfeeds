@@ -1,7 +1,6 @@
-import { useNavigate } from '@tanstack/solid-router';
 import { Maximize2, Plus, X } from 'lucide-solid';
 import { onCleanup } from 'solid-js';
-import { useChatContext } from './chat-context';
+import { useChatContext } from './chat-context.shared';
 import { ChatInput } from './ChatInput';
 import { ChatMessages } from './ChatMessages';
 import { ChatTitleSwitcher } from './ChatTitleSwitcher';
@@ -9,11 +8,12 @@ import { ChatTitleSwitcher } from './ChatTitleSwitcher';
 interface AiPopoverProps {
   open: boolean;
   onClose: () => void;
+  /** Called when the user clicks "Expand" with session info so the caller can navigate */
+  onExpand?: (sessionId: string, hasMessages: boolean) => void;
 }
 
 export function AiPopover(props: AiPopoverProps) {
   const chat = useChatContext();
-  const navigate = useNavigate();
 
   // Handle Escape
   const handleEscape = (e: KeyboardEvent) => {
@@ -29,13 +29,7 @@ export function AiPopover(props: AiPopoverProps) {
 
   const handleExpand = () => {
     props.onClose();
-    const id = chat.sessionId();
-    const hasMessages = chat.messages().length > 0;
-    if (hasMessages) {
-      void navigate({ to: '/ai/$sessionId', params: { sessionId: id } });
-    } else {
-      void navigate({ to: '/ai' });
-    }
+    props.onExpand?.(chat.sessionId(), chat.messages().length > 0);
   };
 
   return (

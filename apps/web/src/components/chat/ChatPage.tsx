@@ -1,7 +1,7 @@
 import { useLocation, useNavigate, useParams } from '@tanstack/solid-router';
 import { Menu, Plus } from 'lucide-solid';
 import { createEffect, on } from 'solid-js';
-import { useChatContext } from './chat-context';
+import { useChatContext } from './chat-context.shared';
 import { ChatInput } from './ChatInput';
 import { ChatMessages } from './ChatMessages';
 import { ChatTitleSwitcher } from './ChatTitleSwitcher';

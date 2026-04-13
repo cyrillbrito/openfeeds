@@ -1,8 +1,7 @@
-import { useLiveQuery } from '@tanstack/solid-db';
 import { Check, Trash2 } from 'lucide-solid';
 import { For, Show } from 'solid-js';
-import { chatSessionsCollection } from '~/entities/chat-sessions';
-import { useChatContext } from './chat-context';
+import { useChatContext } from './chat-context.shared';
+import type { SessionSummary } from './chat-context.shared';
 import { groupByTimePeriod } from './chat-utils';
 
 interface ConversationSwitcherProps {
@@ -13,19 +12,11 @@ interface ConversationSwitcherProps {
   class?: string;
 }
 
-type SessionSummary = { id: string; title: string; updatedAt: Date };
-
 export function ConversationSwitcher(props: ConversationSwitcherProps) {
   const chat = useChatContext();
-  const sessions = useLiveQuery((q) =>
-    q
-      .from({ s: chatSessionsCollection })
-      .select(({ s }) => ({ id: s.id, title: s.title, updatedAt: s.updatedAt }))
-      .orderBy(({ s }) => s.updatedAt, 'desc'),
-  );
 
   const groups = () => {
-    const s = sessions();
+    const s = chat.sessions();
     if (!s) return [];
     return groupByTimePeriod(s);
   };

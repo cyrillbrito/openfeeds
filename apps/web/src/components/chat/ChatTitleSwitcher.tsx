@@ -1,7 +1,7 @@
 import { ChevronDown, Sparkles } from 'lucide-solid';
 import { createSignal, Show } from 'solid-js';
 import { useClickOutside } from '~/utils/useClickOutside';
-import { useChatContext } from './chat-context';
+import { useChatContext } from './chat-context.shared';
 import { ConversationSwitcher } from './ConversationSwitcher';
 
 interface ChatTitleSwitcherProps {

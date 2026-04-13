@@ -1,6 +1,6 @@
 import { ArrowUp, Square } from 'lucide-solid';
 import { createSignal, onMount, Show } from 'solid-js';
-import { useChatContext } from './chat-context';
+import { useChatContext } from './chat-context.shared';
 
 interface ChatInputProps {
   autoFocus?: boolean;
