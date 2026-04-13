@@ -1,5 +1,5 @@
 import { ArrowUp, Square } from 'lucide-solid';
-import { createSignal, onMount, Show } from 'solid-js';
+import { createEffect, createSignal, on, Show } from 'solid-js';
 import { useChatContext } from './chat-context.shared';
 
 interface ChatInputProps {
@@ -18,11 +18,16 @@ export function ChatInput(props: ChatInputProps) {
     el.style.height = `${Math.min(el.scrollHeight, 160)}px`;
   };
 
-  onMount(() => {
-    if (props.autoFocus) {
-      requestAnimationFrame(() => textareaRef?.focus());
-    }
-  });
+  createEffect(
+    on(
+      () => props.autoFocus,
+      (shouldFocus) => {
+        if (shouldFocus) {
+          requestAnimationFrame(() => textareaRef?.focus());
+        }
+      },
+    ),
+  );
 
   const handleSubmit = (e: Event) => {
     e.preventDefault();

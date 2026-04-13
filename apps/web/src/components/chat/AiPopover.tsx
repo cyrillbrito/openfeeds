@@ -88,7 +88,7 @@ export function AiPopover(props: AiPopoverProps) {
         <ChatMessages />
 
         {/* Input */}
-        <ChatInput />
+        <ChatInput autoFocus={props.open} />
       </div>
     </>
   );

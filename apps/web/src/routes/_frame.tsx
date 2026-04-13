@@ -108,10 +108,10 @@ function FrameLayout() {
           <aside class="menu bg-base-100 border-base-300 flex h-dvh w-80 flex-col flex-nowrap border-r px-4 pt-4 pb-2">
             <ClientOnly fallback={<CenterLoader />}>
               {/* Menu Header */}
-              <div class="mt-2 flex items-center justify-center gap-2">
+              <Link to="/inbox" class="mt-2 flex items-center justify-center gap-2">
                 <img src="/logo.svg" class="h-10 w-10" alt="OpenFeeds logo" />
                 <h2 class="text-lg font-bold">OpenFeeds</h2>
-              </div>
+              </Link>
               <div class="divider"></div>
 
               <div class="flex-1 overflow-y-auto">
