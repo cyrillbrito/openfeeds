@@ -1,13 +1,13 @@
 import type { Article, Feed, Tag } from '@repo/domain/client';
+import type { ArticleTag } from '@repo/domain/client';
 import { Link } from '@tanstack/solid-router';
 import { Archive, Check, Inbox, Rss } from 'lucide-solid';
 import { Show } from 'solid-js';
 import { twMerge } from 'tailwind-merge';
-import { containsHtml, downshiftHeadings } from '~/utils/html';
-import { extractYouTubeVideoId, isYouTubeUrl } from '~/utils/youtube';
 import { TimeAgo } from '~/components/TimeAgo';
 import { YouTubeThumbnail } from '~/components/YouTubeThumbnail';
-import type { ArticleTag } from '@repo/domain/client';
+import { containsHtml, downshiftHeadings } from '~/utils/html';
+import { extractYouTubeVideoId, isYouTubeUrl } from '~/utils/youtube';
 import { ArticleTagManager } from './ArticleTagManager';
 
 interface ArticleCardProps {

@@ -1,8 +1,8 @@
 import type { Meta, StoryObj } from 'storybook-solidjs-vite';
 import { expect, fn, within } from 'storybook/test';
-import { ArticleTagManager } from './ArticleTagManager';
-import { articleTagFixtures, tagFixtures } from './articles-stories.fixtures';
 import { withRouter } from './articles-stories.decorator';
+import { articleTagFixtures, tagFixtures } from './articles-stories.fixtures';
+import { ArticleTagManager } from './ArticleTagManager';
 
 const meta: Meta<typeof ArticleTagManager> = {
   title: 'Articles/ArticleTagManager',

@@ -2,13 +2,13 @@ import type { Article, ArticleTag, Feed, Tag } from '@repo/domain/client';
 import { Link } from '@tanstack/solid-router';
 import { ChevronDown } from 'lucide-solid';
 import { For, Show, type JSX } from 'solid-js';
-import { ArticleCard } from './ArticleCard';
 import {
   AllCaughtUpIllustration,
   FeedIllustration,
   NoReadArticlesIllustration,
   TagsIllustration,
 } from '~/components/Icons';
+import { ArticleCard } from './ArticleCard';
 import type { ReadStatus } from './ReadStatusToggle';
 
 export const ARTICLES_PER_PAGE = 20;

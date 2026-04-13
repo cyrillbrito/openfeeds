@@ -1,14 +1,14 @@
 import { and, eq } from '@tanstack/solid-db';
 import { createFileRoute } from '@tanstack/solid-router';
 import { Show, Suspense } from 'solid-js';
+import { ArticleList } from '~/components/articles/ArticleList';
+import { ArticleListToolbar } from '~/components/articles/ArticleListToolbar';
 import {
-  ArticleList,
-  ArticleListToolbar,
   createArticleListState,
-  MarkAllArchivedButton,
-  ReadStatusToggle,
-} from '~/components/articles';
-import type { ArticleQueryFilter } from '~/components/articles';
+  type ArticleQueryFilter,
+} from '~/components/articles/createArticleListState';
+import { MarkAllArchivedButton } from '~/components/articles/MarkAllArchivedButton';
+import { ReadStatusToggle } from '~/components/articles/ReadStatusToggle';
 import { CenterLoader } from '~/components/Loader';
 import { articleTagsCollection } from '~/entities/article-tags';
 import { articlesCollection } from '~/entities/articles';
@@ -101,7 +101,9 @@ function TagArticlesPage() {
       />
 
       <Suspense fallback={<CenterLoader />}>
-        <Show when={state.feeds().length > 0 || state.tags().length > 0 || state.articles().length > 0}>
+        <Show
+          when={state.feeds().length > 0 || state.tags().length > 0 || state.articles().length > 0}
+        >
           <ArticleList
             articles={state.articles()}
             feeds={state.feeds()}

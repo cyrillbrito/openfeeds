@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from 'storybook-solidjs-vite';
 import { expect, within } from 'storybook/test';
-import { ShortsButton } from './ShortsButton';
 import { withRouter } from './articles-stories.decorator';
+import { ShortsButton } from './ShortsButton';
 
 const meta: Meta<typeof ShortsButton> = {
   title: 'Articles/ShortsButton',

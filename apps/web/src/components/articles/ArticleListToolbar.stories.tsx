@@ -1,8 +1,8 @@
 import type { Meta, StoryObj } from 'storybook-solidjs-vite';
 import { expect, within } from 'storybook/test';
 import { ArticleListToolbar } from './ArticleListToolbar';
-import { ReadStatusToggle } from './ReadStatusToggle';
 import { withRouter } from './articles-stories.decorator';
+import { ReadStatusToggle } from './ReadStatusToggle';
 
 const meta: Meta<typeof ArticleListToolbar> = {
   title: 'Articles/ArticleListToolbar',

@@ -220,11 +220,7 @@ export const articleTagFixtures: ArticleTag[] = [
 ];
 
 /** A convenient subset: only unread, non-archived articles */
-export const unreadArticles: Article[] = articleFixtures.filter(
-  (a) => !a.isRead && !a.isArchived,
-);
+export const unreadArticles: Article[] = articleFixtures.filter((a) => !a.isRead && !a.isArchived);
 
 /** A convenient subset: articles with feed-1 */
-export const techCrunchArticles: Article[] = articleFixtures.filter(
-  (a) => a.feedId === 'feed-1',
-);
+export const techCrunchArticles: Article[] = articleFixtures.filter((a) => a.feedId === 'feed-1');

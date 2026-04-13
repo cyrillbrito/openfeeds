@@ -1,6 +1,7 @@
 import type { Meta, StoryObj } from 'storybook-solidjs-vite';
 import { expect, fn, within } from 'storybook/test';
 import { ArticleList } from './ArticleList';
+import { withRouter } from './articles-stories.decorator';
 import {
   articleFixtures,
   articleTagFixtures,
@@ -8,7 +9,6 @@ import {
   tagFixtures,
   unreadArticles,
 } from './articles-stories.fixtures';
-import { withRouter } from './articles-stories.decorator';
 
 const meta: Meta<typeof ArticleList> = {
   title: 'Articles/ArticleList',
@@ -45,7 +45,7 @@ export const WithArticles: Story = {
   },
   play: async ({ canvasElement }: { canvasElement: HTMLElement }) => {
     const canvas = within(canvasElement);
-    await expect(canvas.getByText('Load More')).toBeInTheDocument();
+    await expect(canvas.getByText(/Load More/)).toBeInTheDocument();
   },
 };
 

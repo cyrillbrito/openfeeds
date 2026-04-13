@@ -21,17 +21,14 @@ import { useFeeds } from '~/entities/feeds';
 import { useTags } from '~/entities/tags';
 import { useSessionRead } from '~/providers/session-read';
 import { readStatusFilter } from '~/utils/article-queries';
-import type { ReadStatus } from './ReadStatusToggle';
 import { ARTICLES_PER_PAGE } from './ArticleList';
+import type { ReadStatus } from './ReadStatusToggle';
 
 type SortDirection = 'asc' | 'desc';
 
 export interface ArticleQueryFilter {
   /** Base where-clause applied to all queries (e.g. feedId filter, tag join) */
-  buildQuery: (
-    q: any,
-    extra: { readStatusWhere: ((article: Ref<Article>) => any) | null },
-  ) => any;
+  buildQuery: (q: any, extra: { readStatusWhere: ((article: Ref<Article>) => any) | null }) => any;
   /** Build a count-only query variant (no limit, select id only) */
   buildCountQuery: (
     q: any,
@@ -103,9 +100,7 @@ export function createArticleListState(config: ArticleListStateConfig): ArticleL
   const archivableQuery = useLiveQuery((q) => config.filter.buildArchivableQuery(q));
 
   // Article tags for the displayed articles
-  const articleTagsQuery = useLiveQuery((q) =>
-    q.from({ articleTag: articleTagsCollection }),
-  );
+  const articleTagsQuery = useLiveQuery((q) => q.from({ articleTag: articleTagsCollection }));
 
   // Shorts existence check
   const shortsQuery = useLiveQuery((q) =>

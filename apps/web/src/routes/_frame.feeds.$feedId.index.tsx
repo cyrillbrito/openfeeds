@@ -4,15 +4,15 @@ import { and, eq, toArray, useLiveQuery } from '@tanstack/solid-db';
 import { createFileRoute, Link } from '@tanstack/solid-router';
 import { MoreVertical, TriangleAlert } from 'lucide-solid';
 import { createSignal, For, Show, Suspense } from 'solid-js';
+import { ArticleList } from '~/components/articles/ArticleList';
+import { ArticleListToolbar } from '~/components/articles/ArticleListToolbar';
 import {
-  ArticleList,
-  ArticleListToolbar,
   createArticleListState,
-  MarkAllArchivedButton,
-  ReadStatusToggle,
-  ShortsButton,
-} from '~/components/articles';
-import type { ArticleQueryFilter, ReadStatus } from '~/components/articles';
+  type ArticleQueryFilter,
+} from '~/components/articles/createArticleListState';
+import { MarkAllArchivedButton } from '~/components/articles/MarkAllArchivedButton';
+import { ReadStatusToggle, type ReadStatus } from '~/components/articles/ReadStatusToggle';
+import { ShortsButton } from '~/components/articles/ShortsButton';
 import { ColorIndicator } from '~/components/ColorIndicator';
 import { DeleteFeedModal } from '~/components/DeleteFeedModal';
 import { Dropdown } from '~/components/Dropdown';
@@ -61,13 +61,19 @@ function FeedArticles() {
       q
         .from({ article: articlesCollection })
         .where(({ article }: any) =>
-          and(eq(article.feedId, feedId()), eq(article.isArchived, false), eq(article.isRead, false)),
+          and(
+            eq(article.feedId, feedId()),
+            eq(article.isArchived, false),
+            eq(article.isRead, false),
+          ),
         )
         .select(({ article }: any) => ({ id: article.id })),
     buildArchivableQuery: (q) =>
       q
         .from({ article: articlesCollection })
-        .where(({ article }: any) => and(eq(article.feedId, feedId()), eq(article.isArchived, false)))
+        .where(({ article }: any) =>
+          and(eq(article.feedId, feedId()), eq(article.isArchived, false)),
+        )
         .select(({ article }: any) => ({ id: article.id })),
   };
 
@@ -221,7 +227,9 @@ function FeedArticles() {
       />
 
       <Suspense fallback={<CenterLoader />}>
-        <Show when={state.feeds().length > 0 || state.tags().length > 0 || state.articles().length > 0}>
+        <Show
+          when={state.feeds().length > 0 || state.tags().length > 0 || state.articles().length > 0}
+        >
           <ArticleList
             articles={state.articles()}
             feeds={state.feeds()}
