@@ -1,6 +1,6 @@
 // oxlint-disable import/max-dependencies
 import type { Feed, TagColor } from '@repo/domain/client';
-import { eq, toArray, useLiveQuery } from '@tanstack/solid-db';
+import { and, eq, toArray, useLiveQuery } from '@tanstack/solid-db';
 import { createFileRoute, Link } from '@tanstack/solid-router';
 import { MoreVertical, TriangleAlert } from 'lucide-solid';
 import { createSignal, For, onMount, Show, Suspense } from 'solid-js';
@@ -46,41 +46,36 @@ function FeedArticles() {
 
   // Query articles with orderBy and limit for pagination
   const articlesQuery = useLiveQuery((q) => {
-    let query = q
-      .from({ article: articlesCollection })
-      .where(({ article }) => eq(article.feedId, feedId()))
-      .where(({ article }) => eq(article.isArchived, false));
-
     const filter = readStatusFilter(readStatus(), sessionReadIds());
-    if (filter) {
-      query = query.where(({ article }) => filter(article));
-    }
-
-    return query.orderBy(({ article }) => article.pubDate, 'desc').limit(visibleCount());
+    return q
+      .from({ article: articlesCollection })
+      .where(({ article }) => {
+        const base = and(eq(article.feedId, feedId()), eq(article.isArchived, false));
+        return filter ? and(base, filter(article)) : base;
+      })
+      .orderBy(({ article }) => article.pubDate, 'desc')
+      .limit(visibleCount());
   });
 
   // Lightweight count query for current read status filter (no limit)
   const totalCountQuery = useLiveQuery((q) => {
-    let query = q
-      .from({ article: articlesCollection })
-      .where(({ article }) => eq(article.feedId, feedId()))
-      .where(({ article }) => eq(article.isArchived, false));
-
     const filter = readStatusFilter(readStatus(), sessionReadIds());
-    if (filter) {
-      query = query.where(({ article }) => filter(article));
-    }
-
-    return query.select(({ article }) => ({ id: article.id }));
+    return q
+      .from({ article: articlesCollection })
+      .where(({ article }) => {
+        const base = and(eq(article.feedId, feedId()), eq(article.isArchived, false));
+        return filter ? and(base, filter(article)) : base;
+      })
+      .select(({ article }) => ({ id: article.id }));
   });
 
   // Count of unread articles (independent of current read status filter)
   const unreadCountQuery = useLiveQuery((q) =>
     q
       .from({ article: articlesCollection })
-      .where(({ article }) => eq(article.feedId, feedId()))
-      .where(({ article }) => eq(article.isArchived, false))
-      .where(({ article }) => eq(article.isRead, false))
+      .where(({ article }) =>
+        and(eq(article.feedId, feedId()), eq(article.isArchived, false), eq(article.isRead, false)),
+      )
       .select(({ article }) => ({ id: article.id })),
   );
 
@@ -88,8 +83,7 @@ function FeedArticles() {
   const archivableQuery = useLiveQuery((q) =>
     q
       .from({ article: articlesCollection })
-      .where(({ article }) => eq(article.feedId, feedId()))
-      .where(({ article }) => eq(article.isArchived, false))
+      .where(({ article }) => and(eq(article.feedId, feedId()), eq(article.isArchived, false)))
       .select(({ article }) => ({ id: article.id })),
   );
 

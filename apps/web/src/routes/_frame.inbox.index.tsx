@@ -1,4 +1,4 @@
-import { eq, useLiveQuery } from '@tanstack/solid-db';
+import { and, eq, useLiveQuery } from '@tanstack/solid-db';
 import { createFileRoute } from '@tanstack/solid-router';
 import { createSignal, onMount, Show, Suspense } from 'solid-js';
 import { ArticleList, ARTICLES_PER_PAGE } from '~/components/ArticleList';
@@ -36,39 +36,35 @@ function Inbox() {
 
   // Query articles with orderBy and limit for pagination
   const articlesQuery = useLiveQuery((q) => {
-    let query = q
-      .from({ article: articlesCollection })
-      .where(({ article }) => eq(article.isArchived, false));
-
     const filter = readStatusFilter(readStatus(), sessionReadIds());
-    if (filter) {
-      query = query.where(({ article }) => filter(article));
-    }
-
     const direction = sortOrder() === 'oldest' ? 'asc' : 'desc';
-    return query.orderBy(({ article }) => article.pubDate, direction).limit(visibleCount());
+    return q
+      .from({ article: articlesCollection })
+      .where(({ article }) => {
+        const base = eq(article.isArchived, false);
+        return filter ? and(base, filter(article)) : base;
+      })
+      .orderBy(({ article }) => article.pubDate, direction)
+      .limit(visibleCount());
   });
 
   // Lightweight count query for current read status filter (no limit)
   const totalCountQuery = useLiveQuery((q) => {
-    let query = q
-      .from({ article: articlesCollection })
-      .where(({ article }) => eq(article.isArchived, false));
-
     const filter = readStatusFilter(readStatus(), sessionReadIds());
-    if (filter) {
-      query = query.where(({ article }) => filter(article));
-    }
-
-    return query.select(({ article }) => ({ id: article.id }));
+    return q
+      .from({ article: articlesCollection })
+      .where(({ article }) => {
+        const base = eq(article.isArchived, false);
+        return filter ? and(base, filter(article)) : base;
+      })
+      .select(({ article }) => ({ id: article.id }));
   });
 
   // Count of unread articles (independent of current read status filter)
   const unreadCountQuery = useLiveQuery((q) =>
     q
       .from({ article: articlesCollection })
-      .where(({ article }) => eq(article.isArchived, false))
-      .where(({ article }) => eq(article.isRead, false))
+      .where(({ article }) => and(eq(article.isArchived, false), eq(article.isRead, false)))
       .select(({ article }) => ({ id: article.id })),
   );
 

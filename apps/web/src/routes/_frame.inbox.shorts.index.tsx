@@ -1,4 +1,4 @@
-import { eq, ilike, useLiveQuery } from '@tanstack/solid-db';
+import { and, eq, ilike, useLiveQuery } from '@tanstack/solid-db';
 import { createFileRoute } from '@tanstack/solid-router';
 import { onMount } from 'solid-js';
 import type { ReadStatus } from '~/components/ReadStatusToggle';
@@ -22,17 +22,14 @@ function InboxShorts() {
   onMount(() => setViewKey('inbox-shorts'));
 
   const shortsQuery = useLiveQuery((q) => {
-    let query = q
-      .from({ article: articlesCollection })
-      .where(({ article }) => eq(article.isArchived, false))
-      .where(({ article }) => ilike(article.url, '%youtube.com/shorts%'));
-
     const filter = readStatusFilter(readStatus(), sessionReadIds());
-    if (filter) {
-      query = query.where(({ article }) => filter(article));
-    }
-
-    return query.orderBy(({ article }) => article.pubDate, 'desc');
+    return q
+      .from({ article: articlesCollection })
+      .where(({ article }) => {
+        const base = and(eq(article.isArchived, false), ilike(article.url, '%youtube.com/shorts%'));
+        return filter ? and(base, filter(article)) : base;
+      })
+      .orderBy(({ article }) => article.pubDate, 'desc');
   });
 
   const feedsQuery = useFeeds();
