@@ -48,7 +48,8 @@ function FeedArticles() {
   const articlesQuery = useLiveQuery((q) => {
     let query = q
       .from({ article: articlesCollection })
-      .where(({ article }) => eq(article.feedId, feedId()));
+      .where(({ article }) => eq(article.feedId, feedId()))
+      .where(({ article }) => eq(article.isArchived, false));
 
     const filter = readStatusFilter(readStatus(), sessionReadIds());
     if (filter) {
@@ -62,7 +63,8 @@ function FeedArticles() {
   const totalCountQuery = useLiveQuery((q) => {
     let query = q
       .from({ article: articlesCollection })
-      .where(({ article }) => eq(article.feedId, feedId()));
+      .where(({ article }) => eq(article.feedId, feedId()))
+      .where(({ article }) => eq(article.isArchived, false));
 
     const filter = readStatusFilter(readStatus(), sessionReadIds());
     if (filter) {
@@ -253,16 +255,7 @@ function FeedArticles() {
 
       <ArticleListToolbar
         leftContent={<ReadStatusToggle currentStatus={readStatus()} />}
-        rightContent={
-          <Show when={archivableCount() > 0}>
-            <MarkAllArchivedButton
-              totalCount={archivableCount()}
-              contextLabel="in this feed"
-              onConfirm={handleMarkAllArchived}
-            />
-          </Show>
-        }
-        mobileMenuContent={
+        menuContent={
           <Show when={archivableCount() > 0}>
             <li>
               <MarkAllArchivedButton

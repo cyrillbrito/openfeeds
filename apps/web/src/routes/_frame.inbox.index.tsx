@@ -153,16 +153,7 @@ function Inbox() {
             <SortToggle currentSort={sortOrder()} />
           </>
         }
-        rightContent={
-          <Show when={archivableCount() > 0}>
-            <MarkAllArchivedButton
-              totalCount={archivableCount()}
-              contextLabel="globally"
-              onConfirm={handleMarkAllArchived}
-            />
-          </Show>
-        }
-        mobileMenuContent={
+        menuContent={
           <Show when={archivableCount() > 0}>
             <li>
               <MarkAllArchivedButton

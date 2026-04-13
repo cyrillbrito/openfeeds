@@ -42,6 +42,7 @@ function TagArticlesPage() {
         eq(article.id, articleTag.articleId),
       )
       .where(({ articleTag }) => eq(articleTag.tagId, tagId()))
+      .where(({ article }) => eq(article.isArchived, false))
       .select(({ article }) => ({ ...article }));
 
     const filter = readStatusFilter(readStatus(), sessionReadIds());
@@ -59,7 +60,8 @@ function TagArticlesPage() {
       .innerJoin({ articleTag: articleTagsCollection }, ({ article, articleTag }) =>
         eq(article.id, articleTag.articleId),
       )
-      .where(({ articleTag }) => eq(articleTag.tagId, tagId()));
+      .where(({ articleTag }) => eq(articleTag.tagId, tagId()))
+      .where(({ article }) => eq(article.isArchived, false));
 
     const filter = readStatusFilter(readStatus(), sessionReadIds());
     if (filter) {
@@ -130,16 +132,7 @@ function TagArticlesPage() {
     <>
       <ArticleListToolbar
         leftContent={<ReadStatusToggle currentStatus={readStatus()} />}
-        rightContent={
-          <Show when={archivableCount() > 0}>
-            <MarkAllArchivedButton
-              totalCount={archivableCount()}
-              contextLabel="in this tag"
-              onConfirm={handleMarkAllArchived}
-            />
-          </Show>
-        }
-        mobileMenuContent={
+        menuContent={
           <Show when={archivableCount() > 0}>
             <li>
               <MarkAllArchivedButton

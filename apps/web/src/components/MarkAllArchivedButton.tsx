@@ -1,6 +1,12 @@
 import { TriangleAlert } from 'lucide-solid';
 import { createSignal, Show } from 'solid-js';
+import { Portal } from 'solid-js/web';
 import { LazyModal, type ModalController } from './LazyModal';
+
+// NOTE: The trigger renders a plain <button> (no btn classes) so it works
+// as a daisyUI menu item when placed inside <li> within a <Dropdown>.
+// The modal is portalled to document.body so it isn't destroyed when
+// the dropdown popover closes.
 
 interface MarkAllArchivedButtonProps {
   totalCount?: number;
@@ -14,45 +20,19 @@ export function MarkAllArchivedButton(props: MarkAllArchivedButtonProps) {
 
   return (
     <>
-      <MarkAllArchivedButtonTrigger {...props} onOpenModal={() => modalController.open()} />
-      <LazyModal
-        controller={(controller) => (modalController = controller)}
-        class="max-w-md"
-        title="Mark All as Archived"
-      >
-        <MarkAllArchivedConfirmation {...props} onClose={() => modalController.close()} />
-      </LazyModal>
+      <button type="button" onClick={() => modalController.open()} disabled={props.disabled}>
+        Mark All Archived
+      </button>
+      <Portal>
+        <LazyModal
+          controller={(controller) => (modalController = controller)}
+          class="max-w-md"
+          title="Mark All as Archived"
+        >
+          <MarkAllArchivedConfirmation {...props} onClose={() => modalController.close()} />
+        </LazyModal>
+      </Portal>
     </>
-  );
-}
-
-interface MarkAllArchivedButtonTriggerProps extends MarkAllArchivedButtonProps {
-  onOpenModal: () => void;
-}
-
-function MarkAllArchivedButtonTrigger(props: MarkAllArchivedButtonTriggerProps) {
-  const [isProcessing] = createSignal(false);
-
-  const getButtonText = () => {
-    const count = props.totalCount;
-    if (count && count > 0) {
-      return `Mark All Archived (${count})`;
-    }
-    return 'Mark All Archived';
-  };
-
-  return (
-    <button
-      type="button"
-      class="btn btn-outline btn-sm"
-      onClick={() => props.onOpenModal()}
-      disabled={props.disabled || isProcessing()}
-    >
-      <Show when={isProcessing()} fallback={getButtonText()}>
-        <span class="loading loading-spinner loading-sm"></span>
-        Processing...
-      </Show>
-    </button>
   );
 }
 
