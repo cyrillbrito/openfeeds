@@ -1,5 +1,5 @@
-import type { Meta, StoryObj } from 'storybook-solidjs';
 import type { TagColor } from '@repo/domain/client';
+import type { Meta, StoryObj } from 'storybook-solidjs-vite';
 import { TagBadge } from '~/components/TagBadge';
 
 const meta: Meta<typeof TagBadge> = {
@@ -8,7 +8,26 @@ const meta: Meta<typeof TagBadge> = {
   argTypes: {
     color: {
       control: 'select',
-      options: [null, 'red', 'orange', 'amber', 'yellow', 'lime', 'green', 'emerald', 'teal', 'cyan', 'sky', 'blue', 'indigo', 'violet', 'purple', 'fuchsia', 'pink', 'rose'] satisfies (TagColor | null)[],
+      options: [
+        null,
+        'red',
+        'orange',
+        'amber',
+        'yellow',
+        'lime',
+        'green',
+        'emerald',
+        'teal',
+        'cyan',
+        'sky',
+        'blue',
+        'indigo',
+        'violet',
+        'purple',
+        'fuchsia',
+        'pink',
+        'rose',
+      ] satisfies (TagColor | null)[],
     },
     size: {
       control: 'select',
@@ -44,9 +63,29 @@ export const Sizes: Story = {
 export const AllColors: Story = {
   render: () => (
     <div class="flex flex-wrap gap-2">
-      {(['red', 'orange', 'amber', 'yellow', 'lime', 'green', 'emerald', 'teal', 'cyan', 'sky', 'blue', 'indigo', 'violet', 'purple', 'fuchsia', 'pink', 'rose'] as TagColor[]).map(
-        (color) => <TagBadge name={color} color={color} size="sm" />,
-      )}
+      {(
+        [
+          'red',
+          'orange',
+          'amber',
+          'yellow',
+          'lime',
+          'green',
+          'emerald',
+          'teal',
+          'cyan',
+          'sky',
+          'blue',
+          'indigo',
+          'violet',
+          'purple',
+          'fuchsia',
+          'pink',
+          'rose',
+        ] as TagColor[]
+      ).map((color) => (
+        <TagBadge name={color as string} color={color} size="sm" />
+      ))}
     </div>
   ),
 };
