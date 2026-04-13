@@ -28,7 +28,9 @@ export default defineConfig({
         external: ['jsdom', 'css-tree', '@mixmark-io/domino'],
       },
     }),
-    viteTsConfigPaths({ projects: ['./tsconfig.json'] }),
+    viteTsConfigPaths({
+      projects: ['./tsconfig.json'],
+    }),
     tailwindcss(),
     tanstackStart({
       importProtection: {
@@ -42,7 +44,9 @@ export default defineConfig({
         },
       },
     }),
-    solidPlugin({ ssr: true }),
+    solidPlugin({
+      ssr: true,
+    }),
   ],
   define: {
     __APP_VERSION__: JSON.stringify(rootPkg.version),

@@ -8,3 +8,6 @@ dist-ssr
 .nitro
 .tanstack
 .wrangler
+
+*storybook.log
+storybook-static
