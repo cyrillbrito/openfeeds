@@ -1,5 +1,5 @@
 import type { Article } from '@repo/domain/client';
-import { type Ref, ilike, useLiveQuery } from '@tanstack/solid-db';
+import { type Ref, and, ilike, useLiveQuery } from '@tanstack/solid-db';
 import { Link, type LinkProps } from '@tanstack/solid-router';
 import { Video } from 'lucide-solid';
 import { Show } from 'solid-js';
@@ -12,17 +12,16 @@ type ShortsButtonProps = {
 
 /** Renders a "Shorts" button that only appears when YouTube Shorts exist. */
 export function ShortsButton(props: ShortsButtonProps) {
-  const shortsExist = useLiveQuery((q) => {
-    let query = q
+  const shortsExist = useLiveQuery((q) =>
+    q
       .from({ article: articlesCollection })
-      .where(({ article }) => ilike(article.url, '%youtube.com/shorts%'));
-
-    if (props.where) {
-      query = query.where(({ article }) => props.where!(article));
-    }
-
-    return query.orderBy(({ article }) => article.id, 'desc').limit(1);
-  });
+      .where(({ article }) => {
+        const base = ilike(article.url, '%youtube.com/shorts%');
+        return props.where ? and(base, props.where(article)) : base;
+      })
+      .orderBy(({ article }) => article.id, 'desc')
+      .limit(1),
+  );
 
   return (
     <Show when={(shortsExist()?.length ?? 0) > 0}>

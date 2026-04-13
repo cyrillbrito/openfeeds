@@ -1,4 +1,4 @@
-import { eq, useLiveQuery } from '@tanstack/solid-db';
+import { and, eq, useLiveQuery } from '@tanstack/solid-db';
 import { createFileRoute } from '@tanstack/solid-router';
 import { createSignal, onMount, Show, Suspense } from 'solid-js';
 import { ArticleList, ARTICLES_PER_PAGE } from '~/components/ArticleList';
@@ -36,39 +36,34 @@ function TagArticlesPage() {
 
   // Query articles with join, orderBy, and limit for pagination
   const articlesQuery = useLiveQuery((q) => {
-    let query = q
+    const filter = readStatusFilter(readStatus(), sessionReadIds());
+    return q
       .from({ article: articlesCollection })
       .innerJoin({ articleTag: articleTagsCollection }, ({ article, articleTag }) =>
         eq(article.id, articleTag.articleId),
       )
-      .where(({ articleTag }) => eq(articleTag.tagId, tagId()))
-      .where(({ article }) => eq(article.isArchived, false))
-      .select(({ article }) => ({ ...article }));
-
-    const filter = readStatusFilter(readStatus(), sessionReadIds());
-    if (filter) {
-      query = query.where(({ article }) => filter(article));
-    }
-
-    return query.orderBy(({ article }) => article.pubDate, 'desc').limit(visibleCount());
+      .where(({ article, articleTag }) => {
+        const base = and(eq(articleTag.tagId, tagId()), eq(article.isArchived, false));
+        return filter ? and(base, filter(article)) : base;
+      })
+      .select(({ article }) => ({ ...article }))
+      .orderBy(({ article }) => article.pubDate, 'desc')
+      .limit(visibleCount());
   });
 
   // Lightweight count query for current read status filter (no limit)
   const totalCountQuery = useLiveQuery((q) => {
-    let query = q
+    const filter = readStatusFilter(readStatus(), sessionReadIds());
+    return q
       .from({ article: articlesCollection })
       .innerJoin({ articleTag: articleTagsCollection }, ({ article, articleTag }) =>
         eq(article.id, articleTag.articleId),
       )
-      .where(({ articleTag }) => eq(articleTag.tagId, tagId()))
-      .where(({ article }) => eq(article.isArchived, false));
-
-    const filter = readStatusFilter(readStatus(), sessionReadIds());
-    if (filter) {
-      query = query.where(({ article }) => filter(article));
-    }
-
-    return query.select(({ article }) => ({ id: article.id }));
+      .where(({ article, articleTag }) => {
+        const base = and(eq(articleTag.tagId, tagId()), eq(article.isArchived, false));
+        return filter ? and(base, filter(article)) : base;
+      })
+      .select(({ article }) => ({ id: article.id }));
   });
 
   // Count of unread articles (independent of current read status filter)
@@ -78,9 +73,13 @@ function TagArticlesPage() {
       .innerJoin({ articleTag: articleTagsCollection }, ({ article, articleTag }) =>
         eq(article.id, articleTag.articleId),
       )
-      .where(({ articleTag }) => eq(articleTag.tagId, tagId()))
-      .where(({ article }) => eq(article.isArchived, false))
-      .where(({ article }) => eq(article.isRead, false))
+      .where(({ article, articleTag }) =>
+        and(
+          eq(articleTag.tagId, tagId()),
+          eq(article.isArchived, false),
+          eq(article.isRead, false),
+        ),
+      )
       .select(({ article }) => ({ id: article.id })),
   );
 
@@ -91,8 +90,9 @@ function TagArticlesPage() {
       .innerJoin({ articleTag: articleTagsCollection }, ({ article, articleTag }) =>
         eq(article.id, articleTag.articleId),
       )
-      .where(({ articleTag }) => eq(articleTag.tagId, tagId()))
-      .where(({ article }) => eq(article.isArchived, false))
+      .where(({ article, articleTag }) =>
+        and(eq(articleTag.tagId, tagId()), eq(article.isArchived, false)),
+      )
       .select(({ article }) => ({ id: article.id })),
   );
 
