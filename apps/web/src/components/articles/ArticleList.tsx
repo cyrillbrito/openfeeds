@@ -1,4 +1,4 @@
-import type { Article, ArticleTag, Feed, Tag } from '@repo/domain/client';
+import type { Feed, Tag } from '@repo/domain/client';
 import { Link } from '@tanstack/solid-router';
 import { ChevronDown } from 'lucide-solid';
 import { For, Show, type JSX } from 'solid-js';
@@ -9,15 +9,15 @@ import {
   TagsIllustration,
 } from '~/components/Icons';
 import { ArticleCard } from './ArticleCard';
+import type { ArticleWithTags } from './createArticleListState';
 import type { ReadStatus } from './ReadStatusToggle';
 
 export const ARTICLES_PER_PAGE = 20;
 
 interface ArticleListProps {
-  articles: Article[];
+  articles: ArticleWithTags[];
   feeds: Feed[];
   tags: Tag[];
-  articleTags: ArticleTag[];
   totalCount: number; // Total articles available (for "load more" button)
   onLoadMore: () => void; // Callback to load more
   onUpdateArticle: (articleId: string, updates: { isRead?: boolean; isArchived?: boolean }) => void;
@@ -161,7 +161,6 @@ export function ArticleList(props: ArticleListProps) {
               article={article}
               feeds={props.feeds}
               tags={props.tags}
-              articleTags={props.articleTags}
               onUpdateArticle={props.onUpdateArticle}
               onAddTag={props.onAddTag}
               onRemoveTag={props.onRemoveTag}

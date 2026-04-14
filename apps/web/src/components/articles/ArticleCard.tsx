@@ -1,5 +1,4 @@
-import type { Article, Feed, Tag } from '@repo/domain/client';
-import type { ArticleTag } from '@repo/domain/client';
+import type { Feed, Tag } from '@repo/domain/client';
 import { Link } from '@tanstack/solid-router';
 import { Archive, Check, Inbox, Rss } from 'lucide-solid';
 import { Show } from 'solid-js';
@@ -9,12 +8,12 @@ import { YouTubeThumbnail } from '~/components/YouTubeThumbnail';
 import { containsHtml, downshiftHeadings } from '~/utils/html';
 import { extractYouTubeVideoId, isYouTubeUrl } from '~/utils/youtube';
 import { ArticleTagManager } from './ArticleTagManager';
+import type { ArticleWithTags } from './createArticleListState';
 
 interface ArticleCardProps {
-  article: Article;
+  article: ArticleWithTags;
   feeds: Feed[];
   tags: Tag[];
-  articleTags: ArticleTag[];
   onUpdateArticle: (articleId: string, updates: { isRead?: boolean; isArchived?: boolean }) => void;
   onAddTag: (articleId: string, tagId: string) => void;
   onRemoveTag: (articleTagId: string) => void;
@@ -42,8 +41,6 @@ export function ArticleCard(props: ArticleCardProps) {
   const handleArchive = () => {
     props.onUpdateArticle(props.article.id, { isArchived: !props.article.isArchived });
   };
-
-  const articleTags = () => props.articleTags.filter((at) => at.articleId === props.article.id);
 
   return (
     <article
@@ -161,7 +158,7 @@ export function ArticleCard(props: ArticleCardProps) {
           <ArticleTagManager
             articleId={props.article.id}
             tags={props.tags}
-            articleTags={articleTags()}
+            articleTags={props.article.articleTags}
             onAddTag={(tagId) => props.onAddTag(props.article.id, tagId)}
             onRemoveTag={props.onRemoveTag}
           />

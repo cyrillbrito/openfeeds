@@ -35,8 +35,7 @@ function TagArticlesPage() {
         .where(({ article, articleTag }: any) => {
           const base = and(eq(articleTag.tagId, tagId()), eq(article.isArchived, false));
           return readStatusWhere ? and(base, readStatusWhere(article)) : base;
-        })
-        .select(({ article }: any) => ({ ...article })),
+        }),
     buildCountQuery: (q, { readStatusWhere }) =>
       q
         .from({ article: articlesCollection })
@@ -108,7 +107,6 @@ function TagArticlesPage() {
             articles={state.articles()}
             feeds={state.feeds()}
             tags={state.tags()}
-            articleTags={state.articleTags()}
             totalCount={state.totalCount()}
             onLoadMore={state.loadMore}
             onUpdateArticle={state.updateArticle}
