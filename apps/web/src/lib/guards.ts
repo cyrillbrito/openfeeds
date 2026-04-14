@@ -1,45 +1,20 @@
 import { redirect } from '@tanstack/solid-router';
-import { createIsomorphicFn } from '@tanstack/solid-start';
-import { getRequestHeaders } from '@tanstack/solid-start/server';
-import { posthog } from 'posthog-js';
-import { authClient } from '~/lib/auth-client';
+import { isServer } from 'solid-js/web';
 
-export const hasSession = createIsomorphicFn()
-  .server(async () => {
-    const { auth } = await import('~/server/auth.server');
-    const { captureException, UnexpectedError } = await import('@repo/domain');
-    const headers = getRequestHeaders();
-    try {
-      const session = await auth.api.getSession({ headers });
-      return !!session;
-    } catch (error) {
-      const err = error instanceof Error ? error : new Error(String(error));
-      captureException(err, { source: 'auth-guard', type: 'getSession' });
-      // Re-throw as UnexpectedError so the transport boundary doesn't double-report
-      throw new UnexpectedError();
-    }
-  })
-  .client(async () => {
-    try {
-      const sessionData = await authClient.getSession();
-      if (sessionData.error) {
-        throw sessionData.error instanceof Error
-          ? sessionData.error
-          : new Error(sessionData.error.message ?? 'Authentication error');
-      }
-      return !!sessionData.data;
-    } catch (error) {
-      const err = error instanceof Error ? error : new Error(String(error));
-      posthog.captureException(err);
-      throw err;
-    }
-  });
+// See docs/auth-guards.md for the full auth guard architecture.
+
+interface Location {
+  pathname: string;
+  searchStr: string;
+}
 
 /**
  * Guard for protected routes. Redirects unauthenticated users to /login.
- * Optionally preserves the original path as a ?redirect= search param.
+ * Skips on client navigations — server middleware is the security gate.
  */
-export async function authGuard(location?: { pathname: string; searchStr: string }) {
+export async function authGuard(location?: Location) {
+  if (!isServer) return;
+  const { hasSession } = await import('~/server/has-session.server');
   if (await hasSession()) return;
   const redirectPath = location ? location.pathname + location.searchStr : undefined;
   const search = redirectPath && redirectPath !== '/' ? { redirect: redirectPath } : undefined;
@@ -49,8 +24,11 @@ export async function authGuard(location?: { pathname: string; searchStr: string
 /**
  * Guard for guest-only routes (login, signup, etc).
  * Redirects authenticated users to /.
+ * Skips on client navigations.
  */
 export async function guestGuard() {
+  if (!isServer) return;
+  const { hasSession } = await import('~/server/has-session.server');
   if (await hasSession()) {
     throw redirect({ to: '/' });
   }
