@@ -65,6 +65,7 @@ Commit messages and PR titles must use [Conventional Commits](https://www.conven
 Load the relevant doc when working in these areas. Docs are in `docs/`.
 
 - `docs/error-handling.md` — Adding error types, changing error boundaries, auth errors, PostHog exception capture, or DB error handling
+- `docs/auth-guards.md` — Working on route guards, login/sign-out flows, session cookie checks, or auth middleware
 - `docs/posthog.md` — Adding analytics events, exception capture, or changing PostHog setup
 - `docs/data-layer.md` — Working with TanStack DB collections, Electric SQL sync, or optimistic mutations
 - `docs/domain-context.md` — Writing domain functions that mutate data, using transactions, or wiring `withTransaction`
