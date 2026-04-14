@@ -3,14 +3,13 @@ import { expect, fn, within } from 'storybook/test';
 import { ArticleCard } from './ArticleCard';
 import { withRouter } from './articles-stories.decorator';
 import {
-  articleTagFixtures,
   feedFixtures,
-  htmlDescriptionArticle,
-  noFeedArticle,
-  readArticle,
+  htmlDescriptionArticleWithTags,
+  noFeedArticleWithTags,
+  readArticleWithTags,
   tagFixtures,
-  unreadArticle,
-  youtubeArticle,
+  unreadArticleWithTags,
+  youtubeArticleWithTags,
 } from './articles-stories.fixtures';
 
 const meta: Meta<typeof ArticleCard> = {
@@ -19,7 +18,6 @@ const meta: Meta<typeof ArticleCard> = {
   args: {
     feeds: feedFixtures,
     tags: tagFixtures,
-    articleTags: articleTagFixtures,
     onUpdateArticle: fn().mockName('onUpdateArticle'),
     onAddTag: fn().mockName('onAddTag'),
     onRemoveTag: fn().mockName('onRemoveTag'),
@@ -40,11 +38,11 @@ type Story = StoryObj<typeof meta>;
 /** Unread article with tags */
 export const Unread: Story = {
   args: {
-    article: unreadArticle,
+    article: unreadArticleWithTags,
   },
   play: async ({ canvasElement }: { canvasElement: HTMLElement }) => {
     const canvas = within(canvasElement);
-    await expect(canvas.getByText(unreadArticle.title)).toBeInTheDocument();
+    await expect(canvas.getByText(unreadArticleWithTags.title)).toBeInTheDocument();
     await expect(canvas.getByText('TechCrunch')).toBeInTheDocument();
     await expect(canvas.getByText('Mark read')).toBeInTheDocument();
   },
@@ -53,7 +51,7 @@ export const Unread: Story = {
 /** Read article — reduced opacity */
 export const Read: Story = {
   args: {
-    article: readArticle,
+    article: readArticleWithTags,
   },
   play: async ({ canvasElement }: { canvasElement: HTMLElement }) => {
     const canvas = within(canvasElement);
@@ -64,21 +62,21 @@ export const Read: Story = {
 /** Article with HTML description */
 export const HtmlDescription: Story = {
   args: {
-    article: htmlDescriptionArticle,
+    article: htmlDescriptionArticleWithTags,
   },
 };
 
 /** YouTube Shorts article — shows thumbnail */
 export const YouTubeShort: Story = {
   args: {
-    article: youtubeArticle,
+    article: youtubeArticleWithTags,
   },
 };
 
 /** Article without a feed (saved article) */
 export const NoFeed: Story = {
   args: {
-    article: noFeedArticle,
+    article: noFeedArticleWithTags,
   },
   play: async ({ canvasElement }: { canvasElement: HTMLElement }) => {
     const canvas = within(canvasElement);
@@ -89,8 +87,7 @@ export const NoFeed: Story = {
 /** Article with no tags at all */
 export const NoTags: Story = {
   args: {
-    article: unreadArticle,
+    article: { ...unreadArticleWithTags, articleTags: [] },
     tags: [],
-    articleTags: [],
   },
 };

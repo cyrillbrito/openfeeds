@@ -5,6 +5,7 @@
  * that can be composed into different story scenarios.
  */
 import type { Article, ArticleTag, Feed, Tag } from '@repo/domain/client';
+import type { ArticleWithTags } from './createArticleListState';
 
 const now = new Date().toISOString();
 const oneHourAgo = new Date(Date.now() - 1000 * 60 * 60).toISOString();
@@ -219,8 +220,29 @@ export const articleTagFixtures: ArticleTag[] = [
   { id: 'at-4', userId: 'user-1', articleId: 'article-4', tagId: 'tag-3' },
 ];
 
+// --- Articles with tags (ArticleWithTags) ---
+
+/** Helper to attach article tags to an article */
+function withTags(article: Article): ArticleWithTags {
+  return {
+    ...article,
+    articleTags: articleTagFixtures.filter((at) => at.articleId === article.id),
+  };
+}
+
+export const unreadArticleWithTags = withTags(unreadArticle);
+export const readArticleWithTags = withTags(readArticle);
+export const archivedArticleWithTags = withTags(archivedArticle);
+export const htmlDescriptionArticleWithTags = withTags(htmlDescriptionArticle);
+export const youtubeArticleWithTags = withTags(youtubeArticle);
+export const noFeedArticleWithTags = withTags(noFeedArticle);
+
+export const articleWithTagsFixtures: ArticleWithTags[] = articleFixtures.map(withTags);
+
 /** A convenient subset: only unread, non-archived articles */
 export const unreadArticles: Article[] = articleFixtures.filter((a) => !a.isRead && !a.isArchived);
+export const unreadArticlesWithTags: ArticleWithTags[] = unreadArticles.map(withTags);
 
 /** A convenient subset: articles with feed-1 */
 export const techCrunchArticles: Article[] = articleFixtures.filter((a) => a.feedId === 'feed-1');
+export const techCrunchArticlesWithTags: ArticleWithTags[] = techCrunchArticles.map(withTags);

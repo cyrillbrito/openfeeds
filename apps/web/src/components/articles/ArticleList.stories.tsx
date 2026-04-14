@@ -3,11 +3,10 @@ import { expect, fn, within } from 'storybook/test';
 import { ArticleList } from './ArticleList';
 import { withRouter } from './articles-stories.decorator';
 import {
-  articleFixtures,
-  articleTagFixtures,
+  articleWithTagsFixtures,
   feedFixtures,
   tagFixtures,
-  unreadArticles,
+  unreadArticlesWithTags,
 } from './articles-stories.fixtures';
 
 const meta: Meta<typeof ArticleList> = {
@@ -16,7 +15,6 @@ const meta: Meta<typeof ArticleList> = {
   args: {
     feeds: feedFixtures,
     tags: tagFixtures,
-    articleTags: articleTagFixtures,
     onUpdateArticle: fn().mockName('onUpdateArticle'),
     onLoadMore: fn().mockName('onLoadMore'),
     onAddTag: fn().mockName('onAddTag'),
@@ -38,7 +36,7 @@ type Story = StoryObj<typeof meta>;
 /** List with multiple articles, more available to load */
 export const WithArticles: Story = {
   args: {
-    articles: articleFixtures.filter((a) => !a.isArchived),
+    articles: articleWithTagsFixtures.filter((a) => !a.isArchived),
     totalCount: 25,
     readStatus: 'all',
     context: 'inbox',
@@ -52,8 +50,8 @@ export const WithArticles: Story = {
 /** All articles shown — no "Load More" button */
 export const AllLoaded: Story = {
   args: {
-    articles: unreadArticles,
-    totalCount: unreadArticles.length,
+    articles: unreadArticlesWithTags,
+    totalCount: unreadArticlesWithTags.length,
     readStatus: 'unread',
     context: 'inbox',
   },

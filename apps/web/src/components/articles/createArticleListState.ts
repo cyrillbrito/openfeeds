@@ -2,8 +2,8 @@
  * Shared hook for article list state — queries, pagination, and mutation handlers.
  *
  * Each route calls this with its specific query filter. The hook owns:
- * - 4 standard queries (articles, totalCount, unreadCount, archivable)
- * - Article tags query for the displayed articles
+ * - Combined articles + article-tags query (using toArray includes)
+ * - Count queries (total, unread, archivable)
  * - Shorts existence check
  * - Pagination state (visibleCount + loadMore)
  * - Mutation handlers (updateArticle, markAllArchived, addTag, removeTag)
@@ -12,7 +12,7 @@
  */
 import type { Article, ArticleTag } from '@repo/domain/client';
 import { createId } from '@repo/shared/utils';
-import { type Ref, and, eq, ilike, useLiveQuery } from '@tanstack/solid-db';
+import { type Ref, and, eq, ilike, toArray, useLiveQuery } from '@tanstack/solid-db';
 import { createSignal, onMount } from 'solid-js';
 import type { Accessor } from 'solid-js';
 import { articleTagsCollection } from '~/entities/article-tags';
@@ -26,8 +26,13 @@ import type { ReadStatus } from './ReadStatusToggle';
 
 type SortDirection = 'asc' | 'desc';
 
+export type ArticleWithTags = Article & { articleTags: ArticleTag[] };
+
 export interface ArticleQueryFilter {
-  /** Base where-clause applied to all queries (e.g. feedId filter, tag join) */
+  /**
+   * Base query with from + joins + where (no select, orderBy, or limit).
+   * The hook adds .select() with article-tags toArray include, .orderBy(), and .limit().
+   */
   buildQuery: (q: any, extra: { readStatusWhere: ((article: Ref<Article>) => any) | null }) => any;
   /** Build a count-only query variant (no limit, select id only) */
   buildCountQuery: (
@@ -50,13 +55,12 @@ export interface ArticleListStateConfig {
 }
 
 export interface ArticleListState {
-  articles: Accessor<Article[]>;
+  articles: Accessor<ArticleWithTags[]>;
   totalCount: Accessor<number>;
   unreadCount: Accessor<number>;
   archivableCount: Accessor<number>;
   feeds: Accessor<any[]>;
   tags: Accessor<any[]>;
-  articleTags: Accessor<ArticleTag[]>;
   shortsExist: Accessor<boolean>;
   loadMore: () => void;
   updateArticle: (articleId: string, updates: { isRead?: boolean; isArchived?: boolean }) => void;
@@ -78,11 +82,30 @@ export function createArticleListState(config: ArticleListStateConfig): ArticleL
   const feedsQuery = useFeeds();
   const tagsQuery = useTags();
 
-  // Main articles query
+  // Main articles query with article-tags included via toArray subquery.
+  // Each article row gets an `articleTags: ArticleTag[]` field, scoped to that article.
+  // This replaces the previous separate unfiltered articleTagsQuery that fetched ALL
+  // article-tags (full-table scan) and caused a major performance regression.
   const articlesQuery = useLiveQuery((q) => {
     const filter = readStatusFilter(config.readStatus(), sessionReadIds());
     return config.filter
       .buildQuery(q, { readStatusWhere: filter })
+      .select(({ article }: { article: Ref<Article> }) => ({
+        ...article,
+        articleTags: toArray(
+          q
+            .from({ articleTag: articleTagsCollection })
+            .where(({ articleTag }: { articleTag: Ref<ArticleTag> }) =>
+              eq(articleTag.articleId, article.id),
+            )
+            .select(({ articleTag }: { articleTag: Ref<ArticleTag> }) => ({
+              id: articleTag.id,
+              userId: articleTag.userId,
+              articleId: articleTag.articleId,
+              tagId: articleTag.tagId,
+            })),
+        ),
+      }))
       .orderBy(({ article }: { article: Ref<Article> }) => article.pubDate, direction())
       .limit(visibleCount());
   });
@@ -99,9 +122,6 @@ export function createArticleListState(config: ArticleListStateConfig): ArticleL
   // Archivable count (all non-archived)
   const archivableQuery = useLiveQuery((q) => config.filter.buildArchivableQuery(q));
 
-  // Article tags for the displayed articles
-  const articleTagsQuery = useLiveQuery((q) => q.from({ articleTag: articleTagsCollection }));
-
   // Shorts existence check
   const shortsQuery = useLiveQuery((q) =>
     q
@@ -114,13 +134,13 @@ export function createArticleListState(config: ArticleListStateConfig): ArticleL
   );
 
   // Derived values
-  const articles = (): Article[] => (articlesQuery() as Article[] | undefined) || [];
+  const articles = (): ArticleWithTags[] =>
+    (articlesQuery() as ArticleWithTags[] | undefined) || [];
   const totalCount = () => (totalCountQuery() || []).length;
   const unreadCount = () => (unreadCountQuery() || []).length;
   const archivableCount = () => (archivableQuery() || []).length;
   const feeds = () => feedsQuery() || [];
   const tags = () => tagsQuery() || [];
-  const articleTags = (): ArticleTag[] => articleTagsQuery() || [];
   const shortsExist = () => (shortsQuery()?.length ?? 0) > 0;
 
   // Handlers
@@ -176,7 +196,6 @@ export function createArticleListState(config: ArticleListStateConfig): ArticleL
     archivableCount,
     feeds,
     tags,
-    articleTags,
     shortsExist,
     loadMore,
     updateArticle,

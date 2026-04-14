@@ -30,16 +30,11 @@ function Inbox() {
   const { showToast } = useToast();
 
   const filter: ArticleQueryFilter = {
-    buildQuery: (q, { readStatusWhere }) => {
-      let query = q
-        .from({ article: articlesCollection })
-        .where(({ article }: any) => {
-          const base = eq(article.isArchived, false);
-          return readStatusWhere ? and(base, readStatusWhere(article)) : base;
-        })
-        .select(({ article }: any) => ({ ...article }));
-      return query;
-    },
+    buildQuery: (q, { readStatusWhere }) =>
+      q.from({ article: articlesCollection }).where(({ article }: any) => {
+        const base = eq(article.isArchived, false);
+        return readStatusWhere ? and(base, readStatusWhere(article)) : base;
+      }),
     buildCountQuery: (q, { readStatusWhere }) =>
       q
         .from({ article: articlesCollection })
@@ -127,7 +122,6 @@ function Inbox() {
               articles={state.articles()}
               feeds={state.feeds()}
               tags={state.tags()}
-              articleTags={state.articleTags()}
               totalCount={state.totalCount()}
               onLoadMore={state.loadMore}
               onUpdateArticle={state.updateArticle}

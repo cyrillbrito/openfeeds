@@ -42,13 +42,10 @@ function FeedArticles() {
 
   const filter: ArticleQueryFilter = {
     buildQuery: (q, { readStatusWhere }) =>
-      q
-        .from({ article: articlesCollection })
-        .where(({ article }: any) => {
-          const base = and(eq(article.feedId, feedId()), eq(article.isArchived, false));
-          return readStatusWhere ? and(base, readStatusWhere(article)) : base;
-        })
-        .select(({ article }: any) => ({ ...article })),
+      q.from({ article: articlesCollection }).where(({ article }: any) => {
+        const base = and(eq(article.feedId, feedId()), eq(article.isArchived, false));
+        return readStatusWhere ? and(base, readStatusWhere(article)) : base;
+      }),
     buildCountQuery: (q, { readStatusWhere }) =>
       q
         .from({ article: articlesCollection })
@@ -234,7 +231,6 @@ function FeedArticles() {
             articles={state.articles()}
             feeds={state.feeds()}
             tags={state.tags()}
-            articleTags={state.articleTags()}
             totalCount={state.totalCount()}
             onLoadMore={state.loadMore}
             onUpdateArticle={state.updateArticle}
