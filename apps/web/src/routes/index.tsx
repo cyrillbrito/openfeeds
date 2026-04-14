@@ -3,8 +3,8 @@ import { $$hasAnyFeeds } from '~/entities/feeds.functions';
 import { authGuard } from '~/lib/guards';
 
 export const Route = createFileRoute('/')({
-  beforeLoad: async () => {
-    await authGuard();
+  beforeLoad: async (ctx) => {
+    await authGuard(ctx.location);
   },
   loader: async () => {
     const hasFeeds = await $$hasAnyFeeds();

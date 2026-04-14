@@ -13,8 +13,8 @@ import { authGuard } from '~/lib/guards';
 import { getTagDotColor } from '~/utils/tagColors';
 
 export const Route = createFileRoute('/_frame')({
-  beforeLoad: async ({ location }) => {
-    await authGuard(location);
+  beforeLoad: async (ctx) => {
+    await authGuard(ctx.location);
   },
   component: FrameLayout,
 });
