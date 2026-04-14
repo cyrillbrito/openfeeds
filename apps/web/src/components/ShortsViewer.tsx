@@ -11,9 +11,9 @@ import {
   Suspense,
   type Accessor,
 } from 'solid-js';
+import { ReadStatusToggle, type ReadStatus } from '~/components/articles/ReadStatusToggle';
 import { Dropdown } from './Dropdown';
 import { ReadIconButton } from './ReadIconButton';
-import { ReadStatusToggle, type ReadStatus } from './ReadStatusToggle';
 import { TimeAgo } from './TimeAgo';
 import { YouTubeShortsEmbed } from './YouTubeShortsEmbed';
 

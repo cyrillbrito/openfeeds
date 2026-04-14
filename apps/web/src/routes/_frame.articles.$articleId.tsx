@@ -1,3 +1,4 @@
+import { createId } from '@repo/shared/utils';
 import { eq, useLiveQuery } from '@tanstack/solid-db';
 import { createFileRoute, Link, useRouter } from '@tanstack/solid-router';
 import { Archive, ArrowLeft, Inbox } from 'lucide-solid';
@@ -6,13 +7,14 @@ import { createEffect, createSignal, on, Show, Suspense } from 'solid-js';
 import { ArchiveIconButton } from '~/components/ArchiveIconButton';
 import { ArticleAudioProvider } from '~/components/ArticleAudioContext';
 import { ArticleAudioPlayer } from '~/components/ArticleAudioPlayer';
-import { ArticleTagManager } from '~/components/ArticleTagManager';
+import { ArticleTagManager } from '~/components/articles/ArticleTagManager';
 import { HighlightedArticleContent } from '~/components/HighlightedArticleContent';
 import { Loader } from '~/components/Loader';
 import { PageLayout } from '~/components/PageLayout';
 import { PrintIconButton } from '~/components/PrintIconButton';
 import { ReadIconButton } from '~/components/ReadIconButton';
 import { TimeAgo } from '~/components/TimeAgo';
+import { articleTagsCollection } from '~/entities/article-tags';
 import { articlesCollection } from '~/entities/articles';
 import { $$extractArticleContent } from '~/entities/articles.functions';
 import { feedsCollection } from '~/entities/feeds';
@@ -92,6 +94,27 @@ function ArticleView() {
     q.from({ feed: feedsCollection }).where(({ feed }) => eq(feed.id, article()?.feedId ?? '')),
   );
   const tagsQuery = useTags();
+
+  // Article tags query + handlers (lifted from ArticleTagManager for prop-drilling)
+  const articleTagsQuery = useLiveQuery((q) =>
+    q
+      .from({ articleTag: articleTagsCollection })
+      .where(({ articleTag }) => eq(articleTag.articleId, articleId())),
+  );
+  const articleTags = () => articleTagsQuery() ?? [];
+
+  const handleAddTag = (tagId: string) => {
+    articleTagsCollection.insert({
+      id: createId(),
+      userId: '',
+      articleId: articleId(),
+      tagId,
+    });
+  };
+
+  const handleRemoveTag = (articleTagId: string) => {
+    articleTagsCollection.delete(articleTagId);
+  };
 
   const feed = () => (feedsQuery() ?? [])[0] ?? null;
 
@@ -240,7 +263,13 @@ function ArticleView() {
                 {/* Article Tags */}
                 <Show when={tagsQuery()}>
                   <div class="mt-4 print:hidden">
-                    <ArticleTagManager articleId={art().id} tags={tagsQuery()} />
+                    <ArticleTagManager
+                      articleId={art().id}
+                      tags={tagsQuery()}
+                      articleTags={articleTags()}
+                      onAddTag={handleAddTag}
+                      onRemoveTag={handleRemoveTag}
+                    />
                   </div>
                 </Show>
               </header>

@@ -1,7 +1,7 @@
 import { TriangleAlert } from 'lucide-solid';
 import { createSignal, Show } from 'solid-js';
 import { Portal } from 'solid-js/web';
-import { LazyModal, type ModalController } from './LazyModal';
+import { LazyModal, type ModalController } from '~/components/LazyModal';
 
 // NOTE: The trigger renders a plain <button> (no btn classes) so it works
 // as a daisyUI menu item when placed inside <li> within a <Dropdown>.

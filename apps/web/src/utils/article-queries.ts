@@ -1,6 +1,6 @@
 import type { Article } from '@repo/domain/client';
 import { type Ref, eq, inArray, or } from '@tanstack/solid-db';
-import type { ReadStatus } from '~/components/ReadStatusToggle';
+import type { ReadStatus } from '~/components/articles/ReadStatusToggle';
 
 /**
  * Builds a read-status where clause that correctly handles session-read tracking.
