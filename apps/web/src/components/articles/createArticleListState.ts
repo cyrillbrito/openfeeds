@@ -109,6 +109,7 @@ export function createArticleListState(config: ArticleListStateConfig): ArticleL
       .where(({ article }: { article: Ref<Article> }) =>
         and(eq(article.isArchived, false), ilike(article.url, '%youtube.com/shorts%')),
       )
+      .orderBy(({ article }: { article: Ref<Article> }) => article.pubDate, 'desc')
       .limit(1),
   );
 
