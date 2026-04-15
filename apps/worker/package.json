@@ -10,13 +10,13 @@
     "@repo/db": "workspace:*",
     "@repo/domain": "workspace:*",
     "@t3-oss/env-core": "^0.13.11",
-    "bullmq": "^5.71.1",
+    "bullmq": "^5.74.1",
     "drizzle-orm": "^0.45.2",
     "zod": "^4.3.6"
   },
   "devDependencies": {
-    "@types/bun": "^1.3.11",
-    "better-auth": "^1.5.6",
+    "@types/bun": "^1.3.12",
+    "better-auth": "^1.6.4",
     "typescript": "^5"
   }
 }
