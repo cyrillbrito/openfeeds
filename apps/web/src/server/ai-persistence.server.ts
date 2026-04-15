@@ -19,15 +19,7 @@ export function createPersistenceMiddleware(userId: string, sessionId: string): 
   function save(ctx: ChatMiddlewareContext) {
     const messages = ctx.messages;
 
-    if (messages.length === 0) {
-      console.warn('[ai-persistence] No messages to save, skipping', { sessionId });
-      return;
-    }
-
-    console.log('[ai-persistence] Saving session', {
-      sessionId,
-      messageCount: messages.length,
-    });
+    if (messages.length === 0) return;
 
     ctx.defer(
       (async () => {
@@ -47,8 +39,6 @@ export function createPersistenceMiddleware(userId: string, sessionId: string): 
               messages: messages as unknown as Record<string, unknown>[],
             });
           });
-
-          console.log('[ai-persistence] Session saved successfully', { sessionId, title });
         } catch (err) {
           console.error('[ai-persistence] Failed to save session', { sessionId, error: err });
           throw err;

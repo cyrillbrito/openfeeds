@@ -25,18 +25,7 @@ export const Route = createFileRoute('/api/chat')({
         const { messages, context: chatContext } = body;
         const sessionId: string | undefined = body.sessionId ?? body.data?.sessionId;
 
-        console.log('[chat-api] Request received', {
-          hasMessages: !!messages,
-          messageCount: messages?.length,
-          sessionId,
-          bodyKeys: Object.keys(body),
-          dataKeys: body.data ? Object.keys(body.data) : null,
-        });
-
         if (!sessionId || typeof sessionId !== 'string') {
-          console.warn('[chat-api] Missing sessionId', {
-            body: JSON.stringify(body).slice(0, 500),
-          });
           return new Response('Missing sessionId', { status: 400 });
         }
 

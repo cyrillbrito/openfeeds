@@ -1,7 +1,8 @@
 /**
  * Returns the full URL for an Electric shape endpoint.
  * In the browser, constructs absolute URL from window.location.
- * On the server, returns the path as-is.
+ * On the server (SSR), returns the relative path — collections created during
+ * SSR will get a fresh client-side instance with the correct URL on hydration.
  */
 export function getShapeUrl(model: string): string {
   const path = `/api/shapes/${model}`;

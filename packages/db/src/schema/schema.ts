@@ -1,9 +1,9 @@
 import { relations, sql } from 'drizzle-orm';
 import {
   boolean,
+  customType,
   index,
   integer,
-  jsonb,
   pgTable,
   text,
   timestamp,
@@ -11,6 +11,29 @@ import {
   uuid,
 } from 'drizzle-orm/pg-core';
 import { user } from './auth';
+
+/**
+ * Custom jsonb column type for the bun:sql driver.
+ *
+ * Drizzle's built-in `jsonb()` calls `JSON.stringify()` in its `mapToDriverValue`,
+ * but `bun:sql` also serializes JS objects automatically. This double-serialization
+ * stores a JSON *string* instead of a JSON object/array in the JSONB column.
+ *
+ * This custom type passes the raw JS value through to the driver, letting `bun:sql`
+ * handle serialization once.
+ */
+const bunJsonb = <T>(columnName: string) =>
+  customType<{ data: T; driverData: T }>({
+    dataType() {
+      return 'jsonb';
+    },
+    toDriver(value: T): T {
+      return value;
+    },
+    fromDriver(value: T): T {
+      return value;
+    },
+  })(columnName);
 
 /** RSS/Atom feed subscriptions (unique per user+feedUrl) */
 export const feeds = pgTable(
@@ -352,7 +375,7 @@ export const chatSessions = pgTable(
       .references(() => user.id, { onDelete: 'cascade' }),
     title: text('title').notNull(),
     /** Full message history (UIMessage[] from @tanstack/ai) */
-    messages: jsonb('messages').notNull().default([]),
+    messages: bunJsonb<Record<string, unknown>[]>('messages').notNull().default([]),
     createdAt: timestamp('created_at').notNull().defaultNow(),
     updatedAt: timestamp('updated_at')
       .$onUpdate(() => new Date())
