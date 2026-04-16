@@ -6,7 +6,6 @@ import { ColorIndicator } from '~/components/ColorIndicator';
 import { getTagDotColor } from '~/utils/tagColors';
 
 interface ArticleTagManagerProps {
-  articleId: string;
   tags: Tag[];
   articleTags: ArticleTag[];
   onAddTag: (tagId: string) => void;

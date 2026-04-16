@@ -1,33 +1,54 @@
 import type { Meta, StoryObj } from 'storybook-solidjs-vite';
 import { expect, fn, within } from 'storybook/test';
 import { ArticleCard } from './ArticleCard';
+import { MockArticleListProvider, type ArticleListContextValue } from './ArticleListContext.shared';
 import { withRouter } from './articles-stories.decorator';
 import {
+  articleTagFixtures,
   feedFixtures,
-  htmlDescriptionArticleWithTags,
-  noFeedArticleWithTags,
-  readArticleWithTags,
+  htmlDescriptionArticle,
+  noFeedArticle,
+  readArticle,
   tagFixtures,
-  unreadArticleWithTags,
-  youtubeArticleWithTags,
+  unreadArticle,
+  youtubeArticle,
 } from './articles-stories.fixtures';
+
+const createFixtureTagsAccessor = (articleId: string) => () =>
+  articleTagFixtures.filter((at) => at.articleId === articleId);
+
+function createMockCtx(overrides?: Partial<ArticleListContextValue>): ArticleListContextValue {
+  return {
+    articles: () => [],
+    totalCount: () => 0,
+    unreadCount: () => 0,
+    archivableCount: () => 0,
+    feeds: () => feedFixtures,
+    tags: () => tagFixtures,
+    shortsExist: () => false,
+    readStatus: () => 'all',
+    context: 'inbox',
+    loadMore: fn().mockName('loadMore'),
+    updateArticle: fn().mockName('updateArticle'),
+    markAllArchived: fn().mockName('markAllArchived') as any,
+    addTag: fn().mockName('addTag'),
+    removeTag: fn().mockName('removeTag'),
+    createArticleTagsAccessor: createFixtureTagsAccessor,
+    ...overrides,
+  };
+}
 
 const meta: Meta<typeof ArticleCard> = {
   title: 'Articles/ArticleCard',
   component: ArticleCard,
-  args: {
-    feeds: feedFixtures,
-    tags: tagFixtures,
-    onUpdateArticle: fn().mockName('onUpdateArticle'),
-    onAddTag: fn().mockName('onAddTag'),
-    onRemoveTag: fn().mockName('onRemoveTag'),
-  },
   decorators: [
     withRouter,
     (Story: () => any) => (
-      <div class="divide-base-300 w-full max-w-2xl divide-y">
-        <Story />
-      </div>
+      <MockArticleListProvider value={createMockCtx()}>
+        <div class="divide-base-300 w-full max-w-2xl divide-y">
+          <Story />
+        </div>
+      </MockArticleListProvider>
     ),
   ],
 };
@@ -37,12 +58,10 @@ type Story = StoryObj<typeof meta>;
 
 /** Unread article with tags */
 export const Unread: Story = {
-  args: {
-    article: unreadArticleWithTags,
-  },
+  args: { article: unreadArticle },
   play: async ({ canvasElement }: { canvasElement: HTMLElement }) => {
     const canvas = within(canvasElement);
-    await expect(canvas.getByText(unreadArticleWithTags.title)).toBeInTheDocument();
+    await expect(canvas.getByText(unreadArticle.title)).toBeInTheDocument();
     await expect(canvas.getByText('TechCrunch')).toBeInTheDocument();
     await expect(canvas.getByText('Mark read')).toBeInTheDocument();
   },
@@ -50,9 +69,7 @@ export const Unread: Story = {
 
 /** Read article — reduced opacity */
 export const Read: Story = {
-  args: {
-    article: readArticleWithTags,
-  },
+  args: { article: readArticle },
   play: async ({ canvasElement }: { canvasElement: HTMLElement }) => {
     const canvas = within(canvasElement);
     await expect(canvas.getByText('Read')).toBeInTheDocument();
@@ -61,23 +78,17 @@ export const Read: Story = {
 
 /** Article with HTML description */
 export const HtmlDescription: Story = {
-  args: {
-    article: htmlDescriptionArticleWithTags,
-  },
+  args: { article: htmlDescriptionArticle },
 };
 
 /** YouTube Shorts article — shows thumbnail */
 export const YouTubeShort: Story = {
-  args: {
-    article: youtubeArticleWithTags,
-  },
+  args: { article: youtubeArticle },
 };
 
 /** Article without a feed (saved article) */
 export const NoFeed: Story = {
-  args: {
-    article: noFeedArticleWithTags,
-  },
+  args: { article: noFeedArticle },
   play: async ({ canvasElement }: { canvasElement: HTMLElement }) => {
     const canvas = within(canvasElement);
     await expect(canvas.getByText('Saved Article')).toBeInTheDocument();
@@ -86,8 +97,20 @@ export const NoFeed: Story = {
 
 /** Article with no tags at all */
 export const NoTags: Story = {
-  args: {
-    article: { ...unreadArticleWithTags, articleTags: [] },
-    tags: [],
-  },
+  args: { article: unreadArticle },
+  decorators: [
+    withRouter,
+    (Story: () => any) => (
+      <MockArticleListProvider
+        value={createMockCtx({
+          tags: () => [],
+          createArticleTagsAccessor: () => () => [],
+        })}
+      >
+        <div class="divide-base-300 w-full max-w-2xl divide-y">
+          <Story />
+        </div>
+      </MockArticleListProvider>
+    ),
+  ],
 };
