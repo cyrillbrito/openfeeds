@@ -40,7 +40,7 @@ export const Route = createRootRoute({
     ],
     title: 'OpenFeeds',
   }),
-  shellComponent: RootComponent,
+  component: RootComponent,
 });
 
 function RootComponent() {
