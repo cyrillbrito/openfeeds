@@ -1,5 +1,14 @@
 # Changelog
 
+## [0.12.1](https://github.com/cyrillbrito/openfeeds/compare/v0.12.0...v0.12.1) (2026-04-16)
+
+
+### Bug Fixes
+
+* upgrade dependencies to resolve sync and persistence bugs ([#239](https://github.com/cyrillbrito/openfeeds/issues/239)) ([6d5f8ae](https://github.com/cyrillbrito/openfeeds/commit/6d5f8ae76adebd8521594078e73fd618d1195e47))
+* **web:** fix article tags disappearing when marking as read ([#242](https://github.com/cyrillbrito/openfeeds/issues/242)) ([9efe2ca](https://github.com/cyrillbrito/openfeeds/commit/9efe2ca7028fc1ef73f202fed9340e027b7b176e))
+* **web:** resolve client-side dev warnings ([#241](https://github.com/cyrillbrito/openfeeds/issues/241)) ([13c659c](https://github.com/cyrillbrito/openfeeds/commit/13c659c31c10c69189d3500b269c5c3ed5acc02b))
+
 ## [0.12.0](https://github.com/cyrillbrito/openfeeds/compare/v0.11.13...v0.12.0) (2026-04-14)
 
 
