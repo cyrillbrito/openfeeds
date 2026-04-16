@@ -87,7 +87,7 @@ export const NoFeed: Story = {
 /** Article with no tags at all */
 export const NoTags: Story = {
   args: {
-    article: { ...unreadArticleWithTags, articleTags: [] },
+    article: unreadArticleWithTags,
     tags: [],
   },
 };

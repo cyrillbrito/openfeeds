@@ -158,7 +158,6 @@ export function ArticleCard(props: ArticleCardProps) {
           <ArticleTagManager
             articleId={props.article.id}
             tags={props.tags}
-            articleTags={props.article.articleTags}
             onAddTag={(tagId) => props.onAddTag(props.article.id, tagId)}
             onRemoveTag={props.onRemoveTag}
           />

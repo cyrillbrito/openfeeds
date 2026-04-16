@@ -95,14 +95,7 @@ function ArticleView() {
   );
   const tagsQuery = useTags();
 
-  // Article tags query + handlers (lifted from ArticleTagManager for prop-drilling)
-  const articleTagsQuery = useLiveQuery((q) =>
-    q
-      .from({ articleTag: articleTagsCollection })
-      .where(({ articleTag }) => eq(articleTag.articleId, articleId())),
-  );
-  const articleTags = () => articleTagsQuery() ?? [];
-
+  // Article tag handlers
   const handleAddTag = (tagId: string) => {
     articleTagsCollection.insert({
       id: createId(),
@@ -264,9 +257,8 @@ function ArticleView() {
                 <Show when={tagsQuery()}>
                   <div class="mt-4 print:hidden">
                     <ArticleTagManager
-                      articleId={art().id}
+                      articleId={articleId()}
                       tags={tagsQuery()}
-                      articleTags={articleTags()}
                       onAddTag={handleAddTag}
                       onRemoveTag={handleRemoveTag}
                     />

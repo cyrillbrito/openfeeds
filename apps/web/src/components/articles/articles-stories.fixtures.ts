@@ -221,28 +221,22 @@ export const articleTagFixtures: ArticleTag[] = [
 ];
 
 // --- Articles with tags (ArticleWithTags) ---
+// ArticleWithTags is now just an alias for Article (tags queried independently by ArticleTagManager).
+// These helpers remain for backward compatibility with story imports.
 
-/** Helper to attach article tags to an article */
-function withTags(article: Article): ArticleWithTags {
-  return {
-    ...article,
-    articleTags: articleTagFixtures.filter((at) => at.articleId === article.id),
-  };
-}
+export const unreadArticleWithTags: ArticleWithTags = unreadArticle;
+export const readArticleWithTags: ArticleWithTags = readArticle;
+export const archivedArticleWithTags: ArticleWithTags = archivedArticle;
+export const htmlDescriptionArticleWithTags: ArticleWithTags = htmlDescriptionArticle;
+export const youtubeArticleWithTags: ArticleWithTags = youtubeArticle;
+export const noFeedArticleWithTags: ArticleWithTags = noFeedArticle;
 
-export const unreadArticleWithTags = withTags(unreadArticle);
-export const readArticleWithTags = withTags(readArticle);
-export const archivedArticleWithTags = withTags(archivedArticle);
-export const htmlDescriptionArticleWithTags = withTags(htmlDescriptionArticle);
-export const youtubeArticleWithTags = withTags(youtubeArticle);
-export const noFeedArticleWithTags = withTags(noFeedArticle);
-
-export const articleWithTagsFixtures: ArticleWithTags[] = articleFixtures.map(withTags);
+export const articleWithTagsFixtures: ArticleWithTags[] = articleFixtures;
 
 /** A convenient subset: only unread, non-archived articles */
 export const unreadArticles: Article[] = articleFixtures.filter((a) => !a.isRead && !a.isArchived);
-export const unreadArticlesWithTags: ArticleWithTags[] = unreadArticles.map(withTags);
+export const unreadArticlesWithTags: ArticleWithTags[] = unreadArticles;
 
 /** A convenient subset: articles with feed-1 */
 export const techCrunchArticles: Article[] = articleFixtures.filter((a) => a.feedId === 'feed-1');
-export const techCrunchArticlesWithTags: ArticleWithTags[] = techCrunchArticles.map(withTags);
+export const techCrunchArticlesWithTags: ArticleWithTags[] = techCrunchArticles;
