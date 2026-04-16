@@ -32,11 +32,13 @@ export function createPersistenceMiddleware(userId: string, sessionId: string): 
           );
           const title = deriveTitle(uiMessages);
 
+          const payload = messages as unknown as Record<string, unknown>[];
+
           await withTransaction(db, userId, undefined, async (txCtx) => {
             await saveChatSession(txCtx, {
               id: sessionId,
               title,
-              messages: messages as unknown as Record<string, unknown>[],
+              messages: payload,
             });
           });
         } catch (err) {
@@ -50,7 +52,15 @@ export function createPersistenceMiddleware(userId: string, sessionId: string): 
   return {
     name: 'chat-persistence',
 
-    onFinish(ctx, _info) {
+    onFinish(ctx, info) {
+      // TanStack AI's ctx.messages does NOT include the final assistant response
+      // from the last streaming cycle — only the accumulated content is available
+      // via info.content. Append it so the full conversation is persisted.
+      if (info.content) {
+        const messages = [...ctx.messages, { role: 'assistant' as const, content: info.content }];
+        save({ ...ctx, messages });
+        return;
+      }
       save(ctx);
     },
 

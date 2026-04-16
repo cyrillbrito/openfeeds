@@ -89,24 +89,22 @@ function FrameLayout() {
   };
 
   return (
-    <ChatProvider>
-      <div class="drawer lg:drawer-open">
-        <input id="my-drawer" type="checkbox" class="drawer-toggle" />
-        <div class="drawer-content flex min-h-dvh">
-          {/* Main content */}
-          <div class="flex min-w-0 flex-1 flex-col">
-            <ClientOnly fallback={<CenterLoader />}>
+    <ClientOnly fallback={<CenterLoader />}>
+      <ChatProvider>
+        <div class="drawer lg:drawer-open">
+          <input id="my-drawer" type="checkbox" class="drawer-toggle" />
+          <div class="drawer-content flex min-h-dvh">
+            {/* Main content */}
+            <div class="flex min-w-0 flex-1 flex-col">
               <Suspense fallback={<CenterLoader />}>
                 <Outlet />
               </Suspense>
-            </ClientOnly>
+            </div>
           </div>
-        </div>
 
-        <div class="drawer-side z-10 shadow-sm">
-          <label for="my-drawer" aria-label="close sidebar" class="drawer-overlay"></label>
-          <aside class="menu bg-base-100 border-base-300 flex h-dvh w-80 flex-col flex-nowrap border-r px-4 pt-4 pb-2">
-            <ClientOnly fallback={<CenterLoader />}>
+          <div class="drawer-side z-10 shadow-sm">
+            <label for="my-drawer" aria-label="close sidebar" class="drawer-overlay"></label>
+            <aside class="menu bg-base-100 border-base-300 flex h-dvh w-80 flex-col flex-nowrap border-r px-4 pt-4 pb-2">
               {/* Menu Header */}
               <Link to="/inbox" class="mt-2 flex items-center justify-center gap-2">
                 <img src="/logo.svg" class="h-10 w-10" alt="OpenFeeds logo" />
@@ -166,13 +164,11 @@ function FrameLayout() {
 
               <div class="divider"></div>
               <UserMenu />
-            </ClientOnly>
-          </aside>
+            </aside>
+          </div>
         </div>
-      </div>
 
-      {/* AI surfaces */}
-      <ClientOnly>
+        {/* AI surfaces */}
         <Show when={showFab()}>
           <AiFab onClick={handleFabClick} />
         </Show>
@@ -187,8 +183,8 @@ function FrameLayout() {
             }
           }}
         />
-      </ClientOnly>
-    </ChatProvider>
+      </ChatProvider>
+    </ClientOnly>
   );
 }
 

@@ -50,7 +50,7 @@ export function MockChatProvider(props: MockChatProviderProps) {
     isLoading,
     error,
     sendMessage: async (text: string) => {
-      (props.onSendMessage ?? noop)(text);
+      void (props.onSendMessage ?? noop)(text);
     },
     stop: () => {
       (props.onStop ?? noop)();

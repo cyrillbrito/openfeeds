@@ -11,19 +11,20 @@ export async function saveChatSession(
   ctx: TransactionContext,
   data: SaveChatSessionInput,
 ): Promise<void> {
+  const messagesJson = JSON.stringify(data.messages);
   await ctx.conn
     .insert(chatSessions)
     .values({
       id: data.id,
       userId: ctx.userId,
       title: data.title,
-      messages: data.messages,
+      messages: messagesJson,
     })
     .onConflictDoUpdate({
       target: chatSessions.id,
       set: {
         title: data.title,
-        messages: data.messages,
+        messages: messagesJson,
         updatedAt: new Date(),
       },
     });

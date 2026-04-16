@@ -14,7 +14,8 @@ export const ChatSessionSchema = z.object({
   id: z.string(),
   userId: z.string(),
   title: z.string(),
-  messages: z.array(StoredMessageSchema),
+  /** Messages stored as JSON text — parse on read */
+  messages: z.string().transform((val) => JSON.parse(val) as Record<string, unknown>[]),
   createdAt: z.coerce.date(),
   updatedAt: z.coerce.date(),
 });

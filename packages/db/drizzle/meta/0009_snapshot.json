@@ -1275,10 +1275,10 @@
         },
         "messages": {
           "name": "messages",
-          "type": "jsonb",
+          "type": "text",
           "primaryKey": false,
           "notNull": true,
-          "default": "'[]'::jsonb"
+          "default": "'[]'"
         },
         "created_at": {
           "name": "created_at",

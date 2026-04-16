@@ -58,10 +58,11 @@ export function ChatProvider(props: { children: JSX.Element }) {
       if (viewSessionId() === streamSessionId()) {
         return;
       }
-      const rawMsgs =
-        typeof session.messages === 'string'
+      const rawMsgs = Array.isArray(session.messages)
+        ? session.messages
+        : typeof session.messages === 'string'
           ? (JSON.parse(session.messages as string) as typeof session.messages)
-          : session.messages;
+          : [];
       setViewedMessages(storedToUi(rawMsgs));
     }),
   );

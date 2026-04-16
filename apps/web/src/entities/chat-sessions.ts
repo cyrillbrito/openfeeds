@@ -21,8 +21,6 @@ export const chatSessionsCollection = createCollection(
       url: getShapeUrl('chat-sessions'),
       parser: {
         ...timestampParser,
-        // Electric sends jsonb columns as raw JSON strings — parse them back to objects
-        jsonb: (value: string) => JSON.parse(value),
       },
       columnMapper: snakeCamelMapper(),
       onError: shapeErrorHandler('chat-sessions.shape'),

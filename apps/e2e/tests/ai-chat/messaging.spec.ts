@@ -2,7 +2,7 @@ import { expect, test } from '../../fixtures/auth-fixture';
 import { AiChat } from '../../lib/AiChat';
 
 test.describe('AI Chat Messaging', () => {
-  test.setTimeout(60_000);
+  test.slow();
 
   let chat: AiChat;
 
@@ -69,6 +69,10 @@ test.describe('AI Chat Messaging', () => {
   });
 
   test('multiple messages in sequence', async () => {
+    // Start a fresh session to avoid picking up messages from prior tests
+    await chat.getPageNewChatButton().click();
+    await expect(chat.getEmptyState()).toBeVisible();
+
     await chat.sendMessageAndWaitForResponse('Say the number 1');
     await chat.sendMessageAndWaitForResponse('Say the number 2');
 

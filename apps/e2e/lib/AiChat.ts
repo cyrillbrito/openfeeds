@@ -63,11 +63,6 @@ export class AiChat {
     return this.getPopover().locator('textarea');
   }
 
-  getPageTextarea() {
-    // The full-page textarea is NOT inside role="complementary"
-    return this.page.locator('textarea').not(this.getPopover().locator('textarea'));
-  }
-
   getSendButton() {
     return this.page.getByTitle('Send').first();
   }

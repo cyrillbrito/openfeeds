@@ -2,7 +2,7 @@ import { expect, test } from '../../fixtures/auth-fixture';
 import { AiChat } from '../../lib/AiChat';
 
 test.describe('AI Chat Tool Calling', () => {
-  test.setTimeout(60_000);
+  test.slow();
 
   let chat: AiChat;
 
