@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.12.4](https://github.com/cyrillbrito/openfeeds/compare/v0.12.3...v0.12.4) (2026-04-16)
+
+
+### Bug Fixes
+
+* **ci:** drop --frozen-lockfile from pruned install and revert unnecessary typescript devDeps ([#249](https://github.com/cyrillbrito/openfeeds/issues/249)) ([10b1080](https://github.com/cyrillbrito/openfeeds/commit/10b1080e322e165a685b87d46111dcea3d5b2dac))
+
 ## [0.12.3](https://github.com/cyrillbrito/openfeeds/compare/v0.12.2...v0.12.3) (2026-04-16)
 
 
