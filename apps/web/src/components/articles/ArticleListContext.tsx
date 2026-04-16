@@ -10,22 +10,22 @@
 import type { Article, ArticleTag, Feed, Tag } from '@repo/domain/client';
 import { createId } from '@repo/shared/utils';
 import { type Ref, and, eq, ilike, useLiveQuery } from '@tanstack/solid-db';
-import {
-  type Accessor,
-  type JSX,
-  createContext,
-  createSignal,
-  onMount,
-  useContext,
-} from 'solid-js';
+import { type Accessor, type JSX, createSignal, onMount } from 'solid-js';
 import { articleTagsCollection } from '~/entities/article-tags';
 import { articlesCollection } from '~/entities/articles';
 import { useFeeds } from '~/entities/feeds';
 import { useTags } from '~/entities/tags';
 import { useSessionRead } from '~/providers/session-read';
 import { readStatusFilter } from '~/utils/article-queries';
+import { ArticleListContext, type ArticleListContextValue } from './ArticleListContext.shared';
 import type { ReadStatus } from './ReadStatusToggle';
 
+// Re-export shared types and utilities for non-Storybook consumers
+export {
+  type ArticleListContextValue,
+  MockArticleListProvider,
+  useArticleList,
+} from './ArticleListContext.shared';
 export { type ReadStatus } from './ReadStatusToggle';
 
 export const ARTICLES_PER_PAGE = 20;
@@ -56,31 +56,6 @@ export interface ArticleListProviderProps {
   onArchive?: (articleId: string) => void;
   children: JSX.Element;
 }
-
-export interface ArticleListContextValue {
-  articles: Accessor<Article[]>;
-  totalCount: Accessor<number>;
-  unreadCount: Accessor<number>;
-  archivableCount: Accessor<number>;
-  feeds: Accessor<Feed[]>;
-  tags: Accessor<Tag[]>;
-  shortsExist: Accessor<boolean>;
-  readStatus: Accessor<ReadStatus>;
-  context: 'inbox' | 'feed' | 'tag';
-  loadMore: () => void;
-  updateArticle: (articleId: string, updates: { isRead?: boolean; isArchived?: boolean }) => void;
-  markAllArchived: () => Promise<void>;
-  addTag: (articleId: string, tagId: string) => void;
-  removeTag: (articleTagId: string) => void;
-  /**
-   * Creates a scoped useLiveQuery for article-tags filtered by articleId.
-   * Each call creates an independent reactive subscription unaffected by
-   * the parent articles query's reconcile cycle.
-   */
-  createArticleTagsAccessor: (articleId: string) => Accessor<ArticleTag[]>;
-}
-
-const ArticleListContext = createContext<ArticleListContextValue>();
 
 export function ArticleListProvider(props: ArticleListProviderProps) {
   const { sessionReadIds, addSessionRead, setViewKey } = useSessionRead();
@@ -208,23 +183,4 @@ export function ArticleListProvider(props: ArticleListProviderProps) {
   };
 
   return <ArticleListContext.Provider value={value}>{props.children}</ArticleListContext.Provider>;
-}
-
-export function useArticleList(): ArticleListContextValue {
-  const ctx = useContext(ArticleListContext);
-  if (!ctx) throw new Error('useArticleList must be used within an ArticleListProvider');
-  return ctx;
-}
-
-/**
- * Test-only provider that accepts a pre-built context value.
- * Use in Storybook stories to bypass collection queries.
- */
-export function MockArticleListProvider(props: {
-  value: ArticleListContextValue;
-  children: JSX.Element;
-}) {
-  return (
-    <ArticleListContext.Provider value={props.value}>{props.children}</ArticleListContext.Provider>
-  );
 }

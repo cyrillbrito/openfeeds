@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from 'storybook-solidjs-vite';
 import { expect, fn, within } from 'storybook/test';
 import { ArticleList } from './ArticleList';
-import { MockArticleListProvider, type ArticleListContextValue } from './ArticleListContext';
+import { MockArticleListProvider, type ArticleListContextValue } from './ArticleListContext.shared';
 import { withRouter } from './articles-stories.decorator';
 import {
   articleFixtures,
