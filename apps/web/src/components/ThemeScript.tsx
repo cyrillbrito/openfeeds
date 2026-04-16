@@ -1,5 +1,3 @@
-import { ScriptOnce } from '@tanstack/solid-router';
-
 /**
  * Blocking inline script that prevents theme flash on page load.
  *
@@ -8,12 +6,13 @@ import { ScriptOnce } from '@tanstack/solid-router';
  * from localStorage and resolves "system" via matchMedia.
  *
  * Based on the pattern used by next-themes (https://github.com/pacocoursey/next-themes).
- * Must stay as a string — ScriptOnce injects it as raw JS in <head>.
+ * Uses a raw <script> tag because it renders in shellComponent (before router context).
  */
 export function ThemeScript() {
   return (
-    <ScriptOnce>
-      {`(function() {
+    // eslint-disable-next-line solid/no-innerhtml
+    <script
+      innerHTML={`(function() {
         try {
           var theme = localStorage.getItem('theme') || 'system';
           var resolved = theme;
@@ -26,6 +25,6 @@ export function ThemeScript() {
           document.documentElement.setAttribute('data-theme', 'garden');
         }
       })()`}
-    </ScriptOnce>
+    />
   );
 }

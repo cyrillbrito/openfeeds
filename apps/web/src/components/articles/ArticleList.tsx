@@ -137,20 +137,26 @@ export function ArticleList(props: ArticleListProps) {
           <div class="mb-4 flex justify-center">{emptyState.icon}</div>
           <h2 class="mb-2 text-2xl font-semibold">{emptyState.title}</h2>
           <p class="text-base-content-gray mb-6">{emptyState.description}</p>
-          {emptyState.actions && (
-            <div class="flex justify-center gap-4">
-              {emptyState.actions.primary && (
-                <Link to={emptyState.actions.primary.href} class="btn btn-primary">
-                  {emptyState.actions.primary.text}
-                </Link>
-              )}
-              {emptyState.actions.secondary && (
-                <Link to={emptyState.actions.secondary.href} class="btn btn-outline">
-                  {emptyState.actions.secondary.text}
-                </Link>
-              )}
-            </div>
-          )}
+          <Show when={emptyState.actions}>
+            {(actions) => (
+              <div class="flex justify-center gap-4">
+                <Show when={actions().primary}>
+                  {(primary) => (
+                    <Link to={primary().href} class="btn btn-primary">
+                      {primary().text}
+                    </Link>
+                  )}
+                </Show>
+                <Show when={actions().secondary}>
+                  {(secondary) => (
+                    <Link to={secondary().href} class="btn btn-outline">
+                      {secondary().text}
+                    </Link>
+                  )}
+                </Show>
+              </div>
+            )}
+          </Show>
         </div>
       }
     >
