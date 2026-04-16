@@ -1,15 +1,13 @@
-import type { Tag } from '@repo/domain/client';
-import { eq, useLiveQuery } from '@tanstack/solid-db';
+import type { ArticleTag, Tag } from '@repo/domain/client';
 import { Link } from '@tanstack/solid-router';
 import { Plus } from 'lucide-solid';
 import { For } from 'solid-js';
 import { ColorIndicator } from '~/components/ColorIndicator';
-import { articleTagsCollection } from '~/entities/article-tags';
 import { getTagDotColor } from '~/utils/tagColors';
 
 interface ArticleTagManagerProps {
-  articleId: string;
   tags: Tag[];
+  articleTags: ArticleTag[];
   onAddTag: (tagId: string) => void;
   onRemoveTag: (articleTagId: string) => void;
 }
@@ -18,20 +16,12 @@ export function ArticleTagManager(props: ArticleTagManagerProps) {
   let triggerRef: HTMLButtonElement | undefined;
   let popoverRef: HTMLDivElement | undefined;
 
-  // Independent live query — not affected by parent article query's reconcile cycle
-  const articleTagsQuery = useLiveQuery((q) =>
-    q
-      .from({ articleTag: articleTagsCollection })
-      .where(({ articleTag }) => eq(articleTag.articleId, props.articleId)),
-  );
-
-  const articleTags = () => articleTagsQuery() ?? [];
-  const selectedTagIds = () => articleTags().map((at) => at.tagId);
+  const selectedTagIds = () => props.articleTags.map((at) => at.tagId);
   const selectedTags = () => props.tags.filter((t) => selectedTagIds().includes(t.id));
   const availableTags = () => props.tags.filter((tag) => !selectedTagIds().includes(tag.id));
 
   const removeTag = (tagId: string) => {
-    const articleTag = articleTags().find((at) => at.tagId === tagId);
+    const articleTag = props.articleTags.find((at) => at.tagId === tagId);
     if (articleTag) {
       props.onRemoveTag(articleTag.id);
     }

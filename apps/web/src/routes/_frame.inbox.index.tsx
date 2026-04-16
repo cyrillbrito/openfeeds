@@ -2,13 +2,15 @@ import { and, eq } from '@tanstack/solid-db';
 import { createFileRoute } from '@tanstack/solid-router';
 import { Show, Suspense } from 'solid-js';
 import { ArticleList } from '~/components/articles/ArticleList';
-import { ArticleListToolbar } from '~/components/articles/ArticleListToolbar';
 import {
-  createArticleListState,
+  ArticleListProvider,
+  useArticleList,
   type ArticleQueryFilter,
-} from '~/components/articles/createArticleListState';
+} from '~/components/articles/ArticleListContext';
+import { ArticleListToolbar } from '~/components/articles/ArticleListToolbar';
 import { MarkAllArchivedButton } from '~/components/articles/MarkAllArchivedButton';
 import { ReadStatusToggle } from '~/components/articles/ReadStatusToggle';
+import type { ReadStatus } from '~/components/articles/ReadStatusToggle';
 import { ShortsButton } from '~/components/articles/ShortsButton';
 import { SortToggle } from '~/components/articles/SortToggle';
 import { CommonErrorBoundary } from '~/components/CommonErrorBoundary';
@@ -55,24 +57,33 @@ function Inbox() {
         .select(({ article }: any) => ({ id: article.id })),
   };
 
-  const state = createArticleListState({
-    filter,
-    readStatus: () => readStatus(),
-    sortDirection: () => (sortOrder() === 'oldest' ? 'asc' : 'desc'),
-    viewKey: 'inbox',
-    onArchive: (articleId) => {
-      showToast('Article archived', {
-        action: {
-          label: 'Undo',
-          onClick: () => {
-            articlesCollection.update(articleId, (draft) => {
-              draft.isArchived = false;
-            });
+  return (
+    <ArticleListProvider
+      filter={filter}
+      readStatus={() => readStatus()}
+      sortDirection={() => (sortOrder() === 'oldest' ? 'asc' : 'desc')}
+      viewKey="inbox"
+      context="inbox"
+      onArchive={(articleId) => {
+        showToast('Article archived', {
+          action: {
+            label: 'Undo',
+            onClick: () => {
+              articlesCollection.update(articleId, (draft) => {
+                draft.isArchived = false;
+              });
+            },
           },
-        },
-      });
-    },
-  });
+        });
+      }}
+    >
+      <InboxContent readStatus={readStatus()} sortOrder={sortOrder()} />
+    </ArticleListProvider>
+  );
+}
+
+function InboxContent(props: { readStatus: ReadStatus; sortOrder: string }) {
+  const ctx = useArticleList();
 
   return (
     <PageLayout
@@ -80,8 +91,8 @@ function Inbox() {
       headerActions={
         <div class="flex flex-wrap gap-2">
           <ShortsButton
-            shortsExist={state.shortsExist()}
-            linkProps={{ to: '/inbox/shorts', search: { readStatus: readStatus() } }}
+            shortsExist={ctx.shortsExist()}
+            linkProps={{ to: '/inbox/shorts', search: { readStatus: props.readStatus } }}
           />
         </div>
       }
@@ -91,45 +102,30 @@ function Inbox() {
       <ArticleListToolbar
         leftContent={
           <>
-            <ReadStatusToggle currentStatus={readStatus()} />
-            <SortToggle currentSort={sortOrder()} />
+            <ReadStatusToggle currentStatus={props.readStatus} />
+            <SortToggle currentSort={props.sortOrder as any} />
           </>
         }
         menuContent={
-          <Show when={state.archivableCount() > 0}>
+          <Show when={ctx.archivableCount() > 0}>
             <li>
               <MarkAllArchivedButton
-                totalCount={state.archivableCount()}
+                totalCount={ctx.archivableCount()}
                 contextLabel="globally"
-                onConfirm={state.markAllArchived}
+                onConfirm={ctx.markAllArchived}
               />
             </li>
           </Show>
         }
-        unreadCount={state.unreadCount()}
-        totalCount={state.totalCount()}
-        readStatus={readStatus()}
+        unreadCount={ctx.unreadCount()}
+        totalCount={ctx.totalCount()}
+        readStatus={props.readStatus}
       />
 
       <CommonErrorBoundary>
         <Suspense fallback={<CenterLoader />}>
-          <Show
-            when={
-              state.feeds().length > 0 || state.tags().length > 0 || state.articles().length > 0
-            }
-          >
-            <ArticleList
-              articles={state.articles()}
-              feeds={state.feeds()}
-              tags={state.tags()}
-              totalCount={state.totalCount()}
-              onLoadMore={state.loadMore}
-              onUpdateArticle={state.updateArticle}
-              onAddTag={state.addTag}
-              onRemoveTag={state.removeTag}
-              readStatus={readStatus()}
-              context="inbox"
-            />
+          <Show when={ctx.feeds().length > 0 || ctx.tags().length > 0 || ctx.articles().length > 0}>
+            <ArticleList />
           </Show>
         </Suspense>
       </CommonErrorBoundary>

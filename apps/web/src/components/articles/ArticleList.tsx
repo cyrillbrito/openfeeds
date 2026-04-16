@@ -1,4 +1,3 @@
-import type { Feed, Tag } from '@repo/domain/client';
 import { Link } from '@tanstack/solid-router';
 import { ChevronDown } from 'lucide-solid';
 import { For, Show, type JSX } from 'solid-js';
@@ -9,22 +8,9 @@ import {
   TagsIllustration,
 } from '~/components/Icons';
 import { ArticleCard } from './ArticleCard';
-import type { ArticleWithTags } from './createArticleListState';
-import type { ReadStatus } from './ReadStatusToggle';
-
-export const ARTICLES_PER_PAGE = 20;
+import { useArticleList } from './ArticleListContext';
 
 interface ArticleListProps {
-  articles: ArticleWithTags[];
-  feeds: Feed[];
-  tags: Tag[];
-  totalCount: number; // Total articles available (for "load more" button)
-  onLoadMore: () => void; // Callback to load more
-  onUpdateArticle: (articleId: string, updates: { isRead?: boolean; isArchived?: boolean }) => void;
-  onAddTag: (articleId: string, tagId: string) => void;
-  onRemoveTag: (articleTagId: string) => void;
-  readStatus?: ReadStatus;
-  context?: 'inbox' | 'feed' | 'tag';
   emptyState?: {
     icon: string | JSX.Element;
     title: string;
@@ -37,15 +23,13 @@ interface ArticleListProps {
 }
 
 export function ArticleList(props: ArticleListProps) {
-  // Generate contextual empty state based on readStatus and context
-  const getContextualEmptyState = (): NonNullable<ArticleListProps['emptyState']> => {
-    const readStatus = props.readStatus;
-    const context = props.context || 'inbox';
+  const ctx = useArticleList();
 
-    // If parent provides custom empty state, use it
-    if (props.emptyState) {
-      return props.emptyState;
-    }
+  const getContextualEmptyState = (): NonNullable<ArticleListProps['emptyState']> => {
+    if (props.emptyState) return props.emptyState;
+
+    const readStatus = ctx.readStatus();
+    const context = ctx.context;
 
     if (readStatus === 'unread') {
       const contextMessages = {
@@ -124,14 +108,12 @@ export function ArticleList(props: ArticleListProps) {
   };
 
   const emptyState = getContextualEmptyState();
-
-  // Parent controls pagination now - we just show what we receive
-  const hasMoreArticles = () => props.articles.length < props.totalCount;
-  const remainingCount = () => props.totalCount - props.articles.length;
+  const hasMoreArticles = () => ctx.articles().length < ctx.totalCount();
+  const remainingCount = () => ctx.totalCount() - ctx.articles().length;
 
   return (
     <Show
-      when={props.articles && props.articles.length > 0}
+      when={ctx.articles().length > 0}
       fallback={
         <div class="py-16 text-center">
           <div class="mb-4 flex justify-center">{emptyState.icon}</div>
@@ -161,23 +143,12 @@ export function ArticleList(props: ArticleListProps) {
       }
     >
       <div class="divide-base-300 w-full divide-y">
-        <For each={props.articles}>
-          {(article) => (
-            <ArticleCard
-              article={article}
-              feeds={props.feeds}
-              tags={props.tags}
-              onUpdateArticle={props.onUpdateArticle}
-              onAddTag={props.onAddTag}
-              onRemoveTag={props.onRemoveTag}
-            />
-          )}
-        </For>
+        <For each={ctx.articles()}>{(article) => <ArticleCard article={article} />}</For>
       </div>
 
       <Show when={hasMoreArticles()}>
         <div class="mt-6 flex justify-center">
-          <button class="btn btn-outline btn-wide gap-2" onClick={props.onLoadMore}>
+          <button class="btn btn-outline btn-wide gap-2" onClick={ctx.loadMore}>
             <ChevronDown size={20} />
             Load More ({remainingCount()} remaining)
           </button>

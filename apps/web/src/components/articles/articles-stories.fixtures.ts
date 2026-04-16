@@ -5,7 +5,6 @@
  * that can be composed into different story scenarios.
  */
 import type { Article, ArticleTag, Feed, Tag } from '@repo/domain/client';
-import type { ArticleWithTags } from './createArticleListState';
 
 const now = new Date().toISOString();
 const oneHourAgo = new Date(Date.now() - 1000 * 60 * 60).toISOString();
@@ -220,23 +219,8 @@ export const articleTagFixtures: ArticleTag[] = [
   { id: 'at-4', userId: 'user-1', articleId: 'article-4', tagId: 'tag-3' },
 ];
 
-// --- Articles with tags (ArticleWithTags) ---
-// ArticleWithTags is now just an alias for Article (tags queried independently by ArticleTagManager).
-// These helpers remain for backward compatibility with story imports.
-
-export const unreadArticleWithTags: ArticleWithTags = unreadArticle;
-export const readArticleWithTags: ArticleWithTags = readArticle;
-export const archivedArticleWithTags: ArticleWithTags = archivedArticle;
-export const htmlDescriptionArticleWithTags: ArticleWithTags = htmlDescriptionArticle;
-export const youtubeArticleWithTags: ArticleWithTags = youtubeArticle;
-export const noFeedArticleWithTags: ArticleWithTags = noFeedArticle;
-
-export const articleWithTagsFixtures: ArticleWithTags[] = articleFixtures;
-
 /** A convenient subset: only unread, non-archived articles */
 export const unreadArticles: Article[] = articleFixtures.filter((a) => !a.isRead && !a.isArchived);
-export const unreadArticlesWithTags: ArticleWithTags[] = unreadArticles;
 
 /** A convenient subset: articles with feed-1 */
 export const techCrunchArticles: Article[] = articleFixtures.filter((a) => a.feedId === 'feed-1');
-export const techCrunchArticlesWithTags: ArticleWithTags[] = techCrunchArticles;

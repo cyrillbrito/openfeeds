@@ -5,11 +5,12 @@ import { createFileRoute, Link } from '@tanstack/solid-router';
 import { MoreVertical, TriangleAlert } from 'lucide-solid';
 import { createSignal, For, Show, Suspense } from 'solid-js';
 import { ArticleList } from '~/components/articles/ArticleList';
-import { ArticleListToolbar } from '~/components/articles/ArticleListToolbar';
 import {
-  createArticleListState,
+  ArticleListProvider,
+  useArticleList,
   type ArticleQueryFilter,
-} from '~/components/articles/createArticleListState';
+} from '~/components/articles/ArticleListContext';
+import { ArticleListToolbar } from '~/components/articles/ArticleListToolbar';
 import { MarkAllArchivedButton } from '~/components/articles/MarkAllArchivedButton';
 import { ReadStatusToggle, type ReadStatus } from '~/components/articles/ReadStatusToggle';
 import { ShortsButton } from '~/components/articles/ShortsButton';
@@ -74,17 +75,26 @@ function FeedArticles() {
         .select(({ article }: any) => ({ id: article.id })),
   };
 
-  const state = createArticleListState({
-    filter,
-    readStatus: () => readStatus(),
-    viewKey: `feed:${feedId()}`,
-  });
+  return (
+    <ArticleListProvider
+      filter={filter}
+      readStatus={() => readStatus()}
+      viewKey={`feed:${feedId()}`}
+      context="feed"
+    >
+      <FeedArticlesContent feedId={feedId()} readStatus={readStatus()} />
+    </ArticleListProvider>
+  );
+}
+
+function FeedArticlesContent(props: { feedId: string; readStatus: ReadStatus }) {
+  const ctx = useArticleList();
 
   // Feed-specific queries (not shared with other pages)
   const feedWithTagsQuery = useLiveQuery((q) =>
     q
       .from({ feed: feedsCollection })
-      .where(({ feed }) => eq(feed.id, feedId()))
+      .where(({ feed }) => eq(feed.id, props.feedId))
       .select(({ feed }) => ({
         ...feed,
         tags: toArray(
@@ -116,11 +126,11 @@ function FeedArticles() {
       headerActions={
         <div class="flex flex-wrap gap-2">
           <ShortsButton
-            shortsExist={state.shortsExist()}
+            shortsExist={ctx.shortsExist()}
             linkProps={{
               to: '/feeds/$feedId/shorts',
-              params: { feedId: feedId() },
-              search: { readStatus: readStatus() },
+              params: { feedId: props.feedId },
+              search: { readStatus: props.readStatus },
             }}
           />
           <Show when={currentFeed()}>
@@ -206,39 +216,26 @@ function FeedArticles() {
       </Show>
 
       <ArticleListToolbar
-        leftContent={<ReadStatusToggle currentStatus={readStatus()} />}
+        leftContent={<ReadStatusToggle currentStatus={props.readStatus} />}
         menuContent={
-          <Show when={state.archivableCount() > 0}>
+          <Show when={ctx.archivableCount() > 0}>
             <li>
               <MarkAllArchivedButton
-                totalCount={state.archivableCount()}
+                totalCount={ctx.archivableCount()}
                 contextLabel="in this feed"
-                onConfirm={state.markAllArchived}
+                onConfirm={ctx.markAllArchived}
               />
             </li>
           </Show>
         }
-        unreadCount={state.unreadCount()}
-        totalCount={state.totalCount()}
-        readStatus={readStatus()}
+        unreadCount={ctx.unreadCount()}
+        totalCount={ctx.totalCount()}
+        readStatus={props.readStatus}
       />
 
       <Suspense fallback={<CenterLoader />}>
-        <Show
-          when={state.feeds().length > 0 || state.tags().length > 0 || state.articles().length > 0}
-        >
-          <ArticleList
-            articles={state.articles()}
-            feeds={state.feeds()}
-            tags={state.tags()}
-            totalCount={state.totalCount()}
-            onLoadMore={state.loadMore}
-            onUpdateArticle={state.updateArticle}
-            onAddTag={state.addTag}
-            onRemoveTag={state.removeTag}
-            readStatus={readStatus()}
-            context="feed"
-          />
+        <Show when={ctx.feeds().length > 0 || ctx.tags().length > 0 || ctx.articles().length > 0}>
+          <ArticleList />
         </Show>
       </Suspense>
 

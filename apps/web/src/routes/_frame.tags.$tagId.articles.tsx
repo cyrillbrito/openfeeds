@@ -2,13 +2,14 @@ import { and, eq } from '@tanstack/solid-db';
 import { createFileRoute } from '@tanstack/solid-router';
 import { Show, Suspense } from 'solid-js';
 import { ArticleList } from '~/components/articles/ArticleList';
-import { ArticleListToolbar } from '~/components/articles/ArticleListToolbar';
 import {
-  createArticleListState,
+  ArticleListProvider,
+  useArticleList,
   type ArticleQueryFilter,
-} from '~/components/articles/createArticleListState';
+} from '~/components/articles/ArticleListContext';
+import { ArticleListToolbar } from '~/components/articles/ArticleListToolbar';
 import { MarkAllArchivedButton } from '~/components/articles/MarkAllArchivedButton';
-import { ReadStatusToggle } from '~/components/articles/ReadStatusToggle';
+import { ReadStatusToggle, type ReadStatus } from '~/components/articles/ReadStatusToggle';
 import { CenterLoader } from '~/components/Loader';
 import { articleTagsCollection } from '~/entities/article-tags';
 import { articlesCollection } from '~/entities/articles';
@@ -35,7 +36,8 @@ function TagArticlesPage() {
         .where(({ article, articleTag }: any) => {
           const base = and(eq(articleTag.tagId, tagId()), eq(article.isArchived, false));
           return readStatusWhere ? and(base, readStatusWhere(article)) : base;
-        }),
+        })
+        .select(({ article }: any) => article),
     buildCountQuery: (q, { readStatusWhere }) =>
       q
         .from({ article: articlesCollection })
@@ -73,48 +75,44 @@ function TagArticlesPage() {
         .select(({ article }: any) => ({ id: article.id })),
   };
 
-  const state = createArticleListState({
-    filter,
-    readStatus: () => readStatus(),
-    viewKey: `tag:${tagId()}`,
-  });
+  return (
+    <ArticleListProvider
+      filter={filter}
+      readStatus={() => readStatus()}
+      viewKey={`tag:${tagId()}`}
+      context="tag"
+    >
+      <TagArticlesContent readStatus={readStatus()} />
+    </ArticleListProvider>
+  );
+}
+
+function TagArticlesContent(props: { readStatus: ReadStatus }) {
+  const ctx = useArticleList();
 
   return (
     <>
       <ArticleListToolbar
-        leftContent={<ReadStatusToggle currentStatus={readStatus()} />}
+        leftContent={<ReadStatusToggle currentStatus={props.readStatus} />}
         menuContent={
-          <Show when={state.archivableCount() > 0}>
+          <Show when={ctx.archivableCount() > 0}>
             <li>
               <MarkAllArchivedButton
-                totalCount={state.archivableCount()}
+                totalCount={ctx.archivableCount()}
                 contextLabel="in this tag"
-                onConfirm={state.markAllArchived}
+                onConfirm={ctx.markAllArchived}
               />
             </li>
           </Show>
         }
-        unreadCount={state.unreadCount()}
-        totalCount={state.totalCount()}
-        readStatus={readStatus()}
+        unreadCount={ctx.unreadCount()}
+        totalCount={ctx.totalCount()}
+        readStatus={props.readStatus as any}
       />
 
       <Suspense fallback={<CenterLoader />}>
-        <Show
-          when={state.feeds().length > 0 || state.tags().length > 0 || state.articles().length > 0}
-        >
-          <ArticleList
-            articles={state.articles()}
-            feeds={state.feeds()}
-            tags={state.tags()}
-            totalCount={state.totalCount()}
-            onLoadMore={state.loadMore}
-            onUpdateArticle={state.updateArticle}
-            onAddTag={state.addTag}
-            onRemoveTag={state.removeTag}
-            readStatus={readStatus()}
-            context="tag"
-          />
+        <Show when={ctx.feeds().length > 0 || ctx.tags().length > 0 || ctx.articles().length > 0}>
+          <ArticleList />
         </Show>
       </Suspense>
     </>

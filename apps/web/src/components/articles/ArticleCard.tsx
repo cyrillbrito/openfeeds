@@ -1,4 +1,4 @@
-import type { Feed, Tag } from '@repo/domain/client';
+import type { Article } from '@repo/domain/client';
 import { Link } from '@tanstack/solid-router';
 import { Archive, Check, Inbox, Rss } from 'lucide-solid';
 import { Show } from 'solid-js';
@@ -7,27 +7,25 @@ import { TimeAgo } from '~/components/TimeAgo';
 import { YouTubeThumbnail } from '~/components/YouTubeThumbnail';
 import { containsHtml, downshiftHeadings } from '~/utils/html';
 import { extractYouTubeVideoId, isYouTubeUrl } from '~/utils/youtube';
+import { useArticleList } from './ArticleListContext';
 import { ArticleTagManager } from './ArticleTagManager';
-import type { ArticleWithTags } from './createArticleListState';
 
 interface ArticleCardProps {
-  article: ArticleWithTags;
-  feeds: Feed[];
-  tags: Tag[];
-  onUpdateArticle: (articleId: string, updates: { isRead?: boolean; isArchived?: boolean }) => void;
-  onAddTag: (articleId: string, tagId: string) => void;
-  onRemoveTag: (articleTagId: string) => void;
+  article: Article;
 }
 
 export function ArticleCard(props: ArticleCardProps) {
+  const ctx = useArticleList();
+  const articleTags = ctx.createArticleTagsAccessor(props.article.id);
+
   const feed = () =>
-    props.article.feedId ? props.feeds.find((f) => f.id === props.article.feedId) : null;
+    props.article.feedId ? ctx.feeds().find((f) => f.id === props.article.feedId) : null;
   const feedName = () => feed()?.title || (props.article.feedId ? 'Loading...' : 'Saved Article');
   const feedIcon = () => feed()?.icon;
 
   const markAsRead = () => {
     if (!props.article.isRead) {
-      props.onUpdateArticle(props.article.id, { isRead: true });
+      ctx.updateArticle(props.article.id, { isRead: true });
     }
   };
 
@@ -35,11 +33,11 @@ export function ArticleCard(props: ArticleCardProps) {
   const videoId = () => (props.article.url ? extractYouTubeVideoId(props.article.url) : null);
 
   const handleMarkRead = () => {
-    props.onUpdateArticle(props.article.id, { isRead: !props.article.isRead });
+    ctx.updateArticle(props.article.id, { isRead: !props.article.isRead });
   };
 
   const handleArchive = () => {
-    props.onUpdateArticle(props.article.id, { isArchived: !props.article.isArchived });
+    ctx.updateArticle(props.article.id, { isArchived: !props.article.isArchived });
   };
 
   return (
@@ -153,13 +151,13 @@ export function ArticleCard(props: ArticleCardProps) {
       </Show>
 
       {/* Tags */}
-      <Show when={props.tags.length > 0}>
+      <Show when={ctx.tags().length > 0}>
         <div class="relative mb-2">
           <ArticleTagManager
-            articleId={props.article.id}
-            tags={props.tags}
-            onAddTag={(tagId) => props.onAddTag(props.article.id, tagId)}
-            onRemoveTag={props.onRemoveTag}
+            tags={ctx.tags()}
+            articleTags={articleTags()}
+            onAddTag={(tagId) => ctx.addTag(props.article.id, tagId)}
+            onRemoveTag={ctx.removeTag}
           />
         </div>
       </Show>
