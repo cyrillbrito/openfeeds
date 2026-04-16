@@ -7,7 +7,7 @@ import { TimeAgo } from '~/components/TimeAgo';
 import { YouTubeThumbnail } from '~/components/YouTubeThumbnail';
 import { containsHtml, downshiftHeadings } from '~/utils/html';
 import { extractYouTubeVideoId, isYouTubeUrl } from '~/utils/youtube';
-import { useArticleList } from './ArticleListContext';
+import { useArticleList } from './ArticleListContext.shared';
 import { ArticleTagManager } from './ArticleTagManager';
 
 interface ArticleCardProps {

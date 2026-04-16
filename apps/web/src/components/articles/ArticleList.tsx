@@ -8,7 +8,7 @@ import {
   TagsIllustration,
 } from '~/components/Icons';
 import { ArticleCard } from './ArticleCard';
-import { useArticleList } from './ArticleListContext';
+import { useArticleList } from './ArticleListContext.shared';
 
 interface ArticleListProps {
   emptyState?: {
