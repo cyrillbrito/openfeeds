@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.12.2](https://github.com/cyrillbrito/openfeeds/compare/v0.12.1...v0.12.2) (2026-04-16)
+
+
+### Bug Fixes
+
+* clean install bun.lock ([#244](https://github.com/cyrillbrito/openfeeds/issues/244)) ([2071fe2](https://github.com/cyrillbrito/openfeeds/commit/2071fe24034bd296b8f14b731add1ca969e05b3e))
+
 ## [0.12.1](https://github.com/cyrillbrito/openfeeds/compare/v0.12.0...v0.12.1) (2026-04-16)
 
 
