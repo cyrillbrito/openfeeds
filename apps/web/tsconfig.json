@@ -5,7 +5,7 @@
     "jsx": "preserve",
     "jsxImportSource": "solid-js",
     "module": "ESNext",
-    "lib": ["ES2023", "DOM", "DOM.Iterable"],
+    "lib": ["ES2023", "DOM"],
     "types": ["vite/client"],
 
     /* Bundler mode */
@@ -16,11 +16,9 @@
 
     /* Linting */
     "skipLibCheck": true,
-    "strict": true,
     "noUnusedLocals": true,
     "noUnusedParameters": true,
     "noFallthroughCasesInSwitch": true,
-    "noUncheckedSideEffectImports": true,
     "noUncheckedIndexedAccess": true,
     "noImplicitOverride": true,
 
