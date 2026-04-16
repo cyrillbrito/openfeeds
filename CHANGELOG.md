@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.12.3](https://github.com/cyrillbrito/openfeeds/compare/v0.12.2...v0.12.3) (2026-04-16)
+
+
+### Bug Fixes
+
+* add typescript to deployed apps for turbo prune compatibility ([#247](https://github.com/cyrillbrito/openfeeds/issues/247)) ([5a73225](https://github.com/cyrillbrito/openfeeds/commit/5a732253ef1987cc1a18d5be65d1e41b9fcba83d))
+
 ## [0.12.2](https://github.com/cyrillbrito/openfeeds/compare/v0.12.1...v0.12.2) (2026-04-16)
 
 
