@@ -20,7 +20,6 @@
   "devDependencies": {
     "@tailwindcss/vite": "^4.2.2",
     "@wxt-dev/module-solid": "^1.1.4",
-    "typescript": "^5",
     "wxt": "^0.20.20"
   }
 }
