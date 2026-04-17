@@ -85,12 +85,20 @@ export class AiChat {
     return this.getPopover().getByText('How can I help?');
   }
 
+  /**
+   * Scope for full-page chat — excludes the popover overlay which shares
+   * the same ChatProvider and renders duplicate message elements.
+   */
+  private getPageContainer() {
+    return this.page.getByTestId('chat-page');
+  }
+
   getUserMessages() {
-    return this.page.locator('.bg-primary.text-primary-content');
+    return this.getPageContainer().locator('.bg-primary.text-primary-content');
   }
 
   getAiMessages() {
-    return this.page.locator('.prose.prose-chat');
+    return this.getPageContainer().locator('.prose.prose-chat');
   }
 
   getThinkingIndicator() {

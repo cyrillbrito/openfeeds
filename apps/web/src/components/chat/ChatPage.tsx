@@ -51,7 +51,7 @@ export function ChatPage() {
   };
 
   return (
-    <div class="flex h-dvh flex-col">
+    <div class="flex h-dvh flex-col" data-testid="chat-page">
       {/* Header */}
       <header class="bg-base-100 border-base-300 sticky top-0 z-10 border-b shadow">
         <div class="content-container flex items-center justify-between py-3">
