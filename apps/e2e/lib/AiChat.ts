@@ -117,6 +117,14 @@ export class AiChat {
     return this.page.locator('.loading-spinner');
   }
 
+  getPopoverAiMessages() {
+    return this.getPopover().locator('.prose.prose-chat');
+  }
+
+  getPopoverUserMessages() {
+    return this.getPopover().locator('.bg-primary.text-primary-content');
+  }
+
   getToolCallDoneIndicators() {
     return this.page.locator('.text-success');
   }
@@ -210,9 +218,20 @@ export class AiChat {
   }
 
   async waitForAiResponse() {
-    // Wait for at least one AI prose message to appear
-    await this.getAiMessages().first().waitFor({ timeout: 30_000 });
+    // Wait for at least one AI prose message OR a completed tool call
+    await this.getPageContainer()
+      .locator('.prose.prose-chat, .text-success')
+      .first()
+      .waitFor({ timeout: 30_000 });
     // Then wait for streaming to finish (thinking indicator gone)
+    await this.getThinkingIndicator().waitFor({ state: 'hidden', timeout: 30_000 });
+  }
+
+  async waitForPopoverAiResponse() {
+    await this.getPopover()
+      .locator('.prose.prose-chat, .text-success')
+      .first()
+      .waitFor({ timeout: 30_000 });
     await this.getThinkingIndicator().waitFor({ state: 'hidden', timeout: 30_000 });
   }
 

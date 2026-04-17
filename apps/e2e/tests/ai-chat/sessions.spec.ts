@@ -2,7 +2,6 @@ import { expect, test } from '../../fixtures/auth-fixture';
 import { AiChat } from '../../lib/AiChat';
 
 test.describe('AI Chat Sessions', () => {
-  test.skip(!process.env.ANTHROPIC_API_KEY, 'ANTHROPIC_API_KEY not set');
   test.setTimeout(90_000);
 
   let chat: AiChat;
@@ -135,7 +134,7 @@ test.describe('AI Chat Sessions', () => {
     await page.goto('/');
     await chat.openPopover();
     await chat.sendPopoverMessage('Say hello for expand test');
-    await chat.waitForAiResponse();
+    await chat.waitForPopoverAiResponse();
 
     // Expand to full page
     await chat.expandToFullPage();

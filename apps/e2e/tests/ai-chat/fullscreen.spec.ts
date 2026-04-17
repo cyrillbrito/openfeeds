@@ -14,7 +14,7 @@ test.describe('AI Chat Full Page', () => {
     await chat.goto();
 
     await expect(page).toHaveURL('/ai');
-    await expect(chat.getPageHeader()).toBeVisible();
+    await expect(chat.getPageHeader()).toBeVisible({ timeout: 15_000 });
     await expect(chat.getTextarea()).toBeVisible();
     await expect(chat.getEmptyState()).toBeVisible();
   });

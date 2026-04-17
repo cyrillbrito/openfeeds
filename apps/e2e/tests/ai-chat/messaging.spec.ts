@@ -2,7 +2,6 @@ import { expect, test } from '../../fixtures/auth-fixture';
 import { AiChat } from '../../lib/AiChat';
 
 test.describe('AI Chat Messaging', () => {
-  test.skip(!process.env.ANTHROPIC_API_KEY, 'ANTHROPIC_API_KEY not set');
   test.setTimeout(90_000);
 
   let chat: AiChat;

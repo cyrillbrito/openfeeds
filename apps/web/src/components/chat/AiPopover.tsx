@@ -51,7 +51,6 @@ export function AiPopover(props: AiPopoverProps) {
           'opacity-0 scale-95 translate-y-4 pointer-events-none': !props.open,
         }}
         style={{ height: '65vh', 'max-height': '680px', 'min-height': '400px' }}
-        // biome-ignore lint/a11y/useSemanticElements: chat panel is not a dialog
         role="complementary"
         aria-label="AI Chat"
       >
