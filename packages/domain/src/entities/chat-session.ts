@@ -22,6 +22,7 @@ export async function saveChatSession(
     })
     .onConflictDoUpdate({
       target: chatSessions.id,
+      setWhere: eq(chatSessions.userId, ctx.userId),
       set: {
         title: data.title,
         messages: messagesJson,

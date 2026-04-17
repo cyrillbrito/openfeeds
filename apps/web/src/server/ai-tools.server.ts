@@ -22,7 +22,7 @@ import {
 } from '@repo/domain';
 import { createId } from '@repo/shared/utils';
 import { toolDefinition } from '@tanstack/ai';
-import { asc, count, desc, eq, gte, ilike, inArray, lte, or } from 'drizzle-orm';
+import { and, asc, count, desc, eq, gte, ilike, inArray, lte, or } from 'drizzle-orm';
 import { z } from 'zod';
 
 interface AiUser {
@@ -255,23 +255,16 @@ export function createTools(user: AiUser) {
           assignments.map((a) => ({ id: createId(), feedId: a.feedId, tagId: a.tagId })),
         );
       } else {
-        // For removal, we need the feed-tag IDs — query them first
+        // For removal, we need the feed-tag IDs — query them first.
+        // Use exact (feedId, tagId) pairs via OR to avoid cartesian-product over-deletion.
         const q = scopedQuery(ctx);
+        const pairConditions = assignments.map((a) =>
+          and(eq(feedTagsTable.feedId, a.feedId), eq(feedTagsTable.tagId, a.tagId)),
+        );
         const feedTagRows = await q.db
           .select({ id: feedTagsTable.id })
           .from(feedTagsTable)
-          .where(
-            q.feedTags.where(
-              inArray(
-                feedTagsTable.feedId,
-                assignments.map((a) => a.feedId),
-              ),
-              inArray(
-                feedTagsTable.tagId,
-                assignments.map((a) => a.tagId),
-              ),
-            ),
-          );
+          .where(q.feedTags.where(or(...pairConditions)));
 
         if (feedTagRows.length > 0) {
           await deleteFeedTags(
