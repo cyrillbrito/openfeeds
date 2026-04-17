@@ -13,4 +13,10 @@ export default defineConfig({
     tailwindcss(),
     solidPlugin({ ssr: false }),
   ],
+  optimizeDeps: {
+    // CJS-only packages pulled in by the markdown pipeline
+    // (solid-markdown → unified → extend, remark-gfm → micromark → debug).
+    // Pre-bundle them so Vite converts to ESM for both dev and Storybook.
+    include: ['debug', 'extend'],
+  },
 });

@@ -1,6 +1,7 @@
 // Entity modules - schemas, types, and CRUD functions
 export * from './entities/article';
 export * from './entities/article-tag';
+export * from './entities/chat-session';
 export * from './entities/feed';
 export * from './entities/feed-tag';
 export * from './entities/filter-rule';
@@ -22,7 +23,7 @@ export * from './rule-evaluation';
 export * from './tts';
 
 // Infrastructure
-export { shutdownDomain, redisConnection, QUEUE_NAMES } from './config';
+export { posthog, shutdownDomain, redisConnection, QUEUE_NAMES } from './config';
 export { captureException, type ExceptionMetadata } from './error-tracking';
 export {
   handleBoundaryError,
@@ -44,6 +45,7 @@ export {
 } from './queues';
 export {
   createDomainContext,
+  scopedQuery,
   withTransaction,
   type DomainContext,
   type TransactionContext,

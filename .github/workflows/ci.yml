@@ -102,6 +102,7 @@ jobs:
       BETTER_AUTH_SECRET: e2e-test-secret-not-for-production-use-only
       SIMPLE_AUTH: 'true'
       ELECTRIC_URL: http://localhost:3060
+      ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
       CI: 'true'
 
     steps:

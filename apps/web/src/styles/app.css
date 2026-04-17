@@ -1,66 +1,10 @@
-@import 'tailwindcss';
+@import './tokens.css';
 
-@plugin '@tailwindcss/typography';
-
-@plugin 'daisyui' {
-  themes:
-    garden --default,
-    dracula --prefersdark;
-}
-
-@theme {
-  --font-sans:
-    Inter, ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji',
-    'Segoe UI Symbol', 'Noto Color Emoji';
-
-  --color-base-content-gray: color-mix(in oklab, var(--color-base-content) 70%, transparent);
-}
+/* App shell — styles that only apply in the full application context.
+   Storybook imports tokens.css directly to avoid these. */
 
 html {
   background: var(--color-base-100);
-}
-
-@utility content-container {
-  width: calc(100% - 2rem);
-  margin-inline: 1rem;
-  max-width: 42rem;
-
-  @media (min-width: 640px) {
-    width: calc(100% - 3rem);
-    margin-inline: 1.5rem;
-  }
-  @media (min-width: 768px) {
-    width: 100%;
-    margin-inline: auto;
-  }
-  @media (min-width: 1280px) {
-    max-width: 48rem;
-  }
-}
-
-@utility scrollbar-none {
-  scrollbar-width: none;
-  &::-webkit-scrollbar {
-    display: none;
-  }
-}
-
-@utility scrollbar-thin {
-  scrollbar-width: thin;
-  scrollbar-color: oklch(0.5 0 0 / 0.3) transparent;
-  &::-webkit-scrollbar {
-    height: 4px;
-  }
-  &::-webkit-scrollbar-track {
-    background: transparent;
-  }
-  &::-webkit-scrollbar-thumb {
-    background: oklch(0.5 0 0 / 0.3);
-    border-radius: 2px;
-  }
-  &::-webkit-scrollbar-thumb:hover {
-    background: oklch(0.5 0 0 / 0.5);
-  }
 }
 
 /* Handle mobile virtual keyboard: VisualViewport sets --modal-vh on the dialog

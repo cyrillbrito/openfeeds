@@ -171,7 +171,7 @@ function FeedArticlesContent(props: { feedId: string; readStatus: ReadStatus }) 
             <div class="flex items-start gap-3">
               <TriangleAlert
                 size={18}
-                class={`mt-0.5 shrink-0 ${feed.syncStatus === 'broken' ? 'text-error' : 'text-warning'}`}
+                class={`mt-0.5 shrink-0 ${feed.syncStatus === 'broken' ? 'text-error' : 'text-amber-600 dark:text-amber-400'}`}
               />
               <div class="min-w-0 flex-1">
                 <p class="text-sm font-medium">

@@ -31,6 +31,16 @@ export default mergeConfig(
               provider: playwright({}),
               instances: [{ browser: 'chromium' }],
             },
+            // CJS-only packages (debug, extend) pulled in by the markdown
+            // pipeline need explicit pre-bundling in Vitest browser mode.
+            // Vite's optimizeDeps.include covers dev server but not Vitest.
+            deps: {
+              optimizer: {
+                web: {
+                  include: ['debug', 'extend'],
+                },
+              },
+            },
           },
         },
       ],
