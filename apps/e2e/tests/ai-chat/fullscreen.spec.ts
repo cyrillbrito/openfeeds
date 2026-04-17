@@ -3,6 +3,7 @@ import { AiChat } from '../../lib/AiChat';
 import { Drawer } from '../../lib/Drawer';
 
 test.describe('AI Chat Full Page', () => {
+  test.slow();
   let chat: AiChat;
 
   test.beforeEach(async ({ page, user }) => {

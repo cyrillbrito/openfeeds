@@ -73,6 +73,8 @@ test.describe('AI Chat Messaging', () => {
     // Start a fresh session to avoid picking up messages from prior tests
     await chat.getPageNewChatButton().click();
     await expect(chat.getEmptyState()).toBeVisible();
+    // Ensure no stale user messages from prior tests
+    await expect(chat.getUserMessages()).toHaveCount(0);
 
     await chat.sendMessageAndWaitForResponse('Say the number 1');
     await chat.sendMessageAndWaitForResponse('Say the number 2');
