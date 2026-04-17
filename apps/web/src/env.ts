@@ -30,6 +30,7 @@ export const env = createEnv({
     APPLE_CLIENT_SECRET: z.string().optional(),
     // AI Chat (Anthropic)
     ANTHROPIC_API_KEY: z.string().optional(),
+    AI_MODEL: z.string().default('claude-haiku-4-5'),
   },
   runtimeEnv: process.env,
   emptyStringAsUndefined: true,

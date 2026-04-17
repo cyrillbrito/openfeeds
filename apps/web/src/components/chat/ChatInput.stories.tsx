@@ -36,7 +36,7 @@ export const Default: Story = {
   },
 };
 
-/** Loading state — disabled textarea, stop button visible, clicking stop fires action */
+/** Loading state — textarea stays enabled for typing, stop button visible, clicking stop fires action */
 export const Loading: Story = {
   decorators: [
     (Story: () => any) => (
@@ -48,7 +48,15 @@ export const Loading: Story = {
   play: async ({ canvasElement }: { canvasElement: HTMLElement }) => {
     const canvas = within(canvasElement);
     const textarea = canvas.getByPlaceholderText('Generating response...');
-    await expect(textarea).toBeDisabled();
+    // Textarea should remain enabled so users can type their next message
+    await expect(textarea).not.toBeDisabled();
+    // User can type while loading
+    await userEvent.type(textarea, 'Next question');
+    await expect(textarea).toHaveValue('Next question');
+    // Send button should NOT appear while loading
+    const sendBtn = canvasElement.querySelector('[title="Send"]');
+    await expect(sendBtn).toBeNull();
+    // Stop button should be visible and functional
     const stopBtn = canvasElement.querySelector('[title="Stop generating"]') as HTMLElement;
     await expect(stopBtn).not.toBeNull();
     await userEvent.click(stopBtn);
