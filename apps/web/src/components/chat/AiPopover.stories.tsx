@@ -33,8 +33,9 @@ export const OpenWithConversation: Story = {
   },
   play: async ({ canvasElement }: { canvasElement: HTMLElement }) => {
     const canvas = within(canvasElement);
-    // Title bar renders
-    await expect(canvas.getByText('What feeds do I follow?')).toBeInTheDocument();
+    // Title bar renders (text also appears in user message bubble, so use getAllByText)
+    const titleMatches = canvas.getAllByText('What feeds do I follow?');
+    await expect(titleMatches.length).toBeGreaterThanOrEqual(2);
     // Action buttons
     await expect(canvas.getByTitle('New chat')).toBeInTheDocument();
     await expect(canvas.getByTitle('Expand to full page')).toBeInTheDocument();
