@@ -1,4 +1,28 @@
+import {
+  articles as articlesTable,
+  db,
+  feeds as feedsTable,
+  feedTags as feedTagsTable,
+  tags as tagsTable,
+} from '@repo/db';
+import {
+  createDomainContext,
+  createFeedTags,
+  createTags,
+  deleteFeeds,
+  deleteFeedTags,
+  deleteTags,
+  discoverRssFeeds,
+  followFeedsWithTags,
+  getUserUsage,
+  scopedQuery,
+  updateArticles as domainUpdateArticles,
+  updateTags,
+  withTransaction,
+} from '@repo/domain';
+import { createId } from '@repo/shared/utils';
 import { toolDefinition } from '@tanstack/ai';
+import { asc, count, desc, eq, gte, ilike, inArray, lte, or } from 'drizzle-orm';
 import { z } from 'zod';
 
 interface AiUser {
@@ -6,10 +30,7 @@ interface AiUser {
   plan: string | null | undefined;
 }
 
-/**
- * Creates AI chat tools scoped to a specific user.
- * All tool handlers use dynamic imports to keep server deps lazy.
- */
+/** Creates AI chat tools scoped to a specific user. */
 export function createTools(user: AiUser) {
   // -------------------------------------------------------------------------
   // discover_feeds — find feeds at a URL
@@ -22,7 +43,6 @@ export function createTools(user: AiUser) {
       url: z.string().url().describe('The website URL to search for feeds'),
     }),
   }).server(async ({ url }) => {
-    const { discoverRssFeeds } = await import('@repo/domain');
     const feeds = await discoverRssFeeds(url);
     return {
       feeds: feeds.map((f) => ({
@@ -58,31 +78,43 @@ export function createTools(user: AiUser) {
         ),
     }),
   }).server(async ({ feeds, tagNames }) => {
-    const { db } = await import('@repo/db');
-    const { followFeedsWithTags, withTransaction } = await import('@repo/domain');
-    const { createId } = await import('@repo/shared/utils');
-
     const feedData = feeds.map((f) => ({
       id: createId(),
       feedUrl: f.feedUrl,
       title: f.title ?? null,
     }));
 
-    const newTags = (tagNames ?? []).map((name) => ({
-      id: createId(),
-      name,
-    }));
-
-    const feedTags = feedData.flatMap((feed) =>
-      newTags.map((tag) => ({
-        id: createId(),
-        feedId: feed.id,
-        tagId: tag.id,
-      })),
-    );
-
     await withTransaction(db, user.id, user.plan, async (ctx) => {
-      await followFeedsWithTags(ctx, { feeds: feedData, newTags, feedTags });
+      // Look up existing tags by name so we reuse their IDs instead of
+      // creating phantom IDs that cause FK violations in feed_tags.
+      const q = scopedQuery(ctx);
+      const existingTags =
+        tagNames && tagNames.length > 0
+          ? await q.db
+              .select({ id: tagsTable.id, name: tagsTable.name })
+              .from(tagsTable)
+              .where(q.tags.where(inArray(tagsTable.name, tagNames)))
+          : [];
+
+      const existingByName = new Map(existingTags.map((t) => [t.name, t.id]));
+
+      const newTags = (tagNames ?? [])
+        .filter((name) => !existingByName.has(name))
+        .map((name) => ({ id: createId(), name }));
+
+      const allTagIds = (tagNames ?? []).map(
+        (name) => existingByName.get(name) ?? newTags.find((t) => t.name === name)!.id,
+      );
+
+      const newFeedTags = feedData.flatMap((feed) =>
+        allTagIds.map((tagId) => ({
+          id: createId(),
+          feedId: feed.id,
+          tagId,
+        })),
+      );
+
+      await followFeedsWithTags(ctx, { feeds: feedData, newTags, feedTags: newFeedTags });
     });
 
     return {
@@ -102,9 +134,6 @@ export function createTools(user: AiUser) {
       feedIds: z.array(z.string()).min(1).describe('Feed IDs to unsubscribe from'),
     }),
   }).server(async ({ feedIds }) => {
-    const { db } = await import('@repo/db');
-    const { deleteFeeds, withTransaction } = await import('@repo/domain');
-
     await withTransaction(db, user.id, user.plan, async (ctx) => {
       await deleteFeeds(ctx, feedIds);
     });
@@ -127,9 +156,6 @@ export function createTools(user: AiUser) {
       }),
     }),
   }).server(async ({ articleIds, changes }) => {
-    const { db } = await import('@repo/db');
-    const { updateArticles: domainUpdateArticles, withTransaction } = await import('@repo/domain');
-
     await withTransaction(db, user.id, user.plan, async (ctx) => {
       await domainUpdateArticles(
         ctx,
@@ -179,26 +205,22 @@ export function createTools(user: AiUser) {
       ),
     }),
   }).server(async ({ action, tags }) => {
-    const { db } = await import('@repo/db');
-    const domain = await import('@repo/domain');
-    const { withTransaction } = domain;
-
     await withTransaction(db, user.id, user.plan, async (ctx) => {
       switch (action) {
         case 'create':
-          await domain.createTags(
+          await createTags(
             ctx,
             tags.map((t) => ({ name: t.name!, color: t.color })),
           );
           break;
         case 'update':
-          await domain.updateTags(
+          await updateTags(
             ctx,
             tags.map((t) => ({ id: t.id!, name: t.name, color: t.color })),
           );
           break;
         case 'delete':
-          await domain.deleteTags(
+          await deleteTags(
             ctx,
             tags.map((t) => t.id!),
           );
@@ -226,28 +248,20 @@ export function createTools(user: AiUser) {
       ),
     }),
   }).server(async ({ action, assignments }) => {
-    const { db } = await import('@repo/db');
-    const domain = await import('@repo/domain');
-    const { withTransaction } = domain;
-    const { createId } = await import('@repo/shared/utils');
-
     await withTransaction(db, user.id, user.plan, async (ctx) => {
       if (action === 'assign') {
-        await domain.createFeedTags(
+        await createFeedTags(
           ctx,
           assignments.map((a) => ({ id: createId(), feedId: a.feedId, tagId: a.tagId })),
         );
       } else {
         // For removal, we need the feed-tag IDs — query them first
-        const { feedTags: feedTagsTable } = await import('@repo/db');
-        const { and, eq, inArray } = await import('drizzle-orm');
-
-        const feedTagRows = await ctx.conn
+        const q = scopedQuery(ctx);
+        const feedTagRows = await q.db
           .select({ id: feedTagsTable.id })
           .from(feedTagsTable)
           .where(
-            and(
-              eq(feedTagsTable.userId, user.id),
+            q.feedTags.where(
               inArray(
                 feedTagsTable.feedId,
                 assignments.map((a) => a.feedId),
@@ -260,7 +274,7 @@ export function createTools(user: AiUser) {
           );
 
         if (feedTagRows.length > 0) {
-          await domain.deleteFeedTags(
+          await deleteFeedTags(
             ctx,
             feedTagRows.map((r) => r.id),
           );
@@ -280,7 +294,6 @@ export function createTools(user: AiUser) {
       "Check the user's current plan usage and limits. Returns counts for feeds, saved articles, filter rules, and other plan-gated features along with their maximums. Use this when the user asks about their plan, remaining quota, or if they can add more feeds.",
     inputSchema: z.object({}),
   }).server(async () => {
-    const { getUserUsage } = await import('@repo/domain');
     return await getUserUsage(user.id, user.plan);
   });
 
@@ -300,29 +313,27 @@ export function createTools(user: AiUser) {
         ),
     }),
   }).server(async ({ search }) => {
-    const { db, feeds } = await import('@repo/db');
-    const { eq, ilike, and, or, asc } = await import('drizzle-orm');
+    const q = scopedQuery(createDomainContext(db, user.id, user.plan));
 
-    const conditions = [eq(feeds.userId, user.id)];
+    const searchCondition = search
+      ? or(
+          ilike(feedsTable.title, `%${search}%`),
+          ilike(feedsTable.feedUrl, `%${search}%`),
+          ilike(feedsTable.url, `%${search}%`),
+        )
+      : undefined;
 
-    if (search) {
-      const pattern = `%${search}%`;
-      conditions.push(
-        or(ilike(feeds.title, pattern), ilike(feeds.feedUrl, pattern), ilike(feeds.url, pattern))!,
-      );
-    }
-
-    const rows = await db
+    const rows = await q.db
       .select({
-        id: feeds.id,
-        title: feeds.title,
-        feedUrl: feeds.feedUrl,
-        url: feeds.url,
-        syncStatus: feeds.syncStatus,
+        id: feedsTable.id,
+        title: feedsTable.title,
+        feedUrl: feedsTable.feedUrl,
+        url: feedsTable.url,
+        syncStatus: feedsTable.syncStatus,
       })
-      .from(feeds)
-      .where(and(...conditions))
-      .orderBy(asc(feeds.title));
+      .from(feedsTable)
+      .where(q.feeds.where(searchCondition))
+      .orderBy(asc(feedsTable.title));
 
     return {
       feeds: rows,
@@ -389,54 +400,40 @@ export function createTools(user: AiUser) {
       offset,
       fields,
     }) => {
-      const { db, articles, feeds } = await import('@repo/db');
-      const { eq, and, ilike, desc, gte, lte, count } = await import('drizzle-orm');
-
-      const conditions = [eq(articles.userId, user.id)];
-
-      if (feedId) {
-        conditions.push(eq(articles.feedId, feedId));
-      }
-      if (isRead !== undefined) {
-        conditions.push(eq(articles.isRead, isRead));
-      }
-      if (isArchived !== undefined) {
-        conditions.push(eq(articles.isArchived, isArchived));
-      }
-      if (search) {
-        conditions.push(ilike(articles.title, `%${search}%`));
-      }
-      if (dateFrom) {
-        conditions.push(gte(articles.pubDate, new Date(dateFrom)));
-      }
-      if (dateTo) {
-        conditions.push(lte(articles.pubDate, new Date(dateTo)));
-      }
-
-      const whereClause = and(...conditions);
+      const q = scopedQuery(createDomainContext(db, user.id, user.plan));
       const limit = maxResults ?? 50;
       const skip = offset ?? 0;
 
-      // Run count + data queries in parallel
+      const conditions = [
+        feedId ? eq(articlesTable.feedId, feedId) : undefined,
+        isRead !== undefined ? eq(articlesTable.isRead, isRead) : undefined,
+        isArchived !== undefined ? eq(articlesTable.isArchived, isArchived) : undefined,
+        search ? ilike(articlesTable.title, `%${search}%`) : undefined,
+        dateFrom ? gte(articlesTable.pubDate, new Date(dateFrom)) : undefined,
+        dateTo ? lte(articlesTable.pubDate, new Date(dateTo)) : undefined,
+      ].filter(Boolean);
+
+      const whereClause = q.articles.where(...conditions);
+
       const [countResult, rows] = await Promise.all([
-        db.select({ value: count() }).from(articles).where(whereClause),
-        db
+        q.db.select({ value: count() }).from(articlesTable).where(whereClause),
+        q.db
           .select({
-            id: articles.id,
-            title: articles.title,
-            url: articles.url,
-            description: articles.description,
-            author: articles.author,
-            feedId: articles.feedId,
-            feedTitle: feeds.title,
-            isRead: articles.isRead,
-            isArchived: articles.isArchived,
-            pubDate: articles.pubDate,
+            id: articlesTable.id,
+            title: articlesTable.title,
+            url: articlesTable.url,
+            description: articlesTable.description,
+            author: articlesTable.author,
+            feedId: articlesTable.feedId,
+            feedTitle: feedsTable.title,
+            isRead: articlesTable.isRead,
+            isArchived: articlesTable.isArchived,
+            pubDate: articlesTable.pubDate,
           })
-          .from(articles)
-          .leftJoin(feeds, eq(articles.feedId, feeds.id))
+          .from(articlesTable)
+          .leftJoin(feedsTable, eq(articlesTable.feedId, feedsTable.id))
           .where(whereClause)
-          .orderBy(desc(articles.pubDate))
+          .orderBy(desc(articlesTable.pubDate))
           .limit(limit)
           .offset(skip),
       ]);
@@ -509,19 +506,18 @@ export function createTools(user: AiUser) {
       "List all of the user's tags with their IDs, names, colors, and sort order. Use this to look up tag IDs before calling manage_tags, manage_feed_tags, or filtering articles. Returns the complete list of tags since users typically have a small number.",
     inputSchema: z.object({}),
   }).server(async () => {
-    const { db, tags } = await import('@repo/db');
-    const { eq, asc } = await import('drizzle-orm');
+    const q = scopedQuery(createDomainContext(db, user.id, user.plan));
 
-    const rows = await db
+    const rows = await q.db
       .select({
-        id: tags.id,
-        name: tags.name,
-        color: tags.color,
-        order: tags.order,
+        id: tagsTable.id,
+        name: tagsTable.name,
+        color: tagsTable.color,
+        order: tagsTable.order,
       })
-      .from(tags)
-      .where(eq(tags.userId, user.id))
-      .orderBy(asc(tags.order));
+      .from(tagsTable)
+      .where(q.tags.where())
+      .orderBy(asc(tagsTable.order));
 
     return { tags: rows, count: rows.length };
   });
@@ -539,22 +535,6 @@ export function createTools(user: AiUser) {
     listArticles,
     listTags,
   ];
-
-  // Dev-only tool to test error handling with large payloads
-  if (process.env.NODE_ENV !== 'production') {
-    const stressTest = toolDefinition({
-      name: 'stress_test',
-      description:
-        'DEV ONLY: Generate a large text payload to test context limits. Use when the user asks to test context overflow or stress test.',
-      inputSchema: z.object({
-        sizeKb: z.number().min(1).max(1000).describe('Payload size in KB (default 500)'),
-      }),
-    }).server(({ sizeKb }) => {
-      const size = (sizeKb ?? 500) * 1024;
-      return { data: 'x'.repeat(size), sizeKb };
-    });
-    allTools.push(stressTest);
-  }
 
   return allTools;
 }

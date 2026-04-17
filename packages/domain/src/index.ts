@@ -45,6 +45,7 @@ export {
 } from './queues';
 export {
   createDomainContext,
+  scopedQuery,
   withTransaction,
   type DomainContext,
   type TransactionContext,
