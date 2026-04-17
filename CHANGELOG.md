@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.13.0](https://github.com/cyrillbrito/openfeeds/compare/v0.12.4...v0.13.0) (2026-04-17)
+
+
+### Features
+
+* **web:** AI chat assistant with analytics, tools & conversation persistence ([#226](https://github.com/cyrillbrito/openfeeds/issues/226)) ([12eb93f](https://github.com/cyrillbrito/openfeeds/commit/12eb93f478c98ede1763421c3ebda915f7dc7b96))
+
 ## [0.12.4](https://github.com/cyrillbrito/openfeeds/compare/v0.12.3...v0.12.4) (2026-04-16)
 
 
