@@ -36,8 +36,7 @@ export function ArticleList(props: ArticleListProps) {
         inbox: {
           icon: <AllCaughtUpIllustration />,
           title: 'All Caught Up!',
-          description:
-            'No new articles to read. Check back later for fresh content.',
+          description: 'No new articles to read. Check back later for fresh content.',
         },
         feed: {
           icon: <AllCaughtUpIllustration />,
@@ -78,8 +77,7 @@ export function ArticleList(props: ArticleListProps) {
       inbox: {
         icon: <FeedIllustration />,
         title: 'No Articles Found',
-        description:
-          "You don't have any articles yet. Follow some feeds to see articles here.",
+        description: "You don't have any articles yet. Follow some feeds to see articles here.",
         actions: {
           primary: { text: 'Discover Feeds', href: '/discover' },
           secondary: { text: 'Browse Tags', href: '/tags' },
