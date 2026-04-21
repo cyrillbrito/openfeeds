@@ -34,7 +34,7 @@ function TagArticlesPage() {
           eq(article.id, articleTag.articleId),
         )
         .where(({ article, articleTag }: any) => {
-          const base = and(eq(articleTag.tagId, tagId()), eq(article.isArchived, false));
+          const base = eq(articleTag.tagId, tagId());
           return readStatusWhere ? and(base, readStatusWhere(article)) : base;
         })
         .select(({ article }: any) => article),
@@ -45,7 +45,7 @@ function TagArticlesPage() {
           eq(article.id, articleTag.articleId),
         )
         .where(({ article, articleTag }: any) => {
-          const base = and(eq(articleTag.tagId, tagId()), eq(article.isArchived, false));
+          const base = eq(articleTag.tagId, tagId());
           return readStatusWhere ? and(base, readStatusWhere(article)) : base;
         })
         .select(({ article }: any) => ({ id: article.id })),
@@ -56,11 +56,7 @@ function TagArticlesPage() {
           eq(article.id, articleTag.articleId),
         )
         .where(({ article, articleTag }: any) =>
-          and(
-            eq(articleTag.tagId, tagId()),
-            eq(article.isArchived, false),
-            eq(article.isRead, false),
-          ),
+          and(eq(articleTag.tagId, tagId()), eq(article.isRead, false)),
         )
         .select(({ article }: any) => ({ id: article.id })),
     buildArchivableQuery: (q) =>

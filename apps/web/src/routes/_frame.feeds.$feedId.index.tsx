@@ -44,27 +44,21 @@ function FeedArticles() {
   const filter: ArticleQueryFilter = {
     buildQuery: (q, { readStatusWhere }) =>
       q.from({ article: articlesCollection }).where(({ article }: any) => {
-        const base = and(eq(article.feedId, feedId()), eq(article.isArchived, false));
+        const base = eq(article.feedId, feedId());
         return readStatusWhere ? and(base, readStatusWhere(article)) : base;
       }),
     buildCountQuery: (q, { readStatusWhere }) =>
       q
         .from({ article: articlesCollection })
         .where(({ article }: any) => {
-          const base = and(eq(article.feedId, feedId()), eq(article.isArchived, false));
+          const base = eq(article.feedId, feedId());
           return readStatusWhere ? and(base, readStatusWhere(article)) : base;
         })
         .select(({ article }: any) => ({ id: article.id })),
     buildUnreadQuery: (q) =>
       q
         .from({ article: articlesCollection })
-        .where(({ article }: any) =>
-          and(
-            eq(article.feedId, feedId()),
-            eq(article.isArchived, false),
-            eq(article.isRead, false),
-          ),
-        )
+        .where(({ article }: any) => and(eq(article.feedId, feedId()), eq(article.isRead, false)))
         .select(({ article }: any) => ({ id: article.id })),
     buildArchivableQuery: (q) =>
       q
