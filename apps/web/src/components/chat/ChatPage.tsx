@@ -72,7 +72,11 @@ export function ChatPage() {
           </div>
 
           <Show when={chat.messages().length > 0}>
-            <button class="btn btn-ghost btn-sm btn-circle" onClick={handleNewChat} title="New chat">
+            <button
+              class="btn btn-ghost btn-sm btn-circle"
+              onClick={handleNewChat}
+              title="New chat"
+            >
               <Plus size={18} />
             </button>
           </Show>

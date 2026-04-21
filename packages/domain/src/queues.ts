@@ -111,7 +111,7 @@ export async function forceEnqueueFeedSync(userId: string, feedId: string) {
   const queue = getSingleFeedSyncQueue();
   const jobId = `feed-sync-${feedId}`;
   await queue.remove(jobId);
-  return queue.add(feedId, { feedId, userId }, { jobId, removeOnComplete: 100, removeOnFail: 500 });
+  await queue.add(feedId, { feedId, userId }, { jobId, removeOnComplete: 100, removeOnFail: 500 });
 }
 
 /**

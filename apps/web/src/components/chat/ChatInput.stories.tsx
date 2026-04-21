@@ -92,7 +92,7 @@ export const Submit: Story = {
 export const Multiline: Story = {
   play: async ({ canvasElement }: { canvasElement: HTMLElement }) => {
     const canvas = within(canvasElement);
-    const textarea = canvas.getByPlaceholderText('Ask me anything...') as HTMLTextAreaElement;
+    const textarea = canvas.getByPlaceholderText('Ask me anything...');
     const initialHeight = textarea.offsetHeight;
 
     // Type several lines using Shift+Enter for newlines

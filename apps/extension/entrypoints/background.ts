@@ -11,6 +11,7 @@ export default defineBackground(() => {
       void handleFollowFeed(message.feed).then(sendResponse);
       return true; // Keep channel open for async response
     }
+    return undefined;
   });
 });
 

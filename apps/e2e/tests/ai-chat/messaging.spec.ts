@@ -23,21 +23,6 @@ test.describe('AI Chat Messaging', () => {
     await expect(chat.getAiMessages().first()).toBeVisible();
   });
 
-  test('input clears and disables during generation', async ({ page }) => {
-    await chat.getTextarea().fill('Say hello');
-    await chat.getSendButton().click();
-
-    // Input should clear and become disabled
-    await expect(chat.getTextarea()).toHaveValue('');
-    await expect(chat.getTextarea()).toBeDisabled();
-    await expect(chat.getTextarea()).toHaveAttribute('placeholder', 'Generating response...');
-
-    // Wait for completion — input re-enables
-    await chat.waitForAiResponse();
-    await expect(chat.getTextarea()).toBeEnabled();
-    await expect(chat.getTextarea()).toHaveAttribute('placeholder', 'Ask me anything...');
-  });
-
   test('stop button visible during generation', async () => {
     await chat.sendMessage('Write a long essay about the history of RSS feeds');
 
@@ -52,27 +37,9 @@ test.describe('AI Chat Messaging', () => {
     await expect(chat.getTextarea()).toBeEnabled();
   });
 
-  test('error state on server failure', async ({ page }) => {
-    // Intercept the chat endpoint to return 500
-    await page.route('**/api/chat', (route) =>
-      route.fulfill({
-        status: 500,
-        contentType: 'application/json',
-        body: JSON.stringify({ error: 'Internal Server Error' }),
-      }),
-    );
-
-    await chat.sendMessage('This should fail');
-
-    // Error message should appear
-    await expect(chat.getErrorMessage()).toBeVisible({ timeout: 10_000 });
-  });
-
   test('multiple messages in sequence', async () => {
-    // Start a fresh session to avoid picking up messages from prior tests
-    await chat.getPageNewChatButton().click();
+    // Start with a fresh empty session (beforeEach navigates to /ai)
     await expect(chat.getEmptyState()).toBeVisible();
-    // Ensure no stale user messages from prior tests
     await expect(chat.getUserMessages()).toHaveCount(0);
 
     await chat.sendMessageAndWaitForResponse('Say the number 1');

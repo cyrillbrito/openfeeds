@@ -36,7 +36,7 @@ export const articlesCollection = createCollection(
         }));
 
       if (articles.length === 0) return;
-      return await $$createArticles({ data: articles });
+      await $$createArticles({ data: articles });
     }),
 
     onUpdate: collectionErrorHandler('articles.onUpdate', async ({ transaction }) => {

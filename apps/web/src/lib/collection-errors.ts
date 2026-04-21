@@ -81,7 +81,7 @@ export function shapeErrorHandler(
       }
 
       window.location.href = '/login';
-      return; // stop syncing
+      return undefined; // stop syncing
     }
 
     if (!hasToasted) {
@@ -109,6 +109,6 @@ export function shapeErrorHandler(
       exhausted: true,
       message,
     });
-    return;
+    return undefined;
   };
 }
