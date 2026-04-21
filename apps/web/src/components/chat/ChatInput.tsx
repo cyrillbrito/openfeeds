@@ -73,7 +73,6 @@ export function ChatInput(props: ChatInputProps) {
             resize();
           }}
           onKeyDown={handleKeyDown}
-          disabled={chat.isLoading()}
           rows={1}
         />
         <Show when={chat.isLoading()}>

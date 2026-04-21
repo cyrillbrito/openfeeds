@@ -1,5 +1,5 @@
 import { Maximize2, Plus, X } from 'lucide-solid';
-import { onCleanup } from 'solid-js';
+import { onCleanup, Show } from 'solid-js';
 import { useChatContext } from './chat-context.shared';
 import { ChatInput } from './ChatInput';
 import { ChatMessages } from './ChatMessages';
@@ -59,13 +59,15 @@ export function AiPopover(props: AiPopoverProps) {
           <ChatTitleSwitcher size="sm" dropdownClass="max-w-[calc(28rem-1.5rem)]" />
 
           <div class="flex items-center gap-0.5">
-            <button
-              class="btn btn-ghost btn-xs btn-circle"
-              onClick={() => chat.startNewChat()}
-              title="New chat"
-            >
-              <Plus size={14} />
-            </button>
+            <Show when={chat.messages().length > 0}>
+              <button
+                class="btn btn-ghost btn-xs btn-circle"
+                onClick={() => chat.startNewChat()}
+                title="New chat"
+              >
+                <Plus size={14} />
+              </button>
+            </Show>
             <button
               class="btn btn-ghost btn-xs btn-circle"
               onClick={handleExpand}

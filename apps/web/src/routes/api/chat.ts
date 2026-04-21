@@ -88,7 +88,7 @@ export const Route = createFileRoute('/api/chat')({
 
         return toServerSentEventsResponse(
           chat({
-            adapter: anthropicText('claude-haiku-4-5'),
+            adapter: anthropicText(env.AI_MODEL),
             systemPrompts: contextLines,
             // eslint-disable-next-line @typescript-eslint/no-explicit-any -- validated by Zod above; Anthropic adapter wants a narrower message type
             messages: messages as any,

@@ -1,6 +1,6 @@
 import { useLocation, useNavigate, useParams } from '@tanstack/solid-router';
 import { Menu, Plus } from 'lucide-solid';
-import { createEffect, on } from 'solid-js';
+import { createEffect, on, Show } from 'solid-js';
 import { useChatContext } from './chat-context.shared';
 import { ChatInput } from './ChatInput';
 import { ChatMessages } from './ChatMessages';
@@ -71,9 +71,15 @@ export function ChatPage() {
             />
           </div>
 
-          <button class="btn btn-ghost btn-sm btn-circle" onClick={handleNewChat} title="New chat">
-            <Plus size={18} />
-          </button>
+          <Show when={chat.messages().length > 0}>
+            <button
+              class="btn btn-ghost btn-sm btn-circle"
+              onClick={handleNewChat}
+              title="New chat"
+            >
+              <Plus size={18} />
+            </button>
+          </Show>
         </div>
       </header>
 

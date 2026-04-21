@@ -65,6 +65,8 @@ export const OpenEmpty: Story = {
     const canvas = within(canvasElement);
     await expect(canvas.getByText('How can I help?')).toBeInTheDocument();
     await expect(canvas.getByPlaceholderText('Ask me anything...')).toBeInTheDocument();
+    // New chat button should be hidden when session has no messages
+    await expect(canvas.queryByTitle('New chat')).toBeNull();
   },
 };
 

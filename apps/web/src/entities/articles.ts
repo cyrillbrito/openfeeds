@@ -35,7 +35,7 @@ export const articlesCollection = createCollection(
           url: mutation.modified.url!,
         }));
 
-      if (articles.length === 0) return;
+      if (articles.length === 0) return undefined;
       return await $$createArticles({ data: articles });
     }),
 
