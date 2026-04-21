@@ -37,7 +37,7 @@ export function ArticleList(props: ArticleListProps) {
           icon: <AllCaughtUpIllustration />,
           title: 'All Caught Up!',
           description:
-            'No unread articles right now. New content will appear here when your feeds sync.',
+            'No new articles to read. Check back later for fresh content.',
         },
         feed: {
           icon: <AllCaughtUpIllustration />,
@@ -79,7 +79,7 @@ export function ArticleList(props: ArticleListProps) {
         icon: <FeedIllustration />,
         title: 'No Articles Found',
         description:
-          "You don't have any articles yet. Follow some feeds and sync them to see articles here.",
+          "You don't have any articles yet. Follow some feeds to see articles here.",
         actions: {
           primary: { text: 'Discover Feeds', href: '/discover' },
           secondary: { text: 'Browse Tags', href: '/tags' },
@@ -97,7 +97,7 @@ export function ArticleList(props: ArticleListProps) {
         icon: <TagsIllustration />,
         title: 'No Articles Found',
         description:
-          "This tag doesn't have any articles yet. Articles will appear here once feeds with this tag are synced and contain content.",
+          "This tag doesn't have any articles yet. Articles will appear here once feeds with this tag have new content.",
         actions: {
           primary: { text: 'Feeds', href: '/feeds' },
           secondary: { text: 'Browse Tags', href: '/tags' },
