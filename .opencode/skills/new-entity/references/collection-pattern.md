@@ -16,11 +16,13 @@ onInsert: collectionErrorHandler('feeds.onInsert', async ({ transaction }) => {
     const feed = mutation.modified;
     return { id: mutation.key as string, url: feed.url };
   });
-  await $$createFeeds({ data: feeds });
+  return await $$createFeeds({ data: feeds });
 }),
 ```
 
 **Critical:** Never swallow errors in mutation handlers. If the handler doesn't throw, TanStack DB considers the mutation successful and the optimistic state becomes permanent — even if the server rejected it.
+
+**Critical:** Always `return` the server function result from `onInsert`/`onUpdate`/`onDelete` handlers. Server functions return `{ txid }` — TanStack DB uses this to know when the server transaction is confirmed by the Electric sync stream, keeping the optimistic overlay in place until the real data arrives.
 
 ### Shape Stream Errors (`shapeErrorHandler`)
 

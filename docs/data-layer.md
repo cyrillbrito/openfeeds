@@ -83,14 +83,14 @@ export const feedsCollection = createCollection(
         const feed = mutation.modified;
         return { id: mutation.key as string, url: feed.url };
       });
-      await $$createFeeds({ data: feeds });
+      return await $$createFeeds({ data: feeds });
     }),
-    onUpdate: async ({ transaction }) => {
-      /* batch sync to server */
-    },
-    onDelete: async ({ transaction }) => {
-      /* batch sync to server */
-    },
+    onUpdate: collectionErrorHandler('feeds.onUpdate', async ({ transaction }) => {
+      return await $$updateFeeds({ data: /* batch updates */ });
+    }),
+    onDelete: collectionErrorHandler('feeds.onDelete', async ({ transaction }) => {
+      return await $$deleteFeeds({ data: /* batch deletes */ });
+    }),
   }),
 );
 ```

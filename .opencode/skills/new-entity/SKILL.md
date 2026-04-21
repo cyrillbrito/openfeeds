@@ -87,13 +87,13 @@ export const entitiesCollection = createCollection(
         id: m.key as string,
         name: m.modified.name,
       }));
-      await $$createEntities({ data: items });
+      return await $$createEntities({ data: items });
     }),
     onUpdate: collectionErrorHandler('entities.onUpdate', async ({ transaction }) => {
-      // batch sync updates to server
+      return await $$updateEntities({ data: /* batch updates */ });
     }),
     onDelete: collectionErrorHandler('entities.onDelete', async ({ transaction }) => {
-      // batch sync deletes to server
+      return await $$deleteEntities({ data: /* batch deletes */ });
     }),
   }),
 );

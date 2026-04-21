@@ -35,8 +35,8 @@ export const articlesCollection = createCollection(
           url: mutation.modified.url!,
         }));
 
-      if (articles.length === 0) return;
-      await $$createArticles({ data: articles });
+      if (articles.length === 0) return undefined;
+      return await $$createArticles({ data: articles });
     }),
 
     onUpdate: collectionErrorHandler('articles.onUpdate', async ({ transaction }) => {
