@@ -1,5 +1,14 @@
 # Changelog
 
+## [0.13.1](https://github.com/cyrillbrito/openfeeds/compare/v0.13.0...v0.13.1) (2026-04-21)
+
+
+### Bug Fixes
+
+* **web:** add server-side error tracking to Electric shape proxy ([#253](https://github.com/cyrillbrito/openfeeds/issues/253)) ([9cd7d1b](https://github.com/cyrillbrito/openfeeds/commit/9cd7d1bcc96c8a2e4b8ab8f69493743046565882))
+* **web:** make AI model configurable and fix chat UI issues ([#252](https://github.com/cyrillbrito/openfeeds/issues/252)) ([001a062](https://github.com/cyrillbrito/openfeeds/commit/001a062d21c74634899baa83d11ccc5cf3ae4936))
+* **web:** remove archived filter from tags and feeds views ([#255](https://github.com/cyrillbrito/openfeeds/issues/255)) ([2e109bd](https://github.com/cyrillbrito/openfeeds/commit/2e109bd383cc125251892e92d4d0bee4cde1263b))
+
 ## [0.13.0](https://github.com/cyrillbrito/openfeeds/compare/v0.12.4...v0.13.0) (2026-04-17)
 
 
