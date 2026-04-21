@@ -1,5 +1,5 @@
 import { createFileRoute } from '@tanstack/solid-router';
-import { proxyElectricRequest } from '~/lib/electric-proxy';
+import { proxyElectricRequest } from '~/lib/electric-proxy.server';
 import { authRequestMiddleware, type AuthContext } from '~/server/middleware/auth';
 
 export const Route = createFileRoute('/api/shapes/tags')({
