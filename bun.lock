@@ -63,6 +63,7 @@
       "dependencies": {
         "@better-auth/drizzle-adapter": "^1.6.4",
         "@better-auth/oauth-provider": "^1.6.4",
+        "@better-fetch/fetch": "^1.1.21",
         "@dnd-kit/helpers": "^0.3.2",
         "@dnd-kit/solid": "^0.3.2",
         "@electric-sql/client": "^1.5.15",
@@ -78,6 +79,7 @@
         "@tailwindcss/typography": "^0.5.19",
         "@tanstack/ai": "^0.10.2",
         "@tanstack/ai-anthropic": "^0.7.3",
+        "@tanstack/ai-client": "^0.7.9",
         "@tanstack/ai-solid": "^0.6.14",
         "@tanstack/electric-db-collection": "^0.3.3",
         "@tanstack/solid-db": "^0.2.19",
@@ -127,7 +129,6 @@
       },
       "devDependencies": {
         "@types/bun": "^1.3.12",
-        "better-auth": "^1.6.4",
       },
     },
     "packages/db": {
