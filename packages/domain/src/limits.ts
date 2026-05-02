@@ -131,7 +131,8 @@ export async function checkExtractionLimit(
   userId: string,
   plan: string | null | undefined,
 ): Promise<void> {
-  const limits = PLAN_LIMITS[parsePlan(plan)];
+  const resolvedPlan = parsePlan(plan);
+  const limits = PLAN_LIMITS[resolvedPlan];
   if (limits.extractionsPerDay === null) return;
 
   const [daily, monthly] = await Promise.all([
@@ -144,6 +145,7 @@ export async function checkExtractionLimit(
       window: 'daily',
       current_usage: daily,
       limit: limits.extractionsPerDay,
+      plan: resolvedPlan,
     });
     throw new LimitExceededError('daily content extractions', limits.extractionsPerDay);
   }
@@ -152,6 +154,7 @@ export async function checkExtractionLimit(
       window: 'monthly',
       current_usage: monthly,
       limit: limits.extractionsPerMonth,
+      plan: resolvedPlan,
     });
     throw new LimitExceededError('monthly content extractions', limits.extractionsPerMonth);
   }
@@ -162,7 +165,8 @@ export async function checkTtsLimit(
   userId: string,
   plan: string | null | undefined,
 ): Promise<void> {
-  const limits = PLAN_LIMITS[parsePlan(plan)];
+  const resolvedPlan = parsePlan(plan);
+  const limits = PLAN_LIMITS[resolvedPlan];
   if (limits.ttsPerDay === null) return;
 
   const [daily, monthly] = await Promise.all([
@@ -175,6 +179,7 @@ export async function checkTtsLimit(
       window: 'daily',
       current_usage: daily,
       limit: limits.ttsPerDay,
+      plan: resolvedPlan,
     });
     throw new LimitExceededError('daily TTS generations', limits.ttsPerDay);
   }
@@ -183,6 +188,7 @@ export async function checkTtsLimit(
       window: 'monthly',
       current_usage: monthly,
       limit: limits.ttsPerMonth,
+      plan: resolvedPlan,
     });
     throw new LimitExceededError('monthly TTS generations', limits.ttsPerMonth);
   }

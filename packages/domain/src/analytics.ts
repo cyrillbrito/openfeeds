@@ -83,11 +83,13 @@ export interface ServerAnalyticsEventMap {
     window: 'daily' | 'monthly';
     current_usage: number;
     limit: number;
+    plan: string;
   };
   'limits:tts_limit_hit': {
     window: 'daily' | 'monthly';
     current_usage: number;
     limit: number;
+    plan: string;
   };
 }
 
