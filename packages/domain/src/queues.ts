@@ -152,6 +152,10 @@ export async function initializeScheduledJobs() {
       opts: {
         removeOnComplete: 100,
         removeOnFail: 500,
+        // Retry transient failures (e.g. stale pooled DB connections dropped by
+        // upstream proxies). Backoff is short because the job re-runs every minute anyway.
+        attempts: 3,
+        backoff: { type: 'exponential', delay: 2000 },
       },
     },
   );

@@ -1,4 +1,5 @@
 import {
+  FeedFetchError,
   handleBoundaryError,
   initializeScheduledJobs,
   QUEUE_NAMES,
@@ -48,6 +49,17 @@ autoArchiveWorker.on('failed', (job, err) => {
 });
 
 feedDetailsWorker.on('failed', (job, err) => {
+  // Metadata refresh is best-effort. Remote fetch/parse failures (dead URLs,
+  // rate limiting, malformed feeds) are expected operational errors — the feed
+  // is already marked as broken inside updateFeedMetadata.
+  if (err instanceof FeedFetchError) {
+    console.warn('Feed details fetch failed', {
+      error: err.message,
+      jobId: job?.id,
+      feedId: job?.data?.feedId,
+    });
+    return;
+  }
   handleBoundaryError(err, { source: 'worker', queue: QUEUE_NAMES.FEED_DETAIL, jobId: job?.id });
 });
 

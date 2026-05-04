@@ -3,7 +3,7 @@ import { and, eq } from 'drizzle-orm';
 import type { DomainContext } from './domain-context';
 import type { Feed } from './entities/feed';
 import { assert } from './errors';
-import { fetchRss, type ParseFeedResult } from './rss-fetch';
+import { fetchRss, FeedFetchError, FeedParseError, type ParseFeedResult } from './rss-fetch';
 
 function parseWebpageUrl(feedResult: ParseFeedResult): string | undefined {
   if (feedResult.format === 'rss') {
@@ -13,7 +13,7 @@ function parseWebpageUrl(feedResult: ParseFeedResult): string | undefined {
       feedResult.feed.links?.find((link) => link.rel !== 'self') ?? feedResult.feed.links?.[0];
     return alternateLink?.href;
   } else {
-    throw new Error('Other feed type');
+    throw new FeedParseError('Other feed type');
   }
 }
 
@@ -62,7 +62,9 @@ function decodeHtmlEntities(text: string): string {
 
 async function extractSocialMetadata(url: string): Promise<SocialMetadata> {
   const metadata: SocialMetadata = {};
-  const response = await fetch(url);
+  // 15s timeout: prevents a slow/dead host from holding a worker slot and
+  // exceeding the DB pool's idle window between surrounding ctx.conn.* awaits.
+  const response = await fetch(url, { signal: AbortSignal.timeout(15_000) });
 
   const rewriter = new HTMLRewriter()
     // Extract Open Graph meta tags
@@ -183,6 +185,9 @@ export async function fetchFeedMetadata(feed: ParseFeedResult): Promise<Partial<
 
 /**
  * Fetches and updates feed metadata (icon, title, description, url) from the feed's website.
+ *
+ * If the feed URL is unreachable / unparseable, marks the feed as `broken` so the UI
+ * surfaces it to the user. Re-throws the original error so the boundary can log it.
  */
 export async function updateFeedMetadata(ctx: DomainContext, feedId: string) {
   const feed = await ctx.conn.query.feeds.findFirst({
@@ -192,7 +197,19 @@ export async function updateFeedMetadata(ctx: DomainContext, feedId: string) {
 
   assert(feed);
 
-  const fetchResult = await fetchRss(feed.feedUrl);
+  let fetchResult;
+  try {
+    fetchResult = await fetchRss(feed.feedUrl);
+  } catch (err) {
+    if (err instanceof FeedFetchError) {
+      await ctx.conn
+        .update(feeds)
+        .set({ syncStatus: 'broken', syncError: err.message.slice(0, 1000) })
+        .where(and(eq(feeds.id, feedId), eq(feeds.userId, ctx.userId)));
+    }
+    throw err;
+  }
+
   if (fetchResult.notModified) return;
 
   const partialFeedWithMetadata = await fetchFeedMetadata(fetchResult.feed);
