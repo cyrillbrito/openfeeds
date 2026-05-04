@@ -71,30 +71,15 @@ export async function proxyElectricRequest({
     throw fetchError; // Re-throw so the global requestErrorBoundary handles the response
   }
 
-  // Report non-2xx responses from Electric Cloud to PostHog
-  if (!response.ok) {
-    // Read body for error details, then reconstruct the response stream
-    const body = await response.text();
-    captureException(new Error(`Electric proxy ${response.status}: ${body.slice(0, 200)}`), {
+  // Report only 5xx — 4xx (incl. 409 must-refetch) is part of Electric's normal protocol.
+  if (response.status >= 500) {
+    captureException(new Error(`Electric proxy upstream ${response.status}`), {
       userId,
       source: 'electric-proxy',
       table,
       isLivePoll: isLivePollRequest(url),
       errorType: 'upstream_error',
       upstreamStatus: response.status,
-      upstreamBody: body.slice(0, 500),
-    });
-
-    // Still pass the error response through to the client
-    const headers = new Headers(response.headers);
-    headers.delete('content-encoding');
-    headers.delete('content-length');
-    headers.set('Vary', 'Cookie');
-
-    return new Response(body, {
-      status: response.status,
-      statusText: response.statusText,
-      headers,
     });
   }
 
