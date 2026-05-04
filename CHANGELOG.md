@@ -1,5 +1,14 @@
 # Changelog
 
+## [0.13.2](https://github.com/cyrillbrito/openfeeds/compare/v0.13.1...v0.13.2) (2026-05-04)
+
+
+### Bug Fixes
+
+* correct dependency declarations across workspaces ([#256](https://github.com/cyrillbrito/openfeeds/issues/256)) ([1b9bc96](https://github.com/cyrillbrito/openfeeds/commit/1b9bc9654b3f23af7966190115f7ccb1fba02e80))
+* **web:** stop logging Electric shape protocol signals as errors ([#259](https://github.com/cyrillbrito/openfeeds/issues/259)) ([2fcb2f0](https://github.com/cyrillbrito/openfeeds/commit/2fcb2f0969e427d7a3724a99d90a5c1775b9cbc9))
+* **worker:** handle remote feed-detail fetch failures gracefully ([#261](https://github.com/cyrillbrito/openfeeds/issues/261)) ([1fe2812](https://github.com/cyrillbrito/openfeeds/commit/1fe281291e092800fe12cf11008e8e435a7fff7b))
+
 ## [0.13.1](https://github.com/cyrillbrito/openfeeds/compare/v0.13.0...v0.13.1) (2026-04-21)
 
 
