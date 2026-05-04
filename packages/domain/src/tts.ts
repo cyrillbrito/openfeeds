@@ -182,6 +182,7 @@ export async function generateArticleAudio(
   // Call Unreal Speech API
   const response = await fetch('https://api.v8.unrealspeech.com/speech', {
     method: 'POST',
+    signal: AbortSignal.timeout(30_000),
     headers: {
       Authorization: `Bearer ${apiKey}`,
       'Content-Type': 'application/json',
@@ -204,14 +205,16 @@ export async function generateArticleAudio(
   const data = (await response.json()) as UnrealSpeechResponse;
 
   // Fetch the audio file
-  const audioResponse = await fetch(data.OutputUri);
+  const audioResponse = await fetch(data.OutputUri, { signal: AbortSignal.timeout(30_000) });
   if (!audioResponse.ok) {
     throw new Error('Failed to fetch audio file from Unreal Speech');
   }
   const audioBuffer = Buffer.from(await audioResponse.arrayBuffer());
 
   // Fetch the timestamps
-  const timestampsResponse = await fetch(data.TimestampsUri);
+  const timestampsResponse = await fetch(data.TimestampsUri, {
+    signal: AbortSignal.timeout(30_000),
+  });
   if (!timestampsResponse.ok) {
     throw new Error('Failed to fetch timestamps from Unreal Speech');
   }
