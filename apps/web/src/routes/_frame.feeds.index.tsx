@@ -649,7 +649,7 @@ function FeedRow(props: FeedRowProps) {
         <div class="flex items-center gap-2">
           <Link
             to="/feeds/$feedId"
-            params={{ feedId: props.feed.id.toString() }}
+            params={{ feedId: props.feed.id }}
             search={{ readStatus: 'unread' }}
             class="min-w-0"
           >
@@ -677,7 +677,7 @@ function FeedRow(props: FeedRowProps) {
           <div class="mt-1.5 flex flex-wrap gap-1">
             <For each={props.feed.tags}>
               {(tag) => (
-                <Link to="/tags/$tagId" params={{ tagId: tag.id!.toString() }}>
+                <Link to="/tags/$tagId" params={{ tagId: tag.id! }}>
                   <span class="badge badge-xs gap-1 transition-all hover:brightness-90">
                     <ColorIndicator class={getTagDotColor(tag.color ?? null)} />
                     {tag.name}

@@ -10,7 +10,7 @@ const meta: Meta<typeof ShortsButton> = {
 };
 
 export default meta;
-type Story = StoryObj<typeof meta>;
+type Story = StoryObj;
 
 /** Button visible when shorts exist */
 export const Visible: Story = {

@@ -16,7 +16,7 @@ const meta: Meta = {
 };
 
 export default meta;
-type Story = StoryObj<typeof meta>;
+type Story = StoryObj;
 
 /** Empty chat — "How can I help?" prompt */
 export const EmptyState: Story = {

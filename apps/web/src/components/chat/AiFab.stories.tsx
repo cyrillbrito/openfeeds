@@ -8,7 +8,7 @@ const meta: Meta = {
 };
 
 export default meta;
-type Story = StoryObj<typeof meta>;
+type Story = StoryObj;
 
 /** Default FAB with sparkles icon */
 export const Default: Story = {

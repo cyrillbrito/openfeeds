@@ -12,7 +12,7 @@ const meta: Meta = {
 };
 
 export default meta;
-type Story = StoryObj<typeof meta>;
+type Story = StoryObj;
 
 /** Open popover with conversation */
 export const OpenWithConversation: Story = {

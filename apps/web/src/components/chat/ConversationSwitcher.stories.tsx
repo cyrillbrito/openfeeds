@@ -17,7 +17,7 @@ const meta: Meta = {
 };
 
 export default meta;
-type Story = StoryObj<typeof meta>;
+type Story = StoryObj;
 
 /** Populated session list grouped by time period */
 export const WithSessions: Story = {

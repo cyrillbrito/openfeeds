@@ -17,7 +17,7 @@ const meta: Meta<typeof MarkAllArchivedButton> = {
 };
 
 export default meta;
-type Story = StoryObj<typeof meta>;
+type Story = StoryObj;
 
 /** Default state with article count */
 export const Default: Story = {

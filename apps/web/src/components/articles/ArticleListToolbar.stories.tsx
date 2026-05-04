@@ -11,7 +11,7 @@ const meta: Meta<typeof ArticleListToolbar> = {
 };
 
 export default meta;
-type Story = StoryObj<typeof meta>;
+type Story = StoryObj;
 
 /**
  * NOTE: `leftContent` uses `<ReadStatusToggle>` which renders `<Link>`, so we

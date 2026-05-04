@@ -235,7 +235,7 @@ function DrawerTags() {
               <li>
                 <Link
                   to="/tags/$tagId"
-                  params={{ tagId: tag.id.toString() }}
+                  params={{ tagId: tag.id }}
                   class="flex items-center gap-3"
                   activeProps={{ class: 'menu-active' }}
                 >
