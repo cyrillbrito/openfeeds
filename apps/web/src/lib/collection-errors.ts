@@ -64,7 +64,6 @@ export function shapeErrorHandler(
 
   return (error: unknown) => {
     const message = sanitizeErrorMessage(error);
-    posthog.captureException(error, { context });
 
     // 401 = session expired — stop retrying and redirect to login
     if (error instanceof FetchError && error.status === 401) {
@@ -83,6 +82,8 @@ export function shapeErrorHandler(
       window.location.href = '/login';
       return undefined; // stop syncing
     }
+
+    posthog.captureException(error, { context });
 
     if (!hasToasted) {
       toastService.error(message);

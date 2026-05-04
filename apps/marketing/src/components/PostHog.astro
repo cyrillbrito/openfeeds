@@ -55,6 +55,7 @@ const posthogKey = import.meta.env.PUBLIC_POSTHOG_KEY;
       ui_host: 'https://eu.posthog.com',
       defaults: '2025-05-24',
       person_profiles: 'identified_only',
+      capture_exceptions: true,
     });
     posthog.register({ app: 'marketing' });
   }
