@@ -51,7 +51,7 @@ const meta: Meta<typeof ArticleList> = {
 };
 
 export default meta;
-type Story = StoryObj<typeof meta>;
+type Story = StoryObj;
 
 /** List with multiple articles, more available to load */
 export const WithArticles: Story = {

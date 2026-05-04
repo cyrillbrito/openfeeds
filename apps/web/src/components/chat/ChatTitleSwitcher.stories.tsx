@@ -10,7 +10,7 @@ const meta: Meta = {
 };
 
 export default meta;
-type Story = StoryObj<typeof meta>;
+type Story = StoryObj;
 
 /** Default collapsed state showing title + chevron */
 export const Default: Story = {

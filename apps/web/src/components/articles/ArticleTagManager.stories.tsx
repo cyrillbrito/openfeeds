@@ -11,7 +11,7 @@ const meta: Meta<typeof ArticleTagManager> = {
 };
 
 export default meta;
-type Story = StoryObj<typeof meta>;
+type Story = StoryObj;
 
 /** Article with two tags assigned */
 export const WithTags: Story = {

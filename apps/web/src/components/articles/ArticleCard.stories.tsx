@@ -54,7 +54,7 @@ const meta: Meta<typeof ArticleCard> = {
 };
 
 export default meta;
-type Story = StoryObj<typeof meta>;
+type Story = StoryObj;
 
 /** Unread article with tags */
 export const Unread: Story = {

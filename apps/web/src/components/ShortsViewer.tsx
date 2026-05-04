@@ -128,7 +128,7 @@ export function ShortsViewer(props: ShortsViewerProps) {
                 <Show when={getCurrentFeed()}>
                   <Link
                     to="/feeds/$feedId"
-                    params={{ feedId: getCurrentFeed()!.id.toString() }}
+                    params={{ feedId: getCurrentFeed()!.id }}
                     search={{ readStatus: 'unread' }}
                     class="text-white/90 hover:text-white hover:underline"
                   >

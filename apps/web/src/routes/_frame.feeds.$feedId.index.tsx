@@ -288,7 +288,7 @@ function FeedHeader(props: { feed: FeedWithTags }) {
           <div class="mb-3 flex flex-wrap gap-1.5">
             <For each={props.feed.tags}>
               {(tag) => (
-                <Link to="/tags/$tagId" params={{ tagId: tag.id!.toString() }}>
+                <Link to="/tags/$tagId" params={{ tagId: tag.id! }}>
                   <div class="badge badge-sm gap-1.5 transition-all hover:brightness-90">
                     <ColorIndicator class={getTagDotColor(tag.color ?? null)} />
                     <span>{tag.name}</span>
