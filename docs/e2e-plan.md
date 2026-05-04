@@ -143,9 +143,9 @@ We use **`agent-browser`** (v0.25.3, installed via Homebrew) as our single brows
 `bunx playwright init-agents --loop=opencode` has been run. It generated:
 
 **Files created in `apps/e2e/`:**
-- `.opencode/prompts/playwright-test-planner.md` — planner agent instructions
-- `.opencode/prompts/playwright-test-generator.md` — generator agent instructions
-- `.opencode/prompts/playwright-test-healer.md` — healer agent instructions
+- `.agents/prompts/playwright-test-planner.md` — planner agent instructions
+- `.agents/prompts/playwright-test-generator.md` — generator agent instructions
+- `.agents/prompts/playwright-test-healer.md` — healer agent instructions
 - `opencode.json` — MCP server config + agent definitions with tool permissions
 - `tests/seed.spec.ts` — empty seed test (needs our auth setup)
 - `specs/README.md` — directory for test plans
@@ -160,7 +160,7 @@ We use **`agent-browser`** (v0.25.3, installed via Homebrew) as our single brows
 **What still needs to happen:**
 - [x] Run `bunx playwright init-agents --loop=opencode`
 - [ ] Update `seed.spec.ts` with our auth fixture (so planner/generator start authenticated)
-- [ ] Remove `.opencode/skills/playwright-cli/` (replaced by Playwright Test Agents)
+- [x] Move shared skills to `.agents/skills/` and remove the old Playwright CLI skill location (replaced by Playwright Test Agents)
 - [ ] Update `apps/e2e/AGENTS.md` with the new agent workflow
 - [ ] Test the planner/generator/healer workflow end-to-end
 - [ ] Consider: does `opencode.json` in `apps/e2e/` get picked up by OpenCode at the repo root? May need to move or merge config.
@@ -180,7 +180,7 @@ Key practices to encode in our AGENTS.md / skills:
 ### Remaining setup
 
 - [ ] Update `seed.spec.ts` with auth fixture
-- [ ] Remove `.opencode/skills/playwright-cli/`
+- [x] Move shared skills to `.agents/skills/`
 - [ ] Verify `opencode.json` in `apps/e2e/` is picked up by OpenCode
 - [ ] Update `apps/e2e/AGENTS.md` with new workflow + fresh-user-per-test decision
 - [ ] Test the planner → generator → healer pipeline end-to-end
