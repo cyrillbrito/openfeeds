@@ -70,16 +70,13 @@ export function ArticleListProvider(props: ArticleListProviderProps) {
   const feedsQuery = useFeeds();
   const tagsQuery = useTags();
 
-  // Main articles query — fetches ALL matching articles (no .limit). Pagination
-  // is applied client-side via .slice() in the `articles` accessor below.
-  // Rationale: changing .limit() rebuilds the underlying live-query collection,
-  // briefly emptying results. Slicing in render keeps the collection stable
-  // across "Load more" clicks so scroll position is preserved.
+  // Main articles query
   const articlesQuery = useLiveQuery((q) => {
     const filter = readStatusFilter(props.readStatus(), sessionReadIds());
     return props.filter
       .buildQuery(q, { readStatusWhere: filter })
-      .orderBy(({ article }: { article: Ref<Article> }) => article.pubDate, direction());
+      .orderBy(({ article }: { article: Ref<Article> }) => article.pubDate, direction())
+      .limit(visibleCount());
   });
 
   // Total count query (current read status filter, no limit)
@@ -106,9 +103,23 @@ export function ArticleListProvider(props: ArticleListProviderProps) {
   );
 
   // Derived values
+  // NOTE: read articlesQuery.collection.values() directly instead of calling
+  // articlesQuery() — calling the accessor goes through createResource, which
+  // suspends the parent <Suspense> whenever the underlying collection rebuilds
+  // (e.g. when .limit(visibleCount()) changes on Load More). That suspension
+  // detaches the list from the DOM, collapses page height, and resets
+  // window.scrollY. Reading via .collection + .state subscribes us to changes
+  // synchronously without ever suspending.
+  //
+  // This is unfortunate. Solid's useLiveQuery is hard-wired to createResource
+  // and there is no opt-out (React has useLiveSuspenseQuery as the suspending
+  // variant; Solid only ships the suspending one). Until upstream provides a
+  // non-suspending Solid hook, we bypass the resource using public API:
+  // .collection (Collection) and .state (ReactiveMap).
   const articles = (): Article[] => {
-    const all = articlesQuery() as Article[] | undefined;
-    return all ? all.slice(0, visibleCount()) : [];
+    // Touch the reactive map so this accessor re-runs on changes
+    void articlesQuery.state.size;
+    return Array.from(articlesQuery.collection.values()) as unknown as Article[];
   };
   const totalCount = () => (totalCountQuery() || []).length;
   const unreadCount = () => (unreadCountQuery() || []).length;
