@@ -2,7 +2,8 @@
 
 @plugin '@tailwindcss/typography';
 
-@plugin 'daisyui' {
+/* `daisyui/index.js` not bare `daisyui` — see /docs/daisyui-plugin-import.md */
+@plugin 'daisyui/index.js' {
   themes:
     garden --default,
     dracula --prefersdark;
