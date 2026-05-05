@@ -21,13 +21,13 @@
     "clean-install": "find . -name \"node_modules\" -type d -exec rm -rf {} + && rm bun.lock && bun install"
   },
   "devDependencies": {
-    "@types/bun": "^1.3.12",
-    "oxfmt": "^0.45.0",
-    "oxlint": "^1.60.0",
-    "oxlint-tsgolint": "^0.21.0",
+    "@types/bun": "^1.3.13",
+    "oxfmt": "^0.48.0",
+    "oxlint": "^1.63.0",
+    "oxlint-tsgolint": "^0.22.1",
     "remark-breaks": "^4.0.0",
-    "turbo": "^2.9.6",
+    "turbo": "^2.9.9",
     "typescript": "^6"
   },
-  "packageManager": "bun@1.3.12"
+  "packageManager": "bun@1.3.13"
 }
