@@ -32,3 +32,13 @@ export function readStatusFilter(
 
   return null;
 }
+
+/**
+ * Simple read-status where clause (no session tracking) for one-shot snapshot
+ * queries. Returns null for 'all' (no filter).
+ */
+export function readStatusWhere(readStatus: ReadStatus): ((article: Ref<Article>) => any) | null {
+  if (readStatus === 'read') return (article) => eq(article.isRead, true);
+  if (readStatus === 'unread') return (article) => eq(article.isRead, false);
+  return null;
+}
