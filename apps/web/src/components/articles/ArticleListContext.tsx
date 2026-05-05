@@ -70,13 +70,16 @@ export function ArticleListProvider(props: ArticleListProviderProps) {
   const feedsQuery = useFeeds();
   const tagsQuery = useTags();
 
-  // Main articles query
+  // Main articles query — fetches ALL matching articles (no .limit). Pagination
+  // is applied client-side via .slice() in the `articles` accessor below.
+  // Rationale: changing .limit() rebuilds the underlying live-query collection,
+  // briefly emptying results. Slicing in render keeps the collection stable
+  // across "Load more" clicks so scroll position is preserved.
   const articlesQuery = useLiveQuery((q) => {
     const filter = readStatusFilter(props.readStatus(), sessionReadIds());
     return props.filter
       .buildQuery(q, { readStatusWhere: filter })
-      .orderBy(({ article }: { article: Ref<Article> }) => article.pubDate, direction())
-      .limit(visibleCount());
+      .orderBy(({ article }: { article: Ref<Article> }) => article.pubDate, direction());
   });
 
   // Total count query (current read status filter, no limit)
@@ -103,7 +106,10 @@ export function ArticleListProvider(props: ArticleListProviderProps) {
   );
 
   // Derived values
-  const articles = (): Article[] => (articlesQuery() as Article[] | undefined) || [];
+  const articles = (): Article[] => {
+    const all = articlesQuery() as Article[] | undefined;
+    return all ? all.slice(0, visibleCount()) : [];
+  };
   const totalCount = () => (totalCountQuery() || []).length;
   const unreadCount = () => (unreadCountQuery() || []).length;
   const archivableCount = () => (archivableQuery() || []).length;
