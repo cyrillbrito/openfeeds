@@ -103,7 +103,24 @@ export function ArticleListProvider(props: ArticleListProviderProps) {
   );
 
   // Derived values
-  const articles = (): Article[] => (articlesQuery() as Article[] | undefined) || [];
+  // NOTE: read articlesQuery.collection.values() directly instead of calling
+  // articlesQuery() — calling the accessor goes through createResource, which
+  // suspends the parent <Suspense> whenever the underlying collection rebuilds
+  // (e.g. when .limit(visibleCount()) changes on Load More). That suspension
+  // detaches the list from the DOM, collapses page height, and resets
+  // window.scrollY. Reading via .collection + .state subscribes us to changes
+  // synchronously without ever suspending.
+  //
+  // This is unfortunate. Solid's useLiveQuery is hard-wired to createResource
+  // and there is no opt-out (React has useLiveSuspenseQuery as the suspending
+  // variant; Solid only ships the suspending one). Until upstream provides a
+  // non-suspending Solid hook, we bypass the resource using public API:
+  // .collection (Collection) and .state (ReactiveMap).
+  const articles = (): Article[] => {
+    // Touch the reactive map so this accessor re-runs on changes
+    void articlesQuery.state.size;
+    return Array.from(articlesQuery.collection.values()) as unknown as Article[];
+  };
   const totalCount = () => (totalCountQuery() || []).length;
   const unreadCount = () => (unreadCountQuery() || []).length;
   const archivableCount = () => (archivableQuery() || []).length;

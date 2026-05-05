@@ -1,7 +1,7 @@
 import type { Article } from '@repo/domain/client';
 import { Link } from '@tanstack/solid-router';
 import { Archive, Check, Inbox, Rss } from 'lucide-solid';
-import { Show } from 'solid-js';
+import { Show, Suspense } from 'solid-js';
 import { twMerge } from 'tailwind-merge';
 import { TimeAgo } from '~/components/TimeAgo';
 import { YouTubeThumbnail } from '~/components/YouTubeThumbnail';
@@ -150,17 +150,21 @@ export function ArticleCard(props: ArticleCardProps) {
         <YouTubeThumbnail videoId={videoId()!} alt={props.article.title} />
       </Show>
 
-      {/* Tags */}
-      <Show when={ctx.tags().length > 0}>
-        <div class="relative mb-2">
-          <ArticleTagManager
-            tags={ctx.tags()}
-            articleTags={articleTags()}
-            onAddTag={(tagId) => ctx.addTag(props.article.id, tagId)}
-            onRemoveTag={ctx.removeTag}
-          />
-        </div>
-      </Show>
+      {/* Tags — wrapped in Suspense so per-card useLiveQuery suspension is
+          contained here and doesn't detach the whole list from the DOM
+          (which would collapse page height and reset window.scrollY). */}
+      <Suspense fallback={null}>
+        <Show when={ctx.tags().length > 0}>
+          <div class="relative mb-2">
+            <ArticleTagManager
+              tags={ctx.tags()}
+              articleTags={articleTags()}
+              onAddTag={(tagId) => ctx.addTag(props.article.id, tagId)}
+              onRemoveTag={ctx.removeTag}
+            />
+          </div>
+        </Show>
+      </Suspense>
 
       {/* Actions */}
       <div class="relative -ml-1 flex items-center gap-4">
