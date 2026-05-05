@@ -1,67 +1,50 @@
-import { and, eq, ilike, queryOnce, toArray, useLiveQuery } from '@tanstack/solid-db';
+import { and, eq, ilike, queryOnce } from '@tanstack/solid-db';
 import { createFileRoute } from '@tanstack/solid-router';
 import { createResource, Show } from 'solid-js';
 import type { ReadStatus } from '~/components/articles/ReadStatusToggle';
 import { CenterLoader } from '~/components/Loader';
 import { ShortsViewer } from '~/components/ShortsViewer';
+import { articleTagsCollection } from '~/entities/article-tags';
 import { articlesCollection } from '~/entities/articles';
-import { feedTagsCollection } from '~/entities/feed-tags';
-import { feedsCollection } from '~/entities/feeds';
-import { tagsCollection } from '~/entities/tags';
+import { useFeeds } from '~/entities/feeds';
 import { readStatusWhere } from '~/utils/article-queries';
 import { validateReadStatusSearch } from '~/utils/routing';
 
-export const Route = createFileRoute('/_frame/feeds/$feedId/shorts/')({
+export const Route = createFileRoute('/_frame/tags/$tagId/shorts/')({
   validateSearch: validateReadStatusSearch,
-  component: FeedShorts,
+  component: TagShorts,
 });
 
-function FeedShorts() {
+function TagShorts() {
   const params = Route.useParams();
   const search = Route.useSearch();
-  const feedId = () => params()?.feedId;
+  const tagId = () => params()?.tagId;
   const readStatus = (): ReadStatus => search()?.readStatus || 'unread';
+  const feedsQuery = useFeeds();
 
-  // One-shot snapshot — refetches when feedId or readStatus changes.
+  // One-shot snapshot — refetches when tagId or readStatus changes.
   const [snapshot, { mutate: mutateSnapshot }] = createResource(
-    () => ({ id: feedId(), status: readStatus() }),
+    () => ({ id: tagId(), status: readStatus() }),
     async ({ id, status }) => {
       const filter = readStatusWhere(status);
       return queryOnce((q) =>
         q
           .from({ article: articlesCollection })
-          .where(({ article }) => {
+          .innerJoin({ articleTag: articleTagsCollection }, ({ article, articleTag }) =>
+            eq(article.id, articleTag.articleId),
+          )
+          .where(({ article, articleTag }) => {
             const base = and(
-              eq(article.feedId, id),
+              eq(articleTag.tagId, id),
               eq(article.isArchived, false),
               ilike(article.url, '%youtube.com/shorts%'),
             );
             return filter ? and(base, filter(article)) : base;
           })
+          .select(({ article }) => article)
           .orderBy(({ article }) => article.pubDate, 'desc'),
       );
     },
-  );
-
-  const feedWithTagsQuery = useLiveQuery((q) =>
-    q
-      .from({ feed: feedsCollection })
-      .where(({ feed }) => eq(feed.id, feedId()))
-      .select(({ feed }) => ({
-        ...feed,
-        tags: toArray(
-          q
-            .from({ ft: feedTagsCollection })
-            .where(({ ft }) => eq(ft.feedId, feed.id))
-            .join({ tag: tagsCollection }, ({ ft, tag }) => eq(ft.tagId, tag.id))
-            .select(({ ft, tag }) => ({
-              feedTagId: ft.id,
-              id: tag.id,
-              name: tag.name,
-              color: tag.color,
-            })),
-        ),
-      })),
   );
 
   const setRead = (articleId: string, isRead: boolean) => {
@@ -76,11 +59,11 @@ function FeedShorts() {
       <ShortsViewer
         readStatus={readStatus()}
         shorts={snapshot() ?? []}
-        feeds={feedWithTagsQuery() ?? []}
+        feeds={feedsQuery() ?? []}
         backLink={{
-          to: '/feeds/$feedId',
-          text: 'Back to Feed',
-          params: { feedId: feedId() },
+          to: '/tags/$tagId',
+          text: 'Back to Tag',
+          params: { tagId: tagId() },
         }}
         onSetRead={setRead}
       />

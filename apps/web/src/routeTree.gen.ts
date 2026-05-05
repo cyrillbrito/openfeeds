@@ -46,6 +46,7 @@ import { Route as FrameFeedsFeedIdIndexRouteImport } from './routes/_frame.feeds
 import { Route as ApiArticlesArticleIdAudioRouteImport } from './routes/api/articles/$articleId/audio'
 import { Route as FrameTagsTagIdFeedsRouteImport } from './routes/_frame.tags.$tagId.feeds'
 import { Route as FrameTagsTagIdArticlesRouteImport } from './routes/_frame.tags.$tagId.articles'
+import { Route as FrameTagsTagIdShortsIndexRouteImport } from './routes/_frame.tags.$tagId.shorts.index'
 import { Route as FrameFeedsFeedIdShortsIndexRouteImport } from './routes/_frame.feeds.$feedId.shorts.index'
 
 const SignupRoute = SignupRouteImport.update({
@@ -234,6 +235,12 @@ const FrameTagsTagIdArticlesRoute = FrameTagsTagIdArticlesRouteImport.update({
   path: '/articles',
   getParentRoute: () => FrameTagsTagIdRoute,
 } as any)
+const FrameTagsTagIdShortsIndexRoute =
+  FrameTagsTagIdShortsIndexRouteImport.update({
+    id: '/shorts/',
+    path: '/shorts/',
+    getParentRoute: () => FrameTagsTagIdRoute,
+  } as any)
 const FrameFeedsFeedIdShortsIndexRoute =
   FrameFeedsFeedIdShortsIndexRouteImport.update({
     id: '/feeds/$feedId/shorts/',
@@ -279,6 +286,7 @@ export interface FileRoutesByFullPath {
   '/feeds/$feedId/': typeof FrameFeedsFeedIdIndexRoute
   '/inbox/shorts/': typeof FrameInboxShortsIndexRoute
   '/feeds/$feedId/shorts/': typeof FrameFeedsFeedIdShortsIndexRoute
+  '/tags/$tagId/shorts/': typeof FrameTagsTagIdShortsIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -318,6 +326,7 @@ export interface FileRoutesByTo {
   '/feeds/$feedId': typeof FrameFeedsFeedIdIndexRoute
   '/inbox/shorts': typeof FrameInboxShortsIndexRoute
   '/feeds/$feedId/shorts': typeof FrameFeedsFeedIdShortsIndexRoute
+  '/tags/$tagId/shorts': typeof FrameTagsTagIdShortsIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -359,6 +368,7 @@ export interface FileRoutesById {
   '/_frame/feeds/$feedId/': typeof FrameFeedsFeedIdIndexRoute
   '/_frame/inbox/shorts/': typeof FrameInboxShortsIndexRoute
   '/_frame/feeds/$feedId/shorts/': typeof FrameFeedsFeedIdShortsIndexRoute
+  '/_frame/tags/$tagId/shorts/': typeof FrameTagsTagIdShortsIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -400,6 +410,7 @@ export interface FileRouteTypes {
     | '/feeds/$feedId/'
     | '/inbox/shorts/'
     | '/feeds/$feedId/shorts/'
+    | '/tags/$tagId/shorts/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -439,6 +450,7 @@ export interface FileRouteTypes {
     | '/feeds/$feedId'
     | '/inbox/shorts'
     | '/feeds/$feedId/shorts'
+    | '/tags/$tagId/shorts'
   id:
     | '__root__'
     | '/'
@@ -479,6 +491,7 @@ export interface FileRouteTypes {
     | '/_frame/feeds/$feedId/'
     | '/_frame/inbox/shorts/'
     | '/_frame/feeds/$feedId/shorts/'
+    | '/_frame/tags/$tagId/shorts/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -765,6 +778,13 @@ declare module '@tanstack/solid-router' {
       preLoaderRoute: typeof FrameTagsTagIdArticlesRouteImport
       parentRoute: typeof FrameTagsTagIdRoute
     }
+    '/_frame/tags/$tagId/shorts/': {
+      id: '/_frame/tags/$tagId/shorts/'
+      path: '/shorts'
+      fullPath: '/tags/$tagId/shorts/'
+      preLoaderRoute: typeof FrameTagsTagIdShortsIndexRouteImport
+      parentRoute: typeof FrameTagsTagIdRoute
+    }
     '/_frame/feeds/$feedId/shorts/': {
       id: '/_frame/feeds/$feedId/shorts/'
       path: '/feeds/$feedId/shorts'
@@ -794,11 +814,13 @@ const FrameSettingsRouteWithChildren = FrameSettingsRoute._addFileChildren(
 interface FrameTagsTagIdRouteChildren {
   FrameTagsTagIdArticlesRoute: typeof FrameTagsTagIdArticlesRoute
   FrameTagsTagIdFeedsRoute: typeof FrameTagsTagIdFeedsRoute
+  FrameTagsTagIdShortsIndexRoute: typeof FrameTagsTagIdShortsIndexRoute
 }
 
 const FrameTagsTagIdRouteChildren: FrameTagsTagIdRouteChildren = {
   FrameTagsTagIdArticlesRoute: FrameTagsTagIdArticlesRoute,
   FrameTagsTagIdFeedsRoute: FrameTagsTagIdFeedsRoute,
+  FrameTagsTagIdShortsIndexRoute: FrameTagsTagIdShortsIndexRoute,
 }
 
 const FrameTagsTagIdRouteWithChildren = FrameTagsTagIdRoute._addFileChildren(

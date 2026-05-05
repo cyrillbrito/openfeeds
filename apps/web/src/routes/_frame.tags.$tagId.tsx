@@ -1,11 +1,13 @@
-import { eq, useLiveQuery } from '@tanstack/solid-db';
+import { and, eq, ilike, useLiveQuery } from '@tanstack/solid-db';
 import { createFileRoute, Link, Outlet, useLocation, useNavigate } from '@tanstack/solid-router';
 import { createEffect, createMemo, on, Show, Suspense } from 'solid-js';
+import { ShortsButton } from '~/components/articles/ShortsButton';
 import { ColorIndicator } from '~/components/ColorIndicator';
 import { CenterLoader } from '~/components/Loader';
 import { PageLayout } from '~/components/PageLayout';
 import { TagEmptyState } from '~/components/TagFeedManager';
 import { articleTagsCollection } from '~/entities/article-tags';
+import { articlesCollection } from '~/entities/articles';
 import { feedTagsCollection } from '~/entities/feed-tags';
 import { useFeeds } from '~/entities/feeds';
 import { useTags } from '~/entities/tags';
@@ -55,6 +57,24 @@ function TagLayout() {
   const hasContent = () =>
     (taggedFeedsQuery()?.length ?? 0) > 0 || (taggedArticlesQuery()?.length ?? 0) > 0;
 
+  const shortsExistQuery = useLiveQuery((q) =>
+    q
+      .from({ article: articlesCollection })
+      .innerJoin({ articleTag: articleTagsCollection }, ({ article, articleTag }) =>
+        eq(article.id, articleTag.articleId),
+      )
+      .where(({ article, articleTag }) =>
+        and(
+          eq(articleTag.tagId, tagId()),
+          eq(article.isArchived, false),
+          ilike(article.url, '%youtube.com/shorts%'),
+        ),
+      )
+      .select(({ article }) => ({ id: article.id }))
+      .limit(1),
+  );
+  const shortsExist = () => (shortsExistQuery()?.length ?? 0) > 0;
+
   const navigate = useNavigate();
   createEffect(
     on(
@@ -78,6 +98,16 @@ function TagLayout() {
         ) : (
           'Tag'
         )
+      }
+      headerActions={
+        <ShortsButton
+          shortsExist={shortsExist()}
+          linkProps={{
+            to: '/tags/$tagId/shorts',
+            params: { tagId: tagId() },
+            search: { readStatus: 'unread' },
+          }}
+        />
       }
     >
       <Show
