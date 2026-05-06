@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.14.0](https://github.com/cyrillbrito/openfeeds/compare/v0.13.2...v0.14.0) (2026-05-06)
+
+
+### Features
+
+* **web:** add shorts viewer for inbox, feeds, and tags ([#262](https://github.com/cyrillbrito/openfeeds/issues/262)) ([2a41e23](https://github.com/cyrillbrito/openfeeds/commit/2a41e232934bd5e874628c407f58fd368e141282))
+
+
+### Bug Fixes
+
+* **web:** preserve scroll position when clicking Load More ([#264](https://github.com/cyrillbrito/openfeeds/issues/264)) ([c2f7f36](https://github.com/cyrillbrito/openfeeds/commit/c2f7f369a70099054edd264dc75b8875a63e087f))
+
 ## [0.13.2](https://github.com/cyrillbrito/openfeeds/compare/v0.13.1...v0.13.2) (2026-05-04)
 
 
