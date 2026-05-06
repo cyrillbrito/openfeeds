@@ -18,7 +18,7 @@
     "bullmq": "^5.76.5",
     "drizzle-orm": "^0.45.2",
     "feedsmith": "^2.9.4",
-    "posthog-node": "^5.33.2",
+    "posthog-node": "^5.33.3",
     "resend": "^6.12.2",
     "zod": "^4.4.3"
   },
