@@ -71,6 +71,7 @@ function TagLayout() {
         ),
       )
       .select(({ article }) => ({ id: article.id }))
+      .orderBy(({ article }) => article.pubDate, 'desc')
       .limit(1),
   );
   const shortsExist = () => (shortsExistQuery()?.length ?? 0) > 0;
