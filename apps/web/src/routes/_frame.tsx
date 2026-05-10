@@ -104,15 +104,15 @@ function FrameLayout() {
 
           <div class="drawer-side z-10 shadow-sm">
             <label for="my-drawer" aria-label="close sidebar" class="drawer-overlay"></label>
-            <aside class="menu bg-base-100 border-base-300 flex h-dvh w-80 flex-col flex-nowrap border-r px-4 pt-4 pb-2">
+            <aside class="menu bg-base-100 border-base-300 flex h-dvh w-80 flex-col flex-nowrap border-r !px-0 !pt-4 !pb-2">
               {/* Menu Header */}
-              <Link to="/inbox" class="mt-2 flex items-center justify-center gap-2">
+              <Link to="/inbox" class="mt-2 flex items-center justify-center gap-2 px-4">
                 <img src="/logo.svg" class="h-10 w-10" alt="OpenFeeds logo" />
                 <h2 class="text-lg font-bold">OpenFeeds</h2>
               </Link>
-              <div class="divider"></div>
+              <div class="divider mx-4"></div>
 
-              <div class="flex-1 overflow-y-auto">
+              <div class="flex-1 overflow-y-auto pr-2 pl-4">
                 {/* Navigation */}
                 <ul class="mb-6 space-y-1">
                   <li>
@@ -162,8 +162,10 @@ function FrameLayout() {
                 <DrawerTags />
               </div>
 
-              <div class="divider"></div>
-              <UserMenu />
+              <div class="divider mx-4"></div>
+              <div class="px-4">
+                <UserMenu />
+              </div>
             </aside>
           </div>
         </div>
@@ -196,7 +198,7 @@ function DrawerTags() {
     <div class="flex-1">
       <TagModal controller={(controller) => (createModalController = controller)} />
 
-      <div class="flex px-4">
+      <div class="flex">
         <Link
           to="/tags"
           class="text-base-content-gray hover:text-base-content flex flex-1 items-center gap-2 text-sm font-semibold tracking-wide uppercase transition-colors"
