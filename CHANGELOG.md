@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.15.0](https://github.com/cyrillbrito/openfeeds/compare/v0.14.0...v0.15.0) (2026-05-10)
+
+
+### Features
+
+* **web:** align sidebar scrollbar to right edge ([#269](https://github.com/cyrillbrito/openfeeds/issues/269)) ([a188a8e](https://github.com/cyrillbrito/openfeeds/commit/a188a8e5cef2ada305b01ef09f9caaf21873af47))
+
+
+### Bug Fixes
+
+* **web:** add orderBy to tag shorts existence query ([#267](https://github.com/cyrillbrito/openfeeds/issues/267)) ([fb5ccd1](https://github.com/cyrillbrito/openfeeds/commit/fb5ccd1c27d15da5414aabac809689b7c2af8ba1))
+
 ## [0.14.0](https://github.com/cyrillbrito/openfeeds/compare/v0.13.2...v0.14.0) (2026-05-06)
 
 
