@@ -204,7 +204,7 @@ export function CuratedFeedsBrowser(props: {
         </label>
 
         {/* Category pills — horizontal scroll */}
-        <div class="scrollbar-none sm:scrollbar-thin -mx-4 mb-4 flex gap-2 overflow-x-auto px-4 pb-2 sm:-mx-6 sm:mb-5 sm:px-6">
+        <div class="-mx-4 mb-4 flex scrollbar-none gap-2 overflow-x-auto px-4 pb-2 sm:-mx-6 sm:mb-5 sm:scrollbar-thin sm:px-6">
           <button
             type="button"
             class="btn btn-sm shrink-0 rounded-full"
