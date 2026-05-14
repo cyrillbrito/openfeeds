@@ -1,0 +1,58 @@
+version: 2
+updates:
+  # GitHub Actions — auto-merge patch+minor (already SHA-pinned, low risk).
+  # Dependabot rewrites the SHA and updates the version comment.
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+    cooldown:
+      default-days: 3
+    groups:
+      docker:
+        patterns:
+          - 'docker/*'
+      actions-core:
+        patterns:
+          - 'actions/*'
+      other-actions:
+        patterns:
+          - '*'
+        exclude-patterns:
+          - 'docker/*'
+          - 'actions/*'
+
+  # npm — patches batched + auto-mergeable after cooldown; minors/majors need review.
+  # Cooldown defends against compromised/yanked packages: most malicious npm
+  # publishes are detected and removed within 24-72h, so waiting 5 days dodges
+  # most supply-chain attacks automatically.
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 10
+    cooldown:
+      default-days: 5
+      semver-major-days: 14
+    groups:
+      # All patch updates batched into one PR per week → auto-merged if CI green.
+      patch-updates:
+        update-types:
+          - patch
+      # Dev-only minor updates grouped (eslint, prettier, types, vitest, playwright, etc).
+      # Not auto-merged — you'll review one weekly PR.
+      dev-minor-updates:
+        dependency-type: development
+        update-types:
+          - minor
+    ignore:
+      # Sensitive runtime deps — never auto-touched, even on patch.
+      # Review and bump these manually.
+      - dependency-name: better-auth
+      - dependency-name: drizzle-orm
+      - dependency-name: drizzle-kit
+      - dependency-name: '@electric-sql/*'
+      - dependency-name: '@tanstack/*'
+      - dependency-name: solid-js
+      - dependency-name: '@solidjs/*'
+      - dependency-name: bullmq

@@ -4,9 +4,16 @@ on:
   pull_request:
     types: [opened, synchronize, reopened, closed]
 
+# Cancel superseded runs (e.g. force-push to a PR) to save CI minutes.
+# `cleanup-report` is intentionally not in the group: it runs on close
+# and must not be cancelled by an in-flight PR run.
+concurrency:
+  group: ci-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+# Default to read-only; jobs override only what they need.
 permissions:
-  contents: write
-  pull-requests: write
+  contents: read
 
 jobs:
   lint:
@@ -15,10 +22,17 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
 
       - name: Setup Bun
-        uses: oven-sh/setup-bun@v2
+        uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2.2.0
+
+      - name: Cache Bun install
+        uses: actions/cache@0400d5f644dc74513175e3cd8d07132dd4860809 # v4.2.4
+        with:
+          path: ~/.bun/install/cache
+          key: bun-${{ runner.os }}-${{ hashFiles('**/bun.lock') }}
+          restore-keys: bun-${{ runner.os }}-
 
       - name: Install dependencies
         run: bun install --frozen-lockfile
@@ -32,15 +46,25 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
 
       - name: Setup Bun
-        uses: oven-sh/setup-bun@v2
+        uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2.2.0
+
+      - name: Cache Bun install
+        uses: actions/cache@0400d5f644dc74513175e3cd8d07132dd4860809 # v4.2.4
+        with:
+          path: ~/.bun/install/cache
+          key: bun-${{ runner.os }}-${{ hashFiles('**/bun.lock') }}
+          restore-keys: bun-${{ runner.os }}-
 
       - name: Install dependencies
         run: bun install --frozen-lockfile
 
       - name: Install Playwright browsers
+        # Playwright officially recommends against caching browser binaries:
+        # the apt deps installed by --with-deps cannot be cached, and the
+        # binary download is comparable in time to a cache restore.
         run: bunx playwright install chromium --with-deps
         working-directory: apps/web
 
@@ -52,6 +76,9 @@ jobs:
     name: E2E Tests
     if: github.event.action != 'closed'
     runs-on: ubuntu-latest
+    permissions:
+      contents: write # for gh-pages report push
+      pull-requests: write # for the report comment
     services:
       # Uses Electric SQL's public Postgres image with wal_level=logical pre-configured.
       # This avoids the need to ALTER SYSTEM + restart Postgres at runtime.
@@ -81,7 +108,9 @@ jobs:
           --health-retries 5
 
       electric:
-        image: electricsql/electric:latest
+        # Pinned to avoid silent breakage from upstream releases.
+        # Server is forward-compatible with @electric-sql/client ^1.5.x.
+        image: electricsql/electric:1.6.4
         env:
           DATABASE_URL: postgresql://postgres:postgres@postgres:5432/openfeeds_test?sslmode=disable
           ELECTRIC_INSECURE: 'true'
@@ -107,10 +136,17 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
 
       - name: Setup Bun
-        uses: oven-sh/setup-bun@v2
+        uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2.2.0
+
+      - name: Cache Bun install
+        uses: actions/cache@0400d5f644dc74513175e3cd8d07132dd4860809 # v4.2.4
+        with:
+          path: ~/.bun/install/cache
+          key: bun-${{ runner.os }}-${{ hashFiles('**/bun.lock') }}
+          restore-keys: bun-${{ runner.os }}-
 
       - name: Install dependencies
         run: bun install --frozen-lockfile
@@ -142,27 +178,46 @@ jobs:
           exit 1
 
       - name: Run E2E tests
-        run: bunx playwright test --update-snapshots
+        # No --update-snapshots: CI must fail on visual regressions, not
+        # silently regenerate. Use the 'Update E2E snapshots' workflow
+        # (workflow_dispatch) to refresh snapshots from a PR branch.
+        run: bunx playwright test
         working-directory: apps/e2e
 
       - name: Publish report to GitHub Pages
         if: ${{ !cancelled() }}
+        env:
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
         run: |
-          PR_DIR="playwright-report/pr-${{ github.event.pull_request.number }}"
+          PR_DIR="playwright-report/pr-${PR_NUMBER}"
           # Clone gh-pages into a separate directory to avoid conflicts with working tree
-          git clone --single-branch --branch gh-pages "https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}.git" gh-pages-deploy
+          git clone --single-branch --branch gh-pages "https://x-access-token:${GH_TOKEN}@github.com/${REPO}.git" gh-pages-deploy
           cd gh-pages-deploy
           rm -rf "$PR_DIR"
           mkdir -p "$PR_DIR"
           cp -r "$GITHUB_WORKSPACE/apps/e2e/playwright-report/"* "$PR_DIR/"
           git add "$PR_DIR"
           git -c user.name="github-actions" -c user.email="github-actions@github.com" \
-            commit -m "chore: update playwright report for PR #${{ github.event.pull_request.number }}" --allow-empty
-          git push
+            commit -m "chore: update playwright report for PR #${PR_NUMBER}" --allow-empty
+          # Retry on push race with concurrent E2E runs writing to gh-pages.
+          for attempt in 1 2 3 4 5; do
+            if git push; then
+              echo "gh-pages push succeeded on attempt $attempt"
+              exit 0
+            fi
+            echo "Push failed (attempt $attempt), rebasing on remote and retrying..."
+            git fetch origin gh-pages
+            git rebase origin/gh-pages
+            sleep $((attempt * 2))
+          done
+          echo "gh-pages push failed after 5 attempts"
+          exit 1
 
       - name: Post report comment
         if: ${{ !cancelled() }}
-        uses: daun/playwright-report-summary@v3
+        uses: daun/playwright-report-summary@1229105480a2a4bdd91598d8a146fbab41343fce # v3.11.0
         with:
           report-file: apps/e2e/results.json
           comment-title: 'Playwright E2E Report'
@@ -173,20 +228,34 @@ jobs:
     name: Cleanup Report
     if: github.event.action == 'closed'
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     steps:
       - name: Checkout gh-pages
-        uses: actions/checkout@v4
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
         with:
           ref: gh-pages
 
       - name: Remove PR report
+        env:
+          PR_NUMBER: ${{ github.event.pull_request.number }}
         run: |
-          if [ -d "playwright-report/pr-${{ github.event.pull_request.number }}" ]; then
-            rm -rf "playwright-report/pr-${{ github.event.pull_request.number }}"
+          if [ -d "playwright-report/pr-${PR_NUMBER}" ]; then
+            rm -rf "playwright-report/pr-${PR_NUMBER}"
             git add -A
             git -c user.name="github-actions" -c user.email="github-actions@github.com" \
-              commit -m "chore: remove playwright report for PR #${{ github.event.pull_request.number }}" --allow-empty
-            git push origin gh-pages
+              commit -m "chore: remove playwright report for PR #${PR_NUMBER}" --allow-empty
+            # Retry on push race with concurrent E2E runs writing to gh-pages.
+            for attempt in 1 2 3 4 5; do
+              if git push origin gh-pages; then
+                exit 0
+              fi
+              echo "Push failed (attempt $attempt), pulling and retrying..."
+              git pull --rebase origin gh-pages
+              sleep $((attempt * 2))
+            done
+            echo "gh-pages push failed after 5 attempts"
+            exit 1
           else
-            echo "No report found for PR #${{ github.event.pull_request.number }}, skipping"
+            echo "No report found for PR #${PR_NUMBER}, skipping"
           fi

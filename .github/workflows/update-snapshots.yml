@@ -1,0 +1,137 @@
+name: Update E2E Snapshots
+
+# Manually-triggered workflow to regenerate Playwright visual snapshots for a
+# specific PR branch and commit them back. Use this when CI fails on snapshot
+# diffs that you've reviewed and want to accept.
+#
+# How to use:
+# 1. Go to Actions → "Update E2E Snapshots" → Run workflow
+# 2. Pick the PR branch from the dropdown
+# 3. Wait for the run to finish; new snapshots are committed to the branch
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  update-snapshots:
+    name: Regenerate snapshots
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write # to push regenerated snapshots back to the branch
+    services:
+      postgres:
+        image: ghcr.io/electric-sql/electric/postgres:18-alpine-logical
+        env:
+          POSTGRES_DB: openfeeds_test
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres -d openfeeds_test"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 5
+
+      redis:
+        image: redis:7-alpine
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 5
+
+      electric:
+        image: electricsql/electric:1.6.4
+        env:
+          DATABASE_URL: postgresql://postgres:postgres@postgres:5432/openfeeds_test?sslmode=disable
+          ELECTRIC_INSECURE: 'true'
+        ports:
+          - 3060:3000
+        options: >-
+          --health-cmd "curl -sf http://localhost:3000/v1/health || exit 1"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 10
+
+    env:
+      DATABASE_URL: postgresql://postgres:postgres@localhost:5432/openfeeds_test
+      REDIS_HOST: localhost
+      REDIS_PORT: 6379
+      BASE_URL: http://localhost:3000
+      TRUSTED_ORIGINS: http://localhost:3000
+      BETTER_AUTH_SECRET: e2e-test-secret-not-for-production-use-only
+      SIMPLE_AUTH: 'true'
+      ELECTRIC_URL: http://localhost:3060
+      ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+      CI: 'true'
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+        with:
+          # Use a token that can push back; GITHUB_TOKEN is fine on
+          # workflow_dispatch since the trigger requires write access.
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2.2.0
+
+      - name: Cache Bun install
+        uses: actions/cache@0400d5f644dc74513175e3cd8d07132dd4860809 # v4.2.4
+        with:
+          path: ~/.bun/install/cache
+          key: bun-${{ runner.os }}-${{ hashFiles('**/bun.lock') }}
+          restore-keys: bun-${{ runner.os }}-
+
+      - name: Install dependencies
+        run: bun install --frozen-lockfile
+
+      - name: Install Playwright browsers
+        run: bunx playwright install chromium --with-deps
+        working-directory: apps/e2e
+
+      - name: Run migrations
+        run: bun --cwd=apps/migrator src/index.ts
+
+      - name: Build @repo/emails
+        run: bun run --cwd packages/emails build
+
+      - name: Start web server
+        run: bun --cwd=apps/web --bun vite dev --port 3000 &
+
+      - name: Wait for web server
+        run: |
+          for i in $(seq 1 30); do
+            if curl -s http://localhost:3000 > /dev/null 2>&1; then
+              echo "Web server is ready"
+              exit 0
+            fi
+            echo "Waiting for web server... ($i/30)"
+            sleep 2
+          done
+          echo "Web server failed to start"
+          exit 1
+
+      - name: Regenerate snapshots
+        run: bunx playwright test --update-snapshots
+        working-directory: apps/e2e
+        # Always continue so we can commit even when snapshot mismatches
+        # were the original failure (Playwright still exits non-zero).
+        continue-on-error: true
+
+      - name: Commit and push updated snapshots
+        run: |
+          git -c user.name="github-actions" -c user.email="github-actions@github.com" \
+            add -A
+          if git diff --cached --quiet; then
+            echo "No snapshot changes to commit."
+            exit 0
+          fi
+          git -c user.name="github-actions" -c user.email="github-actions@github.com" \
+            commit -m "test(e2e): update playwright snapshots"
+          git push origin "HEAD:${GITHUB_REF_NAME}"

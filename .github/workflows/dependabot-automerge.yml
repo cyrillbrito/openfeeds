@@ -1,0 +1,54 @@
+name: Dependabot auto-merge
+
+# Auto-merges low-risk Dependabot PRs once required status checks pass:
+#   - npm patch-update groups (post-cooldown, batched weekly)
+#   - GitHub Actions patch + minor bumps (SHA-pinned, low risk)
+# Everything else (npm minors, all majors, sensitive runtime deps) opens a normal
+# PR and waits for human review.
+#
+# `pull_request_target` is required so the workflow has write access to merge.
+# Safe here because we never check out PR code — only call the GitHub API.
+
+on:
+  pull_request_target:
+    # Only on initial open / reopen. Once auto-merge is enabled on a PR,
+    # GitHub keeps it enabled across rebases — re-running on 'synchronize'
+    # would silently re-enable auto-merge if a developer had manually
+    # disabled it to hold a patch PR for review.
+    types: [opened, reopened]
+
+permissions:
+  contents: read
+
+jobs:
+  automerge:
+    if: github.actor == 'dependabot[bot]'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+    steps:
+      - name: Fetch Dependabot metadata
+        id: meta
+        uses: dependabot/fetch-metadata@08eff52bf64351f401fb50d4972fa95b9f2c2d1b # v2.4.0
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Enable auto-merge for npm patch group
+        if: >
+          steps.meta.outputs.package-ecosystem == 'npm' &&
+          steps.meta.outputs.dependency-group == 'patch-updates'
+        env:
+          PR_URL: ${{ github.event.pull_request.html_url }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: gh pr merge --auto --squash "$PR_URL"
+
+      - name: Enable auto-merge for GitHub Actions patch + minor
+        if: >
+          steps.meta.outputs.package-ecosystem == 'github_actions' &&
+          (steps.meta.outputs.update-type == 'version-update:semver-patch' ||
+           steps.meta.outputs.update-type == 'version-update:semver-minor')
+        env:
+          PR_URL: ${{ github.event.pull_request.html_url }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: gh pr merge --auto --squash "$PR_URL"
