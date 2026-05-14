@@ -1,8 +1,13 @@
 name: Build and Push Docker Images
 
+# Triggers:
+# - workflow_call: invoked from release-please.yml on tagged releases.
+# - workflow_dispatch: manual builds (e.g. publish 'edge' from main).
+#
+# The 'push: main' trigger was removed to avoid double-building on release
+# commits (release-please merges to main, then calls this workflow). For
+# rolling 'edge' images from main, run the workflow manually with no tag.
 on:
-  push:
-    branches: [main]
   workflow_call:
     inputs:
       tag:
@@ -25,13 +30,37 @@ permissions:
   contents: read
 
 jobs:
-  # Web: build on runner, upload sourcemaps, then package into Docker
-  build-web:
-    name: Build web
+  build:
+    name: Build ${{ matrix.name }}
     runs-on: ubuntu-latest
     permissions:
       contents: read
       packages: write
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          # Web has a build step + sourcemap upload to PostHog.
+          - name: web
+            package: '@repo/web'
+            image: ghcr.io/cyrillbrito/openfeeds-web
+            dockerfile: apps/web/Dockerfile
+            build: true
+            sourcemaps: true
+          # Worker has a build step but no sourcemap upload.
+          - name: worker
+            package: '@repo/worker'
+            image: ghcr.io/cyrillbrito/openfeeds-worker
+            dockerfile: apps/worker/Dockerfile
+            build: true
+            sourcemaps: false
+          # Migrator has no build step (runs TS directly).
+          - name: migrator
+            package: '@repo/migrator'
+            image: ghcr.io/cyrillbrito/openfeeds-migrations
+            dockerfile: apps/migrator/Dockerfile
+            build: false
+            sourcemaps: false
     steps:
       - name: Checkout
         uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
@@ -39,8 +68,15 @@ jobs:
       - name: Setup Bun
         uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2.2.0
 
+      - name: Cache Bun install
+        uses: actions/cache@0400d5f644dc74513175e3cd8d07132dd4860809 # v4.2.4
+        with:
+          path: ~/.bun/install/cache
+          key: bun-${{ runner.os }}-${{ hashFiles('**/bun.lock') }}
+          restore-keys: bun-${{ runner.os }}-
+
       - name: Prune monorepo
-        run: bunx turbo@^2 prune @repo/web
+        run: bunx turbo@^2 prune ${{ matrix.package }}
 
       # --frozen-lockfile omitted: bun false-positive on turbo-pruned lockfiles (oven-sh/bun#26973)
       - name: Install dependencies
@@ -48,15 +84,18 @@ jobs:
         working-directory: out
 
       - name: Build
+        if: matrix.build
         run: bun run build
         working-directory: out
 
       - name: Read version from package.json
+        if: matrix.sourcemaps
         id: version
         run: echo "value=$(jq -r .version package.json)" >> "$GITHUB_OUTPUT"
         working-directory: out
 
       - name: Upload sourcemaps to PostHog
+        if: matrix.sourcemaps
         uses: PostHog/upload-source-maps@991172e085213c222c61d2ba6a0b9e57c81e5066 # v2.0.0
         with:
           directory: out/apps/web/.output
@@ -67,57 +106,8 @@ jobs:
           release-version: ${{ steps.version.outputs.value }}
           delete-after-upload: true
 
-      - name: Log in to GitHub Container Registry
-        uses: docker/login-action@c94ce9fb468520275223c153574b00df6fe4bcc9 # v3.7.0
-        with:
-          registry: ghcr.io
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Docker metadata
-        id: meta
-        uses: docker/metadata-action@c299e40c65443455700f0fdfc63efafe5b349051 # v5.10.0
-        with:
-          images: ghcr.io/cyrillbrito/openfeeds-web
-          tags: |
-            type=raw,value=edge,enable=${{ github.ref == 'refs/heads/main' }}
-            type=raw,value=latest,enable=${{ inputs.tag != '' }}
-            type=raw,value=${{ inputs.tag }},enable=${{ inputs.tag != '' }}
-
-      - name: Build and push Docker image
-        uses: docker/build-push-action@10e90e3645eae34f1e60eeb005ba3a3d33f178e8 # v6.19.2
-        with:
-          context: .
-          file: apps/web/Dockerfile
-          push: true
-          tags: ${{ steps.meta.outputs.tags }}
-          labels: ${{ steps.meta.outputs.labels }}
-
-  # Worker: turbo prune + install + build on runner, then package into Docker
-  build-worker:
-    name: Build worker
-    runs-on: ubuntu-latest
-    permissions:
-      contents: read
-      packages: write
-    steps:
-      - name: Checkout
-        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
-
-      - name: Setup Bun
-        uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2.2.0
-
-      - name: Prune monorepo
-        run: bunx turbo@^2 prune @repo/worker
-
-      # --frozen-lockfile omitted: bun false-positive on turbo-pruned lockfiles (oven-sh/bun#26973)
-      - name: Install dependencies
-        run: bun install
-        working-directory: out
-
-      - name: Build dependencies
-        run: bun run build
-        working-directory: out
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@8d2750c68a42422c14e847fe6c8ac0403b4cbd6f # v3.12.0
 
       - name: Log in to GitHub Container Registry
         uses: docker/login-action@c94ce9fb468520275223c153574b00df6fe4bcc9 # v3.7.0
@@ -130,9 +120,9 @@ jobs:
         id: meta
         uses: docker/metadata-action@c299e40c65443455700f0fdfc63efafe5b349051 # v5.10.0
         with:
-          images: ghcr.io/cyrillbrito/openfeeds-worker
+          images: ${{ matrix.image }}
           tags: |
-            type=raw,value=edge,enable=${{ github.ref == 'refs/heads/main' }}
+            type=edge,branch=main
             type=raw,value=latest,enable=${{ inputs.tag != '' }}
             type=raw,value=${{ inputs.tag }},enable=${{ inputs.tag != '' }}
 
@@ -140,55 +130,10 @@ jobs:
         uses: docker/build-push-action@10e90e3645eae34f1e60eeb005ba3a3d33f178e8 # v6.19.2
         with:
           context: .
-          file: apps/worker/Dockerfile
+          file: ${{ matrix.dockerfile }}
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
-
-  # Migrator: turbo prune + install on runner (no build step), then package into Docker
-  build-migrator:
-    name: Build migrator
-    runs-on: ubuntu-latest
-    permissions:
-      contents: read
-      packages: write
-    steps:
-      - name: Checkout
-        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
-
-      - name: Setup Bun
-        uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2.2.0
-
-      - name: Prune monorepo
-        run: bunx turbo@^2 prune @repo/migrator
-
-      # --frozen-lockfile omitted: bun false-positive on turbo-pruned lockfiles (oven-sh/bun#26973)
-      - name: Install dependencies
-        run: bun install
-        working-directory: out
-
-      - name: Log in to GitHub Container Registry
-        uses: docker/login-action@c94ce9fb468520275223c153574b00df6fe4bcc9 # v3.7.0
-        with:
-          registry: ghcr.io
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Docker metadata
-        id: meta
-        uses: docker/metadata-action@c299e40c65443455700f0fdfc63efafe5b349051 # v5.10.0
-        with:
-          images: ghcr.io/cyrillbrito/openfeeds-migrations
-          tags: |
-            type=raw,value=edge,enable=${{ github.ref == 'refs/heads/main' }}
-            type=raw,value=latest,enable=${{ inputs.tag != '' }}
-            type=raw,value=${{ inputs.tag }},enable=${{ inputs.tag != '' }}
-
-      - name: Build and push Docker image
-        uses: docker/build-push-action@10e90e3645eae34f1e60eeb005ba3a3d33f178e8 # v6.19.2
-        with:
-          context: .
-          file: apps/migrator/Dockerfile
-          push: true
-          tags: ${{ steps.meta.outputs.tags }}
-          labels: ${{ steps.meta.outputs.labels }}
+          # Per-image GHA cache keeps web/worker/migrator layers separate.
+          cache-from: type=gha,scope=${{ matrix.name }}
+          cache-to: type=gha,mode=max,scope=${{ matrix.name }}

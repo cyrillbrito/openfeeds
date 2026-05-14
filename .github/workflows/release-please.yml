@@ -9,7 +9,7 @@ permissions:
 
 jobs:
   release-please:
-    runs-on: ubuntu-slim
+    runs-on: ubuntu-latest
     permissions:
       contents: write
       pull-requests: write
