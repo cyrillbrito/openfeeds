@@ -7,7 +7,7 @@
     }
   },
   "scripts": {
-    "build": "tsdown --config-loader native",
+    "build": "tsdown",
     "create-broadcast": "bun --env-file=../../.env create-broadcast.tsx",
     "send-reply": "bun --env-file=../../.env send-reply.tsx",
     "dev": "email dev --port 3002",
