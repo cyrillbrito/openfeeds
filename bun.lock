@@ -194,6 +194,7 @@
       "name": "@repo/readability",
       "dependencies": {
         "@mixmark-io/domino": "^2.2.0",
+        "@repo/shared": "workspace:*",
         "defuddle": "^0.18.1",
         "jsdom": "^29.1.1",
         "sanitize-html": "^2.17.3",

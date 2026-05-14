@@ -3,7 +3,8 @@
   "type": "module",
   "exports": {
     "./utils": "./src/utils/index.ts",
-    "./rss": "./src/rss/index.ts"
+    "./rss": "./src/rss/index.ts",
+    "./http": "./src/http/safe-fetch.ts"
   },
   "scripts": {},
   "dependencies": {

@@ -1,12 +1,9 @@
 import { parseFeed } from 'feedsmith';
+import { FetchTimeoutError, safeFetch, SsrfBlockedError } from '../http/safe-fetch';
 
 export type ParseFeedResult = ReturnType<typeof parseFeed>;
 
-export class FetchTimeoutError extends Error {
-  constructor(timeoutMs: number) {
-    super(`Feed fetch timed out after ${timeoutMs / 1000}s`);
-  }
-}
+export { FetchTimeoutError, SsrfBlockedError } from '../http/safe-fetch';
 
 const TRACKING_PARAMS = new Set([
   'utm_source',
@@ -38,26 +35,32 @@ const FEED_DISCRIMINATOR_PARAMS = new Set([
   'category',
 ]);
 
+/**
+ * Fetches `url` with a hard timeout and SSRF protection.
+ *
+ * Returns `null` on network errors (preserving the previous contract).
+ * Throws {@link FetchTimeoutError} on timeout and {@link SsrfBlockedError}
+ * if the URL targets a blocked host (loopback, link-local, RFC 1918, cloud
+ * metadata, etc.). Callers that need to treat blocked hosts as a soft
+ * failure should catch `SsrfBlockedError` explicitly.
+ */
 export async function fetchWithTimeout(
   url: string,
   timeoutMs: number,
   init: RequestInit = {},
 ): Promise<Response | null> {
-  const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
+  // Strip caller-supplied signal/redirect — safeFetch owns both.
+  const { signal: _signal, redirect: _redirect, ...rest } = init;
+  void _signal;
+  void _redirect;
 
   try {
-    return await fetch(url, {
-      ...init,
-      signal: controller.signal,
-    });
+    return await safeFetch(url, { ...rest, timeoutMs });
   } catch (error) {
-    if (error instanceof DOMException && error.name === 'AbortError') {
-      throw new FetchTimeoutError(timeoutMs);
+    if (error instanceof FetchTimeoutError || error instanceof SsrfBlockedError) {
+      throw error;
     }
     return null;
-  } finally {
-    clearTimeout(timeoutId);
   }
 }
 

@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { feedUrlSchema } from './feed.schema';
 
 export const ArticleSchema = z.object({
   id: z.uuidv7(),
@@ -21,7 +22,9 @@ export type Article = z.infer<typeof ArticleSchema>;
 /** Schema for creating articles from a URL (not tied to a feed) */
 export const CreateArticleFromUrlSchema = z.object({
   id: z.uuidv7().optional(),
-  url: z.url(),
+  // Reuse feedUrlSchema → restricts to http(s) and rejects file:/gopher:/etc.
+  // SSRF (private/loopback IPs) is enforced at fetch time by safeFetch.
+  url: feedUrlSchema,
 });
 export type CreateArticleFromUrl = z.infer<typeof CreateArticleFromUrlSchema>;
 
