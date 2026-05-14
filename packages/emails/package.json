@@ -22,10 +22,10 @@
     "resend": "^6.12.2"
   },
   "devDependencies": {
-    "@react-email/ui": "6.0.8",
+    "@react-email/ui": "6.1.1",
     "@types/react": "^19.2.14",
     "@types/react-dom": "^19.2.3",
-    "react-email": "6.0.8",
-    "tsdown": "^0.21.10"
+    "react-email": "6.1.1",
+    "tsdown": "^0.22.0"
   }
 }
