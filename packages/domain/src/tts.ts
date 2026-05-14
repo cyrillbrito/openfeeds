@@ -3,12 +3,34 @@ import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import { articles, db } from '@repo/db';
 import { eq } from 'drizzle-orm';
+import { z } from 'zod';
 import { trackEvent } from './analytics';
 import { extractArticleContent } from './entities/article';
 import type { ArticleAudioMetadata, WordTiming } from './entities/tts.schema';
 import { env } from './env';
-import { TtsNotConfiguredError } from './errors';
+import { BadRequestError, TtsNotConfiguredError } from './errors';
 import { checkTtsLimit } from './limits';
+
+/**
+ * Article IDs are uuidv7 (see packages/db/src/schema/schema.ts). Validate
+ * before path.join so a crafted ID like "../../other-user/article" cannot
+ * escape the user's audio directory.
+ */
+function assertValidArticleId(articleId: string): void {
+  if (!z.uuidv7().safeParse(articleId).success) {
+    throw new BadRequestError('Invalid article id');
+  }
+}
+
+/**
+ * User IDs come from the authenticated session, but defend in depth: the same
+ * path.join traversal would apply if a user id ever contained `/` or `..`.
+ */
+function assertValidUserId(userId: string): void {
+  if (!userId || /[\\/]|\.\./.test(userId)) {
+    throw new BadRequestError('Invalid user id');
+  }
+}
 
 // Re-export client-safe types
 export * from './entities/tts.schema';
@@ -43,6 +65,7 @@ function getAudioDir(userId: string): string {
   if (!env.DATA_PATH) {
     throw new TtsNotConfiguredError();
   }
+  assertValidUserId(userId);
   return join(env.DATA_PATH, 'audio', userId);
 }
 
@@ -50,6 +73,7 @@ function getAudioDir(userId: string): string {
  * Get the audio file path for an article
  */
 function getAudioPath(userId: string, articleId: string): string {
+  assertValidArticleId(articleId);
   return join(getAudioDir(userId), `${articleId}.mp3`);
 }
 
@@ -57,6 +81,7 @@ function getAudioPath(userId: string, articleId: string): string {
  * Get the timestamps file path for an article
  */
 function getTimestampsPath(userId: string, articleId: string): string {
+  assertValidArticleId(articleId);
   return join(getAudioDir(userId), `${articleId}.json`);
 }
 
