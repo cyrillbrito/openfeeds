@@ -1,13 +1,15 @@
 name: Build and Push Docker Images
 
 # Triggers:
-# - workflow_call: invoked from release-please.yml on tagged releases.
-# - workflow_dispatch: manual builds (e.g. publish 'edge' from main).
-#
-# The 'push: main' trigger was removed to avoid double-building on release
-# commits (release-please merges to main, then calls this workflow). For
-# rolling 'edge' images from main, run the workflow manually with no tag.
+# - push: main          → build + publish 'edge' on every main commit, except
+#                         release-please merge commits (which would double-build
+#                         since the workflow_call below also fires for them).
+# - workflow_call       → invoked from release-please.yml on tagged releases;
+#                         publishes 'edge', 'latest' and the version tag.
+# - workflow_dispatch   → manual builds; with a tag publishes 'latest' + tag.
 on:
+  push:
+    branches: [main]
   workflow_call:
     inputs:
       tag:
@@ -32,6 +34,12 @@ permissions:
 jobs:
   build:
     name: Build ${{ matrix.name }}
+    # Skip the push trigger on release-please merge commits: release-please
+    # invokes this workflow via workflow_call right after merging, so a push-
+    # triggered run would build the same commit a second time.
+    if: >-
+      github.event_name != 'push' ||
+      !startsWith(github.event.head_commit.message, 'chore(main): release')
     runs-on: ubuntu-latest
     permissions:
       contents: read
