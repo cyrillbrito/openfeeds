@@ -16,12 +16,22 @@ const CreateFeedBody = z.object({
   url: feedUrlSchema,
 });
 
+function isLocalhostOrigin(origin: string): boolean {
+  if (process.env.NODE_ENV === 'production') return false;
+  try {
+    const { hostname } = new URL(origin);
+    return hostname === 'localhost' || hostname === '127.0.0.1' || hostname === '[::1]';
+  } catch {
+    return false;
+  }
+}
+
 function corsHeaders(request: Request) {
   const origin = request.headers.get('Origin') || '';
   const isAllowed =
     origin.startsWith('chrome-extension://') ||
     origin.startsWith('moz-extension://') ||
-    origin.includes('localhost');
+    isLocalhostOrigin(origin);
 
   return {
     'Access-Control-Allow-Origin': isAllowed ? origin : '',
