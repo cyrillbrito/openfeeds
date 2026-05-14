@@ -10,7 +10,7 @@
     "@repo/db": "workspace:*",
     "@repo/domain": "workspace:*",
     "@t3-oss/env-core": "^0.13.11",
-    "bullmq": "^5.76.5",
+    "bullmq": "^5.76.8",
     "drizzle-orm": "^0.45.2",
     "zod": "^4.4.3"
   },
