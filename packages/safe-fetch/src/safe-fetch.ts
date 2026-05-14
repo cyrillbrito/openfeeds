@@ -1,5 +1,6 @@
 import { lookup } from 'node:dns/promises';
 import { isIP } from 'node:net';
+import { isPrivateIp } from './ip-check';
 
 /**
  * SSRF-safe fetch.
@@ -13,6 +14,7 @@ import { isIP } from 'node:net';
  * - The hostname is resolved and rejected if any of its addresses fall in
  *   loopback, link-local (incl. cloud metadata `169.254.169.254`), private
  *   (RFC 1918), CGNAT, reserved/multicast, or IPv6 ULA/link-local ranges.
+ *   IP categorization is delegated to `ipaddr.js`.
  * - Redirects are followed manually so each hop is re-validated; a redirect
  *   to an internal address is therefore blocked even if the initial host
  *   resolved publicly (defeats simple redirect-based SSRF).
@@ -44,68 +46,6 @@ export class FetchTimeoutError extends Error {
 }
 
 const DEFAULT_MAX_REDIRECTS = 5;
-
-/**
- * Returns true if the literal IP address is private, loopback, link-local,
- * CGNAT, reserved, multicast, broadcast, ULA, or IPv4-mapped private.
- */
-export function isPrivateIp(ip: string): boolean {
-  if (ip === '0.0.0.0' || ip === '::' || ip === '::1') return true;
-
-  const family = isIP(ip);
-
-  if (family === 4) {
-    const parts = ip.split('.').map(Number);
-    if (parts.length !== 4 || parts.some((n) => Number.isNaN(n))) return true;
-    const [a, b] = parts as [number, number, number, number];
-    return (
-      a === 0 || // 0.0.0.0/8 "this network"
-      a === 10 || // 10.0.0.0/8 RFC 1918
-      a === 127 || // 127.0.0.0/8 loopback
-      (a === 169 && b === 254) || // 169.254.0.0/16 link-local incl. cloud metadata
-      (a === 172 && b >= 16 && b <= 31) || // 172.16.0.0/12 RFC 1918
-      (a === 192 && b === 168) || // 192.168.0.0/16 RFC 1918
-      (a === 100 && b >= 64 && b <= 127) || // 100.64.0.0/10 CGNAT
-      (a === 198 && (b === 18 || b === 19)) || // 198.18.0.0/15 benchmarking
-      a >= 224 // multicast (224/4) + reserved (240/4) + 255.255.255.255
-    );
-  }
-
-  if (family === 6) {
-    const lower = ip.toLowerCase();
-
-    // IPv4-mapped IPv6 — re-check embedded v4.
-    // Two forms: dotted "::ffff:127.0.0.1" or compact "::ffff:7f00:1".
-    if (lower.startsWith('::ffff:')) {
-      const tail = lower.slice(7);
-      if (isIP(tail) === 4) return isPrivateIp(tail);
-      // Compact form: two hex words "hhhh:hhhh" → 4 bytes → dotted v4.
-      const m = /^([0-9a-f]{1,4}):([0-9a-f]{1,4})$/.exec(tail);
-      if (m) {
-        const hi = parseInt(m[1]!, 16);
-        const lo = parseInt(m[2]!, 16);
-        const v4 = `${(hi >> 8) & 0xff}.${hi & 0xff}.${(lo >> 8) & 0xff}.${lo & 0xff}`;
-        return isPrivateIp(v4);
-      }
-    }
-
-    // Unique local addresses fc00::/7 (fc.. and fd..)
-    if (lower.startsWith('fc') || lower.startsWith('fd')) return true;
-    // Link-local fe80::/10 (fe80..febf)
-    if (
-      lower.startsWith('fe8') ||
-      lower.startsWith('fe9') ||
-      lower.startsWith('fea') ||
-      lower.startsWith('feb')
-    ) {
-      return true;
-    }
-    return false;
-  }
-
-  // Not a valid IP — caller should not pass non-IPs here.
-  return true;
-}
 
 function isBlockedHostname(host: string): boolean {
   const h = host.toLowerCase();

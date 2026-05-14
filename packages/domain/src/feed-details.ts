@@ -1,5 +1,5 @@
 import { feeds } from '@repo/db';
-import { safeFetch } from '@repo/shared/http';
+import { safeFetch } from '@repo/safe-fetch';
 import { and, eq } from 'drizzle-orm';
 import type { DomainContext } from './domain-context';
 import type { Feed } from './entities/feed';

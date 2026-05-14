@@ -1,8 +1,8 @@
+import { safeFetch } from '@repo/safe-fetch';
 import {
   canonicalizeFeedEquivalenceUrl,
   canonicalizeFeedUrl,
   extractBasicSiteMetadata,
-  fetchWithTimeout,
   normalizeFeedTypeFromHeader,
   parseFeedContent,
   type ParseFeedResult,
@@ -292,13 +292,13 @@ async function fetchDiscoveryUrl(
   extraHeaders: Record<string, string>,
 ): Promise<Response | null> {
   try {
-    return await fetchWithTimeout(url, timeout, {
+    return await safeFetch(url, {
       method: 'GET',
       headers: {
         'User-Agent': options.userAgent,
         ...extraHeaders,
       },
-      redirect: options.followRedirects ? 'follow' : 'manual',
+      timeoutMs: timeout,
     });
   } catch {
     return null;

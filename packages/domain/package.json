@@ -13,6 +13,7 @@
     "@repo/discovery": "workspace:*",
     "@repo/emails": "workspace:*",
     "@repo/readability": "workspace:*",
+    "@repo/safe-fetch": "workspace:*",
     "@repo/shared": "workspace:*",
     "@t3-oss/env-core": "^0.13.11",
     "bullmq": "^5.76.5",

@@ -1,4 +1,4 @@
-import { safeFetch, SsrfBlockedError } from '@repo/shared/http';
+import { safeFetch, SsrfBlockedError } from '@repo/safe-fetch';
 import { Defuddle } from 'defuddle/node';
 import { JSDOM } from 'jsdom';
 import type { ArticleContent } from './types.js';

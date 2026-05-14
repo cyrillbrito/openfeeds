@@ -1,53 +1,5 @@
 import { describe, expect, test } from 'bun:test';
-import { isPrivateIp, safeFetch, SsrfBlockedError } from './safe-fetch';
-
-describe('isPrivateIp', () => {
-  test.each([
-    ['127.0.0.1'],
-    ['127.42.1.1'],
-    ['10.0.0.1'],
-    ['10.255.255.255'],
-    ['172.16.0.1'],
-    ['172.31.255.255'],
-    ['192.168.0.1'],
-    ['169.254.169.254'], // AWS/GCP/Azure metadata
-    ['169.254.0.1'],
-    ['100.64.0.1'], // CGNAT
-    ['100.127.255.255'],
-    ['0.0.0.0'],
-    ['224.0.0.1'], // multicast
-    ['255.255.255.255'], // broadcast
-    ['198.18.0.1'], // benchmarking
-    ['::1'], // IPv6 loopback
-    ['::'],
-    ['fc00::1'], // ULA
-    ['fd00::1'],
-    ['fe80::1'], // link-local
-    ['febf::1'],
-    ['::ffff:127.0.0.1'], // IPv4-mapped loopback
-    ['::ffff:169.254.169.254'], // IPv4-mapped metadata
-  ])('blocks %s', (ip) => {
-    expect(isPrivateIp(ip)).toBe(true);
-  });
-
-  test.each([
-    ['8.8.8.8'],
-    ['1.1.1.1'],
-    ['142.250.80.46'], // public Google
-    ['172.32.0.1'], // just outside RFC 1918
-    ['172.15.255.255'],
-    ['100.63.255.255'], // just outside CGNAT
-    ['100.128.0.1'],
-    ['169.253.255.255'], // just outside link-local
-    ['169.255.0.1'],
-    ['198.20.0.1'], // just outside benchmarking
-    ['223.255.255.255'], // just before multicast
-    ['2001:4860:4860::8888'], // public IPv6
-    ['2606:4700:4700::1111'],
-  ])('allows %s', (ip) => {
-    expect(isPrivateIp(ip)).toBe(false);
-  });
-});
+import { safeFetch, SsrfBlockedError } from './safe-fetch';
 
 describe('safeFetch SSRF rejection', () => {
   test('rejects literal loopback IPv4', async () => {
