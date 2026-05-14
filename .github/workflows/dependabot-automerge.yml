@@ -9,7 +9,13 @@ name: Dependabot auto-merge
 # `pull_request_target` is required so the workflow has write access to merge.
 # Safe here because we never check out PR code — only call the GitHub API.
 
-on: pull_request_target
+on:
+  pull_request_target:
+    # Only on initial open / reopen. Once auto-merge is enabled on a PR,
+    # GitHub keeps it enabled across rebases — re-running on 'synchronize'
+    # would silently re-enable auto-merge if a developer had manually
+    # disabled it to hold a patch PR for review.
+    types: [opened, reopened]
 
 permissions:
   contents: read
