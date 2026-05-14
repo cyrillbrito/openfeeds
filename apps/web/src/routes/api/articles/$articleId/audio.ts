@@ -1,4 +1,5 @@
 import { createFileRoute } from '@tanstack/solid-router';
+import { z } from 'zod';
 import type { AuthContext } from '~/server/middleware/auth';
 import { authRequestMiddleware } from '~/server/middleware/auth';
 
@@ -21,11 +22,19 @@ export const Route = createFileRoute('/api/articles/$articleId/audio')({
       GET: async ({ params, context }) => {
         const { user } = context as unknown as AuthContext;
 
+        const { articleId } = params;
+        // Article IDs are uuidv7. Validate at the route boundary so malformed
+        // input (including `..%2F..` path-traversal payloads) fails fast with
+        // 400 instead of reaching the filesystem layer. Domain-side validation
+        // in `tts.ts` is the authoritative guard; this is fail-fast at the boundary.
+        if (!z.uuidv7().safeParse(articleId).success) {
+          return Response.json({ message: 'Invalid article id' }, { status: 400 });
+        }
+
         // Dynamic imports to keep server-only modules out of the client bundle.
         // See: https://github.com/TanStack/router/issues/2783
         const { getArticleAudioBuffer } = await import('@repo/domain');
 
-        const { articleId } = params;
         const audioBuffer = await getArticleAudioBuffer(user.id, articleId);
 
         if (!audioBuffer) {
