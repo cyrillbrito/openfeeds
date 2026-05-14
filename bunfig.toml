@@ -2,3 +2,4 @@
 
 [install]
 linker = "hoisted"
+minimumReleaseAge = 172800 # 2 days in seconds

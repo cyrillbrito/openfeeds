@@ -15,11 +15,11 @@
     "@repo/readability": "workspace:*",
     "@repo/shared": "workspace:*",
     "@t3-oss/env-core": "^0.13.11",
-    "bullmq": "^5.76.5",
+    "bullmq": "^5.76.8",
     "drizzle-orm": "^0.45.2",
     "feedsmith": "^2.9.4",
-    "posthog-node": "^5.33.3",
-    "resend": "^6.12.2",
+    "posthog-node": "^5.34.0",
+    "resend": "^6.12.3",
     "zod": "^4.4.3"
   },
   "devDependencies": {
