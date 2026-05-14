@@ -1,7 +1,11 @@
+---
+date: 2025-11-05
+status: shipped
+---
+
 # Domain Logic & Worker Split
 
-**Date:** 2025-11-05  
-**Status:** Completed (apps/server removed)
+`apps/server` removed.
 
 ## Why
 

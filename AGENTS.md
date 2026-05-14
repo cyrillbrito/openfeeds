@@ -79,6 +79,9 @@ Load the relevant doc when working in these areas. Docs are in `docs/`.
 - `docs/recommendation-system.md` — Working on article ranking, recommendations, or personalisation
 - `docs/ai-chat.md` — Working on the AI chat feature, tool calling, or conversation persistence
 - `docs/tanstack-db-0.6-upgrade-notes.md` — Upgrading or debugging TanStack DB collection behaviour after a version bump
+- `docs/nitro-bundling.md` — Debugging Nitro server bundling issues, CJS/ESM interop errors, or `Cannot find module` in production
+
+`docs/records/` — Numbered, chronological log of past decisions, specs, ideas, and dropped experiments. Skim when investigating why something is the way it is, or before proposing changes that may have prior context. See `docs/records/README.md` for the convention.
 
 ## User ID Denormalization
 

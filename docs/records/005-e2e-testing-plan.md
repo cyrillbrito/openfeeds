@@ -1,7 +1,9 @@
-# End-to-End Testing Plan
+---
+date: 2025-01-01
+status: planned
+---
 
-**Date:** January 2025  
-**Status:** Planning
+# End-to-End Testing Plan
 
 ## Overview
 

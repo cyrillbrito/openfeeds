@@ -1,7 +1,6 @@
 # Nitro Server Bundling: Externalization Strategy
 
-**Date:** 2026-03-29 (updated 2026-04-03)
-**Status:** Active — externalization with `rollupConfig.external` + full `node_modules` in Docker
+Externalization with `rollupConfig.external` + full `node_modules` in Docker.
 
 ## Summary
 
@@ -105,7 +104,7 @@ The old strategy was brittle:
 - The shim plugin was a build-time hack working around Nitro's `noExternal: true`
 - ~250 lines of build plugins for problems that don't exist when packages run from `node_modules`
 
-Externalization trades a larger Docker image (includes `node_modules`) for zero build plugins and zero patches. The image size increase is acceptable for a VPS deployment (see [VPS decision](./2026-02-07-vps-over-cloudflare-workers.md)).
+Externalization trades a larger Docker image (includes `node_modules`) for zero build plugins and zero patches. The image size increase is acceptable for a VPS deployment (see [VPS decision](./records/006-vps-over-cloudflare-workers.md)).
 
 ### Ecosystem issues (still open)
 
