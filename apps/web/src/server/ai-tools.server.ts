@@ -20,6 +20,7 @@ import {
   updateTags,
   withTransaction,
 } from '@repo/domain';
+import { feedUrlSchema } from '@repo/domain/client';
 import { createId } from '@repo/shared/utils';
 import { toolDefinition } from '@tanstack/ai';
 import { and, asc, count, desc, eq, gte, ilike, inArray, lte, or } from 'drizzle-orm';
@@ -40,7 +41,7 @@ export function createTools(user: AiUser) {
     description:
       'Find available RSS/Atom feeds at a given URL. Use when the user wants to subscribe to a website or content source. Accepts any website URL and returns all discoverable feed URLs with their titles and descriptions. Call this before follow_feeds to show the user what feeds are available at a site.',
     inputSchema: z.object({
-      url: z.string().url().describe('The website URL to search for feeds'),
+      url: feedUrlSchema.describe('The website URL to search for feeds'),
     }),
   }).server(async ({ url }) => {
     const feeds = await discoverRssFeeds(url);
@@ -65,7 +66,7 @@ export function createTools(user: AiUser) {
       feeds: z
         .array(
           z.object({
-            feedUrl: z.string().url().describe('The feed URL to subscribe to'),
+            feedUrl: feedUrlSchema.describe('The feed URL to subscribe to'),
             title: z.string().optional().describe('Feed title'),
           }),
         )

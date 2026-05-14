@@ -1,3 +1,4 @@
+import { safeFetch, SsrfBlockedError } from '@repo/safe-fetch';
 import { Defuddle } from 'defuddle/node';
 import { JSDOM } from 'jsdom';
 import type { ArticleContent } from './types.js';
@@ -33,13 +34,12 @@ function mapResult(result: Awaited<ReturnType<typeof Defuddle>>): ArticleContent
  */
 export async function fetchArticleContent(url: string): Promise<ArticleContent> {
   try {
-    const response = await fetch(url, {
-      signal: AbortSignal.timeout(FETCH_TIMEOUT_MS),
+    const response = await safeFetch(url, {
+      timeoutMs: FETCH_TIMEOUT_MS,
       headers: {
         'User-Agent': 'Mozilla/5.0 (compatible; OpenFeeds/1.0; +https://openfeeds.com)',
         Accept: 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
       },
-      redirect: 'follow',
     });
 
     if (!response.ok) {
@@ -58,6 +58,10 @@ export async function fetchArticleContent(url: string): Promise<ArticleContent> 
 
     return mapResult(result);
   } catch (error) {
+    if (error instanceof SsrfBlockedError) {
+      console.warn(`[${url}] Blocked by SSRF guard: ${error.message}`);
+      return EMPTY_RESULT;
+    }
     console.error(
       `[${url}] Article extraction failed:`,
       error instanceof Error ? error.message : String(error),

@@ -2,12 +2,6 @@ import { parseFeed } from 'feedsmith';
 
 export type ParseFeedResult = ReturnType<typeof parseFeed>;
 
-export class FetchTimeoutError extends Error {
-  constructor(timeoutMs: number) {
-    super(`Feed fetch timed out after ${timeoutMs / 1000}s`);
-  }
-}
-
 const TRACKING_PARAMS = new Set([
   'utm_source',
   'utm_medium',
@@ -37,29 +31,6 @@ const FEED_DISCRIMINATOR_PARAMS = new Set([
   'cat',
   'category',
 ]);
-
-export async function fetchWithTimeout(
-  url: string,
-  timeoutMs: number,
-  init: RequestInit = {},
-): Promise<Response | null> {
-  const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
-
-  try {
-    return await fetch(url, {
-      ...init,
-      signal: controller.signal,
-    });
-  } catch (error) {
-    if (error instanceof DOMException && error.name === 'AbortError') {
-      throw new FetchTimeoutError(timeoutMs);
-    }
-    return null;
-  } finally {
-    clearTimeout(timeoutId);
-  }
-}
 
 export function canonicalizeFeedUrl(url: string): string {
   try {

@@ -1,4 +1,5 @@
-import { fetchWithTimeout, parseFeedContent, type ParseFeedResult } from '@repo/shared/rss';
+import { FetchTimeoutError, safeFetch, SsrfBlockedError } from '@repo/safe-fetch';
+import { parseFeedContent, type ParseFeedResult } from '@repo/shared/rss';
 
 export type { ParseFeedResult } from '@repo/shared/rss';
 
@@ -72,8 +73,13 @@ export async function fetchRss(url: string, opts: FetchRssOptions = {}): Promise
     headers['If-Modified-Since'] = opts.lastModified;
   }
 
-  const response = await fetchWithTimeout(url, FETCH_TIMEOUT_MS, { headers });
-  if (!response) {
+  let response: Response;
+  try {
+    response = await safeFetch(url, { headers, timeoutMs: FETCH_TIMEOUT_MS });
+  } catch (error) {
+    if (error instanceof FetchTimeoutError || error instanceof SsrfBlockedError) {
+      throw error;
+    }
     throw new FeedNetworkError();
   }
 

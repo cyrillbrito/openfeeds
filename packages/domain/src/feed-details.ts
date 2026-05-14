@@ -1,4 +1,5 @@
 import { feeds } from '@repo/db';
+import { safeFetch } from '@repo/safe-fetch';
 import { and, eq } from 'drizzle-orm';
 import type { DomainContext } from './domain-context';
 import type { Feed } from './entities/feed';
@@ -64,7 +65,9 @@ async function extractSocialMetadata(url: string): Promise<SocialMetadata> {
   const metadata: SocialMetadata = {};
   // 15s timeout: prevents a slow/dead host from holding a worker slot and
   // exceeding the DB pool's idle window between surrounding ctx.conn.* awaits.
-  const response = await fetch(url, { signal: AbortSignal.timeout(15_000) });
+  // safeFetch enforces SSRF protection (loopback / RFC1918 / cloud metadata
+  // hosts are rejected before any TCP connect).
+  const response = await safeFetch(url, { timeoutMs: 15_000 });
 
   const rewriter = new HTMLRewriter()
     // Extract Open Graph meta tags

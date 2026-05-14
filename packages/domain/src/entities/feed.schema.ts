@@ -1,9 +1,13 @@
+import { urlSchema } from '@repo/safe-fetch/schema';
 import { z } from 'zod';
 
-/** Feed URL schema — restricts to http/https since fetch() only supports these protocols */
-export const feedUrlSchema = z
-  .url()
-  .refine((u) => /^https?:\/\//i.test(u), { message: 'Only http and https URLs are supported' });
+/**
+ * Feed URL schema — currently equivalent to {@link urlSchema} (http/https
+ * only). Re-exported as a domain-level alias so we can later layer feed-
+ * specific rules (length limits, blocklist hosts, normalisation, ...)
+ * without touching every call-site.
+ */
+export const feedUrlSchema = urlSchema;
 
 export const SyncStatusSchema = z.enum(['ok', 'failing', 'broken']);
 export type SyncStatus = z.infer<typeof SyncStatusSchema>;
