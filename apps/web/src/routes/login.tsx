@@ -76,7 +76,7 @@ function LoginPage() {
         });
         setError(err.error?.message || err.message);
       } else {
-        posthog.captureException(err);
+        posthog.captureException(err instanceof Error ? err : new Error(String(err)));
         posthog.capture('auth:login_fail', {
           source: 'login_form',
           code: 'unknown',

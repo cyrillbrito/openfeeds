@@ -39,7 +39,9 @@ export function collectionErrorHandler<TArgs extends unknown[], TReturn>(
     } catch (error) {
       const message = sanitizeErrorMessage(error);
       toastService.error(message);
-      posthog.captureException(error, { context });
+      posthog.captureException(error instanceof Error ? error : new Error(String(error)), {
+        context,
+      });
       throw error;
     }
   };
@@ -64,7 +66,9 @@ export function shapeErrorHandler(
 
   return (error: unknown) => {
     const message = sanitizeErrorMessage(error);
-    posthog.captureException(error, { context });
+    posthog.captureException(error instanceof Error ? error : new Error(String(error)), {
+      context,
+    });
 
     // 401 = session expired — stop retrying and redirect to login
     if (error instanceof FetchError && error.status === 401) {
