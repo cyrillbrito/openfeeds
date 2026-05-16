@@ -55,18 +55,12 @@ export async function proxyElectricRequest({
     originUrl.searchParams.set('source_secret', env.ELECTRIC_SOURCE_SECRET!);
   }
 
-  // Electric holds live-poll requests open up to ~20s. Bun's default fetch
-  // idleTimeout is 10s, which kills the upstream socket and surfaces as
-  // "socket connection was closed unexpectedly". Bump it for all proxied
-  // requests (Bun-specific option, ignored by Node's fetch).
   let response: Response;
   try {
     response = await fetch(originUrl, {
       // Propagate client cancellation upstream so Electric tears down the
       // long-poll cleanly instead of Bun reporting an unexpected socket close.
       signal: request.signal,
-      // @ts-expect-error Bun-specific fetch option
-      idleTimeout: 30,
     });
   } catch (error) {
     const fetchError = error instanceof Error ? error : new Error(String(error));
