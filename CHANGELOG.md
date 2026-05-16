@@ -1,5 +1,14 @@
 # Changelog
 
+## [0.15.1](https://github.com/cyrillbrito/openfeeds/compare/v0.15.0...v0.15.1) (2026-05-16)
+
+
+### Bug Fixes
+
+* **security:** SSRF-safe fetch and tighten URL validation ([#276](https://github.com/cyrillbrito/openfeeds/issues/276)) ([b286cf8](https://github.com/cyrillbrito/openfeeds/commit/b286cf880e0c5ae0c31227d35278345166e85817))
+* **web:** forward client abort signal to electric proxy ([#270](https://github.com/cyrillbrito/openfeeds/issues/270)) ([369295b](https://github.com/cyrillbrito/openfeeds/commit/369295b29f555e48d562a5953df1dad48376fcc8))
+* **web:** tighten CORS localhost allowlist on /api/feeds ([#274](https://github.com/cyrillbrito/openfeeds/issues/274)) ([0320458](https://github.com/cyrillbrito/openfeeds/commit/0320458be95f1ad7710919308ed5ba68b66a5590))
+
 ## [0.15.0](https://github.com/cyrillbrito/openfeeds/compare/v0.14.0...v0.15.0) (2026-05-10)
 
 
