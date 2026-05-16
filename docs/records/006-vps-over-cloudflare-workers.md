@@ -1,8 +1,11 @@
+---
+date: 2026-02-07
+status: shipped
+---
+
 # VPS over Cloudflare Workers for Cloud Deployment
 
-**Date:** 2026-02-07
-**Status:** Decided — VPS with Cloudflare CDN proxy
-**Context:** Choosing deployment strategy for the managed cloud offering
+Choosing deployment strategy for the managed cloud offering. Decided: VPS with Cloudflare CDN proxy.
 
 ## Decision
 

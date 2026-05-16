@@ -1,7 +1,9 @@
-# Header Buttons Reorganization
+---
+date: 2025-11-01
+status: idea
+---
 
-**Date:** November 1, 2025  
-**Status:** Proposed
+# Header Buttons Reorganization
 
 ## Overview
 

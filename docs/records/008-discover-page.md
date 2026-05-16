@@ -1,7 +1,9 @@
-# Unified Discover Page
+---
+date: 2026-02-21
+status: planned
+---
 
-**Date:** February 21, 2026
-**Status:** Planned
+# Unified Discover Page
 
 ## Overview
 

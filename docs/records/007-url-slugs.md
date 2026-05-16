@@ -1,7 +1,11 @@
+---
+date: 2026-02-21
+status: dropped
+---
+
 # URL Slugs for Feeds & Articles
 
-**Date:** 2026-02-21
-**Status:** Shelved — prototyped, reverted. Complexity not justified by cosmetic benefit.
+Prototyped, reverted. Complexity not justified by cosmetic benefit.
 
 ## Why (Original Motivation)
 

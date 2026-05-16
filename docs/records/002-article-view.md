@@ -1,7 +1,9 @@
-# Dedicated Article/Video View
+---
+date: 2025-11-01
+status: shipped
+---
 
-**Date:** November 1, 2025  
-**Status:** Implemented
+# Dedicated Article/Video View
 
 ## Overview
 
