@@ -37,8 +37,14 @@ jobs:
     # Skip the push trigger on release-please merge commits: release-please
     # invokes this workflow via workflow_call right after merging, so a push-
     # triggered run would build the same commit a second time.
+    #
+    # Gating on `inputs.tag` (not `github.event_name`) because inside a
+    # reusable workflow `github.event_name` reflects the caller's event
+    # (still `push` for the release-please merge), not `workflow_call`.
+    # `inputs.tag` is empty on the native push trigger and populated on
+    # workflow_call (from release-please.yml) and workflow_dispatch.
     if: >-
-      github.event_name != 'push' ||
+      inputs.tag != '' ||
       !startsWith(github.event.head_commit.message, 'chore(main): release')
     runs-on: ubuntu-latest
     permissions:
