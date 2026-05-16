@@ -92,6 +92,29 @@ export async function proxyElectricRequest({
     });
   }
 
+  // Targeted console logging for the "archive comes back" bug: log every
+  // articles shape response (and its Electric stream metadata) so we can
+  // reconstruct, after the fact, what the client received between a mutation
+  // commit and the moment its optimistic state silently reverted. Scoped to
+  // `articles` only to keep log volume manageable.
+  if (table === 'articles') {
+    // eslint-disable-next-line no-console
+    console.info('[server:electric_response]', {
+      table,
+      userId,
+      status: response.status,
+      isLivePoll: isLivePollRequest(url),
+      electricOffset: response.headers.get('electric-offset'),
+      electricHandle: response.headers.get('electric-handle'),
+      electricCursor: response.headers.get('electric-cursor'),
+      electricSchema: response.headers.get('electric-schema') ? 'present' : 'absent',
+      electricUpToDate: response.headers.get('electric-up-to-date'),
+      reqOffset: url.searchParams.get('offset'),
+      reqHandle: url.searchParams.get('handle'),
+      reqLive: url.searchParams.get('live'),
+    });
+  }
+
   // Fetch decompresses the body but doesn't remove the
   // content-encoding & content-length headers which would
   // break decoding in the browser.
