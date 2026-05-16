@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.15.3](https://github.com/cyrillbrito/openfeeds/compare/v0.15.2...v0.15.3) (2026-05-16)
+
+
+### Bug Fixes
+
+* **web:** finalize archive-revert fix; remove debug instrumentation ([#291](https://github.com/cyrillbrito/openfeeds/issues/291)) ([2e5ed1d](https://github.com/cyrillbrito/openfeeds/commit/2e5ed1da0d4e8ea010212817d6f46d05a3b55912))
+
 ## [0.15.2](https://github.com/cyrillbrito/openfeeds/compare/v0.15.1...v0.15.2) (2026-05-16)
 
 
