@@ -11,7 +11,7 @@
   },
   "dependencies": {
     "@astrojs/cloudflare": "^12.6.13",
-    "@astrojs/solid-js": "^5.1.3",
+    "@astrojs/solid-js": "^6.0.1",
     "@tailwindcss/vite": "^4.2.4",
     "astro": "^5.18.1",
     "resend": "^6.9.4",
