@@ -72,8 +72,12 @@ export function collectionErrorHandler<TArgs extends unknown[]>(
       return result;
     } catch (error) {
       const message = sanitizeErrorMessage(error);
+      const errorName = error instanceof Error ? error.name : typeof error;
       toastService.error(message);
-      posthog.captureException(error, { context });
+      // Tag with errorName so `TimeoutWaitingForTxIdError` (server committed
+      // but txid never reached the stream — see record 010) is distinguishable
+      // in PostHog from other mutation failures.
+      posthog.captureException(error, { context, errorName });
       throw error;
     }
   };
