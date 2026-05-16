@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.15.2](https://github.com/cyrillbrito/openfeeds/compare/v0.15.1...v0.15.2) (2026-05-16)
+
+
+### Bug Fixes
+
+* **ci:** gate build-images skip on inputs.tag instead of event_name ([#288](https://github.com/cyrillbrito/openfeeds/issues/288)) ([76d6a47](https://github.com/cyrillbrito/openfeeds/commit/76d6a479db042c9b9b83b92722bebd4a77c1ccef))
+* **web:** pin vite to 8.0.10 to avoid rolldown 1.0.1 SSR bundling regression ([#290](https://github.com/cyrillbrito/openfeeds/issues/290)) ([ce4e87e](https://github.com/cyrillbrito/openfeeds/commit/ce4e87ea01156bdd26da88ee8089281f7714340e))
+
 ## [0.15.1](https://github.com/cyrillbrito/openfeeds/compare/v0.15.0...v0.15.1) (2026-05-16)
 
 
