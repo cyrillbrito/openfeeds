@@ -57,10 +57,19 @@ export async function proxyElectricRequest({
 
   let response: Response;
   try {
-    response = await fetch(originUrl);
+    response = await fetch(originUrl, {
+      // Propagate client cancellation upstream so Electric tears down the
+      // long-poll cleanly instead of Bun reporting an unexpected socket close.
+      signal: request.signal,
+    });
   } catch (error) {
-    // Network-level failure (DNS, connection refused, timeout, etc.)
     const fetchError = error instanceof Error ? error : new Error(String(error));
+    // Client disconnected mid-flight (navigation, unmount, shape handle change).
+    // This is normal for Electric long-polls — don't report or rethrow.
+    if (fetchError.name === 'AbortError' || request.signal.aborted) {
+      return new Response(null, { status: 499 }); // client closed request
+    }
+    // Network-level failure (DNS, connection refused, timeout, etc.)
     captureException(fetchError, {
       userId,
       source: 'electric-proxy',
