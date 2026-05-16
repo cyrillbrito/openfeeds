@@ -2,11 +2,7 @@ import { snakeCamelMapper } from '@electric-sql/client';
 import { ArticleSchema } from '@repo/domain/client';
 import { electricCollectionOptions } from '@tanstack/electric-db-collection';
 import { BasicIndex, createCollection } from '@tanstack/solid-db';
-import {
-  attachCollectionChangeLogger,
-  collectionErrorHandler,
-  shapeErrorHandler,
-} from '~/lib/collection-errors';
+import { collectionErrorHandler, shapeErrorHandler } from '~/lib/collection-errors';
 import { getShapeUrl, timestampParser } from '~/lib/electric-client';
 import { $$createArticles, $$updateArticles } from './articles.functions';
 
@@ -43,37 +39,20 @@ export const articlesCollection = createCollection(
       return await $$createArticles({ data: articles });
     }),
 
-    onUpdate: collectionErrorHandler(
-      'articles.onUpdate',
-      async ({ transaction }, { mutationId }) => {
-        const updates = transaction.mutations.map((mutation) => ({
-          id: String(mutation.key),
-          ...mutation.changes,
-        }));
-        // Thread the client-side mutationId through to the server as a header so
-        // server-side PostHog events (`server:mutation_ok`) can be joined with
-        // the client-side `mutation:*` events when investigating the
-        // "archive comes back" bug.
-        return await $$updateArticles({
-          data: updates,
-          headers: { 'x-mutation-id': mutationId },
-        });
-      },
-    ),
+    onUpdate: collectionErrorHandler('articles.onUpdate', async ({ transaction }) => {
+      // Spread `...mutation.changes` so we only send the fields the caller
+      // actually mutated. Sending an explicit `{ isRead, isArchived }` set
+      // would include `undefined` for whichever field is unchanged, which
+      // older code paths special-cased incorrectly. Matches the pattern used
+      // by every other entity (tags, feeds, filter-rules, settings).
+      const updates = transaction.mutations.map((mutation) => ({
+        id: String(mutation.key),
+        ...mutation.changes,
+      }));
+      return await $$updateArticles({ data: updates });
+    }),
 
     // Articles are archived, not deleted
     onDelete: async () => {},
   }),
 );
-
-// Diagnostic: log every change observed in the articles store, including
-// virtual props ($synced, $origin). Used to investigate the "archive comes
-// back" bug — we want to see whether a sync message overwrites our confirmed
-// archive with a stale row. Cheap (it's just a passive subscriber); leave on
-// in production until the bug is fully understood, then remove or gate behind
-// a debug flag.
-if (typeof window !== 'undefined') {
-  attachCollectionChangeLogger('articles', articlesCollection, {
-    fields: ['id', 'isRead', 'isArchived'],
-  });
-}
