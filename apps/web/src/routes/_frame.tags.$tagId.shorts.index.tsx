@@ -61,7 +61,7 @@ function TagShorts() {
         shorts={snapshot() ?? []}
         feeds={feedsQuery() ?? []}
         backLink={{
-          to: '/tags/$tagId',
+          to: '/tags/$tagId/articles',
           text: 'Back to Tag',
           params: { tagId: tagId() },
         }}
