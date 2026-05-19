@@ -79,9 +79,9 @@ function TagLayout() {
   const navigate = useNavigate();
   createEffect(
     on(
-      () => [hasContent(), tagId()] as const,
-      ([has, id]) => {
-        if (has && isOnIndex()) {
+      () => [hasContent(), tagId(), isOnIndex()] as const,
+      ([has, id, onIndex]) => {
+        if (has && onIndex) {
           void navigate({ to: '/tags/$tagId/articles', params: { tagId: id }, replace: true });
         }
       },
