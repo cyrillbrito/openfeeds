@@ -121,12 +121,19 @@ export function ArticleListProvider(props: ArticleListProviderProps) {
     void articlesQuery.state.size;
     return Array.from(articlesQuery.collection.values()) as unknown as Article[];
   };
-  const totalCount = () => (totalCountQuery() || []).length;
-  const unreadCount = () => (unreadCountQuery() || []).length;
-  const archivableCount = () => (archivableQuery() || []).length;
+  // Read counts from .state.size to avoid going through createResource — calling
+  // the query accessor (e.g. totalCountQuery()) suspends the nearest <Suspense>
+  // whenever the query rebuilds (e.g. when sessionReadIds() changes after
+  // marking an article as read). These counts are rendered in the toolbar,
+  // which lives outside the inner <Suspense>, so suspension bubbles to the
+  // outer _frame Suspense, replaces the entire <Outlet> with a loader, and
+  // resets window.scrollY to 0. See same workaround for articles() above.
+  const totalCount = () => totalCountQuery.state.size;
+  const unreadCount = () => unreadCountQuery.state.size;
+  const archivableCount = () => archivableQuery.state.size;
   const feeds = (): Feed[] => (feedsQuery() as Feed[] | undefined) || [];
   const tags = (): Tag[] => (tagsQuery() as Tag[] | undefined) || [];
-  const shortsExist = () => (shortsQuery()?.length ?? 0) > 0;
+  const shortsExist = () => shortsQuery.state.size > 0;
 
   // Handlers
   const loadMore = () => {
@@ -150,7 +157,7 @@ export function ArticleListProvider(props: ArticleListProviderProps) {
   };
 
   const markAllArchived = async () => {
-    const results = (archivableQuery() || []) as { id: string }[];
+    const results = Array.from(archivableQuery.state.values()) as unknown as { id: string }[];
     const articleIds = results.map((a) => a.id);
     if (articleIds.length > 0) {
       articlesCollection.update(articleIds, (drafts) => {
