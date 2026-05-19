@@ -22,11 +22,12 @@ export function TimeAgo(props: TimeAgoProps) {
   return (
     <span
       class={twMerge(
-        'tooltip cursor-default',
-        props.tooltipBottom && 'tooltip-bottom',
+        'md:tooltip cursor-default',
+        props.tooltipBottom && 'md:tooltip-bottom',
         props.class,
       )}
       data-tip={formatted()}
+      title={formatted()}
     >
       {timeAgo()}
     </span>
