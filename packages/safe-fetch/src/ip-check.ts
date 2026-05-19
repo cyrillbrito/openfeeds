@@ -49,6 +49,10 @@ const BLOCKED_IPV6_RANGES = new Set<string>([
   'uniqueLocal',
   'multicast',
   'reserved',
+  // ipaddr.js v2 split these out of `reserved`/`unicast`.
+  'deprecatedSiteLocal', // fec0::/10
+  'discard', // 100::/64
+  'benchmarking', // 2001:2::/48
 ]);
 
 /**

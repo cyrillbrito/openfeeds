@@ -14,7 +14,7 @@
   "dependencies": {
     "@repo/discovery": "workspace:*",
     "daisyui": "^5.5.19",
-    "solid-js": "^1.9.12",
+    "solid-js": "^1.9.13",
     "tailwindcss": "^4.3.0"
   },
   "devDependencies": {
