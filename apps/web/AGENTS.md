@@ -98,13 +98,12 @@ Load the `new-entity` skill for the full end-to-end pattern (domain → collecti
 
 See [docs/oauth-mcp.md](../../docs/oauth-mcp.md) for architecture. Key files:
 
-- `src/server/auth.server.ts` — OAuth config
+- `src/server/auth.ts` — Better Auth instance (wraps `@repo/auth` createAuth with `tanstackStartCookies()`)
 - `src/server/well-known.server.ts` — discovery endpoints
 - `src/routes/api/mcp/$.ts` — MCP endpoint
 - `src/routes/oauth/consent.tsx` — consent page
 
-**Critical:** `src/server/auth.schema.server.ts` mirrors plugin setup for schema generation.
-Keep in sync with `auth.server.ts` (but avoids importing `~/env`).
+**Critical:** Shared Better Auth config lives in `@repo/auth` (`packages/auth/`). The CLI schema generator reads `packages/auth/src/schema-config.ts` (env-free mirror); keep it in sync with `createAuth` in `packages/auth/src/index.ts`.
 
 ## Browser Debugging
 

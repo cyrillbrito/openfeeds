@@ -10,7 +10,7 @@ import {
 import { feedUrlSchema } from '@repo/domain/client';
 import { createFileRoute } from '@tanstack/solid-router';
 import { z } from 'zod/v4';
-import { auth } from '~/server/auth.server';
+import { auth } from '~/server/auth';
 
 const CreateFeedBody = z.object({
   url: feedUrlSchema,

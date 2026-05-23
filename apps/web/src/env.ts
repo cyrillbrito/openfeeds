@@ -23,6 +23,8 @@ export const env = createEnv({
       .pipe(z.array(z.url())),
     BASE_URL: z.url(),
     PORT: z.coerce.number().default(3000),
+    // Dev-only: where /api2/* proxy forwards to. Dropped once Start is removed.
+    API_ORIGIN: z.url().default('http://localhost:3001'),
     // Social login providers (optional — social login disabled when not set)
     GOOGLE_CLIENT_ID: z.string().optional(),
     GOOGLE_CLIENT_SECRET: z.string().optional(),
