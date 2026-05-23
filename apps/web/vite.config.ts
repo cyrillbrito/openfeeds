@@ -10,16 +10,16 @@ const rootPkg = JSON.parse(readFileSync('../../package.json', 'utf-8'));
 
 /**
  * Pure Vite SPA. All server-side concerns (auth, MCP, well-known, entity
- * mutations, Electric shape proxies, OAuth provider) live in apps/api/
+ * mutations, Electric shape proxies, OAuth provider) live in apps/server/
  * (Bun + Hono) — see docs/records/011-migrate-server-off-tanstack-start.md.
  *
  * The dev proxy forwards `/api/*` (everything Better Auth, Hono RPC, and
- * the Electric shape proxies use) to the api server on :3401 so the browser
+ * the Electric shape proxies use) to the server on :3401 so the browser
  * sees a single origin: no CORS, cookies just work, deep links survive page
  * refresh via `historyApiFallback` (Vite's SPA default).
  *
  * No `preview` block: prod-like runs (CI E2E, Docker) don't use `vite
- * preview` — the api serves the built SPA directly via `SERVE_SPA=true`.
+ * preview` — the server serves the built SPA directly via `SERVE_SPA=true`.
  */
 export default defineConfig({
   resolve: {
@@ -58,7 +58,7 @@ export default defineConfig({
       //   /api/mcp/*        — MCP server
       //   /api/chat         — AI chat SSE stream
       '/api': { target: 'http://localhost:3401', changeOrigin: true, ws: true },
-      // `.well-known/*` discovery documents also live on api (RFC 8615).
+      // `.well-known/*` discovery documents also live on the server (RFC 8615).
       '/.well-known': { target: 'http://localhost:3401', changeOrigin: true },
     },
   },

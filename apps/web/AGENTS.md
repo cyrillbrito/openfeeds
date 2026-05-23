@@ -1,14 +1,14 @@
 # Web Application - SolidJS SPA
 
-Local-first SolidJS single-page app. Data lives in client-side TanStack Solid DB collections, synced via Electric SQL. All mutations and reads call the api app (`apps/api/`) over Hono's `hc` RPC client.
+Local-first SolidJS single-page app. Data lives in client-side TanStack Solid DB collections, synced via Electric SQL. All mutations and reads call the server app (`apps/server/`) over Hono's `hc` RPC client.
 
 ## Stack
 
 - **SolidJS** — UI and reactivity. Use the `solidjs` skill for patterns.
 - **TanStack Solid Router** — file-based routing under `src/routes/`. Code generation via `@tanstack/router-plugin/vite`.
-- **TanStack Solid DB + Electric SQL** — local collections in `src/entities/`, synced through api's shape proxy at `/api/shapes/*`.
+- **TanStack Solid DB + Electric SQL** — local collections in `src/entities/`, synced through the server's shape proxy at `/api/shapes/*`.
 - **Vite** — pure SPA build. `index.html` is the entry; no SSR, no Nitro.
-- **Hono `hc`** — typed RPC to apps/api/ via `import type { App } from '@repo/api/client'`. See `src/lib/api-client.ts`.
+- **Hono `hc`** — typed RPC to apps/server/ via `import type { App } from '@repo/server/client'`. See `src/lib/api-client.ts`.
 
 ## Commands
 
@@ -17,9 +17,9 @@ bun dev      # Vite dev server (port 3400), proxies /api/* and /.well-known/* to
 bun build    # Production SPA build
 ```
 
-`bun dev` requires the api app to be running on :3401. Run `bun dev` at the monorepo root to start both.
+`bun dev` requires the server app to be running on :3401. Run `bun dev` at the monorepo root to start both.
 
-To run a prod-like build locally (real bundle, served by the api on a single port — exactly what CI E2E and Docker do): `bun run build`, then in `apps/api/`: `SERVE_SPA=true API_PORT=3400 bun --bun src/index.ts` (after symlinking `apps/web/dist` to `apps/api/web-dist`).
+To run a prod-like build locally (real bundle, served by the server on a single port — exactly what CI E2E and Docker do): `bun run build`, then in `apps/server/`: `SERVE_SPA=true SERVER_PORT=3400 bun --bun src/index.ts` (after symlinking `apps/web/dist` to `apps/server/web-dist`).
 
 ## Directory Structure
 
@@ -44,10 +44,10 @@ vite.config.ts      # SPA-only — tanstackRouter() + solidPlugin(), no Nitro/St
 
 Each entity in `src/entities/` is a TanStack DB collection wired to:
 
-- **Sync**: `electricCollectionOptions({ shapeOptions: { url: getShapeUrl('<table>') } })` — reads from api's `/api/shapes/<table>` proxy, which scopes rows by `user_id`.
+- **Sync**: `electricCollectionOptions({ shapeOptions: { url: getShapeUrl('<table>') } })` — reads from the server's `/api/shapes/<table>` proxy, which scopes rows by `user_id`.
 - **Mutations**: `onInsert` / `onUpdate` / `onDelete` callbacks POST a **batch** to `api.api.<entity>.create.$post({ json: [...] })` (or `.update.$patch`, `.delete.$post`) and await `{ txid }`. Electric replays the change and the optimistic transaction resolves.
 
-Load the `new-entity` skill for the full end-to-end pattern (domain → schema → collection → api route).
+Load the `new-entity` skill for the full end-to-end pattern (domain → schema → collection → server route).
 
 ## Calling the API
 
@@ -60,11 +60,11 @@ import { api, unwrap } from '~/lib/api-client';
 const result = await unwrap(api.api.feeds.discover.$post({ json: { url } }));
 ```
 
-`unwrap()` reads `{ message }` from error responses (every api route returns this shape via `app.onError`). For streaming endpoints (SSE, raw bodies) work with the response directly instead of `unwrap`.
+`unwrap()` reads `{ message }` from error responses (every server route returns this shape via `app.onError`). For streaming endpoints (SSE, raw bodies) work with the response directly instead of `unwrap`.
 
 ## Auth
 
-Better Auth lives entirely on the api app. Web uses `better-auth/solid`'s `authClient` (`src/lib/auth-client.ts`) which talks to `/api/auth/*` — proxied to api in dev, same-origin in prod.
+Better Auth lives entirely on the server app. Web uses `better-auth/solid`'s `authClient` (`src/lib/auth-client.ts`) which talks to `/api/auth/*` — proxied to the server in dev, same-origin in prod.
 
 **Session cache** (`src/lib/session.ts`): module-level memoized promise that fetches `/api/auth/get-session` exactly once on cold load. Route guards (`src/lib/guards.ts`) await this promise in `beforeLoad`. Login/signup seed it via `setSession()`; sign-out clears it via `invalidateSession()`. Net effect: one network round-trip per page load instead of one per protected route.
 
@@ -81,4 +81,4 @@ Use the `playwright-cli` skill for browser interaction. Auth state saved at `.pl
 - Path mapping: `~/*` → `./src/*`. Never use `../`.
 - TypeScript strict mode, **`noUncheckedIndexedAccess` deliberately off** — Hono RPC inference is incompatible with it (the `ClientResponse` union collapses to `any`). Don't reintroduce it.
 - Devtools enabled in development via `@tanstack/solid-devtools`.
-- No `.server.ts` / `*.functions.ts` patterns; no `createServerFn`. All server code lives in `apps/api/`.
+- No `.server.ts` / `*.functions.ts` patterns; no `createServerFn`. All server code lives in `apps/server/`.

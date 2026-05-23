@@ -101,20 +101,20 @@ jobs:
       - name: Build @repo/emails
         run: bun run --cwd packages/emails build
 
-      # Build the SPA so the api can serve it (SERVE_SPA below). Same setup
+      # Build the SPA so the server can serve it (SERVE_SPA below). Same setup
       # as ci.yml — see comment there.
       - name: Build web SPA
         run: bun run --cwd apps/web build
 
-      - name: Symlink web dist into api
-        run: ln -s "$GITHUB_WORKSPACE/apps/web/dist" "$GITHUB_WORKSPACE/apps/api/web-dist"
+      - name: Symlink web dist into server
+        run: ln -s "$GITHUB_WORKSPACE/apps/web/dist" "$GITHUB_WORKSPACE/apps/server/web-dist"
 
-      - name: Start api + SPA server
+      - name: Start server + SPA
         run: |
-          bun --cwd=apps/api --bun src/index.ts > /tmp/api.log 2>&1 &
-          echo "API_PID=$!" >> "$GITHUB_ENV"
+          bun --cwd=apps/server --bun src/index.ts > /tmp/server.log 2>&1 &
+          echo "SERVER_PID=$!" >> "$GITHUB_ENV"
         env:
-          API_PORT: '3400'
+          SERVER_PORT: '3400'
           SERVE_SPA: 'true'
 
       - name: Wait for server
@@ -124,16 +124,16 @@ jobs:
               echo "Server is ready"
               exit 0
             fi
-            if ! kill -0 "$API_PID" 2>/dev/null; then
-              echo "API process exited before becoming ready. Logs:"
-              cat /tmp/api.log || true
+            if ! kill -0 "$SERVER_PID" 2>/dev/null; then
+              echo "Server process exited before becoming ready. Logs:"
+              cat /tmp/server.log || true
               exit 1
             fi
             echo "Waiting for server... ($i/30)"
             sleep 2
           done
           echo "Server failed to start. Logs:"
-          cat /tmp/api.log || true
+          cat /tmp/server.log || true
           exit 1
 
       - name: Regenerate snapshots
@@ -143,17 +143,17 @@ jobs:
         # were the original failure (Playwright still exits non-zero).
         continue-on-error: true
 
-      - name: Dump api logs on failure
+      - name: Dump server logs on failure
         if: failure()
         run: |
-          echo "=== /tmp/api.log ==="
-          cat /tmp/api.log || echo "(no log file)"
+          echo "=== /tmp/server.log ==="
+          cat /tmp/server.log || echo "(no log file)"
 
-      - name: Stop api server
+      - name: Stop server
         if: always()
         run: |
-          if [ -n "${API_PID:-}" ] && kill -0 "$API_PID" 2>/dev/null; then
-            kill "$API_PID" || true
+          if [ -n "${SERVER_PID:-}" ] && kill -0 "$SERVER_PID" 2>/dev/null; then
+            kill "$SERVER_PID" || true
           fi
 
       - name: Commit and push updated snapshots

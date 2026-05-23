@@ -26,9 +26,9 @@ export const chatSessionsCollection = createCollection(
       onError: shapeErrorHandler('chat-sessions.shape'),
     },
     // Persistence is handled server-side by the AI middleware (`@repo/domain/ai`,
-    // wired into `apps/api/src/routes/chat.ts`). Electric syncs the saved session
+    // wired into `apps/server/src/routes/chat.ts`). Electric syncs the saved session
     // back to the client automatically. Only deletes are client-initiated and
-    // need an api call.
+    // need a server call.
     onDelete: collectionErrorHandler('chat-sessions.onDelete', async ({ transaction }) => {
       const ids = transaction.mutations.map((mutation) => String(mutation.key));
       return await unwrap(api.api['chat-sessions'].delete.$post({ json: ids }));

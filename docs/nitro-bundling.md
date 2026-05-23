@@ -1,6 +1,6 @@
 # Nitro Server Bundling: Externalization Strategy
 
-> **🚧 Status: being deprecated.** Nitro is on the way out as part of the TanStack Start → Bun + Hono migration (`docs/records/011-migrate-server-off-tanstack-start.md`). The pain documented here — opaque CJS/ESM interop bugs, dev/prod parity breakage, build plugins working around `noExternal: true` — is exactly *why* we are moving. This file stays as the canonical reference for keeping the current Nitro bundle alive **until `apps/web/` becomes a pure Vite SPA**. Do not invest in extending this strategy; port the affected code path to `apps/api/` (Hono) instead whenever it's reasonable.
+> **🚧 Status: being deprecated.** Nitro is on the way out as part of the TanStack Start → Bun + Hono migration (`docs/records/011-migrate-server-off-tanstack-start.md`). The pain documented here — opaque CJS/ESM interop bugs, dev/prod parity breakage, build plugins working around `noExternal: true` — is exactly *why* we are moving. This file stays as the canonical reference for keeping the current Nitro bundle alive **until `apps/web/` becomes a pure Vite SPA**. Do not invest in extending this strategy; port the affected code path to `apps/server/` (Hono) instead whenever it's reasonable.
 
 Externalization with `rollupConfig.external` + full `node_modules` in Docker.
 

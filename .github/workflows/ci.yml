@@ -161,28 +161,28 @@ jobs:
       - name: Build @repo/emails
         run: bun run --cwd packages/emails build
 
-      # Build the SPA so the api can serve it (SERVE_SPA below). Mirrors the
+      # Build the SPA so the server can serve it (SERVE_SPA below). Mirrors the
       # production Docker image: one process serves /api/* + the SPA from the
       # real prod bundle. Catches build-time issues that `vite dev` would hide.
       - name: Build web SPA
         run: bun run --cwd apps/web build
 
-      - name: Symlink web dist into api
-        run: ln -s "$GITHUB_WORKSPACE/apps/web/dist" "$GITHUB_WORKSPACE/apps/api/web-dist"
+      - name: Symlink web dist into server
+        run: ln -s "$GITHUB_WORKSPACE/apps/web/dist" "$GITHUB_WORKSPACE/apps/server/web-dist"
 
       # Single process serves /api/* + the SPA on :3400 — same port as the
       # dev Vite server, so BASE_URL/TRUSTED_ORIGINS/E2E defaults stay
       # consistent between local dev and CI.
       #
-      # Logs go to /tmp/api.log so the wait step (and any later failure) can
+      # Logs go to /tmp/server.log so the wait step (and any later failure) can
       # surface boot errors instead of "Server failed to start" with no cause.
       # PID saved so a final cleanup step can kill it on success or failure.
-      - name: Start api + SPA server
+      - name: Start server + SPA
         run: |
-          bun --cwd=apps/api --bun src/index.ts > /tmp/api.log 2>&1 &
-          echo "API_PID=$!" >> "$GITHUB_ENV"
+          bun --cwd=apps/server --bun src/index.ts > /tmp/server.log 2>&1 &
+          echo "SERVER_PID=$!" >> "$GITHUB_ENV"
         env:
-          API_PORT: '3400'
+          SERVER_PORT: '3400'
           SERVE_SPA: 'true'
 
       - name: Wait for server
@@ -193,16 +193,16 @@ jobs:
               exit 0
             fi
             # Bail early if the process died — no point waiting 60s.
-            if ! kill -0 "$API_PID" 2>/dev/null; then
-              echo "API process exited before becoming ready. Logs:"
-              cat /tmp/api.log || true
+            if ! kill -0 "$SERVER_PID" 2>/dev/null; then
+              echo "Server process exited before becoming ready. Logs:"
+              cat /tmp/server.log || true
               exit 1
             fi
             echo "Waiting for server... ($i/30)"
             sleep 2
           done
           echo "Server failed to start. Logs:"
-          cat /tmp/api.log || true
+          cat /tmp/server.log || true
           exit 1
 
       - name: Run E2E tests
@@ -212,17 +212,17 @@ jobs:
         run: bunx playwright test
         working-directory: apps/e2e
 
-      - name: Dump api logs on failure
+      - name: Dump server logs on failure
         if: failure()
         run: |
-          echo "=== /tmp/api.log ==="
-          cat /tmp/api.log || echo "(no log file)"
+          echo "=== /tmp/server.log ==="
+          cat /tmp/server.log || echo "(no log file)"
 
-      - name: Stop api server
+      - name: Stop server
         if: always()
         run: |
-          if [ -n "${API_PID:-}" ] && kill -0 "$API_PID" 2>/dev/null; then
-            kill "$API_PID" || true
+          if [ -n "${SERVER_PID:-}" ] && kill -0 "$SERVER_PID" 2>/dev/null; then
+            kill "$SERVER_PID" || true
           fi
       - name: Publish report to GitHub Pages
         if: ${{ !cancelled() }}
