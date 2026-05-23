@@ -1,16 +1,16 @@
 # OpenFeeds
 
-Local-first RSS reader. SolidJS SPA + TanStack Router on the client, TanStack Solid DB with Electric SQL sync, Bun + Elysia API on the server.
+Local-first RSS reader. SolidJS SPA + TanStack Router on the client, TanStack Solid DB with Electric SQL sync, Bun + Hono API on the server.
 
 ## 🚧 Architecture Migration In Progress
 
-**We are migrating the server layer off TanStack Start (Nitro/Vite SSR) to a standalone Bun + Elysia API (`apps/api/`), and turning `apps/web/` into a pure Vite SPA.**
+**We are migrating the server layer off TanStack Start (Nitro/Vite SSR) to a standalone Bun + Hono API (`apps/api/`), and turning `apps/web/` into a pure Vite SPA.**
 
-Why: Nitro bundling has been a persistent source of dev/prod parity bugs (see `docs/nitro-bundling.md`), the `.server.ts` + dynamic-import dance blurs the frontend/backend boundary, and OpenFeeds is local-first — we pay full SSR-framework complexity for almost no SSR benefit. End state: folder = layer, one bundler per side, end-to-end types via Eden Treaty.
+Why: Nitro bundling has been a persistent source of dev/prod parity bugs (see `docs/nitro-bundling.md`), the `.server.ts` + dynamic-import dance blurs the frontend/backend boundary, and OpenFeeds is local-first — we pay full SSR-framework complexity for almost no SSR benefit. End state: folder = layer, one bundler per side, end-to-end types via Hono's `hc` client.
 
-**Read `docs/records/011-migrate-server-to-elysia.md` before doing any cross-cutting work.** Migration is gradual; both stacks run side-by-side. New server code should go into `apps/api/` (Elysia) whenever possible; web `*.server.*` / `createServerFn` patterns are legacy and being removed.
+**Read `docs/records/011-migrate-server-off-tanstack-start.md` before doing any cross-cutting work.** Migration is gradual; both stacks run side-by-side. New server code should go into `apps/api/` (Hono) whenever possible; web `*.server.*` / `createServerFn` patterns are legacy and being removed.
 
-Load the `elysiajs` skill when working in `apps/api/`.
+Note: an earlier attempt used Elysia + Eden Treaty and was abandoned after unrecoverable TypeScript inference bugs (see "Pivot to Hono" in record 011). Do not reintroduce Elysia.
 
 ## Commands
 
@@ -24,8 +24,8 @@ Each app/package has its own `AGENTS.md` with specific patterns and guidelines.
 
 **Apps:**
 
-- `apps/web/` — SolidJS SPA (currently still TanStack Start; being migrated to pure Vite SPA — see `docs/records/011-migrate-server-to-elysia.md`)
-- `apps/api/` — Bun + Elysia HTTP API (new; target home for all server-side code)
+- `apps/web/` — SolidJS SPA (currently still TanStack Start; being migrated to pure Vite SPA — see `docs/records/011-migrate-server-off-tanstack-start.md`)
+- `apps/api/` — Bun + Hono HTTP API (new; target home for all server-side code)
 - `apps/worker/` — BullMQ jobs
 - `apps/migrator/` — DB migrations
 - `apps/e2e/` — Playwright tests
@@ -97,7 +97,7 @@ Load the relevant doc when working in these areas. Docs are in `docs/`.
 - `docs/recommendation-system.md` — Working on article ranking, recommendations, or personalisation
 - `docs/ai-chat.md` — Working on the AI chat feature, tool calling, or conversation persistence
 - `docs/tanstack-db-0.6-upgrade-notes.md` — Upgrading or debugging TanStack DB collection behaviour after a version bump
-- `docs/nitro-bundling.md` — Debugging Nitro server bundling issues, CJS/ESM interop errors, or `Cannot find module` in production. **Context for the Elysia migration (see record 011) — Nitro will be removed once `apps/web/` becomes a pure SPA.**
+- `docs/nitro-bundling.md` — Debugging Nitro server bundling issues, CJS/ESM interop errors, or `Cannot find module` in production. **Context for the server migration (see record 011) — Nitro will be removed once `apps/web/` becomes a pure SPA.**
 
 `docs/records/` — Numbered, chronological log of past decisions, specs, ideas, and dropped experiments. Skim when investigating why something is the way it is, or before proposing changes that may have prior context. See `docs/records/README.md` for the convention.
 
