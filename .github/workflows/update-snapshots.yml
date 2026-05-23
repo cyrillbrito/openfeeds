@@ -110,7 +110,9 @@ jobs:
         run: ln -s "$GITHUB_WORKSPACE/apps/web/dist" "$GITHUB_WORKSPACE/apps/api/web-dist"
 
       - name: Start api + SPA server
-        run: bun --cwd=apps/api --bun src/index.ts &
+        run: |
+          bun --cwd=apps/api --bun src/index.ts > /tmp/api.log 2>&1 &
+          echo "API_PID=$!" >> "$GITHUB_ENV"
         env:
           API_PORT: '3400'
           SERVE_SPA: 'true'
@@ -122,10 +124,16 @@ jobs:
               echo "Server is ready"
               exit 0
             fi
+            if ! kill -0 "$API_PID" 2>/dev/null; then
+              echo "API process exited before becoming ready. Logs:"
+              cat /tmp/api.log || true
+              exit 1
+            fi
             echo "Waiting for server... ($i/30)"
             sleep 2
           done
-          echo "Server failed to start"
+          echo "Server failed to start. Logs:"
+          cat /tmp/api.log || true
           exit 1
 
       - name: Regenerate snapshots
@@ -134,6 +142,19 @@ jobs:
         # Always continue so we can commit even when snapshot mismatches
         # were the original failure (Playwright still exits non-zero).
         continue-on-error: true
+
+      - name: Dump api logs on failure
+        if: failure()
+        run: |
+          echo "=== /tmp/api.log ==="
+          cat /tmp/api.log || echo "(no log file)"
+
+      - name: Stop api server
+        if: always()
+        run: |
+          if [ -n "${API_PID:-}" ] && kill -0 "$API_PID" 2>/dev/null; then
+            kill "$API_PID" || true
+          fi
 
       - name: Commit and push updated snapshots
         run: |

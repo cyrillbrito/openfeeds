@@ -173,8 +173,14 @@ jobs:
       # Single process serves /api/* + the SPA on :3400 — same port as the
       # dev Vite server, so BASE_URL/TRUSTED_ORIGINS/E2E defaults stay
       # consistent between local dev and CI.
+      #
+      # Logs go to /tmp/api.log so the wait step (and any later failure) can
+      # surface boot errors instead of "Server failed to start" with no cause.
+      # PID saved so a final cleanup step can kill it on success or failure.
       - name: Start api + SPA server
-        run: bun --cwd=apps/api --bun src/index.ts &
+        run: |
+          bun --cwd=apps/api --bun src/index.ts > /tmp/api.log 2>&1 &
+          echo "API_PID=$!" >> "$GITHUB_ENV"
         env:
           API_PORT: '3400'
           SERVE_SPA: 'true'
@@ -186,10 +192,17 @@ jobs:
               echo "Server is ready"
               exit 0
             fi
+            # Bail early if the process died — no point waiting 60s.
+            if ! kill -0 "$API_PID" 2>/dev/null; then
+              echo "API process exited before becoming ready. Logs:"
+              cat /tmp/api.log || true
+              exit 1
+            fi
             echo "Waiting for server... ($i/30)"
             sleep 2
           done
-          echo "Server failed to start"
+          echo "Server failed to start. Logs:"
+          cat /tmp/api.log || true
           exit 1
 
       - name: Run E2E tests
@@ -199,6 +212,18 @@ jobs:
         run: bunx playwright test
         working-directory: apps/e2e
 
+      - name: Dump api logs on failure
+        if: failure()
+        run: |
+          echo "=== /tmp/api.log ==="
+          cat /tmp/api.log || echo "(no log file)"
+
+      - name: Stop api server
+        if: always()
+        run: |
+          if [ -n "${API_PID:-}" ] && kill -0 "$API_PID" 2>/dev/null; then
+            kill "$API_PID" || true
+          fi
       - name: Publish report to GitHub Pages
         if: ${{ !cancelled() }}
         env:
