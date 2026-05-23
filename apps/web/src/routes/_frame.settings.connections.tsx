@@ -5,7 +5,7 @@ import { Card } from '~/components/Card';
 import { LazyModal, type ModalController } from '~/components/LazyModal';
 import { CenterLoader } from '~/components/Loader';
 import { authClient } from '~/lib/auth-client';
-import { SCOPE_DESCRIPTIONS } from '~/utils/oauth';
+import { SCOPE_DESCRIPTIONS } from '~/lib/oauth-scopes';
 
 async function fetchConsents() {
   const result = await authClient.oauth2.getConsents();

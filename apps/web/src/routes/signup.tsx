@@ -8,7 +8,7 @@ import { Loader } from '~/components/Loader';
 import { SocialLoginButtons } from '~/components/SocialLoginButtons';
 import { authClient } from '~/lib/auth-client';
 import { guestGuard } from '~/lib/guards';
-import { setSession } from '~/lib/session';
+import { primeSessionAfterAuth } from '~/lib/session';
 
 export const Route = createFileRoute('/signup')({
   beforeLoad: guestGuard,
@@ -57,16 +57,9 @@ function SignUpPage() {
       setIsLoading(false);
 
       if (result?.token) {
-        // Identify user for PostHog (signup event tracked server-side)
-        const session = await authClient.getSession();
-        setSession(session.data ?? null);
-        if (session.data?.user) {
-          posthog.identify(session.data.user.id, {
-            email: session.data.user.email,
-            name: session.data.user.name,
-            created_at: session.data.user.createdAt,
-          });
-        }
+        // Seed the session cache so the next guard run doesn't refetch.
+        // PostHog identify is wired reactively in _frame.tsx via useSession().
+        await primeSessionAfterAuth();
 
         // Redirect to original page or default to root (which will smart-redirect)
         const redirectTo = search()?.redirect || '/';

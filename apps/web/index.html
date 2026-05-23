@@ -15,11 +15,10 @@
     <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <!--
-      Blocking inline script that prevents theme flash on page load. Mirrors
-      the previous ThemeScript component but runs synchronously before the
-      JS bundle, which is the only way to apply data-theme before first paint
-      in a SPA. Keep in sync with `src/components/ThemeScript.tsx` (kept for
-      Storybook) and `src/providers/theme.tsx`.
+      Blocking inline script that prevents theme flash on page load. Runs
+      synchronously before the JS bundle, which is the only way to apply
+      data-theme before first paint in a SPA. Keep in sync with
+      `src/providers/theme.tsx`.
     -->
     <script>
       (function () {
