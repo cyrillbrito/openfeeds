@@ -1,4 +1,5 @@
 import { createFileRoute } from '@tanstack/solid-router';
+import { env } from '~/env';
 
 /**
  * /api2/* — catch-all proxy to the Elysia server in apps/api/.
@@ -16,11 +17,9 @@ import { createFileRoute } from '@tanstack/solid-router';
  * of both services — but the contract is identical.
  */
 
-const API_ORIGIN = process.env.API_ORIGIN ?? 'http://localhost:3001';
-
 async function forward({ request }: { request: Request }): Promise<Response> {
   const url = new URL(request.url);
-  const upstream = new URL(url.pathname + url.search, API_ORIGIN);
+  const upstream = new URL(url.pathname + url.search, env.API_ORIGIN);
 
   // Recreate the request against the upstream URL.
   // `duplex: 'half'` is required by undici when streaming a body.

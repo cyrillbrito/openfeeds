@@ -18,21 +18,11 @@ import { shapesRoutes } from '~/routes/shapes';
  * via Eden Treaty in apps/web/.
  */
 const app = new Elysia()
-  // Prototype: log every incoming request + body for debugging the migration.
-  // Remove once the prototype is validated.
+  // Prototype: log every incoming request for debugging the migration.
+  // Body logging intentionally omitted — auth routes carry plaintext
+  // credentials. Remove once the prototype is validated.
   .onRequest(({ request }) => {
     console.log(`[api] → ${request.method} ${new URL(request.url).pathname}`);
-  })
-  .onParse(async ({ request }, contentType) => {
-    if (contentType?.includes('application/json')) {
-      const text = await request.text();
-      console.log(`[api]   body:`, text.length > 500 ? text.slice(0, 500) + '…' : text);
-      try {
-        return JSON.parse(text);
-      } catch {
-        return text;
-      }
-    }
   })
 
   // CORS — dev only really matters here. Origin is the web dev server.
