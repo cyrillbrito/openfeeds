@@ -39,10 +39,19 @@ build_app() {
   local app="$1"
   local image_name="openfeeds-${app}"
   local dockerfile="apps/${app}/Dockerfile"
+  local prune_scope="@repo/${app}"
 
   # migrator image is named differently in prod
   if [[ "$app" == "migrator" ]]; then
     image_name="openfeeds-migrations"
+  fi
+
+  # web is built from apps/api/Dockerfile and bundles the SPA. Image name
+  # stays `openfeeds-web` for deployment compat; prune scope must include
+  # both @repo/api and @repo/web so the web build output ends up in out/.
+  if [[ "$app" == "web" ]]; then
+    dockerfile="apps/api/Dockerfile"
+    prune_scope="@repo/api @repo/web"
   fi
 
   log "========================================="
@@ -53,8 +62,8 @@ build_app() {
   cleanup
 
   # Step 1: Turbo prune (same as CI)
-  log "[${app}] Pruning monorepo for @repo/${app}..."
-  bunx turbo@^2 prune "@repo/${app}"
+  log "[${app}] Pruning monorepo for ${prune_scope}..."
+  bunx turbo@^2 prune ${prune_scope}
 
   # Step 2: Install deps in pruned output (same as CI)
   log "[${app}] Installing dependencies in out/..."

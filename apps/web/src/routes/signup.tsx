@@ -8,6 +8,7 @@ import { Loader } from '~/components/Loader';
 import { SocialLoginButtons } from '~/components/SocialLoginButtons';
 import { authClient } from '~/lib/auth-client';
 import { guestGuard } from '~/lib/guards';
+import { setSession } from '~/lib/session';
 
 export const Route = createFileRoute('/signup')({
   beforeLoad: guestGuard,
@@ -58,6 +59,7 @@ function SignUpPage() {
       if (result?.token) {
         // Identify user for PostHog (signup event tracked server-side)
         const session = await authClient.getSession();
+        setSession(session.data ?? null);
         if (session.data?.user) {
           posthog.identify(session.data.user.id, {
             email: session.data.user.email,

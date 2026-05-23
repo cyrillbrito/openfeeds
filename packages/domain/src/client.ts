@@ -22,3 +22,6 @@ export {
   type PlanLimits,
   type UserUsage,
 } from './limits.schema';
+
+// App version (pure, browser-safe)
+export { setAppVersion, getAppVersion } from './version';

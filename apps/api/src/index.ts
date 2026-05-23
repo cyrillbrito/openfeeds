@@ -1,76 +1,150 @@
-import { cors } from '@elysiajs/cors';
-import { Elysia } from 'elysia';
+import {
+  BadRequestError,
+  ConflictError,
+  handleBoundaryError,
+  LimitExceededError,
+  NotFoundError,
+  TtsNotConfiguredError,
+  UnauthorizedError,
+} from '@repo/domain';
+import { Hono } from 'hono';
+import { serveStatic } from 'hono/bun';
+import { cors } from 'hono/cors';
+import { HTTPException } from 'hono/http-exception';
 import { auth } from '~/auth';
 import { env } from '~/env';
-import { AuthError } from '~/middleware/auth';
+import type { Env } from '~/middleware/auth';
+import { actionsRoutes } from '~/routes/actions';
+import { articleAudioRoutes } from '~/routes/article-audio';
+import { articleTagsRoutes } from '~/routes/article-tags';
+import { articlesRoutes } from '~/routes/articles';
 import { chatRoutes } from '~/routes/chat';
+import { chatSessionsRoutes } from '~/routes/chat-sessions';
+import { feedTagsRoutes } from '~/routes/feed-tags';
 import { feedsRoutes } from '~/routes/feeds';
+import { filterRulesRoutes } from '~/routes/filter-rules';
+import { mcpRoutes } from '~/routes/mcp';
+import { publicConfigRoutes } from '~/routes/public-config';
+import { settingsRoutes } from '~/routes/settings';
 import { shapesRoutes } from '~/routes/shapes';
+import { tagsRoutes } from '~/routes/tags';
+import { wellKnownRoutes } from '~/routes/well-known';
 
 /**
- * apps/api — Bun + Elysia prototype.
+ * apps/api — Bun + Hono.
  *
- * Dev: web (Vite, :3000) calls this server cross-origin on :3001. CORS with
+ * Dev: web (Vite, :3400) calls this server cross-origin on :3401. CORS with
  * credentials enabled below so the shared Better Auth session cookie is sent.
- * Production target: same-origin via reverse proxy, then CORS becomes unused.
+ * Production: this same process also serves the built SPA from ./web-dist
+ * (see SPA fallback at the bottom of this file) on :3000, so the browser
+ * sees one origin and CORS is unused.
  *
  * Type export: `export type App = typeof app` enables end-to-end type safety
- * via Eden Treaty in apps/web/.
+ * via Hono's `hc<App>` client in apps/web/.
+ *
+ * IMPORTANT: every route and `.route()` mount MUST be chained on the same
+ * `app` reference. Splitting routes across reassigned variables breaks the
+ * RPC type inference. See "Hono Client (RPC)" in the hono skill.
  */
-const app = new Elysia()
-  // Prototype: log every incoming request for debugging the migration.
-  // Body logging intentionally omitted — auth routes carry plaintext
-  // credentials. Remove once the prototype is validated.
-  .onRequest(({ request }) => {
-    console.log(`[api] → ${request.method} ${new URL(request.url).pathname}`);
-  })
-
+const app = new Hono<Env>()
   // CORS — dev only really matters here. Origin is the web dev server.
   // `credentials: true` requires an explicit origin (not `*`) so the browser
   // accepts the Better Auth session cookie.
   .use(
+    '*',
     cors({
       origin: env.TRUSTED_ORIGINS,
       credentials: true,
-      methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-      allowedHeaders: ['Content-Type', 'Authorization'],
+      allowMethods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+      allowHeaders: ['Content-Type', 'Authorization'],
     }),
   )
 
-  // Better Auth handles its own routes. Mounted under /api2/auth/* so it
-  // doesn't conflict with web's Start-owned /api/auth/* (which the browser
-  // still uses for login). Elysia's instance shares DB + secret, so cookies
-  // issued by either app are accepted here for reading the session.
-  .all('/api2/auth/*', ({ request }) => auth.handler(request))
+  // Better Auth handles its own routes under /api/auth/*. Auth is the single
+  // source of truth for this app — cookies it issues are valid everywhere.
+  .all('/api/auth/*', (c) => auth.handler(c.req.raw))
 
-  // Domain routes
-  .use(shapesRoutes)
-  .use(feedsRoutes)
-  .use(chatRoutes)
+  // Domain routes. Mount paths are baked in here (not in the child routers)
+  // so the child routers stay portable.
+  .route('/api/shapes', shapesRoutes)
+  .route('/api/feeds', feedsRoutes)
+  .route('/api/articles', articlesRoutes)
+  .route('/api/article-tags', articleTagsRoutes)
+  .route('/api/article-audio', articleAudioRoutes)
+  .route('/api/tags', tagsRoutes)
+  .route('/api/feed-tags', feedTagsRoutes)
+  .route('/api/filter-rules', filterRulesRoutes)
+  .route('/api/settings', settingsRoutes)
+  .route('/api/chat-sessions', chatSessionsRoutes)
+  .route('/api/actions', actionsRoutes)
+  .route('/api/chat', chatRoutes)
+  // RFC 8615 / OpenID Discovery mandates root-level paths under /.well-known/*
+  .route('/.well-known', wellKnownRoutes)
+  .route('/api/mcp', mcpRoutes)
+  .route('/api/public-config', publicConfigRoutes);
 
-  // Error mapping
-  .onError(({ error, code, set, request, path }) => {
-    console.log(`[api] ✗ ${request.method} ${path} → ${code}`, error);
-    if (error instanceof AuthError) {
-      set.status = error.status;
-      return { message: error.message };
-    }
-    if (code === 'VALIDATION') {
-      set.status = 422;
-      return {
-        message: 'Invalid request body',
-        // Surface Elysia's detailed validation error in dev so the client can
-        // see exactly which field failed.
-        detail: error instanceof Error ? error.message : JSON.stringify(error),
-      };
-    }
-    console.error('[api] Unhandled error', error);
-    set.status = 500;
-    return { message: 'Internal server error' };
-  })
+// SPA serving (prod only). In dev the web Vite server on :3400 owns the
+// browser origin and proxies /api/* here, so we don't want this app to
+// shadow Vite's HMR. In prod the Docker image copies the built SPA into
+// ./web-dist alongside this server, and Hono serves it: static assets
+// first, then `index.html` for any unmatched route (deep links, refreshes).
+//
+// SERVE_SPA is set by the prod Dockerfile. Order matters: this MUST come
+// after all /api/* and /.well-known/* mounts so they win over the SPA fallback.
+if (env.SERVE_SPA) {
+  app.use('/assets/*', serveStatic({ root: './web-dist' }));
+  app.get('/favicon.ico', serveStatic({ path: './web-dist/favicon.ico' }));
+  // SPA fallback — any non-API GET returns index.html so client-side
+  // routing (TanStack Router) handles the URL.
+  app.get('*', serveStatic({ path: './web-dist/index.html' }));
+}
 
-  .listen(env.API_PORT);
+// Error mapping — runs for any thrown error or HTTPException. Validation
+// errors from @hono/zod-validator return 400 automatically with a default
+// body; HTTPException(401) from `requireUser` lands here too.
+//
+// Domain errors are transport-agnostic (see packages/domain/AGENTS.md) — we
+// map them to HTTP here so route handlers stay free of try/catch noise.
+app.onError((err, c) => {
+  if (err instanceof HTTPException) {
+    return c.json({ message: err.message }, err.status);
+  }
+
+  // Domain error mapping. Messages are user-safe by construction.
+  if (err instanceof UnauthorizedError) {
+    return c.json({ message: err.message }, 401);
+  }
+  if (err instanceof NotFoundError) {
+    return c.json({ message: err.message }, 404);
+  }
+  if (err instanceof ConflictError) {
+    return c.json({ message: err.message }, 409);
+  }
+  if (err instanceof BadRequestError) {
+    return c.json({ message: err.message }, 400);
+  }
+  if (err instanceof LimitExceededError) {
+    return c.json({ message: err.message, resource: err.resource, limit: err.limit }, 429);
+  }
+  if (err instanceof TtsNotConfiguredError) {
+    return c.json({ message: err.message }, 503);
+  }
+
+  // Unknown — capture and return a sanitized response. Path/user context is
+  // best-effort: c.var.user may not be set on routes that don't require auth.
+  handleBoundaryError(err, {
+    source: 'api-route',
+    operation: `${c.req.method} ${new URL(c.req.url).pathname}`,
+    userId: c.var.user?.id,
+  });
+  return c.json({ message: 'Internal server error' }, 500);
+});
 
 console.log(`🚀 api listening on http://localhost:${env.API_PORT}`);
+
+export default {
+  port: env.API_PORT,
+  fetch: app.fetch,
+};
 
 export type App = typeof app;

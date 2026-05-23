@@ -29,9 +29,9 @@ import { YouTubeIcon } from '~/components/YouTubeIcon';
 import { articleTagsCollection } from '~/entities/article-tags';
 import { articlesCollection } from '~/entities/articles';
 import { useFeeds } from '~/entities/feeds';
-import { $$discoverFeeds } from '~/entities/feeds.functions';
 import { buildFollowVars, followFeedsAction } from '~/entities/follow-feeds';
 import { useTags } from '~/entities/tags';
+import { api, unwrap } from '~/lib/api-client';
 
 export const Route = createFileRoute('/_frame/discover')({
   component: DiscoverPage,
@@ -64,7 +64,7 @@ function DiscoverPage() {
   // Discovery results driven by URL search param
   const searchUrl = () => search()?.url;
   const [discoveryResult] = createResource(searchUrl, async (url) => {
-    return $$discoverFeeds({ data: { url } });
+    return unwrap(api.api.feeds.discover.$post({ json: { url } }));
   });
 
   // Ephemeral UI state — reset when the search URL changes

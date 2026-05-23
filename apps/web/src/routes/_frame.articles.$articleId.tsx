@@ -16,9 +16,9 @@ import { ReadIconButton } from '~/components/ReadIconButton';
 import { TimeAgo } from '~/components/TimeAgo';
 import { articleTagsCollection } from '~/entities/article-tags';
 import { articlesCollection } from '~/entities/articles';
-import { $$extractArticleContent } from '~/entities/articles.functions';
 import { feedsCollection } from '~/entities/feeds';
 import { useTags } from '~/entities/tags';
+import { api, unwrap } from '~/lib/api-client';
 import { containsHtml, downshiftHeadings } from '~/utils/html';
 import { extractYouTubeVideoId, isYouTubeUrl } from '~/utils/youtube';
 import articlePrintCss from '~/styles/article-print.css?url';
@@ -79,7 +79,7 @@ function ArticleView() {
 
         setIsExtracting(true);
         setExtractionError(null);
-        $$extractArticleContent({ data: { id } })
+        unwrap(api.api.articles['extract-content'].$post({ json: { id } }))
           .catch((err: Error) => {
             setExtractionError(err.message);
           })

@@ -7,7 +7,7 @@
     "packages/*"
   ],
   "scripts": {
-    "dev": "turbo run dev --filter=@repo/web --filter=@repo/worker",
+    "dev": "turbo run dev --filter=@repo/web --filter=@repo/api --filter=@repo/worker",
     "build": "turbo run build",
     "lint": "oxlint",
     "format:check": "oxfmt --check .",

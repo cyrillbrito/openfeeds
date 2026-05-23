@@ -56,24 +56,24 @@ MCP Client (e.g. Claude)          OpenFeeds                    User
 
 ## Key Files
 
-| File                           | Purpose                                                                      |
-| ------------------------------ | ---------------------------------------------------------------------------- |
-| `src/server/auth.ts`           | Better Auth config with `jwt()` + `oauthProvider()` plugins                  |
-| `src/server/auth.schema.ts`    | Schema-generation-only copy (avoids runtime env during codegen)              |
-| `src/server/well-known.ts`     | `.well-known` endpoint handlers (OpenID, OAuth metadata, protected resource) |
-| `src/server/dev-cors.ts`       | Development-only CORS middleware for MCP Inspector                           |
-| `src/server.ts`                | Server entry — wires `.well-known` interception and dev CORS                 |
-| `src/routes/oauth/consent.tsx` | User-facing consent page (approve/deny scopes)                               |
-| `src/routes/api/mcp/$.ts`      | MCP server endpoint (Streamable HTTP transport)                              |
-| `src/lib/auth-client.ts`       | Client-side auth with `oauthProviderClient()` plugin                         |
+| File                                       | Purpose                                                                      |
+| ------------------------------------------ | ---------------------------------------------------------------------------- |
+| `packages/auth/src/index.ts`               | Better Auth config with `jwt()` + `oauthProvider()` plugins                  |
+| `packages/auth/src/schema-config.ts`       | Schema-generation-only copy (avoids runtime env during codegen)              |
+| `apps/api/src/routes/well-known.ts`        | `.well-known` endpoint handlers (OpenID, OAuth metadata, protected resource) |
+| `apps/api/src/index.ts`                    | api entrypoint — mounts `.well-known/*` at host root and the auth catch-all  |
+| `apps/web/src/routes/oauth/consent.tsx`    | User-facing consent page (approve/deny scopes)                               |
+| `apps/api/src/routes/mcp.ts`               | MCP server endpoint (Streamable HTTP transport)                              |
+| `apps/web/src/lib/auth-client.ts`          | Client-side auth with `oauthProviderClient()` plugin                         |
 
 ## Auth Configuration
 
-The OAuth provider is configured in `src/server/auth.ts`:
+The OAuth provider is configured in `packages/auth/src/index.ts`:
 
 ```typescript
 plugins: [
-  jwt(),
+  jwt({ disableSettingJwtHeader: true }),
+  lastLoginMethod(),
   oauthProvider({
     loginPage: '/login',
     consentPage: '/oauth/consent',
@@ -82,7 +82,6 @@ plugins: [
     scopes: ['openid', 'profile', 'email', 'offline_access', 'mcp:tools'],
     validAudiences: [`${env.BASE_URL}/api/mcp`],
   }),
-  tanstackStartCookies(),
 ],
 ```
 
@@ -94,7 +93,7 @@ plugins: [
 
 ## Well-Known Endpoints
 
-TanStack Start's file-based router can't handle dotfile paths (`.well-known`), so they're intercepted in `src/server.ts` and routed to `src/server/well-known.ts`.
+RFC 8615 requires well-known URIs at the host root. The api app mounts `wellKnownRoutes` at `/.well-known/*` directly (`apps/api/src/index.ts`). In dev, the SPA's Vite proxy forwards `/.well-known/*` to the api so the same origin serves both UI and discovery documents.
 
 | Endpoint                                           | Spec                     | Purpose                                                                                      |
 | -------------------------------------------------- | ------------------------ | -------------------------------------------------------------------------------------------- |
@@ -127,7 +126,7 @@ Scope descriptions:
 
 ## MCP Endpoint
 
-`src/routes/api/mcp/$.ts` — the Model Context Protocol server.
+`apps/api/src/routes/mcp.ts` — the Model Context Protocol server.
 
 - Uses `mcpHandler` from `@better-auth/oauth-provider` for JWT verification against the local JWKS endpoint (`/api/auth/jwks`).
 - The JWKS URL uses `localhost` to avoid the server fetching itself through the public URL (DNS, TLS, potential deadlocks).
@@ -135,12 +134,9 @@ Scope descriptions:
 - Currently registers a single `hello` tool for testing the OAuth flow.
 - Handles `GET`, `POST`, `DELETE`, and `OPTIONS` HTTP methods.
 
-## Dev CORS Middleware
+## Dev CORS
 
-`src/server/dev-cors.ts` — wraps the server's fetch handler.
-
-- **Production**: no-op passthrough (tree-shaken via `process.env.NODE_ENV` check).
-- **Development**: adds permissive CORS headers for MCP Inspector and other local tools. Handles `OPTIONS` preflight with 204. Exposes `Mcp-Session-Id` and `Mcp-Protocol-Version` headers.
+CORS for MCP Inspector is handled by Hono's `cors()` middleware in `apps/api/src/index.ts`. `TRUSTED_ORIGINS` in env controls the allowed origins; in development this typically includes `http://localhost:6274` (MCP Inspector). If you add MCP-specific response headers later (e.g. `Mcp-Session-Id`), expose them via the `cors()` config.
 
 ## Database Tables
 
@@ -158,16 +154,16 @@ Migration: `packages/db/drizzle/0002_add-oauth.sql`
 
 ## Dependencies
 
-Added to `apps/web/package.json`:
+## Dependencies
 
-- `@better-auth/oauth-provider` — OAuth 2.1 Authorization Server plugin for Better Auth
-- `@modelcontextprotocol/sdk` — Official MCP SDK (server, transport, tool registration)
+- `@better-auth/oauth-provider` — OAuth 2.1 Authorization Server plugin for Better Auth (in `packages/auth`)
+- `@modelcontextprotocol/sdk` — Official MCP SDK (in `apps/api`)
 
 ## Testing with MCP Inspector
 
-1. Start the dev server: `bun dev`
+1. Start the dev servers: `bun dev` at the repo root (boots web on :3000 and api on :3401).
 2. Open [MCP Inspector](https://inspector.tools/)
-3. Connect to `http://localhost:3000/api/mcp`
+3. Connect to `http://localhost:3000/api/mcp` (Vite proxies `/api/*` to the api on :3401, so the MCP client sees a single origin).
 4. The inspector will discover endpoints via `.well-known`, register as a client, and prompt you to log in and consent
 5. After authorization, you can invoke the `hello` tool
 

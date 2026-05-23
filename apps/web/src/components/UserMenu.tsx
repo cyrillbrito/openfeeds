@@ -3,6 +3,7 @@ import { ChevronsUpDown, LogOut, Monitor, Moon, Settings, Sun } from 'lucide-sol
 import { posthog } from 'posthog-js';
 import { Suspense } from 'solid-js';
 import { authClient } from '~/lib/auth-client';
+import { invalidateSession } from '~/lib/session';
 import { useTheme } from '~/providers/theme';
 import { Dropdown } from './Dropdown';
 
@@ -49,6 +50,7 @@ export function UserMenu() {
   const handleSignOut = async () => {
     try {
       await authClient.signOut();
+      invalidateSession();
       posthog.reset();
       window.location.href = '/login';
     } catch (error) {

@@ -1,6 +1,6 @@
 import { Check, CircleAlert, CircleMinus, FileWarning, Plus, TriangleAlert, X } from 'lucide-solid';
 import { createSignal, For, Match, Show, Switch } from 'solid-js';
-import { $$importOpml } from '~/entities/feeds.functions';
+import { api, unwrap } from '~/lib/api-client';
 import { LazyModal, type ModalController } from './LazyModal';
 
 interface ImportOpmlModalProps {
@@ -45,7 +45,9 @@ function ImportOpmlForm(props: ImportOpmlFormProps) {
       setImportError(null);
       setImportResult(null);
 
-      const data = await $$importOpml({ data: { opmlContent: content } });
+      const data = await unwrap(
+        api.api.feeds['import-opml'].$post({ json: { opmlContent: content } }),
+      );
       setImportResult(data);
     } catch (err) {
       console.error('Failed to import OPML:', err);

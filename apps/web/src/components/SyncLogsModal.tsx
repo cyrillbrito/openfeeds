@@ -1,6 +1,6 @@
 import type { Feed } from '@repo/domain/client';
 import { createResource, For, Match, Show, Switch } from 'solid-js';
-import { $$getFeedSyncLogs } from '~/entities/feeds.functions';
+import { api, unwrap } from '~/lib/api-client';
 import { LazyModal, type ModalController } from './LazyModal';
 import { TimeAgo } from './TimeAgo';
 
@@ -24,7 +24,7 @@ export function SyncLogsModal(props: SyncLogsModalProps) {
 function SyncLogsContent(props: { feed: Feed }) {
   const [logs] = createResource(
     () => props.feed.id,
-    (feedId) => $$getFeedSyncLogs({ data: { feedId } }),
+    (feedId) => unwrap(api.api.feeds['sync-logs'].$get({ query: { feedId } })),
   );
 
   const errorMessage = () => (logs.error as Error | undefined)?.message ?? 'Unknown error';

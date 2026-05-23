@@ -3,8 +3,8 @@ import { createFileRoute } from '@tanstack/solid-router';
 import { createSignal, Show } from 'solid-js';
 import { Card } from '~/components/Card';
 import { LazyModal, type ModalController } from '~/components/LazyModal';
-import { $$exportOpml } from '~/entities/feeds.functions';
 import { settingsCollection, triggerAutoArchive, useSettings } from '~/entities/settings';
+import { api, unwrap } from '~/lib/api-client';
 
 export const Route = createFileRoute('/_frame/settings/general')({
   component: SettingsGeneralPage,
@@ -42,7 +42,7 @@ function SettingsGeneralPage() {
   const handleExportOpml = async () => {
     try {
       setIsExporting(true);
-      const opmlContent = await $$exportOpml();
+      const opmlContent = await unwrap(api.api.feeds['export-opml'].$get({}));
       const blob = new Blob([opmlContent], { type: 'application/xml' });
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');

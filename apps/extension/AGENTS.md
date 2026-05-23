@@ -52,7 +52,7 @@ All message types defined in `utils/types.ts`:
 - Permissions: `activeTab`, `storage`, host permissions for localhost + openfeeds.app
 - Content script runs on ALL URLs at `document_idle`
 - Background uses `fetch()` with `credentials: 'include'` for auth cookies
-- Dev port 3003 (avoids conflict with web 3000)
+- Dev port 3003 (avoids conflict with web 3400)
 
 ## Directory Structure
 

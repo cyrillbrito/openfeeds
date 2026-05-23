@@ -2,7 +2,7 @@ import type { UserUsage } from '@repo/domain/client';
 import { createFileRoute } from '@tanstack/solid-router';
 import { createResource, For, Show } from 'solid-js';
 import { Card } from '~/components/Card';
-import { $$getUserUsage } from '~/entities/settings.functions';
+import { api, unwrap } from '~/lib/api-client';
 
 export const Route = createFileRoute('/_frame/settings/usage')({
   component: UsagePage,
@@ -37,7 +37,7 @@ function isUnlimited(limit: number | null) {
 }
 
 function UsageLimitsCard() {
-  const [usage] = createResource(() => $$getUserUsage());
+  const [usage] = createResource(() => unwrap(api.api.settings.usage.$get({})));
 
   return (
     <Card>

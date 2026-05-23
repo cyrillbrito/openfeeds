@@ -1,15 +1,15 @@
 import { ELECTRIC_PROTOCOL_QUERY_PARAMS } from '@electric-sql/client';
 import { captureException } from '@repo/domain';
-import { Elysia } from 'elysia';
+import { Hono } from 'hono';
 import { env } from '~/env';
-import { authPlugin, requireUser } from '~/middleware/auth';
+import { authMiddleware, requireUser, type Env } from '~/middleware/auth';
 
 /**
  * Electric SQL proxy. Forwards a shape request to the Electric service,
- * scoping it server-side to the authenticated user.
- *
- * Ported from apps/web/src/lib/electric-proxy.server.ts — same logic,
- * just expressed as an Elysia handler.
+ * scoping it server-side to the authenticated user. Returns the upstream
+ * `Response` unchanged (Hono passes through any returned `Response`), so
+ * the streaming shape log body is forwarded straight to the browser
+ * without re-buffering.
  */
 async function proxyElectricRequest(opts: {
   request: Request;
@@ -75,9 +75,52 @@ async function proxyElectricRequest(opts: {
   });
 }
 
-export const shapesRoutes = new Elysia({ prefix: '/api2/shapes' })
-  .use(authPlugin)
-  .get('/settings', ({ request, user }) => {
+/**
+ * Shape proxy router. Routes are chained on a single Hono instance so the
+ * exported type carries every route into `hc<App>` on the client.
+ *
+ * URL path is kebab-case (matches `apps/web/src/lib/electric-client.ts` →
+ * `getShapeUrl(model)`); DB table is snake_case.
+ */
+export const shapesRoutes = new Hono<Env>()
+  .use('*', authMiddleware)
+  .get('/settings', (c) => {
+    const user = c.var.user;
     requireUser(user);
-    return proxyElectricRequest({ request, table: 'settings', userId: user.id });
+    return proxyElectricRequest({ request: c.req.raw, table: 'settings', userId: user.id });
+  })
+  .get('/articles', (c) => {
+    const user = c.var.user;
+    requireUser(user);
+    return proxyElectricRequest({ request: c.req.raw, table: 'articles', userId: user.id });
+  })
+  .get('/article-tags', (c) => {
+    const user = c.var.user;
+    requireUser(user);
+    return proxyElectricRequest({ request: c.req.raw, table: 'article_tags', userId: user.id });
+  })
+  .get('/chat-sessions', (c) => {
+    const user = c.var.user;
+    requireUser(user);
+    return proxyElectricRequest({ request: c.req.raw, table: 'chat_sessions', userId: user.id });
+  })
+  .get('/feeds', (c) => {
+    const user = c.var.user;
+    requireUser(user);
+    return proxyElectricRequest({ request: c.req.raw, table: 'feeds', userId: user.id });
+  })
+  .get('/feed-tags', (c) => {
+    const user = c.var.user;
+    requireUser(user);
+    return proxyElectricRequest({ request: c.req.raw, table: 'feed_tags', userId: user.id });
+  })
+  .get('/filter-rules', (c) => {
+    const user = c.var.user;
+    requireUser(user);
+    return proxyElectricRequest({ request: c.req.raw, table: 'filter_rules', userId: user.id });
+  })
+  .get('/tags', (c) => {
+    const user = c.var.user;
+    requireUser(user);
+    return proxyElectricRequest({ request: c.req.raw, table: 'tags', userId: user.id });
   });

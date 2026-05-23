@@ -2,9 +2,9 @@ import { snakeCamelMapper } from '@electric-sql/client';
 import { ArticleSchema } from '@repo/domain/client';
 import { electricCollectionOptions } from '@tanstack/electric-db-collection';
 import { BasicIndex, createCollection } from '@tanstack/solid-db';
+import { api, unwrap } from '~/lib/api-client';
 import { collectionErrorHandler, shapeErrorHandler } from '~/lib/collection-errors';
 import { getShapeUrl, timestampParser } from '~/lib/electric-client';
-import { $$createArticles, $$updateArticles } from './articles.functions';
 
 // Articles Collection - Electric-powered real-time sync
 export const articlesCollection = createCollection(
@@ -36,7 +36,7 @@ export const articlesCollection = createCollection(
         }));
 
       if (articles.length === 0) return undefined;
-      return await $$createArticles({ data: articles });
+      return await unwrap(api.api.articles.create.$post({ json: articles }));
     }),
 
     onUpdate: collectionErrorHandler('articles.onUpdate', async ({ transaction }) => {
@@ -49,7 +49,7 @@ export const articlesCollection = createCollection(
         id: String(mutation.key),
         ...mutation.changes,
       }));
-      return await $$updateArticles({ data: updates });
+      return await unwrap(api.api.articles.update.$patch({ json: updates }));
     }),
 
     // Articles are archived, not deleted

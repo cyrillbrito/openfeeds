@@ -1,5 +1,5 @@
 import { createFileRoute, redirect } from '@tanstack/solid-router';
-import { $$hasAnyFeeds } from '~/entities/feeds.functions';
+import { api, unwrap } from '~/lib/api-client';
 import { authGuard } from '~/lib/guards';
 
 export const Route = createFileRoute('/')({
@@ -7,7 +7,7 @@ export const Route = createFileRoute('/')({
     await authGuard(ctx.location);
   },
   loader: async () => {
-    const hasFeeds = await $$hasAnyFeeds();
-    throw redirect({ to: hasFeeds ? '/inbox' : '/discover' });
+    const { hasAny } = await unwrap(api.api.feeds['has-any'].$get({}));
+    throw redirect({ to: hasAny ? '/inbox' : '/discover' });
   },
 });

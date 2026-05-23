@@ -1,7 +1,7 @@
 ---
 date: 2026-05-19
 updated: 2026-05-23
-status: in-progress (framework changed mid-migration — see "Pivot to Hono" below)
+status: shipped (Hono port complete — see "What actually shipped" at the bottom)
 ---
 
 # Migrate server layer off TanStack Start to a standalone Bun API
@@ -137,3 +137,33 @@ Step 8 (delete Start) only happens once everything else is verified working in p
 - Replacing TanStack Solid Router. SPA mode works; we keep it.
 - Replacing TanStack Solid DB / Electric SQL. The whole point of this migration is that the local-first stack is healthy — it's the SSR framework that isn't.
 - Re-evaluating Elysia before its 2.0 release.
+
+## What actually shipped
+
+The plan above is preserved verbatim for historical reasons. The migration completed under Hono and a few details landed differently than originally planned. Recording them here so future readers don't go looking for things that aren't there.
+
+**No `/api2` interim namespace.** The Elysia prototype used `/api2/*` as an intentionally ugly placeholder while Nitro still owned `/api/*`. Once Start was deleted (step 8) the rename was free, so all routes ship as `/api/*` directly. The `apps/web/src/routes/api2/$.ts` Start forwarder never made it past the Elysia phase — under Hono we proxy through Vite's `server.proxy` instead.
+
+**No `packages/electric-proxy/` extraction.** The proxy stayed inline in `apps/api/src/routes/shapes.ts`. There is one consumer and the proxy is ~80 lines; extracting it adds a package boundary for no benefit. Revisit if a second consumer ever appears.
+
+**No "external" namespace.** Step 4 originally implied a public-API sub-app for the extension + curl-style consumers. Instead, the one public endpoint (`POST /api/feeds`) lives on the entity router as a root-method route with its own widened `cors()` middleware. That keeps `chrome-extension://` / `moz-extension://` allowances scoped to the route that needs them and avoids splitting feed logic across two files. Worth knowing: combining a root-method (`.post('/')`) with sibling subpaths can collapse Hono RPC type inference for the entire router — survived here but verify with `bun checks` whenever a similar pattern is added.
+
+**`@repo/auth` is a direct `export const auth`, not a factory.** The Elysia notes describe an `extraPlugins` injection for cross-app config. Once web stopped being a server, there was exactly one consumer and the factory was deadweight — it ships as a plain `betterAuth({...})` export.
+
+**`.well-known/*` mounted at the root, not under `/api`.** RFC 8615 says well-known URIs must live at the host root. The api app mounts `wellKnownRoutes` at `/.well-known/*` directly; the Vite dev proxy forwards `/.well-known/*` alongside `/api/*` so the dev origin behaves like prod.
+
+**SPA session cache.** Route guards used to call `auth.api.getSession()` per route. In SPA mode this turned into N parallel `/api/auth/get-session` round-trips on cold load. Fixed with a module-level memoized promise in `apps/web/src/lib/session.ts` (`getSessionOnce()`). Login/signup seed it via `setSession()`, sign-out clears via `invalidateSession()`. One round-trip per page load.
+
+**`noUncheckedIndexedAccess` is off in `apps/web/`.** Hono RPC inference is fundamentally incompatible with it — the `ClientResponse` status-keyed union collapses to `any`. Don't reintroduce. (This is exactly the same class of problem that killed Eden, just less catastrophic — Hono fails the inference gracefully rather than crashing `tsc`.)
+
+**Vite 8 plugin array needs `as Plugin[]`.** After dropping `tanstackStart()` the remaining plugin array (`tanstackRouter()` + `solidPlugin()` + tailwind etc.) trips TS2321 "Excessive stack depth" on Vite 8's strict overloads. Cast the array to `Plugin[]` to dodge it. Documented in `apps/web/vite.config.ts` and the storybook config.
+
+**AI helpers extracted to `@repo/domain/ai`.** Step 3's "things worth extracting" list called for `@repo/ai` or `@repo/domain/ai`. Shipped as a `./ai` subpath export on `@repo/domain`, since the helpers depend on the domain DB/transaction context anyway.
+
+**Theme flash prevention.** With SSR gone, the `ThemeScript` component (which rendered a blocking `<script>` server-side) had nothing to attach to. Replaced with an inline `<script>` in `apps/web/index.html` — the only way to run code before first paint in a pure SPA.
+
+**Public runtime config is lazy.** `publicConfig` (social provider availability for the login screen) was originally fetched in the root route's loader. With no SSR, that became an extra round-trip on every cold load. Moved into `SocialLoginButtons` with a module-level cache, so it only fires on the login/signup pages.
+
+**`BASE_URL` semantics.** The api app's `BASE_URL` env var is the public origin browsers and MCP clients see (Vite dev proxy in dev, reverse proxy in prod), not the api's bind address (`API_PORT` controls that). OAuth discovery, MCP metadata, and well-known URIs all derive from `BASE_URL`.
+
+**Hono RPC ergonomics.** The `client.api.feeds.discover.$post({ json: {...} })` shape is more verbose than Eden's `treaty(...).discover.post({...})`. Hyphenated mount paths require bracket access (`client.api['public-config'].config.$get({})`) and can collapse `Awaited<ReturnType<typeof ...>>` to `any` through that bracket — type inline. We accepted these as the cost of working type inference. If oRPC (or anything else with better ergonomics + comparable inference stability) matures, it's worth re-evaluating the client layer; the route handlers themselves are framework-agnostic enough that swapping clients would not touch business logic.

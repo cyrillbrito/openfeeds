@@ -3,6 +3,7 @@
   "type": "module",
   "exports": {
     ".": "./src/index.ts",
+    "./ai": "./src/ai/index.ts",
     "./client": "./src/client.ts",
     "./logger": "./src/logger.ts",
     "./environment": "./src/env.ts"
@@ -16,6 +17,7 @@
     "@repo/safe-fetch": "workspace:*",
     "@repo/shared": "workspace:*",
     "@t3-oss/env-core": "^0.13.11",
+    "@tanstack/ai": "^0.18.0",
     "bullmq": "^5.76.8",
     "drizzle-orm": "^0.45.2",
     "feedsmith": "^2.9.4",

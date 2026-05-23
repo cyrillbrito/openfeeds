@@ -2,9 +2,9 @@ import { snakeCamelMapper } from '@electric-sql/client';
 import { ArticleTagSchema } from '@repo/domain/client';
 import { electricCollectionOptions } from '@tanstack/electric-db-collection';
 import { BasicIndex, createCollection } from '@tanstack/solid-db';
+import { api, unwrap } from '~/lib/api-client';
 import { collectionErrorHandler, shapeErrorHandler } from '~/lib/collection-errors';
 import { getShapeUrl } from '~/lib/electric-client';
-import { $$createArticleTags, $$deleteArticleTags } from './article-tags.functions';
 
 // Article Tags Collection (junction table for local-first joins) - Electric-powered real-time sync
 export const articleTagsCollection = createCollection(
@@ -31,12 +31,12 @@ export const articleTagsCollection = createCollection(
         const tag = mutation.modified;
         return { id: String(mutation.key), articleId: tag.articleId, tagId: tag.tagId };
       });
-      return await $$createArticleTags({ data: tags });
+      return await unwrap(api.api['article-tags'].create.$post({ json: tags }));
     }),
 
     onDelete: collectionErrorHandler('articleTags.onDelete', async ({ transaction }) => {
       const ids = transaction.mutations.map((mutation) => String(mutation.key));
-      return await $$deleteArticleTags({ data: ids });
+      return await unwrap(api.api['article-tags'].delete.$post({ json: ids }));
     }),
   }),
 );

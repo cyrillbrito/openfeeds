@@ -2,9 +2,9 @@ import { snakeCamelMapper } from '@electric-sql/client';
 import { TagSchema } from '@repo/domain/client';
 import { electricCollectionOptions } from '@tanstack/electric-db-collection';
 import { BasicIndex, createCollection, useLiveQuery } from '@tanstack/solid-db';
+import { api, unwrap } from '~/lib/api-client';
 import { collectionErrorHandler, shapeErrorHandler } from '~/lib/collection-errors';
 import { getShapeUrl, timestampParser } from '~/lib/electric-client';
-import { $$createTags, $$deleteTags, $$updateTags } from './tags.functions';
 
 // Tags Collection - Electric-powered real-time sync
 export const tagsCollection = createCollection(
@@ -32,7 +32,7 @@ export const tagsCollection = createCollection(
         const tag = mutation.modified;
         return { id: String(mutation.key), name: tag.name, color: tag.color, order: tag.order };
       });
-      return await $$createTags({ data: tags });
+      return await unwrap(api.api.tags.create.$post({ json: tags }));
     }),
 
     onUpdate: collectionErrorHandler('tags.onUpdate', async ({ transaction }) => {
@@ -40,12 +40,12 @@ export const tagsCollection = createCollection(
         id: mutation.key,
         ...mutation.changes,
       }));
-      return await $$updateTags({ data: updates });
+      return await unwrap(api.api.tags.update.$patch({ json: updates }));
     }),
 
     onDelete: collectionErrorHandler('tags.onDelete', async ({ transaction }) => {
       const ids = transaction.mutations.map((mutation) => String(mutation.key));
-      return await $$deleteTags({ data: ids });
+      return await unwrap(api.api.tags.delete.$post({ json: ids }));
     }),
   }),
 );

@@ -5,7 +5,7 @@ import { defineConfig, devices } from '@playwright/test';
  * Reads from BASE_URL env var so tests work against any host
  * (localhost, Tailscale, staging, etc). Defaults to localhost.
  */
-const BASE_URL = process.env.BASE_URL ?? 'http://localhost:3000';
+const BASE_URL = process.env.BASE_URL ?? 'http://localhost:3400';
 
 /**
  * See https://playwright.dev/docs/test-configuration.

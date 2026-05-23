@@ -1,19 +1,28 @@
-import { useRouteContext } from '@tanstack/solid-router';
 import { createSignal, onMount, Show } from 'solid-js';
 import { AppleIcon } from '~/components/AppleIcon';
 import { GoogleIcon } from '~/components/GoogleIcon';
 import { Loader } from '~/components/Loader';
+import { api, unwrap } from '~/lib/api-client';
 import { authClient } from '~/lib/auth-client';
+
+type SocialProviders = { google: boolean; apple: boolean };
+
+let socialProvidersCache: Promise<SocialProviders> | undefined;
+function getSocialProviders(): Promise<SocialProviders> {
+  socialProvidersCache ??= unwrap(api.api['public-config'].config.$get({})).then(
+    (cfg) => cfg.socialProviders,
+  );
+  return socialProvidersCache;
+}
 
 function LastUsedBadge() {
   return <span class="badge badge-sm badge-info absolute -top-2 -right-2">Last used</span>;
 }
 
 /**
- * Returns the last login method from the cookie-based plugin.
- * Deferred to onMount to avoid SSR hydration mismatch — the cookie is only
- * readable on the client, so the server always returns null. By starting with
- * null and updating after mount, server and client initial renders match.
+ * Returns the last login method from the cookie-based plugin. Read in
+ * `onMount` so the value is computed only after hydration / first paint;
+ * the cookie itself is always client-readable in a SPA.
  */
 export function useLastLoginMethod() {
   const [method, setMethod] = createSignal<string | null>(null);
@@ -27,11 +36,17 @@ export function SocialLoginButtons(props: {
   callbackURL: string;
   onError: (message: string) => void;
 }) {
-  const context = useRouteContext({ from: '__root__' });
-  const socialProviders = () => context()?.publicConfig?.socialProviders;
+  const [socialProviders, setSocialProviders] = createSignal<SocialProviders | undefined>(
+    undefined,
+  );
   const lastMethod = useLastLoginMethod();
-
   const [loadingProvider, setLoadingProvider] = createSignal<string | null>(null);
+
+  onMount(() => {
+    // Fire-and-forget; buttons appear once the response lands. Cached at
+    // module scope so subsequent mounts (e.g., login → signup nav) are sync.
+    void getSocialProviders().then(setSocialProviders);
+  });
 
   const hasSocialProviders = () => socialProviders()?.google || socialProviders()?.apple;
 

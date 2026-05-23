@@ -2,9 +2,9 @@ import { snakeCamelMapper } from '@electric-sql/client';
 import { FeedTagSchema } from '@repo/domain/client';
 import { electricCollectionOptions } from '@tanstack/electric-db-collection';
 import { BasicIndex, createCollection, useLiveQuery } from '@tanstack/solid-db';
+import { api, unwrap } from '~/lib/api-client';
 import { collectionErrorHandler, shapeErrorHandler } from '~/lib/collection-errors';
 import { getShapeUrl } from '~/lib/electric-client';
-import { $$createFeedTags, $$deleteFeedTags } from './feed-tags.functions';
 
 // Feed Tags Collection (junction table for local-first joins) - Electric-powered real-time sync
 export const feedTagsCollection = createCollection(
@@ -31,12 +31,12 @@ export const feedTagsCollection = createCollection(
         const tag = mutation.modified;
         return { id: String(mutation.key), feedId: tag.feedId, tagId: tag.tagId };
       });
-      return await $$createFeedTags({ data: tags });
+      return await unwrap(api.api['feed-tags'].create.$post({ json: tags }));
     }),
 
     onDelete: collectionErrorHandler('feedTags.onDelete', async ({ transaction }) => {
       const ids = transaction.mutations.map((mutation) => String(mutation.key));
-      return await $$deleteFeedTags({ data: ids });
+      return await unwrap(api.api['feed-tags'].delete.$post({ json: ids }));
     }),
   }),
 );

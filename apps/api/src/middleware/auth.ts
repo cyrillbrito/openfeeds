@@ -1,45 +1,59 @@
-import { Elysia } from 'elysia';
+import { createMiddleware } from 'hono/factory';
+import { HTTPException } from 'hono/http-exception';
 import { auth, type AuthSession } from '~/auth';
 
 /**
- * Auth plugin — exposes `user` + `session` on the request context.
+ * Variables exposed by `authMiddleware` on Hono's context. Every route gets
+ * `user` and `session`, both nullable. Use `requireUser(c.var.user)` inside
+ * handlers that require auth.
  *
- * Usage:
- *   app.use(authPlugin).get('/me', ({ user }) => user)
- *
- * Routes that require auth should call `requireUser(user)` or use a guard.
+ * Use this `Env` everywhere a Hono instance, middleware, or handler is
+ * defined (`new Hono<Env>()`, `createMiddleware<Env>(...)`) so context types
+ * line up across the app.
  */
-export const authPlugin = new Elysia({ name: 'auth' }).derive(
-  { as: 'global' },
-  async ({
-    request,
-  }): Promise<{ user: AuthSession['user'] | null; session: AuthSession['session'] | null }> => {
-    try {
-      const result = await auth.api.getSession({ headers: request.headers });
-      if (!result) return { user: null, session: null };
-      return { user: result.user, session: result.session };
-    } catch {
-      // Surfaces as 500 if the route requires the user; otherwise treated as guest.
-      return { user: null, session: null };
-    }
-  },
-);
+export type AuthVariables = {
+  user: AuthSession['user'] | null;
+  session: AuthSession['session'] | null;
+};
+
+export type Env = {
+  Variables: AuthVariables;
+};
 
 /**
- * Throws an Elysia 401 if user is missing. Use at the top of handlers that require auth.
+ * Reads the Better Auth session from the request cookie and stores user +
+ * session on the context. Always runs — routes that require auth call
+ * `requireUser` to assert non-null.
+ *
+ * Errors from the auth provider are swallowed and treated as guest — same as
+ * the previous Elysia behaviour. A failure to read the session shouldn't 500
+ * the entire request; missing user surfaces as 401 only when a handler asks
+ * for one.
+ */
+export const authMiddleware = createMiddleware<Env>(async (c, next) => {
+  try {
+    const result = await auth.api.getSession({ headers: c.req.raw.headers });
+    if (result) {
+      c.set('user', result.user);
+      c.set('session', result.session);
+    } else {
+      c.set('user', null);
+      c.set('session', null);
+    }
+  } catch {
+    c.set('user', null);
+    c.set('session', null);
+  }
+  await next();
+});
+
+/**
+ * Asserts the request is authenticated. Throws `HTTPException(401)` if not,
+ * which the central `app.onError` in `src/index.ts` maps to the standard
+ * `{ message }` error body.
  */
 export function requireUser(user: AuthSession['user'] | null): asserts user is AuthSession['user'] {
   if (!user) {
-    throw new AuthError('Unauthorized', 401);
-  }
-}
-
-export class AuthError extends Error {
-  constructor(
-    message: string,
-    public status: number,
-  ) {
-    super(message);
-    this.name = 'AuthError';
+    throw new HTTPException(401, { message: 'Unauthorized' });
   }
 }

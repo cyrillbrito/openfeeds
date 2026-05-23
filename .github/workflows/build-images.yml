@@ -54,23 +54,25 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          # Web has a build step + sourcemap upload to PostHog.
-          - name: web
-            package: '@repo/web'
+          # api: bundles the built SPA (apps/web/dist) and serves it from Hono
+          # alongside /api/*. Prune scope includes both packages so the web
+          # build output lands in the same pruned tree.
+          - name: api
+            packages: '@repo/api @repo/web'
             image: ghcr.io/cyrillbrito/openfeeds-web
-            dockerfile: apps/web/Dockerfile
+            dockerfile: apps/api/Dockerfile
             build: true
             sourcemaps: true
           # Worker has a build step but no sourcemap upload.
           - name: worker
-            package: '@repo/worker'
+            packages: '@repo/worker'
             image: ghcr.io/cyrillbrito/openfeeds-worker
             dockerfile: apps/worker/Dockerfile
             build: true
             sourcemaps: false
           # Migrator has no build step (runs TS directly).
           - name: migrator
-            package: '@repo/migrator'
+            packages: '@repo/migrator'
             image: ghcr.io/cyrillbrito/openfeeds-migrations
             dockerfile: apps/migrator/Dockerfile
             build: false
@@ -90,7 +92,7 @@ jobs:
           restore-keys: bun-${{ runner.os }}-
 
       - name: Prune monorepo
-        run: bunx turbo@^2 prune ${{ matrix.package }}
+        run: bunx turbo@^2 prune ${{ matrix.packages }}
 
       # --frozen-lockfile omitted: bun false-positive on turbo-pruned lockfiles (oven-sh/bun#26973)
       - name: Install dependencies
@@ -112,7 +114,7 @@ jobs:
         if: matrix.sourcemaps
         uses: PostHog/upload-source-maps@991172e085213c222c61d2ba6a0b9e57c81e5066 # v2.0.0
         with:
-          directory: out/apps/web/.output
+          directory: out/apps/web/dist
           project-id: ${{ secrets.POSTHOG_PROJECT_ID }}
           api-key: ${{ secrets.POSTHOG_CLI_API_KEY }}
           host: https://eu.posthog.com

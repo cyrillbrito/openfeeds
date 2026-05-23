@@ -8,6 +8,7 @@ import { Loader } from '~/components/Loader';
 import { SocialLoginButtons, useLastLoginMethod } from '~/components/SocialLoginButtons';
 import { authClient } from '~/lib/auth-client';
 import { guestGuard } from '~/lib/guards';
+import { setSession } from '~/lib/session';
 
 export const Route = createFileRoute('/login')({
   beforeLoad: guestGuard,
@@ -56,6 +57,7 @@ function LoginPage() {
 
       // Identify user for PostHog (login event tracked server-side)
       const session = await authClient.getSession();
+      setSession(session.data ?? null);
       if (session.data?.user) {
         posthog.identify(session.data.user.id, {
           email: session.data.user.email,
