@@ -31,9 +31,9 @@ async function proxyElectricRequest(opts: {
   originUrl.searchParams.set('where', 'user_id = $1');
   originUrl.searchParams.set('params[1]', userId);
 
-  if (env.ELECTRIC_SOURCE_ID) {
+  if (env.ELECTRIC_SOURCE_ID && env.ELECTRIC_SOURCE_SECRET) {
     originUrl.searchParams.set('source_id', env.ELECTRIC_SOURCE_ID);
-    originUrl.searchParams.set('source_secret', env.ELECTRIC_SOURCE_SECRET!);
+    originUrl.searchParams.set('source_secret', env.ELECTRIC_SOURCE_SECRET);
   }
 
   let response: Response;

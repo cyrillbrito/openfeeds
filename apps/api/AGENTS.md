@@ -42,12 +42,14 @@ src/
 
 ## Public-API endpoints
 
-Most routes are "internal" — same-origin only, batched + txid handshake. A few endpoints are public-shaped (single object in, row out) and meant for non-web consumers: the browser extension, curl, third-party scripts. The current example is `POST /api/feeds` in `routes/feeds.ts`.
+Most routes are "internal" — same-origin only, batched + txid handshake. A few endpoints are public-shaped (single object in, row out) and meant for non-web consumers: the browser extension, third-party scripts. The current example is `POST /api/feeds` in `routes/feeds.ts`.
+
+"Public" here means **cross-origin allowlisted, still session-authed** — not anonymous. The Better Auth session cookie is required; callers must already be logged in to openfeeds.com in the same browser profile. There is no API-key auth model.
 
 Pattern:
 
 - Live on the relevant entity router (no separate "external" sub-app — there is no such namespace).
-- Carry their own `cors()` middleware that widens the global TRUSTED_ORIGINS policy to also allow `chrome-extension://`, `moz-extension://`, and localhost in dev.
+- Carry their own `cors()` middleware that widens the global TRUSTED_ORIGINS policy to also allow the specific extension origins from `EXTENSION_ORIGINS` (env-var allowlist of fully-qualified `chrome-extension://<id>` / `moz-extension://<id>` values — wildcards are intentionally not accepted so an unrelated installed extension cannot piggyback on the user's cookie), plus localhost in dev.
 - Declared as the **root method** (`.post('/', cors, requireAuthMiddleware, validator, handler)`) so the URL is the entity's natural noun, e.g. `POST /api/feeds`.
 
 Watch out: combining a root-method (`.post('/')`) with sibling subpaths (`.post('/create')`) on the same router can collapse Hono RPC type inference for the entire router. Run `bun checks` after adding one and verify the web client's `api.api.<entity>.<...>` calls still type-check. If inference breaks, move the public route to the top-level `app` in `src/index.ts` instead.

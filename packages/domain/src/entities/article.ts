@@ -96,12 +96,18 @@ export async function extractArticleContent(
       updateData.description = extracted.excerpt;
     }
 
-    await db.update(articles).set(updateData).where(eq(articles.id, id));
+    await db
+      .update(articles)
+      .set(updateData)
+      .where(and(eq(articles.id, id), eq(articles.userId, userId)));
 
     return cleanContent;
   } catch (error) {
     // Mark as extracted even on failure to avoid retrying indefinitely
-    await db.update(articles).set({ contentExtractedAt: new Date() }).where(eq(articles.id, id));
+    await db
+      .update(articles)
+      .set({ contentExtractedAt: new Date() })
+      .where(and(eq(articles.id, id), eq(articles.userId, userId)));
     console.error(`Failed to extract content for article ${id}:`, error);
     return null;
   }

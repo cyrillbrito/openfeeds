@@ -55,7 +55,7 @@ const app = new Hono<Env>()
     cors({
       origin: env.TRUSTED_ORIGINS,
       credentials: true,
-      allowMethods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+      allowMethods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
       allowHeaders: ['Content-Type', 'Authorization'],
     }),
   )

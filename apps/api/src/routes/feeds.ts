@@ -31,16 +31,22 @@ import { requireAuthMiddleware, type AuthedEnv } from '~/middleware/auth';
  * `{ txid }` response). Errors bubble — `app.onError` in `src/index.ts`
  * maps domain errors to HTTP.
  *
- * One handler is intentionally public: `POST /` (i.e. `POST /api/feeds`).
- * It takes a single `{ url }` and returns the created feed row — the
- * standard public-API shape, usable from the browser extension, curl,
- * scripts, or any third-party client. It carries its own CORS middleware
- * that widens the global policy to also allow chrome-extension:// and
- * moz-extension:// origins (the top-level CORS in src/index.ts only
- * permits TRUSTED_ORIGINS).
+ * One handler is intentionally cross-origin-shaped: `POST /` (i.e.
+ * `POST /api/feeds`). It takes a single `{ url }` and returns the created
+ * feed row — the standard public-API shape, usable from the browser
+ * extension. It is still session-authed (Better Auth cookie required); the
+ * "public" label here means "accepts cross-origin credentialed requests
+ * from a pinned allowlist", not "anonymous".
+ *
+ * It carries its own CORS middleware that widens the global policy to
+ * also allow the specific extension origins listed in `EXTENSION_ORIGINS`
+ * (the top-level CORS in src/index.ts only permits TRUSTED_ORIGINS).
+ * `chrome-extension://*` wildcards are intentionally NOT accepted —
+ * pinning by extension id stops any other installed extension from
+ * piggybacking on the user's session cookie.
  */
 function isLocalhostOrigin(origin: string): boolean {
-  if (process.env.NODE_ENV === 'production') return false;
+  if (env.NODE_ENV === 'production') return false;
   try {
     const { hostname } = new URL(origin);
     return hostname === 'localhost' || hostname === '127.0.0.1' || hostname === '[::1]';
@@ -51,16 +57,15 @@ function isLocalhostOrigin(origin: string): boolean {
 
 const publicCors = cors({
   origin: (origin) => {
-    if (!origin) return '';
+    if (!origin) return null;
     if (
-      origin.startsWith('chrome-extension://') ||
-      origin.startsWith('moz-extension://') ||
+      env.EXTENSION_ORIGINS.includes(origin) ||
       env.TRUSTED_ORIGINS.includes(origin) ||
       isLocalhostOrigin(origin)
     ) {
       return origin;
     }
-    return '';
+    return null;
   },
   credentials: true,
   allowMethods: ['POST', 'OPTIONS'],
