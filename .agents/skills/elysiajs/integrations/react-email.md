@@ -113,7 +113,7 @@ import Resend from 'resend'
 
 const resend = new Resend('re_123456789')
 
-.get('/otp', ({ body }) => {
+.get('/otp', async ({ body }) => {
   const otp = ~~(Math.random() * 900_000) + 100_000
   
   await resend.emails.send({

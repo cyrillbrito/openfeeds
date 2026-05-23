@@ -417,6 +417,7 @@ Detailed documentation split by topic:
 - `deployment.md` - Production deployment guide / Docker
 - `eden.md` - e2e type safe RPC client for share type from backend to frontend
 - `guard.md` - Setting validation/lifecycle all at once
+- `lifecycle.md` - Lifecycle hooks (onRequest, onTransform, onBeforeHandle, onAfterHandle, onError, etc.)
 - `macro.md` - Compose multiple schema/lifecycle as a reusable Elysia via key-value (recommended for complex setup, eg. authentication, authorization, Role-based Access Check)
 - `plugin.md` - Decouple part of Elysia into a standalone component
 - `route.md` - Elysia foundation building block: Routing, Handler and Context
@@ -451,7 +452,7 @@ Guide to integrate Elysia with external library/runtime:
 - `nodejs.md` - Run Elysia on Node.js
 - `nuxt.md` - Elysia on API route
 - `prisma.md` - Integrate Elysia with Prisma
-- `react-email.d` - Create and Send Email with React and Elysia
+- `react-email.md` - Create and Send Email with React and Elysia
 - `sveltekit.md` - Run Elysia on Svelte Kit API route
 - `tanstack-start.md` - Run Elysia on Tanstack Start / React Query
 - `vercel.md` - Deploy Elysia to Vercel
