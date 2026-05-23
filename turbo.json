@@ -8,6 +8,10 @@
       "outputs": ["dist/**", ".output/**"],
       "env": [
         "VITE_*",
+        "AI_MODEL",
+        "ANTHROPIC_API_KEY",
+        "API_PORT",
+        "AUTH_JWKS_URL",
         "BASE_URL",
         "BETTER_AUTH_SECRET",
         "DATABASE_URL",
@@ -21,6 +25,7 @@
         "REDIS_PORT",
         "RESEND_API_KEY",
         "RESEND_AUDIENCE_ID",
+        "SERVE_SPA",
         "SIMPLE_AUTH",
         "TRUSTED_ORIGINS",
         "GOOGLE_CLIENT_ID",
