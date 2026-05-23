@@ -2,6 +2,18 @@
 
 Local-first SolidJS app. Data in client-side TanStack Solid DB, synced via Electric SQL, mutations via server functions.
 
+## 🚧 Migrating to a pure Vite SPA
+
+**This app is being stripped down to a client-only SPA.** All server-side concerns (auth, server functions, Electric proxies, API routes, OAuth, MCP, well-known) are moving to `apps/api/` (Bun + Elysia). TanStack Start, Nitro, and every `*.server.ts` / `createServerFn` pattern here is **legacy and on the way out**.
+
+Read `docs/records/011-migrate-server-to-elysia.md` before touching anything cross-cutting. Key rules during the migration:
+
+- **Don't add new server code to `apps/web/`.** New backend logic goes into `apps/api/` (load the `elysiajs` skill).
+- **Don't add new `createServerFn` / `*.server.ts` files.** If you must touch existing ones, prefer porting them to Elysia instead of extending them.
+- Existing patterns documented below still apply to legacy code you must edit — they will all be deleted at the final step of the migration.
+
+End state: this folder contains only SolidJS components, TanStack Router routes, TanStack DB collections, and Vite config. No Nitro, no Start, no server bundling.
+
 ## Commands
 
 ```bash
