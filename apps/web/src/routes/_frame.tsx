@@ -37,6 +37,7 @@ function FrameLayout() {
           posthog.identify(user.id, {
             email: user.email,
             name: user.name,
+            created_at: user.createdAt,
           });
         }
       },
