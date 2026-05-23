@@ -107,7 +107,7 @@ Each transport wires the boundary at its own level:
 | API routes        | Global `requestMiddleware` via `createStart()`  | `apps/web/src/start.ts`                   |
 | API routes (Hono) | `app.onError()` global handler                  | `packages/api/` (future)                  |
 | Workers           | `worker.on('failed')` handler                   | `apps/worker/src/workers.ts`              |
-| Auth layer        | `onAPIError.onError` in Better Auth config      | `apps/web/src/server/auth.server.ts`      |
+| Auth layer        | `onAPIError.onError` in Better Auth config      | `packages/auth/src/index.ts`              |
 | Auth middleware   | `captureException` in each middleware/guard     | `apps/web/src/server/middleware/auth.ts`, `apps/web/src/lib/guards.ts` |
 
 **Note on double-reporting:** Auth middleware and guards call `captureException` then re-throw `UnexpectedError` (a domain error) — not the raw infra error. This prevents the global boundaries in `start.ts` from reporting the same error a second time, since domain errors pass through unchanged.

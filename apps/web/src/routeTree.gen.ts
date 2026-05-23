@@ -16,8 +16,8 @@ import { Route as ForgotPasswordRouteImport } from './routes/forgot-password'
 import { Route as FrameRouteImport } from './routes/_frame'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as OauthConsentRouteImport } from './routes/oauth/consent'
+import { Route as Api2SplatRouteImport } from './routes/api2/$'
 import { Route as ApiFeedsRouteImport } from './routes/api/feeds'
-import { Route as ApiChatRouteImport } from './routes/api/chat'
 import { Route as FrameSettingsRouteImport } from './routes/_frame.settings'
 import { Route as FrameDiscoverRouteImport } from './routes/_frame.discover'
 import { Route as FrameChatRouteImport } from './routes/_frame.chat'
@@ -83,14 +83,14 @@ const OauthConsentRoute = OauthConsentRouteImport.update({
   path: '/oauth/consent',
   getParentRoute: () => rootRouteImport,
 } as any)
+const Api2SplatRoute = Api2SplatRouteImport.update({
+  id: '/api2/$',
+  path: '/api2/$',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiFeedsRoute = ApiFeedsRouteImport.update({
   id: '/api/feeds',
   path: '/api/feeds',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ApiChatRoute = ApiChatRouteImport.update({
-  id: '/api/chat',
-  path: '/api/chat',
   getParentRoute: () => rootRouteImport,
 } as any)
 const FrameSettingsRoute = FrameSettingsRouteImport.update({
@@ -258,8 +258,8 @@ export interface FileRoutesByFullPath {
   '/chat': typeof FrameChatRoute
   '/discover': typeof FrameDiscoverRoute
   '/settings': typeof FrameSettingsRouteWithChildren
-  '/api/chat': typeof ApiChatRoute
   '/api/feeds': typeof ApiFeedsRoute
+  '/api2/$': typeof Api2SplatRoute
   '/oauth/consent': typeof OauthConsentRoute
   '/ai/$sessionId': typeof FrameAiSessionIdRoute
   '/articles/$articleId': typeof FrameArticlesArticleIdRoute
@@ -298,8 +298,8 @@ export interface FileRoutesByTo {
   '/chat': typeof FrameChatRoute
   '/discover': typeof FrameDiscoverRoute
   '/settings': typeof FrameSettingsRouteWithChildren
-  '/api/chat': typeof ApiChatRoute
   '/api/feeds': typeof ApiFeedsRoute
+  '/api2/$': typeof Api2SplatRoute
   '/oauth/consent': typeof OauthConsentRoute
   '/ai/$sessionId': typeof FrameAiSessionIdRoute
   '/articles/$articleId': typeof FrameArticlesArticleIdRoute
@@ -340,8 +340,8 @@ export interface FileRoutesById {
   '/_frame/chat': typeof FrameChatRoute
   '/_frame/discover': typeof FrameDiscoverRoute
   '/_frame/settings': typeof FrameSettingsRouteWithChildren
-  '/api/chat': typeof ApiChatRoute
   '/api/feeds': typeof ApiFeedsRoute
+  '/api2/$': typeof Api2SplatRoute
   '/oauth/consent': typeof OauthConsentRoute
   '/_frame/ai_/$sessionId': typeof FrameAiSessionIdRoute
   '/_frame/articles/$articleId': typeof FrameArticlesArticleIdRoute
@@ -382,8 +382,8 @@ export interface FileRouteTypes {
     | '/chat'
     | '/discover'
     | '/settings'
-    | '/api/chat'
     | '/api/feeds'
+    | '/api2/$'
     | '/oauth/consent'
     | '/ai/$sessionId'
     | '/articles/$articleId'
@@ -422,8 +422,8 @@ export interface FileRouteTypes {
     | '/chat'
     | '/discover'
     | '/settings'
-    | '/api/chat'
     | '/api/feeds'
+    | '/api2/$'
     | '/oauth/consent'
     | '/ai/$sessionId'
     | '/articles/$articleId'
@@ -463,8 +463,8 @@ export interface FileRouteTypes {
     | '/_frame/chat'
     | '/_frame/discover'
     | '/_frame/settings'
-    | '/api/chat'
     | '/api/feeds'
+    | '/api2/$'
     | '/oauth/consent'
     | '/_frame/ai_/$sessionId'
     | '/_frame/articles/$articleId'
@@ -501,8 +501,8 @@ export interface RootRouteChildren {
   LoginRoute: typeof LoginRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
   SignupRoute: typeof SignupRoute
-  ApiChatRoute: typeof ApiChatRoute
   ApiFeedsRoute: typeof ApiFeedsRoute
+  Api2SplatRoute: typeof Api2SplatRoute
   OauthConsentRoute: typeof OauthConsentRoute
   ApiAuthSplatRoute: typeof ApiAuthSplatRoute
   ApiMcpSplatRoute: typeof ApiMcpSplatRoute
@@ -568,18 +568,18 @@ declare module '@tanstack/solid-router' {
       preLoaderRoute: typeof OauthConsentRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api2/$': {
+      id: '/api2/$'
+      path: '/api2/$'
+      fullPath: '/api2/$'
+      preLoaderRoute: typeof Api2SplatRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/feeds': {
       id: '/api/feeds'
       path: '/api/feeds'
       fullPath: '/api/feeds'
       preLoaderRoute: typeof ApiFeedsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/chat': {
-      id: '/api/chat'
-      path: '/api/chat'
-      fullPath: '/api/chat'
-      preLoaderRoute: typeof ApiChatRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_frame/settings': {
@@ -868,8 +868,8 @@ const rootRouteChildren: RootRouteChildren = {
   LoginRoute: LoginRoute,
   ResetPasswordRoute: ResetPasswordRoute,
   SignupRoute: SignupRoute,
-  ApiChatRoute: ApiChatRoute,
   ApiFeedsRoute: ApiFeedsRoute,
+  Api2SplatRoute: Api2SplatRoute,
   OauthConsentRoute: OauthConsentRoute,
   ApiAuthSplatRoute: ApiAuthSplatRoute,
   ApiMcpSplatRoute: ApiMcpSplatRoute,

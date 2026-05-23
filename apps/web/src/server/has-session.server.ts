@@ -1,6 +1,6 @@
 import { captureException, UnexpectedError } from '@repo/domain';
 import { getRequestHeaders } from '@tanstack/solid-start/server';
-import { auth } from '~/server/auth.server';
+import { auth } from '~/server/auth';
 
 export async function hasSession(): Promise<boolean> {
   const headers = getRequestHeaders();
