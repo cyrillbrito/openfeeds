@@ -18,8 +18,8 @@ export default defineConfig({
   forbidOnly: !!process.env.CI,
   /* Retry on CI only */
   retries: process.env.CI ? 2 : 0,
-  /* Opt out of parallel tests on CI. */
-  workers: process.env.CI ? 1 : undefined,
+  /* Workers: let Playwright pick locally; cap at 3 on CI (ubuntu-latest has 4 vCPUs). */
+  workers: process.env.CI ? 3 : undefined,
 
   /* Reporter config: HTML report for interactive browsing, JSON for CI summary comment */
   reporter: process.env.CI

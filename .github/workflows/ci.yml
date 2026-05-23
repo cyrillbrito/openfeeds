@@ -73,9 +73,13 @@ jobs:
         working-directory: apps/web
 
   e2e:
-    name: E2E Tests
+    name: E2E Tests (shard ${{ matrix.shard }}/${{ strategy.job-total }})
     if: github.event.action != 'closed'
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [1, 2]
     permissions:
       contents: write # for gh-pages report push
       pull-requests: write # for the report comment
@@ -152,7 +156,9 @@ jobs:
         run: bun install --frozen-lockfile
 
       - name: Install Playwright browsers
-        run: bunx playwright install chromium --with-deps
+        # ubuntu-latest already has the system libs Chromium needs, so we skip
+        # --with-deps to save ~30-60s of apt-get on every run.
+        run: bunx playwright install chromium
         working-directory: apps/e2e
 
       - name: Run migrations
@@ -209,7 +215,7 @@ jobs:
         # No --update-snapshots: CI must fail on visual regressions, not
         # silently regenerate. Use the 'Update E2E snapshots' workflow
         # (workflow_dispatch) to refresh snapshots from a PR branch.
-        run: bunx playwright test
+        run: bunx playwright test --shard=${{ matrix.shard }}/${{ strategy.job-total }}
         working-directory: apps/e2e
 
       - name: Dump server logs on failure
@@ -228,10 +234,11 @@ jobs:
         if: ${{ !cancelled() }}
         env:
           PR_NUMBER: ${{ github.event.pull_request.number }}
+          SHARD: ${{ matrix.shard }}
           GH_TOKEN: ${{ github.token }}
           REPO: ${{ github.repository }}
         run: |
-          PR_DIR="playwright-report/pr-${PR_NUMBER}"
+          PR_DIR="playwright-report/pr-${PR_NUMBER}/shard-${SHARD}"
           # Clone gh-pages into a separate directory to avoid conflicts with working tree
           git clone --single-branch --branch gh-pages "https://x-access-token:${GH_TOKEN}@github.com/${REPO}.git" gh-pages-deploy
           cd gh-pages-deploy
@@ -240,7 +247,7 @@ jobs:
           cp -r "$GITHUB_WORKSPACE/apps/e2e/playwright-report/"* "$PR_DIR/"
           git add "$PR_DIR"
           git -c user.name="github-actions" -c user.email="github-actions@github.com" \
-            commit -m "chore: update playwright report for PR #${PR_NUMBER}" --allow-empty
+            commit -m "chore: update playwright report for PR #${PR_NUMBER} shard ${SHARD}" --allow-empty
           # Retry on push race with concurrent E2E runs writing to gh-pages.
           for attempt in 1 2 3 4 5; do
             if git push; then
@@ -260,8 +267,8 @@ jobs:
         uses: daun/playwright-report-summary@1229105480a2a4bdd91598d8a146fbab41343fce # v3.11.0
         with:
           report-file: apps/e2e/results.json
-          comment-title: 'Playwright E2E Report'
-          report-url: 'https://cyrillbrito.github.io/openfeeds/playwright-report/pr-${{ github.event.pull_request.number }}/'
+          comment-title: 'Playwright E2E Report (shard ${{ matrix.shard }}/${{ strategy.job-total }})'
+          report-url: 'https://cyrillbrito.github.io/openfeeds/playwright-report/pr-${{ github.event.pull_request.number }}/shard-${{ matrix.shard }}/'
 
   # Clean up GitHub Pages report when PR is closed/merged
   cleanup-report:
