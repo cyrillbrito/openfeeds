@@ -1,5 +1,4 @@
 import {
-  ClientOnly,
   createFileRoute,
   Link,
   Outlet,
@@ -50,15 +49,13 @@ function FrameLayout() {
     ),
   );
 
-  // Close sidebar drawer on navigation (mobile only) - runs only on client
-  onMount(() => {
-    createEffect(() => {
-      void location().pathname;
-      const drawerCheckbox = document.getElementById('my-drawer') as HTMLInputElement;
-      if (drawerCheckbox) {
-        drawerCheckbox.checked = false;
-      }
-    });
+  // Close sidebar drawer on navigation (mobile only)
+  createEffect(() => {
+    void location().pathname;
+    const drawerCheckbox = document.getElementById('my-drawer') as HTMLInputElement | null;
+    if (drawerCheckbox) {
+      drawerCheckbox.checked = false;
+    }
   });
 
   // Cmd+J / Ctrl+J to toggle popover
@@ -81,7 +78,7 @@ function FrameLayout() {
   const showFab = () => !popoverOpen() && !location().pathname.startsWith('/ai');
 
   const handleFabClick = () => {
-    if (typeof window !== 'undefined' && window.innerWidth < 1024) {
+    if (window.innerWidth < 1024) {
       void navigate({ to: '/ai' });
       return;
     }
@@ -89,104 +86,102 @@ function FrameLayout() {
   };
 
   return (
-    <ClientOnly fallback={<CenterLoader />}>
-      <ChatProvider>
-        <div class="drawer lg:drawer-open">
-          <input id="my-drawer" type="checkbox" class="drawer-toggle" />
-          <div class="drawer-content flex min-h-dvh">
-            {/* Main content */}
-            <div class="flex min-w-0 flex-1 flex-col">
-              <Suspense fallback={<CenterLoader />}>
-                <Outlet />
-              </Suspense>
-            </div>
-          </div>
-
-          <div class="drawer-side z-10 shadow-sm">
-            <label for="my-drawer" aria-label="close sidebar" class="drawer-overlay"></label>
-            <aside class="menu bg-base-100 border-base-300 flex h-dvh w-80 flex-col flex-nowrap border-r !px-0 !pt-4 !pb-2">
-              {/* Menu Header */}
-              <Link to="/inbox" class="mt-2 flex items-center justify-center gap-2 px-4">
-                <img src="/logo.svg" class="h-10 w-10" alt="OpenFeeds logo" />
-                <h2 class="text-lg font-bold">OpenFeeds</h2>
-              </Link>
-              <div class="divider mx-4"></div>
-
-              <div class="flex-1 overflow-y-auto pr-2 pl-4">
-                {/* Navigation */}
-                <ul class="mb-6 space-y-1">
-                  <li>
-                    <Link
-                      to="/discover"
-                      class="flex items-center gap-3"
-                      activeProps={{ class: 'menu-active' }}
-                    >
-                      <Compass size={20} />
-                      Discover
-                    </Link>
-                  </li>
-                  <li>
-                    <Link
-                      to="/inbox"
-                      class="flex items-center gap-3"
-                      activeProps={{ class: 'menu-active' }}
-                    >
-                      <Inbox size={20} />
-                      Inbox
-                    </Link>
-                  </li>
-                  <li>
-                    <Link
-                      to="/feeds"
-                      class="flex items-center gap-3"
-                      activeProps={{ class: 'menu-active' }}
-                    >
-                      <Rss size={20} />
-                      Feeds
-                    </Link>
-                  </li>
-                  <li>
-                    <Link
-                      to="/ai"
-                      class="flex items-center gap-3"
-                      activeProps={{ class: 'menu-active' }}
-                    >
-                      <Sparkles size={20} />
-                      AI Chat
-                    </Link>
-                  </li>
-                </ul>
-
-                <div class="divider"></div>
-
-                <DrawerTags />
-              </div>
-
-              <div class="divider mx-4"></div>
-              <div class="px-4">
-                <UserMenu />
-              </div>
-            </aside>
+    <ChatProvider>
+      <div class="drawer lg:drawer-open">
+        <input id="my-drawer" type="checkbox" class="drawer-toggle" />
+        <div class="drawer-content flex min-h-dvh">
+          {/* Main content */}
+          <div class="flex min-w-0 flex-1 flex-col">
+            <Suspense fallback={<CenterLoader />}>
+              <Outlet />
+            </Suspense>
           </div>
         </div>
 
-        {/* AI surfaces */}
-        <Show when={showFab()}>
-          <AiFab onClick={handleFabClick} />
-        </Show>
-        <AiPopover
-          open={popoverOpen()}
-          onClose={() => setPopoverOpen(false)}
-          onExpand={(sessionId, hasMessages) => {
-            if (hasMessages) {
-              void navigate({ to: '/ai/$sessionId', params: { sessionId } });
-            } else {
-              void navigate({ to: '/ai' });
-            }
-          }}
-        />
-      </ChatProvider>
-    </ClientOnly>
+        <div class="drawer-side z-10 shadow-sm">
+          <label for="my-drawer" aria-label="close sidebar" class="drawer-overlay"></label>
+          <aside class="menu bg-base-100 border-base-300 flex h-dvh w-80 flex-col flex-nowrap border-r !px-0 !pt-4 !pb-2">
+            {/* Menu Header */}
+            <Link to="/inbox" class="mt-2 flex items-center justify-center gap-2 px-4">
+              <img src="/logo.svg" class="h-10 w-10" alt="OpenFeeds logo" />
+              <h2 class="text-lg font-bold">OpenFeeds</h2>
+            </Link>
+            <div class="divider mx-4"></div>
+
+            <div class="flex-1 overflow-y-auto pr-2 pl-4">
+              {/* Navigation */}
+              <ul class="mb-6 space-y-1">
+                <li>
+                  <Link
+                    to="/discover"
+                    class="flex items-center gap-3"
+                    activeProps={{ class: 'menu-active' }}
+                  >
+                    <Compass size={20} />
+                    Discover
+                  </Link>
+                </li>
+                <li>
+                  <Link
+                    to="/inbox"
+                    class="flex items-center gap-3"
+                    activeProps={{ class: 'menu-active' }}
+                  >
+                    <Inbox size={20} />
+                    Inbox
+                  </Link>
+                </li>
+                <li>
+                  <Link
+                    to="/feeds"
+                    class="flex items-center gap-3"
+                    activeProps={{ class: 'menu-active' }}
+                  >
+                    <Rss size={20} />
+                    Feeds
+                  </Link>
+                </li>
+                <li>
+                  <Link
+                    to="/ai"
+                    class="flex items-center gap-3"
+                    activeProps={{ class: 'menu-active' }}
+                  >
+                    <Sparkles size={20} />
+                    AI Chat
+                  </Link>
+                </li>
+              </ul>
+
+              <div class="divider"></div>
+
+              <DrawerTags />
+            </div>
+
+            <div class="divider mx-4"></div>
+            <div class="px-4">
+              <UserMenu />
+            </div>
+          </aside>
+        </div>
+      </div>
+
+      {/* AI surfaces */}
+      <Show when={showFab()}>
+        <AiFab onClick={handleFabClick} />
+      </Show>
+      <AiPopover
+        open={popoverOpen()}
+        onClose={() => setPopoverOpen(false)}
+        onExpand={(sessionId, hasMessages) => {
+          if (hasMessages) {
+            void navigate({ to: '/ai/$sessionId', params: { sessionId } });
+          } else {
+            void navigate({ to: '/ai' });
+          }
+        }}
+      />
+    </ChatProvider>
   );
 }
 

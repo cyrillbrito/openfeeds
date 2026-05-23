@@ -1,8 +1,8 @@
-import { ClientOnly, createFileRoute } from '@tanstack/solid-router';
+import { createFileRoute } from '@tanstack/solid-router';
 import { CircleCheck, CircleX } from 'lucide-solid';
 import { createResource, createSignal, For, Show } from 'solid-js';
 import { Card } from '~/components/Card';
-import { CenterLoader, Loader } from '~/components/Loader';
+import { Loader } from '~/components/Loader';
 import { authClient } from '~/lib/auth-client';
 import { SCOPE_DESCRIPTIONS } from '~/utils/oauth';
 
@@ -17,9 +17,7 @@ export const Route = createFileRoute('/oauth/consent')({
 function ConsentPage() {
   return (
     <div class="bg-base-200 flex min-h-screen items-center justify-center px-4">
-      <ClientOnly fallback={<CenterLoader />}>
-        <ConsentContent />
-      </ClientOnly>
+      <ConsentContent />
     </div>
   );
 }

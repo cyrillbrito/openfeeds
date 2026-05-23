@@ -1,5 +1,5 @@
 import { Maximize2, Plus, X } from 'lucide-solid';
-import { onCleanup, Show } from 'solid-js';
+import { onCleanup, onMount, Show } from 'solid-js';
 import { useChatContext } from './chat-context.shared';
 import { ChatInput } from './ChatInput';
 import { ChatMessages } from './ChatMessages';
@@ -22,10 +22,10 @@ export function AiPopover(props: AiPopoverProps) {
     }
   };
 
-  if (typeof document !== 'undefined') {
+  onMount(() => {
     document.addEventListener('keydown', handleEscape);
     onCleanup(() => document.removeEventListener('keydown', handleEscape));
-  }
+  });
 
   const handleExpand = () => {
     props.onClose();

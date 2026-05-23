@@ -1,12 +1,10 @@
 /**
  * Blocking inline script that prevents theme flash on page load.
  *
- * Runs synchronously before first paint to set the correct DaisyUI
- * data-theme attribute on <html>. Reads the user's theme preference
- * from localStorage and resolves "system" via matchMedia.
- *
- * Based on the pattern used by next-themes (https://github.com/pacocoursey/next-themes).
- * Uses a raw <script> tag because it renders in shellComponent (before router context).
+ * The real app uses the equivalent inline `<script>` in `apps/web/index.html`
+ * (which is the only way to run code before first paint in a pure SPA). This
+ * component exists solely for Storybook, which renders its own document shell
+ * and needs the same flash-prevention logic. Keep the two in sync.
  */
 export function ThemeScript() {
   return (

@@ -7,11 +7,13 @@ import { requireAuthMiddleware, type AuthedEnv } from '~/middleware/auth';
 
 export const chatSessionsRoutes = new Hono<AuthedEnv>()
   .use('*', requireAuthMiddleware)
-  .post('/delete', zValidator('json', z.uuidv7()), async (c) => {
+  .post('/delete', zValidator('json', z.array(z.uuidv7())), async (c) => {
     const user = c.var.user;
-    const id = c.req.valid('json');
+    const ids = c.req.valid('json');
     const result = await withTransaction(db, user.id, user.plan, async (ctx) => {
-      await deleteChatSession(ctx, id);
+      for (const id of ids) {
+        await deleteChatSession(ctx, id);
+      }
       return { txid: await getTxId(ctx.conn) };
     });
     return c.json(result);

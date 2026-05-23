@@ -30,12 +30,8 @@ export const chatSessionsCollection = createCollection(
     // back to the client automatically. Only deletes are client-initiated and
     // need an api call.
     onDelete: collectionErrorHandler('chat-sessions.onDelete', async ({ transaction }) => {
-      const results = await Promise.all(
-        transaction.mutations.map((mutation) =>
-          unwrap(api.api['chat-sessions'].delete.$post({ json: mutation.key as string })),
-        ),
-      );
-      return results[results.length - 1];
+      const ids = transaction.mutations.map((mutation) => String(mutation.key));
+      return await unwrap(api.api['chat-sessions'].delete.$post({ json: ids }));
     }),
   }),
 );

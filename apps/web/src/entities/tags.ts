@@ -37,7 +37,7 @@ export const tagsCollection = createCollection(
 
     onUpdate: collectionErrorHandler('tags.onUpdate', async ({ transaction }) => {
       const updates = transaction.mutations.map((mutation) => ({
-        id: mutation.key,
+        id: String(mutation.key),
         ...mutation.changes,
       }));
       return await unwrap(api.api.tags.update.$patch({ json: updates }));
