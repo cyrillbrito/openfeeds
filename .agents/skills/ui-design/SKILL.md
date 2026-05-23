@@ -1,3 +1,9 @@
+---
+name: ui-design
+description: "UI design language and conventions for OpenFeeds: background colors, content layout (content-container, PageLayout), spacing, responsive breakpoints, and overlay/layering rules (modals, dropdowns, popovers). Use when writing or styling UI components, adding pages, building modals/dropdowns/popovers, or making layout/spacing decisions. Do not use for SolidJS reactivity patterns (load the solidjs skill instead)."
+user-invocable: false
+---
+
 # UI Design Language
 
 Design decisions and conventions for OpenFeeds UI.
