@@ -75,7 +75,7 @@ export function ChatProvider(props: { children: JSX.Element }) {
   // Create ChatClient directly so we can call sendMessage(text, { sessionId })
   // with a per-message body override — useChat doesn't expose this parameter.
   const client = new ChatClient({
-    connection: fetchServerSentEvents('/api2/chat'),
+    connection: fetchServerSentEvents('/api/chat'),
     onMessagesChange: (msgs) => {
       setStreamMessages(msgs);
     },

@@ -29,8 +29,8 @@ import { PageLayout } from '~/components/PageLayout';
 import { SyncLogsModal } from '~/components/SyncLogsModal';
 import { feedTagsCollection, useFeedTags } from '~/entities/feed-tags';
 import { feedsCollection } from '~/entities/feeds';
-import { $$retryFeed } from '~/entities/feeds.functions';
 import { tagsCollection, useTags } from '~/entities/tags';
+import { api, unwrap } from '~/lib/api-client';
 import { getTagDotColor } from '~/utils/tagColors';
 
 const SEARCH_DEBOUNCE_MS = 200;
@@ -175,7 +175,7 @@ function FeedsComponent() {
           draft.syncStatus = 'ok';
           draft.syncError = null;
         });
-        void $$retryFeed({ data: { id: feed.id } });
+        void unwrap(api.api.feeds.retry.$post({ json: { id: feed.id } }));
       }
     }
     clearSelection();
@@ -354,7 +354,7 @@ function FeedsComponent() {
                           draft.syncStatus = 'ok';
                           draft.syncError = null;
                         });
-                        void $$retryFeed({ data: { id: feed.id } });
+                        void unwrap(api.api.feeds.retry.$post({ json: { id: feed.id } }));
                       }}
                       onViewLogs={() => {
                         setSyncLogsFeed(feed);

@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
+    />
+    <meta name="theme-color" content="#000000" />
+    <meta
+      name="description"
+      content="A centralized feed reader where you control what you see. No algorithms, no distractions."
+    />
+    <title>OpenFeeds</title>
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <!--
+      Blocking inline script that prevents theme flash on page load. Mirrors
+      the previous ThemeScript component but runs synchronously before the
+      JS bundle, which is the only way to apply data-theme before first paint
+      in a SPA. Keep in sync with `src/components/ThemeScript.tsx` (kept for
+      Storybook) and `src/providers/theme.tsx`.
+    -->
+    <script>
+      (function () {
+        try {
+          var theme = localStorage.getItem('theme') || 'system';
+          var resolved = theme;
+          if (theme === 'system') {
+            resolved = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+          }
+          var daisyTheme = resolved === 'dark' ? 'dracula' : 'garden';
+          document.documentElement.setAttribute('data-theme', daisyTheme);
+        } catch (e) {
+          document.documentElement.setAttribute('data-theme', 'garden');
+        }
+      })();
+    </script>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>

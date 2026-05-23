@@ -2,9 +2,9 @@ import { snakeCamelMapper } from '@electric-sql/client';
 import { ChatSessionSchema } from '@repo/domain/client';
 import { electricCollectionOptions } from '@tanstack/electric-db-collection';
 import { BasicIndex, createCollection } from '@tanstack/solid-db';
+import { api, unwrap } from '~/lib/api-client';
 import { collectionErrorHandler, shapeErrorHandler } from '~/lib/collection-errors';
 import { getShapeUrl, timestampParser } from '~/lib/electric-client';
-import { $$deleteChatSession } from './chat-sessions.functions';
 
 export const chatSessionsCollection = createCollection(
   electricCollectionOptions({
@@ -25,16 +25,13 @@ export const chatSessionsCollection = createCollection(
       columnMapper: snakeCamelMapper(),
       onError: shapeErrorHandler('chat-sessions.shape'),
     },
-    // Persistence is handled server-side by the AI middleware (ai-persistence.server.ts).
-    // Electric syncs the saved session back to the client automatically.
-    // Only deletes are client-initiated and need a server function.
+    // Persistence is handled server-side by the AI middleware (`@repo/domain/ai`,
+    // wired into `apps/api/src/routes/chat.ts`). Electric syncs the saved session
+    // back to the client automatically. Only deletes are client-initiated and
+    // need an api call.
     onDelete: collectionErrorHandler('chat-sessions.onDelete', async ({ transaction }) => {
-      const results = await Promise.all(
-        transaction.mutations.map((mutation) =>
-          $$deleteChatSession({ data: mutation.key as string }),
-        ),
-      );
-      return results[results.length - 1];
+      const ids = transaction.mutations.map((mutation) => String(mutation.key));
+      return await unwrap(api.api['chat-sessions'].delete.$post({ json: ids }));
     }),
   }),
 );

@@ -2,9 +2,9 @@ import { snakeCamelMapper } from '@electric-sql/client';
 import { SettingsSchema, type ArchiveResult } from '@repo/domain/client';
 import { electricCollectionOptions } from '@tanstack/electric-db-collection';
 import { createCollection, useLiveQuery } from '@tanstack/solid-db';
+import { api, unwrap } from '~/lib/api-client';
 import { collectionErrorHandler, shapeErrorHandler } from '~/lib/collection-errors';
 import { getShapeUrl, timestampParser } from '~/lib/electric-client';
-import { $$triggerAutoArchive, $$updateSettings } from './settings.functions';
 
 // Settings Collection - Electric-powered real-time sync
 // One row per user, userId is the primary key
@@ -23,7 +23,7 @@ export const settingsCollection = createCollection(
 
     onUpdate: collectionErrorHandler('settings.onUpdate', async ({ transaction }) => {
       const updates = transaction.mutations.map((mutation) => mutation.changes);
-      return await $$updateSettings({ data: updates });
+      return await unwrap(api.api.settings.update.$patch({ json: updates }));
     }),
 
     // Settings cannot be inserted or deleted by clients
@@ -61,5 +61,5 @@ export function useSettings() {
  */
 export async function triggerAutoArchive(): Promise<ArchiveResult> {
   // Electric SQL automatically syncs archived articles
-  return await $$triggerAutoArchive();
+  return await unwrap(api.api.settings['trigger-auto-archive'].$post({}));
 }

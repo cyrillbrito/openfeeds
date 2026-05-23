@@ -2,6 +2,9 @@ import { expect, test } from '../../fixtures/auth-fixture';
 import { AiChat } from '../../lib/AiChat';
 
 test.describe('AI Chat Messaging', () => {
+  // Anthropic key is unavailable on forked PRs (secrets aren't passed through).
+  // The `/api/chat` route returns 503 without it, so every assertion would fail.
+  test.skip(!process.env.ANTHROPIC_API_KEY, 'ANTHROPIC_API_KEY not configured');
   test.setTimeout(90_000);
 
   let chat: AiChat;

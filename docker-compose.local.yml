@@ -37,7 +37,7 @@ services:
   electric:
     image: electricsql/electric:latest
     ports:
-      - '3060:3000'
+      - '3406:3000'
     environment:
       DATABASE_URL: postgresql://postgres:postgres@postgres:5432/openfeeds?sslmode=disable
       ELECTRIC_INSECURE: true
@@ -50,7 +50,7 @@ services:
   queuedash:
     image: ghcr.io/alexbudure/queuedash:3.14.0
     ports:
-      - '3009:3000'
+      - '3409:3000'
     environment:
       - QUEUES_CONFIG_JSON={"queues":[{"name":"feed-sync-orchestrator","displayName":"Feed Sync Orchestrator","type":"bullmq","connectionUrl":"redis://redis:6379"},{"name":"single-feed-sync","displayName":"Single Feed Sync","type":"bullmq","connectionUrl":"redis://redis:6379"},{"name":"feed-detail","displayName":"Feed Details","type":"bullmq","connectionUrl":"redis://redis:6379"},{"name":"auto-archive","displayName":"Auto Archive","type":"bullmq","connectionUrl":"redis://redis:6379"}]}
     depends_on:

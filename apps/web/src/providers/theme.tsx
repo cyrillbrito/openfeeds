@@ -7,7 +7,6 @@ import {
   useContext,
   type ParentComponent,
 } from 'solid-js';
-import { isServer } from 'solid-js/web';
 
 type ThemeMode = 'light' | 'dark' | 'system';
 
@@ -29,7 +28,6 @@ export const ThemeProvider: ParentComponent = (props) => {
   const actualTheme = () => {
     const currentTheme = theme();
     if (currentTheme === 'system') {
-      if (isServer) return 'garden' as const; // Default for SSR
       return systemPrefersDark() ? ('dracula' as const) : ('garden' as const);
     } else if (currentTheme === 'dark') {
       return 'dracula' as const;
@@ -38,7 +36,7 @@ export const ThemeProvider: ParentComponent = (props) => {
     }
   };
 
-  // Load saved theme from localStorage (client-only)
+  // Load saved theme from localStorage
   onMount(() => {
     const saved = localStorage.getItem('theme') as ThemeMode;
     if (saved && ['light', 'dark', 'system'].includes(saved)) {
@@ -58,7 +56,6 @@ export const ThemeProvider: ParentComponent = (props) => {
 
   // Apply theme to document
   createEffect(() => {
-    if (isServer) return;
     const themeToApply = actualTheme();
     document.documentElement.setAttribute('data-theme', themeToApply);
     localStorage.setItem('theme', theme());

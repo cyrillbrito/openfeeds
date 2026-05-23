@@ -20,7 +20,7 @@ const chromaticColors = [
   'rose',
 ] as const;
 
-const TagColorSchema = z.enum(chromaticColors).nullable();
+export const TagColorSchema = z.enum(chromaticColors).nullable();
 export type TagColor = z.infer<typeof TagColorSchema>;
 
 export const TagSchema = z.object({

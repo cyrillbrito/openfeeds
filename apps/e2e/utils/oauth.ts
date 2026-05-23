@@ -1,6 +1,6 @@
 import { expect, type APIRequestContext, type Page } from '@playwright/test';
 
-export const BASE_URL = process.env.BASE_URL ?? 'http://localhost:3000';
+export const BASE_URL = process.env.BASE_URL ?? 'http://localhost:3400';
 const AUTH_BASE = `${BASE_URL}/api/auth`;
 
 /**

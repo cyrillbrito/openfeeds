@@ -5,7 +5,7 @@ import { createAuthClient } from 'better-auth/client';
  */
 export async function createTestUser(email: string, name: string, password: string) {
   const authClient = createAuthClient({
-    baseURL: process.env.BASE_URL ?? 'http://localhost:3000',
+    baseURL: process.env.BASE_URL ?? 'http://localhost:3400',
   });
   return authClient.signUp.email({
     email,

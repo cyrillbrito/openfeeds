@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import { feedUrlSchema } from './entities/feed.schema';
+import { TagColorSchema } from './entities/tag.schema';
 
 export const FollowFeedsWithTagsSchema = z.object({
   feeds: z.array(
@@ -18,6 +19,7 @@ export const FollowFeedsWithTagsSchema = z.object({
     z.object({
       id: z.uuidv7(),
       name: z.string(),
+      color: TagColorSchema.optional(),
     }),
   ),
   feedTags: z.array(

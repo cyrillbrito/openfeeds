@@ -2,13 +2,9 @@ import { snakeCamelMapper } from '@electric-sql/client';
 import { FilterRuleSchema } from '@repo/domain/client';
 import { electricCollectionOptions } from '@tanstack/electric-db-collection';
 import { createCollection, eq, useLiveQuery } from '@tanstack/solid-db';
+import { api, unwrap } from '~/lib/api-client';
 import { collectionErrorHandler, shapeErrorHandler } from '~/lib/collection-errors';
 import { getShapeUrl, timestampParser } from '~/lib/electric-client';
-import {
-  $$createFilterRules,
-  $$deleteFilterRules,
-  $$updateFilterRules,
-} from './filter-rules.functions';
 
 // Filter Rules Collection - Electric-powered real-time sync
 export const filterRulesCollection = createCollection(
@@ -35,7 +31,7 @@ export const filterRulesCollection = createCollection(
           isActive: rule.isActive,
         };
       });
-      return await $$createFilterRules({ data: rules });
+      return await unwrap(api.api['filter-rules'].create.$post({ json: rules }));
     }),
 
     onUpdate: collectionErrorHandler('filterRules.onUpdate', async ({ transaction }) => {
@@ -43,12 +39,12 @@ export const filterRulesCollection = createCollection(
         id: String(mutation.key),
         ...mutation.changes,
       }));
-      return await $$updateFilterRules({ data: updates });
+      return await unwrap(api.api['filter-rules'].update.$patch({ json: updates }));
     }),
 
     onDelete: collectionErrorHandler('filterRules.onDelete', async ({ transaction }) => {
       const ids = transaction.mutations.map((mutation) => String(mutation.key));
-      return await $$deleteFilterRules({ data: ids });
+      return await unwrap(api.api['filter-rules'].delete.$post({ json: ids }));
     }),
   }),
 );

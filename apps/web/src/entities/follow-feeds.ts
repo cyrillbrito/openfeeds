@@ -3,8 +3,8 @@ import { createId } from '@repo/shared/utils';
 import { createOptimisticAction } from '@tanstack/solid-db';
 import { feedTagsCollection } from '~/entities/feed-tags';
 import { feedsCollection } from '~/entities/feeds';
-import { $$followFeedsWithTags } from '~/entities/feeds.functions';
 import { tagsCollection } from '~/entities/tags';
+import { api, unwrap } from '~/lib/api-client';
 
 // ---------------------------------------------------------------------------
 // Optimistic action: follow feeds + tags in one transaction
@@ -57,7 +57,7 @@ export const followFeedsAction = createOptimisticAction<FollowFeedsWithTags>({
     }
   },
   mutationFn: async (vars) => {
-    const { txid } = await $$followFeedsWithTags({ data: vars });
+    const { txid } = await unwrap(api.api.feeds['follow-with-tags'].$post({ json: vars }));
 
     // createOptimisticAction doesn't auto-wire txid like electricCollectionOptions,
     // so we must explicitly await sync confirmation on each touched collection.

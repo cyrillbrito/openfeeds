@@ -44,9 +44,9 @@ export function createSingleFeedSyncWorker() {
       connection: redisConnection,
       concurrency: env.WORKER_CONCURRENCY_FEED_SYNC,
 
-      // Rate limit: max 10 feed sync jobs processed per second across all worker instances.
-      // Prevents hammering a single RSS host (e.g. YouTube) with too many concurrent requests.
-      // Must match the queue limiter in @repo/domain/queues.ts if one is set.
+      // Rate limit: max 5 feed sync jobs processed per second per worker instance.
+      // Prevents hammering a single RSS host (e.g. YouTube) with too many concurrent
+      // requests. Applied at the worker, not the queue — see queues.ts.
       limiter: { max: 5, duration: 1000 },
     },
   );

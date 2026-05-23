@@ -1,15 +1,12 @@
 /**
  * Returns the full URL for an Electric shape endpoint.
- * In the browser, constructs absolute URL from window.location.
- * On the server (SSR), returns the relative path — collections created during
- * SSR will get a fresh client-side instance with the correct URL on hydration.
+ *
+ * Path lives under `/api/shapes/*` and is served by the api app. In dev,
+ * Vite proxies `/api/*` to the api server on :3401; in prod both apps sit
+ * behind a single reverse-proxied origin.
  */
 export function getShapeUrl(model: string): string {
-  const path = `/api/shapes/${model}`;
-  if (typeof window !== 'undefined') {
-    return `${window.location.origin}${path}`;
-  }
-  return path;
+  return `${window.location.origin}/api/shapes/${model}`;
 }
 
 /**

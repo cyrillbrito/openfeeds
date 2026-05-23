@@ -1,15 +1,26 @@
 import { readFileSync } from 'node:fs';
 import tailwindcss from '@tailwindcss/vite';
 import { devtools } from '@tanstack/devtools-vite';
-import { tanstackStart } from '@tanstack/solid-start/plugin/vite';
-import { nitro } from 'nitro/vite';
-import { defineConfig } from 'vite';
+import { tanstackRouter } from '@tanstack/router-plugin/vite';
+import { defineConfig, type Plugin } from 'vite';
 import lucidePreprocess from 'vite-plugin-lucide-preprocess';
 import solidPlugin from 'vite-plugin-solid';
 
 const rootPkg = JSON.parse(readFileSync('../../package.json', 'utf-8'));
 
-// Bundling strategy: docs/decisions/2026-03-29-nitro-cjs-esm-bundling.md
+/**
+ * Pure Vite SPA. All server-side concerns (auth, MCP, well-known, entity
+ * mutations, Electric shape proxies, OAuth provider) live in apps/api/
+ * (Bun + Hono) — see docs/records/011-migrate-server-off-tanstack-start.md.
+ *
+ * The dev proxy forwards `/api/*` (everything Better Auth, Hono RPC, and
+ * the Electric shape proxies use) to the api server on :3401 so the browser
+ * sees a single origin: no CORS, cookies just work, deep links survive page
+ * refresh via `historyApiFallback` (Vite's SPA default).
+ *
+ * No `preview` block: prod-like runs (CI E2E, Docker) don't use `vite
+ * preview` — the api serves the built SPA directly via `SERVE_SPA=true`.
+ */
 export default defineConfig({
   resolve: {
     tsconfigPaths: true,
@@ -17,36 +28,15 @@ export default defineConfig({
   plugins: [
     lucidePreprocess(),
     devtools(),
-    nitro({
-      commonJS: {
-        // ESM packages consumed via require() (svix → uuid, msgpackr).
-        // Tells @rollup/plugin-commonjs to use namespace imports instead of default.
-        esmExternals: ['uuid', 'msgpackr'],
-        requireReturnsDefault: 'namespace',
-      },
-      // Packages that break when bundled (read sibling files at runtime).
-      // Nitro hardcodes noExternal:true — only rollupConfig.external works.
-      rollupConfig: {
-        external: ['jsdom', 'css-tree', '@mixmark-io/domino'],
-      },
+    // MUST come before solidPlugin so the router's file-based code generation
+    // sees route files before the Solid compiler.
+    tanstackRouter({
+      target: 'solid',
+      autoCodeSplitting: true,
     }),
     tailwindcss(),
-    tanstackStart({
-      importProtection: {
-        client: {
-          // Block server-only monorepo packages from the client bundle.
-          // Use `@repo/domain/client` for schemas/types, and dynamic
-          // `await import()` inside .server() callbacks for full CRUD.
-          // See: https://github.com/TanStack/router/issues/2783
-          //
-          specifiers: ['@repo/db', '@repo/domain', 'bun'],
-        },
-      },
-    }),
-    solidPlugin({
-      ssr: true,
-    }),
-  ],
+    solidPlugin(),
+  ] as Plugin[],
   define: {
     __APP_VERSION__: JSON.stringify(rootPkg.version),
   },
@@ -60,5 +50,16 @@ export default defineConfig({
   },
   server: {
     allowedHosts: true,
+    proxy: {
+      // Forward every api request to the Bun/Hono server. Includes:
+      //   /api/auth/*       — Better Auth (sign-in, get-session, …)
+      //   /api/shapes/*     — Electric SQL shape proxies
+      //   /api/<entity>/*   — Hono RPC routes (feeds, articles, tags, …)
+      //   /api/mcp/*        — MCP server
+      //   /api/chat         — AI chat SSE stream
+      '/api': { target: 'http://localhost:3401', changeOrigin: true, ws: true },
+      // `.well-known/*` discovery documents also live on api (RFC 8615).
+      '/.well-known': { target: 'http://localhost:3401', changeOrigin: true },
+    },
   },
 });

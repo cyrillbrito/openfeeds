@@ -25,8 +25,8 @@ import { SyncLogsModal } from '~/components/SyncLogsModal';
 import { articlesCollection } from '~/entities/articles';
 import { feedTagsCollection } from '~/entities/feed-tags';
 import { feedsCollection } from '~/entities/feeds';
-import { $$retryFeed } from '~/entities/feeds.functions';
 import { tagsCollection } from '~/entities/tags';
+import { api, unwrap } from '~/lib/api-client';
 import { validateReadStatusSearch } from '~/utils/routing';
 import { getTagDotColor } from '~/utils/tagColors';
 
@@ -184,7 +184,7 @@ function FeedArticlesContent(props: { feedId: string; readStatus: ReadStatus }) 
                         draft.syncStatus = 'ok';
                         draft.syncError = null;
                       });
-                      await $$retryFeed({ data: { id: feed.id } });
+                      await unwrap(api.api.feeds.retry.$post({ json: { id: feed.id } }));
                     }}
                   >
                     Retry sync

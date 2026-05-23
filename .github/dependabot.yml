@@ -56,3 +56,8 @@ updates:
       - dependency-name: solid-js
       - dependency-name: '@solidjs/*'
       - dependency-name: bullmq
+      # Newly load-bearing post-Hono port: server routing + RPC types travel
+      # across the entire app, AI surface is still alpha-shaped.
+      - dependency-name: hono
+      - dependency-name: '@hono/*'
+      - dependency-name: '@tanstack/ai*'

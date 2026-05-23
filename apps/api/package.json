@@ -11,9 +11,10 @@
     "start": "bun --env-file=../../.env run src/index.ts"
   },
   "dependencies": {
+    "@better-auth/oauth-provider": "^1.6.11",
     "@electric-sql/client": "^1.5.17",
-    "@elysiajs/cors": "^1.4.2",
-    "@elysiajs/eden": "^1.4.4",
+    "@hono/zod-validator": "^0.8.0",
+    "@modelcontextprotocol/sdk": "^1.29.0",
     "@repo/auth": "workspace:*",
     "@repo/db": "workspace:*",
     "@repo/domain": "workspace:*",
@@ -22,7 +23,7 @@
     "@tanstack/ai": "^0.18.0",
     "@tanstack/ai-anthropic": "^0.8.8",
     "better-auth": "^1.6.11",
-    "elysia": "^1.4.13",
+    "hono": "^4.12.21",
     "zod": "^4.4.3"
   },
   "devDependencies": {

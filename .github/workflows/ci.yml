@@ -115,7 +115,7 @@ jobs:
           DATABASE_URL: postgresql://postgres:postgres@postgres:5432/openfeeds_test?sslmode=disable
           ELECTRIC_INSECURE: 'true'
         ports:
-          - 3060:3000
+          - 3406:3000
         options: >-
           --health-cmd "curl -sf http://localhost:3000/v1/health || exit 1"
           --health-interval 10s
@@ -126,11 +126,11 @@ jobs:
       DATABASE_URL: postgresql://postgres:postgres@localhost:5432/openfeeds_test
       REDIS_HOST: localhost
       REDIS_PORT: 6379
-      BASE_URL: http://localhost:3000
-      TRUSTED_ORIGINS: http://localhost:3000
+      BASE_URL: http://localhost:3400
+      TRUSTED_ORIGINS: http://localhost:3400
       BETTER_AUTH_SECRET: e2e-test-secret-not-for-production-use-only
       SIMPLE_AUTH: 'true'
-      ELECTRIC_URL: http://localhost:3060
+      ELECTRIC_URL: http://localhost:3406
       ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
       CI: 'true'
 
@@ -161,20 +161,48 @@ jobs:
       - name: Build @repo/emails
         run: bun run --cwd packages/emails build
 
-      - name: Start web server
-        run: bun --cwd=apps/web --bun vite dev --port 3000 &
+      # Build the SPA so the api can serve it (SERVE_SPA below). Mirrors the
+      # production Docker image: one process serves /api/* + the SPA from the
+      # real prod bundle. Catches build-time issues that `vite dev` would hide.
+      - name: Build web SPA
+        run: bun run --cwd apps/web build
 
-      - name: Wait for web server
+      - name: Symlink web dist into api
+        run: ln -s "$GITHUB_WORKSPACE/apps/web/dist" "$GITHUB_WORKSPACE/apps/api/web-dist"
+
+      # Single process serves /api/* + the SPA on :3400 — same port as the
+      # dev Vite server, so BASE_URL/TRUSTED_ORIGINS/E2E defaults stay
+      # consistent between local dev and CI.
+      #
+      # Logs go to /tmp/api.log so the wait step (and any later failure) can
+      # surface boot errors instead of "Server failed to start" with no cause.
+      # PID saved so a final cleanup step can kill it on success or failure.
+      - name: Start api + SPA server
+        run: |
+          bun --cwd=apps/api --bun src/index.ts > /tmp/api.log 2>&1 &
+          echo "API_PID=$!" >> "$GITHUB_ENV"
+        env:
+          API_PORT: '3400'
+          SERVE_SPA: 'true'
+
+      - name: Wait for server
         run: |
           for i in $(seq 1 30); do
-            if curl -s http://localhost:3000 > /dev/null 2>&1; then
-              echo "Web server is ready"
+            if curl -s http://localhost:3400 > /dev/null 2>&1; then
+              echo "Server is ready"
               exit 0
             fi
-            echo "Waiting for web server... ($i/30)"
+            # Bail early if the process died — no point waiting 60s.
+            if ! kill -0 "$API_PID" 2>/dev/null; then
+              echo "API process exited before becoming ready. Logs:"
+              cat /tmp/api.log || true
+              exit 1
+            fi
+            echo "Waiting for server... ($i/30)"
             sleep 2
           done
-          echo "Web server failed to start"
+          echo "Server failed to start. Logs:"
+          cat /tmp/api.log || true
           exit 1
 
       - name: Run E2E tests
@@ -184,6 +212,18 @@ jobs:
         run: bunx playwright test
         working-directory: apps/e2e
 
+      - name: Dump api logs on failure
+        if: failure()
+        run: |
+          echo "=== /tmp/api.log ==="
+          cat /tmp/api.log || echo "(no log file)"
+
+      - name: Stop api server
+        if: always()
+        run: |
+          if [ -n "${API_PID:-}" ] && kill -0 "$API_PID" 2>/dev/null; then
+            kill "$API_PID" || true
+          fi
       - name: Publish report to GitHub Pages
         if: ${{ !cancelled() }}
         env:

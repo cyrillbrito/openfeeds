@@ -1,16 +1,15 @@
 # OpenFeeds
 
-Local-first RSS reader. SolidJS SPA + TanStack Router on the client, TanStack Solid DB with Electric SQL sync, Bun + Hono API on the server.
+Local-first RSS reader. SolidJS SPA on the client, TanStack Solid DB with Electric SQL sync, Bun + Hono API on the server.
 
-## 🚧 Architecture Migration In Progress
+## Architecture (end state)
 
-**We are migrating the server layer off TanStack Start (Nitro/Vite SSR) to a standalone Bun + Hono API (`apps/api/`), and turning `apps/web/` into a pure Vite SPA.**
+- `apps/web/` is a **pure Vite SPA** — no SSR, no Nitro, no TanStack Start. `index.html` is the entry; everything happens in the browser.
+- `apps/api/` is a **standalone Bun + Hono HTTP API** that owns all server-side concerns (auth, Electric SQL shape proxies, entity mutations, OAuth, MCP, well-known endpoints).
+- The web app talks to the api over Hono's typed `hc<App>` RPC client — end-to-end types, no codegen. See [docs/hono-rpc.md](docs/hono-rpc.md).
+- Folder = layer. No `.server.ts` suffix, no `createServerFn`, no dynamic-import dance.
 
-Why: Nitro bundling has been a persistent source of dev/prod parity bugs (see `docs/nitro-bundling.md`), the `.server.ts` + dynamic-import dance blurs the frontend/backend boundary, and OpenFeeds is local-first — we pay full SSR-framework complexity for almost no SSR benefit. End state: folder = layer, one bundler per side, end-to-end types via Hono's `hc` client.
-
-**Read `docs/records/011-migrate-server-off-tanstack-start.md` before doing any cross-cutting work.** Migration is gradual; both stacks run side-by-side. New server code should go into `apps/api/` (Hono) whenever possible; web `*.server.*` / `createServerFn` patterns are legacy and being removed.
-
-Note: an earlier attempt used Elysia + Eden Treaty and was abandoned after unrecoverable TypeScript inference bugs (see "Pivot to Hono" in record 011). Do not reintroduce Elysia.
+Historical context: the server layer was migrated off TanStack Start (Nitro + Start `createServerFn`) in 2026. An earlier attempt used Elysia + Eden Treaty and was abandoned after unrecoverable TypeScript inference bugs. See `docs/records/011-migrate-server-off-tanstack-start.md` for the full story and the reasoning behind the current shape. **Do not reintroduce Elysia, TanStack Start server functions, Nitro, or `*.server.ts` patterns in `apps/web/`.**
 
 ## Commands
 
@@ -24,8 +23,8 @@ Each app/package has its own `AGENTS.md` with specific patterns and guidelines.
 
 **Apps:**
 
-- `apps/web/` — SolidJS SPA (currently still TanStack Start; being migrated to pure Vite SPA — see `docs/records/011-migrate-server-off-tanstack-start.md`)
-- `apps/api/` — Bun + Hono HTTP API (new; target home for all server-side code)
+- `apps/web/` — SolidJS SPA (pure Vite, no SSR)
+- `apps/api/` — Bun + Hono HTTP API (all server-side code lives here)
 - `apps/worker/` — BullMQ jobs
 - `apps/migrator/` — DB migrations
 - `apps/e2e/` — Playwright tests
@@ -35,8 +34,8 @@ Each app/package has its own `AGENTS.md` with specific patterns and guidelines.
 **Packages:**
 
 - `packages/db/` — Drizzle ORM + PostgreSQL
-- `packages/domain/` — business logic + queues
-- `packages/auth/` — shared Better Auth factory (consumed by web + api)
+- `packages/domain/` — business logic + queues + AI helpers (`@repo/domain/ai`)
+- `packages/auth/` — shared Better Auth instance (consumed by api)
 - `packages/discovery/` — RSS feed discovery
 - `packages/shared/` — utilities + types
 - `packages/emails/` — React Email templates
@@ -45,7 +44,7 @@ Each app/package has its own `AGENTS.md` with specific patterns and guidelines.
 ## Architecture
 
 - **Local-first:** Client-side TanStack Solid DB collections with Electric SQL sync. Entities in `apps/web/src/entities/`. Load the `new-entity` skill when adding features.
-- **Server functions:** TanStack Start `createServerFn` with auth middleware, calls `@repo/domain` with explicit context.
+- **API routes:** Hono routes in `apps/api/src/routes/`, called from web via the typed `hc<App>` client. See [docs/hono-rpc.md](docs/hono-rpc.md).
 - **Background jobs:** BullMQ queues (owned by `@repo/domain`), processed by `apps/worker/`
 - **Error handling:** Domain errors are transport-agnostic. See [docs/error-handling.md](docs/error-handling.md)
 - **OAuth/MCP:** OAuth 2.1 Authorization Server for MCP clients via Better Auth. See [docs/oauth-mcp.md](docs/oauth-mcp.md)
@@ -83,6 +82,7 @@ Commit messages and PR titles use [Conventional Commits](https://www.conventiona
 Load the relevant doc when working in these areas. Docs are in `docs/`.
 
 - `docs/error-handling.md` — Adding error types, changing error boundaries, auth errors, PostHog exception capture, or DB error handling
+- `docs/hono-rpc.md` — Working on `apps/api/` Hono routes, the `hc` typed client, or hitting RPC type-inference issues
 - `docs/auth-guards.md` — Working on route guards, login/sign-out flows, session cookie checks, or auth middleware
 - `docs/posthog.md` — Adding analytics events, exception capture, or changing PostHog setup
 - `docs/data-layer.md` — Working with TanStack DB collections, Electric SQL sync, or optimistic mutations
@@ -97,7 +97,7 @@ Load the relevant doc when working in these areas. Docs are in `docs/`.
 - `docs/recommendation-system.md` — Working on article ranking, recommendations, or personalisation
 - `docs/ai-chat.md` — Working on the AI chat feature, tool calling, or conversation persistence
 - `docs/tanstack-db-0.6-upgrade-notes.md` — Upgrading or debugging TanStack DB collection behaviour after a version bump
-- `docs/nitro-bundling.md` — Debugging Nitro server bundling issues, CJS/ESM interop errors, or `Cannot find module` in production. **Context for the server migration (see record 011) — Nitro will be removed once `apps/web/` becomes a pure SPA.**
+- `docs/nitro-bundling.md` — Historical: debugging context from the Nitro/TanStack Start era. Nitro is no longer used (web is a pure Vite SPA, api is plain Bun). Read only when investigating why something was the way it was. See record 011.
 
 `docs/records/` — Numbered, chronological log of past decisions, specs, ideas, and dropped experiments. Skim when investigating why something is the way it is, or before proposing changes that may have prior context. See `docs/records/README.md` for the convention.
 

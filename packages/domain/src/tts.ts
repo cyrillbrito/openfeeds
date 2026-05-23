@@ -2,7 +2,7 @@ import { existsSync } from 'node:fs';
 import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import { articles, db } from '@repo/db';
-import { eq } from 'drizzle-orm';
+import { eq, and } from 'drizzle-orm';
 import { z } from 'zod';
 import { trackEvent } from './analytics';
 import { extractArticleContent } from './entities/article';
@@ -276,7 +276,10 @@ export async function generateArticleAudio(
   await writeFile(timestampsPath, JSON.stringify(metadata, null, 2));
 
   // Record generation timestamp in DB for rate limiting
-  await db.update(articles).set({ audioGeneratedAt: new Date() }).where(eq(articles.id, articleId));
+  await db
+    .update(articles)
+    .set({ audioGeneratedAt: new Date() })
+    .where(and(eq(articles.id, articleId), eq(articles.userId, userId)));
 
   trackEvent(userId, 'tts:audio_generate', {
     duration_ms: Math.round(duration * 1000),

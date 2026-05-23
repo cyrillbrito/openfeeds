@@ -1,4 +1,4 @@
-import { ClientOnly, createFileRoute } from '@tanstack/solid-router';
+import { createFileRoute } from '@tanstack/solid-router';
 import { CircleCheck, CircleX, Unplug } from 'lucide-solid';
 import { createResource, createSignal, For, Show } from 'solid-js';
 import { Card } from '~/components/Card';
@@ -20,14 +20,6 @@ export const Route = createFileRoute('/_frame/settings/connections')({
 });
 
 function ConnectionsPage() {
-  return (
-    <ClientOnly fallback={<CenterLoader />}>
-      <ConnectionsContent />
-    </ClientOnly>
-  );
-}
-
-function ConnectionsContent() {
   const [revokeError, setRevokeError] = createSignal<string | null>(null);
   const [revokeTarget, setRevokeTarget] = createSignal<Consent | null>(null);
   const [revokingId, setRevokingId] = createSignal<string | null>(null);

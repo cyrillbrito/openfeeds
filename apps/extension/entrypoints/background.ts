@@ -26,6 +26,8 @@ async function handleFollowFeed(
   try {
     const apiUrl = await getApiUrl();
 
+    // POST /api/feeds — public single-feed subscribe endpoint. Takes a
+    // single { url }, returns the created feed row.
     const response = await fetch(`${apiUrl}/api/feeds`, {
       method: 'POST',
       headers: {

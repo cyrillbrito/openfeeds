@@ -2,11 +2,7 @@ import type { WordTiming } from '@repo/domain/client';
 import { Headphones, Loader2, Pause, Play, Wifi } from 'lucide-solid';
 import { posthog } from 'posthog-js';
 import { createEffect, createResource, createSignal, onCleanup, onMount, Show } from 'solid-js';
-import {
-  $$generateArticleAudio,
-  $$getArticleAudio,
-  $$isTtsAvailable,
-} from '~/entities/article-audio.functions';
+import { api, unwrap } from '~/lib/api-client';
 import { useArticleAudio } from './ArticleAudioContext';
 
 interface ArticleAudioPlayerProps {
@@ -29,7 +25,7 @@ export function ArticleAudioPlayer(props: ArticleAudioPlayerProps) {
   const [buffering, setBuffering] = createSignal(false);
 
   // Check if TTS is available on the server
-  const [ttsAvailable] = createResource(() => $$isTtsAvailable());
+  const [ttsAvailable] = createResource(() => unwrap(api.api['article-audio'].available.$get({})));
   const isTtsAvailable = () => ttsAvailable()?.available ?? false;
 
   let audioRef: HTMLAudioElement | undefined;
@@ -97,7 +93,7 @@ export function ArticleAudioPlayer(props: ArticleAudioPlayerProps) {
     if (!articleId) return;
 
     try {
-      const result = await $$getArticleAudio({ data: { articleId } });
+      const result = await unwrap(api.api['article-audio'].metadata.$get({ query: { articleId } }));
       if (result.exists) {
         setAudioUrl(result.audioUrl);
         setLocalWordTimings(result.wordTimings);
@@ -115,7 +111,9 @@ export function ArticleAudioPlayer(props: ArticleAudioPlayerProps) {
     setError(null);
 
     try {
-      const result = await $$generateArticleAudio({ data: { articleId: props.articleId } });
+      const result = await unwrap(
+        api.api['article-audio'].generate.$post({ json: { articleId: props.articleId } }),
+      );
       setAudioUrl(result.audioUrl);
       setLocalWordTimings(result.wordTimings);
       audio.setWordTimings(result.wordTimings);

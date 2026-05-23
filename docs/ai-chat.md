@@ -6,16 +6,16 @@ AI assistant integrated into OpenFeeds. Uses TanStack AI with Anthropic (Claude 
 
 ```
 ┌─────────────────────────────────────────┐
-│  Frontend (SolidJS)                     │
+│  Frontend (SolidJS SPA)                 │
 │  ChatProvider → ChatClient              │
 │  Popover / Full-page / FAB              │
 │  Electric SQL ← chat_sessions sync      │
 └──────────────┬──────────────────────────┘
                │ SSE stream (POST /api/chat)
-               │ body: { messages, sessionId, context }
+               │ body: { messages, sessionId }
                ▼
 ┌─────────────────────────────────────────┐
-│  /api/chat route handler                │
+│  apps/api — Hono /api/chat handler      │
 │  Auth: Better Auth session cookie       │
 │  chat() + anthropicText() adapter       │
 │  Middleware: persistence + analytics     │
@@ -24,7 +24,8 @@ AI assistant integrated into OpenFeeds. Uses TanStack AI with Anthropic (Claude 
                │ tool execute() calls
                ▼
 ┌─────────────────────────────────────────┐
-│  @repo/domain + @repo/db                │
+│  @repo/domain (incl. @repo/domain/ai)   │
+│  + @repo/db                             │
 │  Write tools → withTransaction()        │
 │  Read tools → direct Drizzle queries    │
 └──────────────┬──────────────────────────┘
@@ -41,36 +42,35 @@ AI assistant integrated into OpenFeeds. Uses TanStack AI with Anthropic (Claude 
 
 ## API Endpoint
 
-**`POST /api/chat`** — `apps/web/src/routes/api/chat.ts`
+**`POST /api/chat`** — `apps/api/src/routes/chat.ts`
 
-SSE streaming endpoint. Uses TanStack Start file route with raw request/response handlers (not `createServerFn`) because TanStack AI needs SSE control.
+SSE streaming endpoint on the Hono api app. Returns a `Response` produced by `toServerSentEventsResponse()` from `@tanstack/ai`; Hono passes it through unchanged.
 
 **Request body:**
 
-| Field | Type | Description |
-|---|---|---|
-| `messages` | `ModelMessage[]` | Conversation history |
-| `sessionId` | `string` | UUID for the conversation session |
-| `context` | `object?` | Current page context (feed, article, route) |
+| Field       | Type             | Description                                |
+| ----------- | ---------------- | ------------------------------------------ |
+| `messages`  | `ModelMessage[]` | Conversation history                       |
+| `sessionId` | `string`         | UUID for the conversation session          |
 
-**Auth:** `authRequestMiddleware` — reads Better Auth session from request headers. Returns 401 if unauthenticated.
+(The chat UI also tracks "current page context" client-side; it's threaded through the system prompt by mutating the user message, not as a separate body field.)
+
+**Auth:** `requireAuthMiddleware` from `apps/api/src/middleware/auth.ts` reads the Better Auth session cookie. Returns 401 if unauthenticated.
 
 **Env guard:** Returns 503 if `ANTHROPIC_API_KEY` is not configured.
 
-**Model:** `anthropicText('claude-sonnet-4-5')`, max 4096 tokens.
+**Model:** `anthropicText(env.AI_MODEL)`, max 4096 tokens.
 
-**Context injection:** The base system prompt is extended with per-request page context (which feed/article the user is currently viewing). This lets the AI understand "this feed" or "this article" references.
+**Middleware pipeline:** Two `ChatMiddleware` instances are attached to every `chat()` call (note: singular `middleware:` option, not `middlewares:`):
 
-**Middleware pipeline:** Two `ChatMiddleware` instances are attached to every `chat()` call:
-
-1. **Persistence middleware** (`ai-persistence.server.ts`) — saves conversation on finish/error/abort
-2. **Analytics middleware** (`ai-analytics.server.ts`) — captures PostHog `$ai_generation` events
+1. **Persistence middleware** (`@repo/domain/ai` → `createPersistenceMiddleware`) — saves conversation on finish/error/abort
+2. **Analytics middleware** (`@repo/domain/ai` → `createAnalyticsMiddleware`) — captures PostHog `$ai_generation` events
 
 Both use `ctx.defer()` so they never block the SSE stream.
 
 ## Server-Side Persistence
 
-**File:** `apps/web/src/server/ai-persistence.server.ts`
+**File:** `packages/domain/src/ai/persistence.ts` (`createPersistenceMiddleware`)
 
 Messages are saved to the database **on the server**, not the client. The persistence middleware hooks into three lifecycle events:
 
@@ -84,7 +84,7 @@ The server is the **single source of truth**. The client sees persisted sessions
 
 ## Analytics
 
-**File:** `apps/web/src/server/ai-analytics.server.ts`
+**File:** `packages/domain/src/ai/analytics.ts` (`createAnalyticsMiddleware`)
 
 Captures PostHog `$ai_generation` events with:
 
@@ -97,9 +97,9 @@ Collected via `onAfterToolCall` (per-tool metrics) and fired on `onFinish` or `o
 
 ## Tools
 
-**File:** `apps/web/src/server/ai-tools.server.ts`
+**File:** `packages/domain/src/ai/tools.ts` (`createTools`)
 
-`createTools(userId, plan)` — factory returning tools scoped to the authenticated user. Each tool uses `toolDefinition().server()` from `@tanstack/ai` with Zod input schemas.
+`createTools({ id, plan })` — factory returning tools scoped to the authenticated user. Each tool uses `toolDefinition().server()` from `@tanstack/ai` with Zod input schemas.
 
 ### Write Tools (use `withTransaction`)
 
@@ -125,7 +125,7 @@ Collected via `onAfterToolCall` (per-tool metrics) and fired on `onFinish` or `o
 
 ## System Prompt
 
-**File:** `apps/web/src/server/ai-system-prompt.server.ts`
+**File:** `packages/domain/src/ai/system-prompt.ts` (`getSystemPrompt`)
 
 `getSystemPrompt()` returns a dynamic string (injects today's date). Key directives:
 
@@ -148,11 +148,13 @@ Collected via `onAfterToolCall` (per-tool metrics) and fired on `onFinish` or `o
 | `id` | `uuid` | PK, UUIDv7 default |
 | `user_id` | `text` | FK → `user.id`, ON DELETE CASCADE, indexed |
 | `title` | `text` | Not null |
-| `messages` | `jsonb` | Full `ModelMessage[]` array, default `[]` |
+| `messages` | `text` | JSON-encoded `ModelMessage[]`, default `'[]'`. See note below. |
 | `created_at` | `timestamp` | Default now |
 | `updated_at` | `timestamp` | Auto-updated via `$onUpdate` |
 
-Messages are stored as a single JSONB blob per session — no separate messages table. This simplifies sync and avoids per-message row overhead.
+Messages are stored as a single JSON blob per session — no separate messages table. This simplifies sync and avoids per-message row overhead.
+
+The column is `text` rather than `jsonb` because bun:sql's binary protocol auto-serialises objects for `jsonb`, which collides with Drizzle's own `JSON.stringify` in the toDriver mapper and double-encodes the payload (`jsonb_typeof` returns `'string'` instead of `'array'`). PG's `json` type has the same issue since Drizzle's `json()` also stringifies. Using `text` removes all driver ambiguity: we `JSON.stringify` on write (`saveChatSession`) and `JSON.parse` on read (via the `ChatSessionSchema` transform).
 
 ### Domain Layer
 
@@ -179,15 +181,16 @@ Client-safe schemas (exported from `@repo/domain/client`):
 - Shape: `/api/shapes/chat-sessions` (auth-protected, filtered by `user_id`)
 - Custom JSONB parser (Electric sends JSONB as raw strings)
 - `snakeCamelMapper()` for column names
-- `onDelete` → calls `$$deleteChatSession` server function
+- `onDelete` → calls `api.api['chat-sessions'].delete.$post(...)` via Hono RPC
 - No `onInsert`/`onUpdate` — persistence is server-side; Electric syncs back automatically
 
-### Server Functions
+### API Routes
 
-**File:** `apps/web/src/entities/chat-sessions.functions.ts`
+**File:** `apps/api/src/routes/chat-sessions.ts`
 
-- `$$saveChatSession` — upsert via `createServerFn` (used by client for explicit saves if needed)
-- `$$deleteChatSession` — delete via `createServerFn` (called by collection's `onDelete`)
+- `POST /api/chat-sessions/delete` — accepts a session id, deletes server-side. Returns `{ txid }` for the optimistic-mutation handshake.
+
+(There is no client-initiated save endpoint — the persistence middleware on the streaming `/api/chat` route is the only writer.)
 
 ## Frontend
 
@@ -268,10 +271,10 @@ Wraps the entire `_frame` layout (single instance). Uses `ChatClient` directly (
 
 1. User types in `ChatInput` → `sendMessage(text)` on context
 2. `ChatProvider` restores history into ChatClient buffer if needed, sets `streamSessionId`
-3. `ChatClient` POSTs to `/api/chat` with `{ messages, sessionId, context }`
-4. Server authenticates via Better Auth session cookie
-5. Server builds context-aware system prompt (base + page context)
-6. `chat()` streams via `anthropicText('claude-sonnet-4-5')` with tools + middlewares
+3. `ChatClient` POSTs to `/api/chat` with `{ messages, sessionId }` (via the SPA's Vite proxy in dev, same-origin in prod)
+4. api authenticates via Better Auth session cookie
+5. Hono handler builds the chat stream (system prompt + tools + middleware)
+6. `chat()` streams via `anthropicText(env.AI_MODEL)` with tools + middleware
 7. Tool calls execute against `@repo/domain` / `@repo/db`
 8. SSE events stream back → `ChatClient.onMessagesChange` → `streamMessages` signal → UI re-renders
 9. On finish/error/abort: persistence middleware saves full `ModelMessage[]` to `chat_sessions` (deferred)
@@ -289,7 +292,7 @@ Wraps the entire `_frame` layout (single instance). Uses `ChatClient` directly (
 ### Deleting a Session
 
 1. `deleteSession(id)` → `chatSessionsCollection.delete(id)` (optimistic)
-2. Collection `onDelete` → `$$deleteChatSession` server function → `domain.deleteChatSession`
+2. Collection `onDelete` → `POST /api/chat-sessions/delete` → `domain.deleteChatSession` inside `withTransaction`
 3. Electric syncs deletion to all connected clients
 
 ## MCP vs AI Chat

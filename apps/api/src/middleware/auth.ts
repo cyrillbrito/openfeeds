@@ -1,45 +1,77 @@
-import { Elysia } from 'elysia';
+import { createMiddleware } from 'hono/factory';
+import { HTTPException } from 'hono/http-exception';
 import { auth, type AuthSession } from '~/auth';
 
 /**
- * Auth plugin — exposes `user` + `session` on the request context.
+ * Two flavours of auth context:
  *
- * Usage:
- *   app.use(authPlugin).get('/me', ({ user }) => user)
+ * - `Env` — `user` and `session` may be null. Use on routers that have
+ *   public endpoints, mounted under `authMiddleware`.
+ * - `AuthedEnv` — `user` and `session` are guaranteed non-null. Use on
+ *   routers (or sub-chains) mounted under `requireAuthMiddleware`; handlers
+ *   get narrowed types without an explicit assertion.
  *
- * Routes that require auth should call `requireUser(user)` or use a guard.
+ * 99% of routes require auth — reach for `AuthedEnv` + `requireAuthMiddleware`
+ * by default. Use `Env` + `authMiddleware` only when a router genuinely mixes
+ * public and protected handlers (e.g. `article-audio.ts`'s `/available`).
  */
-export const authPlugin = new Elysia({ name: 'auth' }).derive(
-  { as: 'global' },
-  async ({
-    request,
-  }): Promise<{ user: AuthSession['user'] | null; session: AuthSession['session'] | null }> => {
-    try {
-      const result = await auth.api.getSession({ headers: request.headers });
-      if (!result) return { user: null, session: null };
-      return { user: result.user, session: result.session };
-    } catch {
-      // Surfaces as 500 if the route requires the user; otherwise treated as guest.
-      return { user: null, session: null };
-    }
-  },
-);
+export type AuthVariables = {
+  user: AuthSession['user'] | null;
+  session: AuthSession['session'] | null;
+};
+
+export type Env = {
+  Variables: AuthVariables;
+};
+
+export type AuthedVariables = {
+  user: AuthSession['user'];
+  session: AuthSession['session'];
+};
+
+export type AuthedEnv = {
+  Variables: AuthedVariables;
+};
 
 /**
- * Throws an Elysia 401 if user is missing. Use at the top of handlers that require auth.
+ * Reads the Better Auth session and stores user + session (nullable) on the
+ * context. Never throws — auth-provider failures surface as guest, and
+ * missing-session is just `user: null` for routes that allow it.
  */
-export function requireUser(user: AuthSession['user'] | null): asserts user is AuthSession['user'] {
-  if (!user) {
-    throw new AuthError('Unauthorized', 401);
+export const authMiddleware = createMiddleware<Env>(async (c, next) => {
+  try {
+    const result = await auth.api.getSession({ headers: c.req.raw.headers });
+    if (result) {
+      c.set('user', result.user);
+      c.set('session', result.session);
+    } else {
+      c.set('user', null);
+      c.set('session', null);
+    }
+  } catch {
+    c.set('user', null);
+    c.set('session', null);
   }
-}
+  await next();
+});
 
-export class AuthError extends Error {
-  constructor(
-    message: string,
-    public status: number,
-  ) {
-    super(message);
-    this.name = 'AuthError';
+/**
+ * Asserting variant. Reads the session and throws `HTTPException(401)` if
+ * absent. Downstream handlers get non-null `user`/`session` via `AuthedEnv`.
+ * Auth-provider failures still surface as 401 (treated as guest first, then
+ * rejected) rather than 500.
+ */
+export const requireAuthMiddleware = createMiddleware<AuthedEnv>(async (c, next) => {
+  let result: AuthSession | null = null;
+  try {
+    result = await auth.api.getSession({ headers: c.req.raw.headers });
+  } catch {
+    result = null;
   }
-}
+  if (!result) {
+    throw new HTTPException(401, { message: 'Unauthorized' });
+  }
+  c.set('user', result.user);
+  c.set('session', result.session);
+  await next();
+});
