@@ -101,7 +101,7 @@ if (env.SERVE_SPA) {
 
 // Error mapping — runs for any thrown error or HTTPException. Validation
 // errors from @hono/zod-validator return 400 automatically with a default
-// body; HTTPException(401) from `requireUser` lands here too.
+// body; HTTPException(401) from `requireAuthMiddleware` lands here too.
 //
 // Domain errors are transport-agnostic (see packages/domain/AGENTS.md) — we
 // map them to HTTP here so route handlers stay free of try/catch noise.

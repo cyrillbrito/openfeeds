@@ -36,7 +36,7 @@ Without this cache, N protected routes on cold load = N parallel `/api/auth/get-
 
 Guards are a **UX optimization**, not a security boundary. Real enforcement happens server-side:
 
-1. **api routes:** `authMiddleware` validates on every call; missing/expired session → 401 with `{ message }`.
+1. **api routes:** `requireAuthMiddleware` validates on every protected call; missing/expired session → 401 with `{ message }`.
 2. **Electric shape proxies:** the `/api/shapes/<table>` proxy validates the cookie and scopes by `user_id`; missing/expired session → 401, the shape stream's error handler reacts.
 3. **Client guards:** prevent the user from briefly seeing an authenticated layout while a request is in flight.
 
@@ -45,7 +45,7 @@ A user with browser devtools can bypass the client guards, but every api respons
 ## Session Expiry Flows
 
 **api call (expired session):**
-Client calls any api route → `authMiddleware` returns 401 → `unwrap()` throws → the caller surfaces the error (toast) and, where appropriate, navigates to `/login?redirect=<path>`.
+Client calls any api route → `requireAuthMiddleware` returns 401 → `unwrap()` throws → the caller surfaces the error (toast) and, where appropriate, navigates to `/login?redirect=<path>`.
 
 **Electric shape stream (expired session):**
 ShapeStream polls proxy → proxy returns 401 → `shapeErrorHandler` fires → toast + `window.location.href = '/login'` (hard reload).

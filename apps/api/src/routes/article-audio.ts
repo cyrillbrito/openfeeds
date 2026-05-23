@@ -8,13 +8,9 @@ import {
 } from '@repo/domain';
 import { Hono } from 'hono';
 import { z } from 'zod';
-import { authMiddleware, requireUser, type Env } from '~/middleware/auth';
+import { requireAuthMiddleware, type Env } from '~/middleware/auth';
 
 /**
- * Mirror of `apps/web/src/entities/article-audio.functions.ts` plus the
- * streaming endpoint previously at `apps/web/src/routes/api/articles/$articleId/audio.ts`
- * (Step 4 of the migration — see docs/records/011-migrate-server-off-tanstack-start.md).
- *
  * `/stream/:articleId` is a binary HTTP stream (not RPC) — large mp3 bodies,
  * byte-range capable, cache-headered. Kept in this file so audio routes live
  * together; the URL is referenced as `audioUrl` in `/metadata` and `/generate`
@@ -29,10 +25,9 @@ export const articleAudioRoutes = new Hono<Env>()
   // `isTtsAvailable` is intentionally public — used by the UI to show or hide
   // TTS controls before the user authenticates / on first paint.
   .get('/available', (c) => c.json({ available: isTtsConfigured() }))
-  .use('*', authMiddleware)
+  .use('*', requireAuthMiddleware)
   .get('/metadata', zValidator('query', z.object({ articleId: z.uuidv7() })), async (c) => {
     const user = c.var.user;
-    requireUser(user);
     const { articleId } = c.req.valid('query');
 
     if (!articleAudioExists(user.id, articleId)) {
@@ -54,7 +49,6 @@ export const articleAudioRoutes = new Hono<Env>()
     zValidator('json', z.object({ articleId: z.uuidv7(), voice: z.string().optional() })),
     async (c) => {
       const user = c.var.user;
-      requireUser(user);
       const { articleId, voice } = c.req.valid('json');
       const metadata = await generateArticleAudio(articleId, user.id, user.plan, {
         voice,
@@ -76,7 +70,6 @@ export const articleAudioRoutes = new Hono<Env>()
     zValidator('param', z.object({ articleId: z.uuidv7() })),
     async (c) => {
       const user = c.var.user;
-      requireUser(user);
       const { articleId } = c.req.valid('param');
 
       const audioBuffer = await getArticleAudioBuffer(user.id, articleId);

@@ -3,13 +3,17 @@ import { HTTPException } from 'hono/http-exception';
 import { auth, type AuthSession } from '~/auth';
 
 /**
- * Variables exposed by `authMiddleware` on Hono's context. Every route gets
- * `user` and `session`, both nullable. Use `requireUser(c.var.user)` inside
- * handlers that require auth.
+ * Two flavours of auth context:
  *
- * Use this `Env` everywhere a Hono instance, middleware, or handler is
- * defined (`new Hono<Env>()`, `createMiddleware<Env>(...)`) so context types
- * line up across the app.
+ * - `Env` — `user` and `session` may be null. Use on routers that have
+ *   public endpoints, mounted under `authMiddleware`.
+ * - `AuthedEnv` — `user` and `session` are guaranteed non-null. Use on
+ *   routers (or sub-chains) mounted under `requireAuthMiddleware`; handlers
+ *   get narrowed types without an explicit assertion.
+ *
+ * 99% of routes require auth — reach for `AuthedEnv` + `requireAuthMiddleware`
+ * by default. Use `Env` + `authMiddleware` only when a router genuinely mixes
+ * public and protected handlers (e.g. `article-audio.ts`'s `/available`).
  */
 export type AuthVariables = {
   user: AuthSession['user'] | null;
@@ -20,15 +24,19 @@ export type Env = {
   Variables: AuthVariables;
 };
 
+export type AuthedVariables = {
+  user: AuthSession['user'];
+  session: AuthSession['session'];
+};
+
+export type AuthedEnv = {
+  Variables: AuthedVariables;
+};
+
 /**
- * Reads the Better Auth session from the request cookie and stores user +
- * session on the context. Always runs — routes that require auth call
- * `requireUser` to assert non-null.
- *
- * Errors from the auth provider are swallowed and treated as guest — same as
- * the previous Elysia behaviour. A failure to read the session shouldn't 500
- * the entire request; missing user surfaces as 401 only when a handler asks
- * for one.
+ * Reads the Better Auth session and stores user + session (nullable) on the
+ * context. Never throws — auth-provider failures surface as guest, and
+ * missing-session is just `user: null` for routes that allow it.
  */
 export const authMiddleware = createMiddleware<Env>(async (c, next) => {
   try {
@@ -48,12 +56,22 @@ export const authMiddleware = createMiddleware<Env>(async (c, next) => {
 });
 
 /**
- * Asserts the request is authenticated. Throws `HTTPException(401)` if not,
- * which the central `app.onError` in `src/index.ts` maps to the standard
- * `{ message }` error body.
+ * Asserting variant. Reads the session and throws `HTTPException(401)` if
+ * absent. Downstream handlers get non-null `user`/`session` via `AuthedEnv`.
+ * Auth-provider failures still surface as 401 (treated as guest first, then
+ * rejected) rather than 500.
  */
-export function requireUser(user: AuthSession['user'] | null): asserts user is AuthSession['user'] {
-  if (!user) {
+export const requireAuthMiddleware = createMiddleware<AuthedEnv>(async (c, next) => {
+  let result: AuthSession | null = null;
+  try {
+    result = await auth.api.getSession({ headers: c.req.raw.headers });
+  } catch {
+    result = null;
+  }
+  if (!result) {
     throw new HTTPException(401, { message: 'Unauthorized' });
   }
-}
+  c.set('user', result.user);
+  c.set('session', result.session);
+  await next();
+});

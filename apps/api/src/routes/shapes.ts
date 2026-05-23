@@ -2,7 +2,7 @@ import { ELECTRIC_PROTOCOL_QUERY_PARAMS } from '@electric-sql/client';
 import { captureException } from '@repo/domain';
 import { Hono } from 'hono';
 import { env } from '~/env';
-import { authMiddleware, requireUser, type Env } from '~/middleware/auth';
+import { requireAuthMiddleware, type AuthedEnv } from '~/middleware/auth';
 
 /**
  * Electric SQL proxy. Forwards a shape request to the Electric service,
@@ -82,45 +82,37 @@ async function proxyElectricRequest(opts: {
  * URL path is kebab-case (matches `apps/web/src/lib/electric-client.ts` →
  * `getShapeUrl(model)`); DB table is snake_case.
  */
-export const shapesRoutes = new Hono<Env>()
-  .use('*', authMiddleware)
+export const shapesRoutes = new Hono<AuthedEnv>()
+  .use('*', requireAuthMiddleware)
   .get('/settings', (c) => {
     const user = c.var.user;
-    requireUser(user);
     return proxyElectricRequest({ request: c.req.raw, table: 'settings', userId: user.id });
   })
   .get('/articles', (c) => {
     const user = c.var.user;
-    requireUser(user);
     return proxyElectricRequest({ request: c.req.raw, table: 'articles', userId: user.id });
   })
   .get('/article-tags', (c) => {
     const user = c.var.user;
-    requireUser(user);
     return proxyElectricRequest({ request: c.req.raw, table: 'article_tags', userId: user.id });
   })
   .get('/chat-sessions', (c) => {
     const user = c.var.user;
-    requireUser(user);
     return proxyElectricRequest({ request: c.req.raw, table: 'chat_sessions', userId: user.id });
   })
   .get('/feeds', (c) => {
     const user = c.var.user;
-    requireUser(user);
     return proxyElectricRequest({ request: c.req.raw, table: 'feeds', userId: user.id });
   })
   .get('/feed-tags', (c) => {
     const user = c.var.user;
-    requireUser(user);
     return proxyElectricRequest({ request: c.req.raw, table: 'feed_tags', userId: user.id });
   })
   .get('/filter-rules', (c) => {
     const user = c.var.user;
-    requireUser(user);
     return proxyElectricRequest({ request: c.req.raw, table: 'filter_rules', userId: user.id });
   })
   .get('/tags', (c) => {
     const user = c.var.user;
-    requireUser(user);
     return proxyElectricRequest({ request: c.req.raw, table: 'tags', userId: user.id });
   });

@@ -11,14 +11,12 @@ import {
 } from '@repo/domain';
 import { Hono } from 'hono';
 import { z } from 'zod';
-import { authMiddleware, requireUser, type Env } from '~/middleware/auth';
+import { requireAuthMiddleware, type AuthedEnv } from '~/middleware/auth';
 
-/** Mirror of `apps/web/src/entities/settings.functions.ts`. */
-export const settingsRoutes = new Hono<Env>()
-  .use('*', authMiddleware)
+export const settingsRoutes = new Hono<AuthedEnv>()
+  .use('*', requireAuthMiddleware)
   .get('/', async (c) => {
     const user = c.var.user;
-    requireUser(user);
     const settings = await getSettings(user.id, db);
     return c.json(settings);
   })
@@ -27,7 +25,6 @@ export const settingsRoutes = new Hono<Env>()
   // first element. Keeps the collection optimistic-mutation pipeline uniform.
   .patch('/update', zValidator('json', z.array(UpdateSettingsSchema)), async (c) => {
     const user = c.var.user;
-    requireUser(user);
     const data = c.req.valid('json');
     const updates = data[0] || {};
     const result = await withTransaction(db, user.id, user.plan, async (ctx) => {
@@ -38,14 +35,12 @@ export const settingsRoutes = new Hono<Env>()
   })
   .post('/trigger-auto-archive', async (c) => {
     const user = c.var.user;
-    requireUser(user);
     const ctx = createDomainContext(db, user.id, user.plan);
     const result = await performArchiveArticles(ctx);
     return c.json(result);
   })
   .get('/usage', async (c) => {
     const user = c.var.user;
-    requireUser(user);
     const usage = await getUserUsage(user.id, user.plan);
     return c.json(usage);
   });

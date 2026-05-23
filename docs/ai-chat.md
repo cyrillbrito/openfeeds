@@ -55,7 +55,7 @@ SSE streaming endpoint on the Hono api app. Returns a `Response` produced by `to
 
 (The chat UI also tracks "current page context" client-side; it's threaded through the system prompt by mutating the user message, not as a separate body field.)
 
-**Auth:** `authMiddleware` from `apps/api/src/middleware/auth.ts` reads the Better Auth session cookie. Returns 401 if unauthenticated.
+**Auth:** `requireAuthMiddleware` from `apps/api/src/middleware/auth.ts` reads the Better Auth session cookie. Returns 401 if unauthenticated.
 
 **Env guard:** Returns 503 if `ANTHROPIC_API_KEY` is not configured.
 

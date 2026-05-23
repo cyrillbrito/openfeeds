@@ -20,7 +20,7 @@ src/
   auth.ts         # Re-export of the shared @repo/auth instance
   client.ts       # Type-only re-export for hc<App> (consumed by web via @repo/api/client)
   middleware/
-    auth.ts       # Auth middleware + requireUser (the pattern for every protected route)
+    auth.ts       # authMiddleware (nullable) + requireAuthMiddleware (asserts, narrows types)
   routes/
     shapes.ts     # Electric SQL shape proxies (per-table, scoped to user_id)
     feeds.ts      # Entity routes + the one public-API endpoint (see below)
@@ -34,7 +34,7 @@ src/
 ## Core Patterns
 
 - **Chain `.get/.post/...` calls on the same app reference** so Hono's RPC inference (`typeof app`) sees every route. Splitting routes across reassigned variables loses types.
-- **Auth** — every protected route uses the auth middleware + `requireUser` pattern from `src/middleware/auth.ts`. Do not roll your own session reads.
+- **Auth** — every protected route uses `requireAuthMiddleware` from `src/middleware/auth.ts`. Mount with `new Hono<AuthedEnv>().use('*', requireAuthMiddleware)`. The middleware throws 401 if there's no session, so handlers get `c.var.user` and `c.var.session` typed non-null — no per-handler `requireUser` calls. Use `authMiddleware` + `Env` only on routers that genuinely mix public and protected handlers (current example: `article-audio.ts`'s `/available`). Do not roll your own session reads.
 - **Domain calls** — route handlers should be thin: validate input → call `@repo/domain` inside `withTransaction` → map errors. No business logic in handlers.
 - **Errors** — domain errors are transport-agnostic; the central `app.onError` in `src/index.ts` maps them to HTTP. See `docs/error-handling.md`.
 - **Validation** — Zod via `@hono/zod-validator` (`zValidator('json', schema)`), since domain schemas are Zod.
@@ -48,7 +48,7 @@ Pattern:
 
 - Live on the relevant entity router (no separate "external" sub-app — there is no such namespace).
 - Carry their own `cors()` middleware that widens the global TRUSTED_ORIGINS policy to also allow `chrome-extension://`, `moz-extension://`, and localhost in dev.
-- Declared as the **root method** (`.post('/', cors, authMiddleware, validator, handler)`) so the URL is the entity's natural noun, e.g. `POST /api/feeds`.
+- Declared as the **root method** (`.post('/', cors, requireAuthMiddleware, validator, handler)`) so the URL is the entity's natural noun, e.g. `POST /api/feeds`.
 
 Watch out: combining a root-method (`.post('/')`) with sibling subpaths (`.post('/create')`) on the same router can collapse Hono RPC type inference for the entire router. Run `bun checks` after adding one and verify the web client's `api.api.<entity>.<...>` calls still type-check. If inference breaks, move the public route to the top-level `app` in `src/index.ts` instead.
 

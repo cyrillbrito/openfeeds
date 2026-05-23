@@ -10,14 +10,12 @@ import {
 } from '@repo/domain';
 import { Hono } from 'hono';
 import { z } from 'zod';
-import { authMiddleware, requireUser, type Env } from '~/middleware/auth';
+import { requireAuthMiddleware, type AuthedEnv } from '~/middleware/auth';
 
-/** Mirror of `apps/web/src/entities/tags.functions.ts`. */
-export const tagsRoutes = new Hono<Env>()
-  .use('*', authMiddleware)
+export const tagsRoutes = new Hono<AuthedEnv>()
+  .use('*', requireAuthMiddleware)
   .post('/create', zValidator('json', z.array(CreateTagSchema)), async (c) => {
     const user = c.var.user;
-    requireUser(user);
     const data = c.req.valid('json');
     const result = await withTransaction(db, user.id, user.plan, async (ctx) => {
       await createTags(ctx, data);
@@ -27,7 +25,6 @@ export const tagsRoutes = new Hono<Env>()
   })
   .patch('/update', zValidator('json', z.array(UpdateTagSchema)), async (c) => {
     const user = c.var.user;
-    requireUser(user);
     const data = c.req.valid('json');
     const result = await withTransaction(db, user.id, user.plan, async (ctx) => {
       await updateTags(ctx, data);
@@ -37,7 +34,6 @@ export const tagsRoutes = new Hono<Env>()
   })
   .post('/delete', zValidator('json', z.array(z.uuidv7())), async (c) => {
     const user = c.var.user;
-    requireUser(user);
     const ids = c.req.valid('json');
     const result = await withTransaction(db, user.id, user.plan, async (ctx) => {
       await deleteTags(ctx, ids);

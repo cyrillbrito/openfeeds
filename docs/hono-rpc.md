@@ -56,7 +56,7 @@ const publicCors = cors({
   credentials: true,
 })
 
-feedsRoutes.post('/', publicCors, authMiddleware, zValidator('json', schema), handler)
+feedsRoutes.post('/', publicCors, requireAuthMiddleware, zValidator('json', schema), handler)
 ```
 
 Route-scoped CORS keeps the wider policy attached to the route that needs it; the rest of the app stays on the strict global policy (TRUSTED_ORIGINS only).
@@ -127,7 +127,7 @@ Routes consumed by TanStack DB collections take a **batched array** input and re
 ```ts
 .post(
   '/create',
-  authMiddleware,
+  requireAuthMiddleware,
   zValidator('json', z.array(insertSchema)),
   async (c) => {
     const user = c.var.user;

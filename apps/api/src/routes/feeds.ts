@@ -21,7 +21,7 @@ import { Hono } from 'hono';
 import { cors } from 'hono/cors';
 import { z } from 'zod';
 import { env } from '~/env';
-import { authMiddleware, requireUser, type Env } from '~/middleware/auth';
+import { requireAuthMiddleware, type AuthedEnv } from '~/middleware/auth';
 
 /**
  * Feed routes.
@@ -67,17 +67,16 @@ const publicCors = cors({
   allowHeaders: ['Content-Type'],
 });
 
-export const feedsRoutes = new Hono<Env>()
+export const feedsRoutes = new Hono<AuthedEnv>()
   // Public single-feed subscribe. CORS for extension origins, then auth,
   // then handler. Mounted under /api/feeds so the path is `POST /api/feeds`.
   .post(
     '/',
     publicCors,
-    authMiddleware,
+    requireAuthMiddleware,
     zValidator('json', z.object({ url: feedUrlSchema })),
     async (c) => {
       const user = c.var.user;
-      requireUser(user);
       const { url } = c.req.valid('json');
       const [feed] = await withTransaction(db, user.id, user.plan, async (ctx) => {
         const created = await createFeeds(ctx, [{ feedUrl: url }]);
@@ -89,11 +88,10 @@ export const feedsRoutes = new Hono<Env>()
     },
   )
   // Internal routes — same-origin only, no extra CORS needed.
-  .use('*', authMiddleware)
+  .use('*', requireAuthMiddleware)
   // Collection.onInsert (batch + txid handshake)
   .post('/create', zValidator('json', z.array(CreateFeedSchema)), async (c) => {
     const user = c.var.user;
-    requireUser(user);
     const data = c.req.valid('json');
     const result = await withTransaction(db, user.id, user.plan, async (ctx) => {
       await createFeeds(ctx, data);
@@ -103,7 +101,6 @@ export const feedsRoutes = new Hono<Env>()
   })
   .patch('/update', zValidator('json', z.array(UpdateFeedSchema)), async (c) => {
     const user = c.var.user;
-    requireUser(user);
     const data = c.req.valid('json');
     const result = await withTransaction(db, user.id, user.plan, async (ctx) => {
       await updateFeeds(ctx, data);
@@ -113,7 +110,6 @@ export const feedsRoutes = new Hono<Env>()
   })
   .post('/delete', zValidator('json', z.array(z.uuidv7())), async (c) => {
     const user = c.var.user;
-    requireUser(user);
     const ids = c.req.valid('json');
     const result = await withTransaction(db, user.id, user.plan, async (ctx) => {
       await deleteFeeds(ctx, ids);
@@ -122,15 +118,12 @@ export const feedsRoutes = new Hono<Env>()
     return c.json(result);
   })
   .post('/discover', zValidator('json', z.object({ url: feedUrlSchema })), async (c) => {
-    const user = c.var.user;
-    requireUser(user);
     const { url } = c.req.valid('json');
     const result = await discoverRssFeeds(url);
     return c.json(result);
   })
   .post('/import-opml', zValidator('json', z.object({ opmlContent: z.string() })), async (c) => {
     const user = c.var.user;
-    requireUser(user);
     const { opmlContent } = c.req.valid('json');
     const result = await withTransaction(db, user.id, user.plan, (ctx) =>
       importOpmlFeeds(ctx, opmlContent),
@@ -139,13 +132,11 @@ export const feedsRoutes = new Hono<Env>()
   })
   .get('/export-opml', async (c) => {
     const user = c.var.user;
-    requireUser(user);
     const opml = await exportOpmlFeeds(user.id);
     return c.json(opml);
   })
   .get('/has-any', async (c) => {
     const user = c.var.user;
-    requireUser(user);
     const feed = await db.query.feeds.findFirst({
       columns: { id: true },
       where: eq(feeds.userId, user.id),
@@ -154,21 +145,18 @@ export const feedsRoutes = new Hono<Env>()
   })
   .post('/retry', zValidator('json', z.object({ id: z.uuidv7() })), async (c) => {
     const user = c.var.user;
-    requireUser(user);
     const { id } = c.req.valid('json');
     const result = await retryFeed(id, user.id);
     return c.json(result);
   })
   .get('/sync-logs', zValidator('query', z.object({ feedId: z.uuidv7() })), async (c) => {
     const user = c.var.user;
-    requireUser(user);
     const { feedId } = c.req.valid('query');
     const logs = await getFeedSyncLogs(user.id, feedId, 200);
     return c.json(logs);
   })
   .post('/follow-with-tags', zValidator('json', FollowFeedsWithTagsSchema), async (c) => {
     const user = c.var.user;
-    requireUser(user);
     const data = c.req.valid('json');
     const result = await withTransaction(db, user.id, user.plan, async (ctx) => {
       await followFeedsWithTags(ctx, data);

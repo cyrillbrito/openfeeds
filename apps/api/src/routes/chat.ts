@@ -10,7 +10,7 @@ import { anthropicText } from '@tanstack/ai-anthropic';
 import { Hono } from 'hono';
 import { z } from 'zod';
 import { env } from '~/env';
-import { authMiddleware, requireUser, type Env } from '~/middleware/auth';
+import { requireAuthMiddleware, type AuthedEnv } from '~/middleware/auth';
 
 /**
  * Loose body validator — `ModelMessage[]` has a wide shape; Zod just makes
@@ -40,11 +40,10 @@ const chatBody = z.object({
  * analytics. The stream is returned as SSE — Hono passes the `Response`
  * through unchanged.
  */
-export const chatRoutes = new Hono<Env>()
-  .use('*', authMiddleware)
+export const chatRoutes = new Hono<AuthedEnv>()
+  .use('*', requireAuthMiddleware)
   .post('/', zValidator('json', chatBody), (c) => {
     const user = c.var.user;
-    requireUser(user);
 
     if (!env.ANTHROPIC_API_KEY) {
       return c.json({ message: 'AI chat is not configured' }, 503);
