@@ -33,7 +33,6 @@ export const feeds = pgTable(
     syncStatus: text('sync_status').notNull().default('ok'),
     /** Last sync error message (null when healthy) */
     syncError: text('sync_error'),
-    /** Consecutive sync failure count */
     /** HTTP ETag header from last successful fetch (for conditional requests) */
     etagHeader: text('etag_header'),
     /** HTTP Last-Modified header from last successful fetch (for conditional requests) */

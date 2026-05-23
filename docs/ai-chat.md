@@ -148,11 +148,13 @@ Collected via `onAfterToolCall` (per-tool metrics) and fired on `onFinish` or `o
 | `id` | `uuid` | PK, UUIDv7 default |
 | `user_id` | `text` | FK → `user.id`, ON DELETE CASCADE, indexed |
 | `title` | `text` | Not null |
-| `messages` | `jsonb` | Full `ModelMessage[]` array, default `[]` |
+| `messages` | `text` | JSON-encoded `ModelMessage[]`, default `'[]'`. See note below. |
 | `created_at` | `timestamp` | Default now |
 | `updated_at` | `timestamp` | Auto-updated via `$onUpdate` |
 
-Messages are stored as a single JSONB blob per session — no separate messages table. This simplifies sync and avoids per-message row overhead.
+Messages are stored as a single JSON blob per session — no separate messages table. This simplifies sync and avoids per-message row overhead.
+
+The column is `text` rather than `jsonb` because bun:sql's binary protocol auto-serialises objects for `jsonb`, which collides with Drizzle's own `JSON.stringify` in the toDriver mapper and double-encodes the payload (`jsonb_typeof` returns `'string'` instead of `'array'`). PG's `json` type has the same issue since Drizzle's `json()` also stringifies. Using `text` removes all driver ambiguity: we `JSON.stringify` on write (`saveChatSession`) and `JSON.parse` on read (via the `ChatSessionSchema` transform).
 
 ### Domain Layer
 
