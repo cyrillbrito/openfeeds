@@ -1,7 +1,7 @@
 /**
  * Shared UIMessage fixtures for AI chat Storybook stories.
  */
-import type { UIMessage } from '@tanstack/ai';
+import type { UIMessage } from '@tanstack/ai-client';
 import type { SessionSummary } from './chat-context.shared';
 
 export const userMessage: UIMessage = {

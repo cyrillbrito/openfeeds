@@ -1,4 +1,4 @@
-import type { ToolCallPart, UIMessage } from '@tanstack/ai';
+import type { ToolCallPart, UIMessage } from '@tanstack/ai-client';
 import { AlertTriangle, Sparkles } from 'lucide-solid';
 import remarkBreaks from 'remark-breaks';
 import remarkGfm from 'remark-gfm';
