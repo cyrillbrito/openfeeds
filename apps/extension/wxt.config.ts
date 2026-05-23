@@ -1,5 +1,5 @@
 import tailwindcss from '@tailwindcss/vite';
-import { defineConfig } from 'wxt';
+import { defineConfig, type WxtViteConfig } from 'wxt';
 
 export default defineConfig({
   modules: ['@wxt-dev/module-solid'],
@@ -24,7 +24,7 @@ export default defineConfig({
       port: 3003,
     },
   },
-  vite: () => ({
-    plugins: [tailwindcss()],
+  vite: (): WxtViteConfig => ({
+    plugins: [...tailwindcss()] as WxtViteConfig['plugins'],
   }),
 });
