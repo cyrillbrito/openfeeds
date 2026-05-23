@@ -11,6 +11,6 @@
     "uuidv7": "^1.2.1"
   },
   "devDependencies": {
-    "@types/bun": "^1.3.13"
+    "@types/bun": "^1.3.14"
   }
 }
