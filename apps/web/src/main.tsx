@@ -1,15 +1,24 @@
 /* @refresh reload */
 import { setAppVersion } from '@repo/domain/client';
-import { RouterProvider } from '@tanstack/solid-router';
+import { RouterProvider, createRouter } from '@tanstack/solid-router';
 import { ErrorBoundary } from 'solid-js';
 import { render } from 'solid-js/web';
-import { getRouter } from './router';
+import { DefaultCatchBoundary } from './components/DefaultCatchBoundary';
+import { NotFound } from './components/NotFound';
+import { routeTree } from './routeTree.gen';
 import './assets/inter/inter.css';
 import './styles/app.css';
 
 setAppVersion(__APP_VERSION__);
 
-const router = getRouter();
+const router = createRouter({
+  routeTree,
+  defaultPreload: 'intent',
+  defaultPreloadStaleTime: 0,
+  defaultErrorComponent: DefaultCatchBoundary,
+  defaultNotFoundComponent: () => <NotFound />,
+  scrollRestoration: true,
+});
 
 declare module '@tanstack/solid-router' {
   interface Register {
