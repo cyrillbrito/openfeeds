@@ -4,7 +4,7 @@ import { createResource, createSignal, For, Show } from 'solid-js';
 import { Card } from '~/components/Card';
 import { Loader } from '~/components/Loader';
 import { authClient } from '~/lib/auth-client';
-import { SCOPE_DESCRIPTIONS } from '~/utils/oauth';
+import { SCOPE_DESCRIPTIONS } from '~/lib/oauth-scopes';
 
 export const Route = createFileRoute('/oauth/consent')({
   validateSearch: (search): { client_id?: string; scope?: string } => ({

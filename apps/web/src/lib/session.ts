@@ -3,26 +3,25 @@ import { authClient } from './auth-client';
 /**
  * SPA session cache.
  *
- * A single in-memory promise that resolves to the current Better Auth session
- * (or `null` for guests). Used by route guards so navigation never spams the
- * api with `get-session` requests — the first guard to run triggers one fetch,
- * every subsequent guard awaits the already-resolved promise synchronously.
+ * Better Auth's `authClient.getSession()` is a dynamic-proxy method that
+ * always fires a fresh `/api/auth/get-session` request — its reactive
+ * `useSession()` atom is the only thing it dedupes through. Route guards
+ * (`~/lib/guards`) cannot wait for the atom to settle, so this module
+ * memoizes a single promise: first guard on a cold load triggers one fetch,
+ * every subsequent guard awaits the same promise.
  *
  * Lifecycle:
- * - Cold app load → first call to `getSessionOnce()` fires one network request.
+ * - Cold app load → first `getSessionOnce()` fires one network request.
  * - All subsequent calls return the same memoized promise.
- * - `setSession(...)` lets the login/signup flows seed the cache after a
- *   successful sign-in so the next guard run sees the new session without
- *   a refetch.
- * - `invalidateSession()` clears the cache (used on sign-out — though the
- *   sign-out handler also does a full reload, this keeps the helpers honest
- *   for any future in-place flow).
+ * - `primeSessionAfterAuth()` seeds the cache after a successful login/signup
+ *   so the post-redirect guard run sees the session without a refetch.
+ * - `invalidateSession()` clears the cache on sign-out (the sign-out handler
+ *   also does a full page reload, which independently nukes everything;
+ *   the explicit clear keeps the helper honest for any future in-place flow).
  *
  * The shape is intentionally narrow: guards only need to know "is there a
- * session?". Components that need user details continue to use Better Auth's
- * `useSession()` reactive hook — which already shares the same underlying
- * fetch via `better-auth/solid` and stays in sync with this cache because
- * Better Auth's client maintains its own internal cache.
+ * session?". Components that need user details use Better Auth's reactive
+ * `useSession()` hook.
  */
 
 type SessionData = Awaited<ReturnType<typeof authClient.getSession>>['data'];
@@ -40,4 +39,17 @@ export function setSession(data: SessionData): void {
 
 export function invalidateSession(): void {
   cached = null;
+}
+
+/**
+ * Seed the cache after a successful login/signup and return the session data
+ * (or null when verification is still pending).
+ *
+ * The reactive `useSession()` atom in `_frame.tsx` separately picks up the
+ * user and fires `posthog.identify()` — callers do not need to identify here.
+ */
+export async function primeSessionAfterAuth(): Promise<SessionData> {
+  const { data } = await authClient.getSession();
+  setSession(data ?? null);
+  return data ?? null;
 }
