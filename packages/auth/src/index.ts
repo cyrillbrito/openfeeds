@@ -14,7 +14,7 @@ import { jwt, lastLoginMethod } from 'better-auth/plugins';
 import { env } from './env';
 
 /**
- * Shared Better Auth instance. Consumed by apps/api/. The api app mounts
+ * Shared Better Auth instance. Consumed by apps/server/. The server app mounts
  * `auth.handler` as a Hono catch-all (`.all('/api/auth/*', …)`) which
  * passes Set-Cookie through natively — no framework cookie plugin is
  * needed. Schema generation reads `schema-config.ts` (keep the plugin

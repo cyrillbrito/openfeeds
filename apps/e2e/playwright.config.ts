@@ -89,13 +89,13 @@ export default defineConfig({
   /* Servers Playwright manages for the test run.
    *
    * - mock-server: stand-in RSS endpoints on :9999.
-   * - api + SPA on :3400: in local dev, Playwright starts it from a fresh
+   * - server + SPA on :3400: in local dev, Playwright starts it from a fresh
    *   build so `bunx playwright test` works without a prior `bun dev`. In
    *   CI, the workflow starts the process itself (see ci.yml) — set
    *   `reuseExistingServer: true` so Playwright just waits for the existing
    *   listener instead of trying to spawn a duplicate.
    *
-   * Two-process dev (api on :3401 + vite on :3400 with HMR) is the daily
+   * Two-process dev (server on :3401 + vite on :3400 with HMR) is the daily
    * driver; for E2E we use the production-shaped single-process build so
    * the test bundle matches what ships. */
   webServer: [
@@ -106,12 +106,12 @@ export default defineConfig({
       timeout: 10_000,
     },
     {
-      // From apps/e2e: build the SPA, then run the api with SERVE_SPA=true.
+      // From apps/e2e: build the SPA, then run the server with SERVE_SPA=true.
       // Mirrors the CI step (.github/workflows/ci.yml).
       command:
         'bun --cwd ../web run build && ' +
-        'ln -sfn "$PWD/../web/dist" ../api/web-dist && ' +
-        'SERVE_SPA=true API_PORT=3400 bun --cwd ../api --bun src/index.ts',
+        'ln -sfn "$PWD/../web/dist" ../server/web-dist && ' +
+        'SERVE_SPA=true SERVER_PORT=3400 bun --cwd ../server --bun src/index.ts',
       url: 'http://localhost:3400',
       // CI starts the server out-of-band; reuse it instead of spawning a duplicate.
       reuseExistingServer: true,

@@ -1,6 +1,6 @@
-# API Application - Bun + Hono
+# Server Application - Bun + Hono
 
-Standalone HTTP API. Owns all server-side concerns: auth, Electric SQL shape proxies, entity mutations, OAuth, MCP, well-known endpoints. End-to-end typed to `apps/web/` via Hono's `hc` client (`@repo/api/client`).
+Standalone HTTP server. Owns all server-side concerns: auth, Electric SQL shape proxies, entity mutations, OAuth, MCP, well-known endpoints. Also serves the built SPA in production (`SERVE_SPA=true`). End-to-end typed to `apps/web/` via Hono's `hc` client (`@repo/server/client`).
 
 ## Commands
 
@@ -15,10 +15,10 @@ Run `bun checks` from the repo root after every change.
 
 ```
 src/
-  index.ts        # Hono app entrypoint: CORS, error mapping, route mounts
+  index.ts        # Hono app entrypoint: CORS, error mapping, route mounts, SPA fallback
   env.ts          # t3-env validation
   auth.ts         # Re-export of the shared @repo/auth instance
-  client.ts       # Type-only re-export for hc<App> (consumed by web via @repo/api/client)
+  client.ts       # Type-only re-export for hc<App> (consumed by web via @repo/server/client)
   middleware/
     auth.ts       # authMiddleware (nullable) + requireAuthMiddleware (asserts, narrows types)
   routes/
@@ -56,7 +56,7 @@ Watch out: combining a root-method (`.post('/')`) with sibling subpaths (`.post(
 
 ## Typed RPC client (`hc`)
 
-`src/client.ts` exports `type App = typeof app` only — never values. Web imports it via `@repo/api/client` and builds the `hc<App>(...)` client in `apps/web/src/lib/api-client.ts`. End-to-end types flow without codegen.
+`src/client.ts` exports `type App = typeof app` only — never values. Web imports it via `@repo/server/client` and builds the `hc<App>(...)` client in `apps/web/src/lib/api-client.ts`. End-to-end types flow without codegen.
 
 Call shape on the client: `client.api.feeds.discover.$post({ json: { url } })` returns a typed `Response`. The `unwrap()` helper in `apps/web/src/lib/api-client.ts` checks `res.ok` and parses JSON.
 

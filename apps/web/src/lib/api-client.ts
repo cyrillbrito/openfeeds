@@ -1,9 +1,9 @@
-import type { App } from '@repo/api/client';
+import type { App } from '@repo/server/client';
 import { hc } from 'hono/client';
 import type { ClientResponse } from 'hono/client';
 
 /**
- * Hono RPC client — end-to-end typed access to the Hono API in apps/api/.
+ * Hono RPC client — end-to-end typed access to the Hono API in apps/server/.
  *
  * Same-origin in the browser via Vite's `server.proxy: { '/api': ... }`
  * (dev) and a reverse proxy in prod. No CORS, no cookie domain issues,

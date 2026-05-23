@@ -60,10 +60,10 @@ MCP Client (e.g. Claude)          OpenFeeds                    User
 | ------------------------------------------ | ---------------------------------------------------------------------------- |
 | `packages/auth/src/index.ts`               | Better Auth config with `jwt()` + `oauthProvider()` plugins                  |
 | `packages/auth/src/schema-config.ts`       | Schema-generation-only copy (avoids runtime env during codegen)              |
-| `apps/api/src/routes/well-known.ts`        | `.well-known` endpoint handlers (OpenID, OAuth metadata, protected resource) |
-| `apps/api/src/index.ts`                    | api entrypoint — mounts `.well-known/*` at host root and the auth catch-all  |
+| `apps/server/src/routes/well-known.ts`     | `.well-known` endpoint handlers (OpenID, OAuth metadata, protected resource) |
+| `apps/server/src/index.ts`                 | server entrypoint — mounts `.well-known/*` at host root and the auth catch-all |
 | `apps/web/src/routes/oauth/consent.tsx`    | User-facing consent page (approve/deny scopes)                               |
-| `apps/api/src/routes/mcp.ts`               | MCP server endpoint (Streamable HTTP transport)                              |
+| `apps/server/src/routes/mcp.ts`            | MCP server endpoint (Streamable HTTP transport)                              |
 | `apps/web/src/lib/auth-client.ts`          | Client-side auth with `oauthProviderClient()` plugin                         |
 
 ## Auth Configuration
@@ -93,7 +93,7 @@ plugins: [
 
 ## Well-Known Endpoints
 
-RFC 8615 requires well-known URIs at the host root. The api app mounts `wellKnownRoutes` at `/.well-known/*` directly (`apps/api/src/index.ts`). In dev, the SPA's Vite proxy forwards `/.well-known/*` to the api so the same origin serves both UI and discovery documents.
+RFC 8615 requires well-known URIs at the host root. The server app mounts `wellKnownRoutes` at `/.well-known/*` directly (`apps/server/src/index.ts`). In dev, the SPA's Vite proxy forwards `/.well-known/*` to the server so the same origin serves both UI and discovery documents.
 
 | Endpoint                                           | Spec                     | Purpose                                                                                      |
 | -------------------------------------------------- | ------------------------ | -------------------------------------------------------------------------------------------- |
@@ -126,7 +126,7 @@ Scope descriptions:
 
 ## MCP Endpoint
 
-`apps/api/src/routes/mcp.ts` — the Model Context Protocol server.
+`apps/server/src/routes/mcp.ts` — the Model Context Protocol server.
 
 - Uses `mcpHandler` from `@better-auth/oauth-provider` for JWT verification against the local JWKS endpoint (`/api/auth/jwks`).
 - The JWKS URL uses `localhost` to avoid the server fetching itself through the public URL (DNS, TLS, potential deadlocks).
@@ -136,7 +136,7 @@ Scope descriptions:
 
 ## Dev CORS
 
-CORS for MCP Inspector is handled by Hono's `cors()` middleware in `apps/api/src/index.ts`. `TRUSTED_ORIGINS` in env controls the allowed origins; in development this typically includes `http://localhost:6274` (MCP Inspector). If you add MCP-specific response headers later (e.g. `Mcp-Session-Id`), expose them via the `cors()` config.
+CORS for MCP Inspector is handled by Hono's `cors()` middleware in `apps/server/src/index.ts`. `TRUSTED_ORIGINS` in env controls the allowed origins; in development this typically includes `http://localhost:6274` (MCP Inspector). If you add MCP-specific response headers later (e.g. `Mcp-Session-Id`), expose them via the `cors()` config.
 
 ## Database Tables
 
@@ -157,7 +157,7 @@ Migration: `packages/db/drizzle/0002_add-oauth.sql`
 ## Dependencies
 
 - `@better-auth/oauth-provider` — OAuth 2.1 Authorization Server plugin for Better Auth (in `packages/auth`)
-- `@modelcontextprotocol/sdk` — Official MCP SDK (in `apps/api`)
+- `@modelcontextprotocol/sdk` — Official MCP SDK (in `apps/server`)
 
 ## Testing with MCP Inspector
 

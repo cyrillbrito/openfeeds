@@ -31,7 +31,7 @@ import { tagsRoutes } from '~/routes/tags';
 import { wellKnownRoutes } from '~/routes/well-known';
 
 /**
- * apps/api — Bun + Hono.
+ * apps/server — Bun + Hono.
  *
  * Dev: web (Vite, :3400) calls this server cross-origin on :3401. CORS with
  * credentials enabled below so the shared Better Auth session cookie is sent.
@@ -140,10 +140,10 @@ app.onError((err, c) => {
   return c.json({ message: 'Internal server error' }, 500);
 });
 
-console.log(`🚀 api listening on http://localhost:${env.API_PORT}`);
+console.log(`🚀 server listening on http://localhost:${env.SERVER_PORT}`);
 
 export default {
-  port: env.API_PORT,
+  port: env.SERVER_PORT,
   fetch: app.fetch,
 };
 

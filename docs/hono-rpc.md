@@ -1,6 +1,6 @@
 # Hono + `hc` RPC in OpenFeeds
 
-Project-specific patterns and gotchas for the api app (`apps/api/`) and its typed client consumed by `apps/web/`. The generic Hono skill (`.agents/skills/hono/SKILL.md`) covers the framework itself — this doc only captures what's specific to this codebase.
+Project-specific patterns and gotchas for the server app (`apps/server/`) and its typed client consumed by `apps/web/`. The generic Hono skill (`.agents/skills/hono/SKILL.md`) covers the framework itself — this doc only captures what's specific to this codebase.
 
 Background: see `docs/records/011-migrate-server-off-tanstack-start.md` for why we chose Hono (after abandoning Elysia + Eden Treaty) and what the end-state architecture looks like.
 
@@ -21,14 +21,14 @@ const entityRoutes = new Hono()
   .patch('/update', authMw, validator, handler)
 ```
 
-If the root-method handler's request/response shape differs sharply from the sibling subpaths', Hono's RPC type for the entire router can collapse. Run `bun checks` immediately after adding a `.<method>('/')` route and verify `client.api.<entity>.<...>` still has narrow types at call sites in `apps/web/`. If inference broke, move the root route to the top-level `app` in `apps/api/src/index.ts` instead of the sub-router.
+If the root-method handler's request/response shape differs sharply from the sibling subpaths', Hono's RPC type for the entire router can collapse. Run `bun checks` immediately after adding a `.<method>('/')` route and verify `client.api.<entity>.<...>` still has narrow types at call sites in `apps/web/`. If inference broke, move the root route to the top-level `app` in `apps/server/src/index.ts` instead of the sub-router.
 
-Currently in use for `POST /api/feeds` in `apps/api/src/routes/feeds.ts` (extension-facing endpoint) — survived inference, but treat any future addition with the same skepticism.
+Currently in use for `POST /api/feeds` in `apps/server/src/routes/feeds.ts` (extension-facing endpoint) — survived inference, but treat any future addition with the same skepticism.
 
 ## Hyphenated mount paths require bracket access — and can collapse types
 
 ```ts
-// Server (apps/api/src/index.ts)
+// Server (apps/server/src/index.ts)
 app.route('/api/public-config', publicConfigRoutes)
 
 // Client (apps/web/)
@@ -92,7 +92,7 @@ Use `unwrap()` for everything except streaming endpoints (SSE chat, audio). For 
 
 ## Central `app.onError` keeps handlers thin
 
-All domain errors map to `{ message: string }` JSON in one place (`apps/api/src/index.ts`):
+All domain errors map to `{ message: string }` JSON in one place (`apps/server/src/index.ts`):
 
 ```ts
 app.onError((err, c) => {
@@ -147,8 +147,8 @@ See `docs/data-layer.md` for the client side of this handshake.
 
 ## `.well-known/*` at the host root
 
-RFC 8615 says well-known URIs must live at the host root, not under `/api`. The api app mounts `wellKnownRoutes` at `/.well-known/*` directly (`apps/api/src/index.ts`); the Vite dev proxy in `apps/web/vite.config.ts` forwards `/.well-known/*` alongside `/api/*` so the dev origin behaves like prod.
+RFC 8615 says well-known URIs must live at the host root, not under `/api`. The server app mounts `wellKnownRoutes` at `/.well-known/*` directly (`apps/server/src/index.ts`); the Vite dev proxy in `apps/web/vite.config.ts` forwards `/.well-known/*` alongside `/api/*` so the dev origin behaves like prod.
 
 ## Client construction
 
-`apps/api/src/client.ts` exports `type App = typeof app` only — never values. Web imports it via `@repo/api/client` and builds the `hc<App>(...)` client in `apps/web/src/lib/api-client.ts`. End-to-end types flow without codegen.
+`apps/server/src/client.ts` exports `type App = typeof app` only — never values. Web imports it via `@repo/server/client` and builds the `hc<App>(...)` client in `apps/web/src/lib/api-client.ts`. End-to-end types flow without codegen.

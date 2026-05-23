@@ -4,7 +4,7 @@ import { z } from 'zod';
 export const env = createEnv({
   server: {
     NODE_ENV: z.enum(['development', 'test', 'production']).default('development'),
-    API_PORT: z.coerce.number().default(3401),
+    SERVER_PORT: z.coerce.number().default(3401),
     /**
      * When true, this server also serves the built SPA from ./web-dist
      * (assets + index.html fallback). Set in the prod Docker image. Off in
@@ -16,7 +16,7 @@ export const env = createEnv({
      * this is typically the web Vite server (http://localhost:3400), which
      * proxies /api/* → :3401 — so browsers, MCP clients, and OAuth flows
      * see one origin. In prod this is whatever public hostname terminates
-     * TLS in front of the api app (which also serves the SPA — same origin).
+     * TLS in front of the server (which also serves the SPA — same origin).
      */
     BASE_URL: z.url(),
     /**

@@ -10,7 +10,7 @@
         "VITE_*",
         "AI_MODEL",
         "ANTHROPIC_API_KEY",
-        "API_PORT",
+        "SERVER_PORT",
         "AUTH_JWKS_URL",
         "BASE_URL",
         "BETTER_AUTH_SECRET",

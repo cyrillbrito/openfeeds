@@ -54,13 +54,13 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          # api: bundles the built SPA (apps/web/dist) and serves it from Hono
+          # server: bundles the built SPA (apps/web/dist) and serves it from Hono
           # alongside /api/*. Prune scope includes both packages so the web
           # build output lands in the same pruned tree.
-          - name: api
-            packages: '@repo/api @repo/web'
+          - name: server
+            packages: '@repo/server @repo/web'
             image: ghcr.io/cyrillbrito/openfeeds-web
-            dockerfile: apps/api/Dockerfile
+            dockerfile: apps/server/Dockerfile
             build: true
             sourcemaps: true
           # Worker has a build step but no sourcemap upload.

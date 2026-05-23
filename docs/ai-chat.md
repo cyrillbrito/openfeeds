@@ -15,7 +15,7 @@ AI assistant integrated into OpenFeeds. Uses TanStack AI with Anthropic (Claude 
                │ body: { messages, sessionId }
                ▼
 ┌─────────────────────────────────────────┐
-│  apps/api — Hono /api/chat handler      │
+│  apps/server — Hono /api/chat handler   │
 │  Auth: Better Auth session cookie       │
 │  chat() + anthropicText() adapter       │
 │  Middleware: persistence + analytics     │
@@ -42,9 +42,9 @@ AI assistant integrated into OpenFeeds. Uses TanStack AI with Anthropic (Claude 
 
 ## API Endpoint
 
-**`POST /api/chat`** — `apps/api/src/routes/chat.ts`
+**`POST /api/chat`** — `apps/server/src/routes/chat.ts`
 
-SSE streaming endpoint on the Hono api app. Returns a `Response` produced by `toServerSentEventsResponse()` from `@tanstack/ai`; Hono passes it through unchanged.
+SSE streaming endpoint on the Hono server app. Returns a `Response` produced by `toServerSentEventsResponse()` from `@tanstack/ai`; Hono passes it through unchanged.
 
 **Request body:**
 
@@ -55,7 +55,7 @@ SSE streaming endpoint on the Hono api app. Returns a `Response` produced by `to
 
 (The chat UI also tracks "current page context" client-side; it's threaded through the system prompt by mutating the user message, not as a separate body field.)
 
-**Auth:** `requireAuthMiddleware` from `apps/api/src/middleware/auth.ts` reads the Better Auth session cookie. Returns 401 if unauthenticated.
+**Auth:** `requireAuthMiddleware` from `apps/server/src/middleware/auth.ts` reads the Better Auth session cookie. Returns 401 if unauthenticated.
 
 **Env guard:** Returns 503 if `ANTHROPIC_API_KEY` is not configured.
 
@@ -186,7 +186,7 @@ Client-safe schemas (exported from `@repo/domain/client`):
 
 ### API Routes
 
-**File:** `apps/api/src/routes/chat-sessions.ts`
+**File:** `apps/server/src/routes/chat-sessions.ts`
 
 - `POST /api/chat-sessions/delete` — accepts a session id, deletes server-side. Returns `{ txid }` for the optimistic-mutation handshake.
 
@@ -272,7 +272,7 @@ Wraps the entire `_frame` layout (single instance). Uses `ChatClient` directly (
 1. User types in `ChatInput` → `sendMessage(text)` on context
 2. `ChatProvider` restores history into ChatClient buffer if needed, sets `streamSessionId`
 3. `ChatClient` POSTs to `/api/chat` with `{ messages, sessionId }` (via the SPA's Vite proxy in dev, same-origin in prod)
-4. api authenticates via Better Auth session cookie
+4. The server authenticates via Better Auth session cookie
 5. Hono handler builds the chat stream (system prompt + tools + middleware)
 6. `chat()` streams via `anthropicText(env.AI_MODEL)` with tools + middleware
 7. Tool calls execute against `@repo/domain` / `@repo/db`
