@@ -1,4 +1,4 @@
-import { db, feeds, type DbFeed, type DbInsertFeed } from '@repo/db';
+import { feeds, type DbFeed, type DbInsertFeed } from '@repo/db';
 import type { DiscoveredFeed } from '@repo/discovery/server';
 import { discoverFeeds } from '@repo/discovery/server';
 import { createId } from '@repo/shared/utils';
@@ -31,9 +31,9 @@ function toApiFeed(f: DbFeed): Feed {
 }
 
 /** Existence + ownership guard. Throws NotFoundError if feed doesn't exist or doesn't belong to user. */
-async function assertFeedExists(id: string, userId: string): Promise<void> {
-  const feed = await db.query.feeds.findFirst({
-    where: and(eq(feeds.id, id), eq(feeds.userId, userId)),
+async function assertFeedExists(ctx: TransactionContext, id: string): Promise<void> {
+  const feed = await ctx.conn.query.feeds.findFirst({
+    where: and(eq(feeds.id, id), eq(feeds.userId, ctx.userId)),
     columns: { id: true },
   });
 
@@ -118,17 +118,17 @@ export async function deleteFeeds(ctx: TransactionContext, ids: string[]): Promi
  * Reset a feed's sync error state so the orchestrator picks it up again.
  * Does NOT immediately sync — the next orchestrator run will handle it.
  */
-export async function retryFeed(id: string, userId: string): Promise<void> {
+export async function retryFeed(ctx: TransactionContext, id: string): Promise<void> {
   // Verify feed exists and belongs to user
-  await assertFeedExists(id, userId);
+  await assertFeedExists(ctx, id);
 
-  await db
+  await ctx.conn
     .update(feeds)
     .set({
       syncStatus: 'ok',
       syncError: null,
     })
-    .where(and(eq(feeds.id, id), eq(feeds.userId, userId)));
+    .where(and(eq(feeds.id, id), eq(feeds.userId, ctx.userId)));
 }
 
 export async function discoverRssFeeds(url: string): Promise<DiscoveredFeed[]> {

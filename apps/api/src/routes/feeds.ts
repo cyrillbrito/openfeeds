@@ -151,7 +151,10 @@ export const feedsRoutes = new Hono<AuthedEnv>()
   .post('/retry', zValidator('json', z.object({ id: z.uuidv7() })), async (c) => {
     const user = c.var.user;
     const { id } = c.req.valid('json');
-    const result = await retryFeed(id, user.id);
+    const result = await withTransaction(db, user.id, user.plan, async (ctx) => {
+      await retryFeed(ctx, id);
+      return { txid: await getTxId(ctx.conn) };
+    });
     return c.json(result);
   })
   .get('/sync-logs', zValidator('query', z.object({ feedId: z.uuidv7() })), async (c) => {

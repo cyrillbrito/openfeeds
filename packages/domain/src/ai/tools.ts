@@ -6,7 +6,7 @@ import {
   tags as tagsTable,
 } from '@repo/db';
 import { createId } from '@repo/shared/utils';
-import { toolDefinition } from '@tanstack/ai';
+import { toolDefinition, type Tool } from '@tanstack/ai';
 import { and, asc, count, desc, eq, gte, ilike, inArray, lte, or } from 'drizzle-orm';
 import { z } from 'zod';
 import { feedUrlSchema } from '../client';
@@ -508,8 +508,7 @@ export function createTools(user: AiUser) {
     return { tags: rows, count: rows.length };
   });
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const allTools: any[] = [
+  const allTools: Tool[] = [
     discoverFeeds,
     followFeeds,
     unfollowFeeds,

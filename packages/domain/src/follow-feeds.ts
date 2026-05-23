@@ -47,7 +47,7 @@ export async function followFeedsWithTags(
   if (data.newTags.length > 0) {
     await createTags(
       ctx,
-      data.newTags.map((t) => ({ id: t.id, name: t.name })),
+      data.newTags.map((t) => ({ id: t.id, name: t.name, color: t.color })),
     );
   }
 
