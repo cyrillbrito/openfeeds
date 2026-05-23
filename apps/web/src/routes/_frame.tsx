@@ -1,10 +1,4 @@
-import {
-  createFileRoute,
-  Link,
-  Outlet,
-  useLocation,
-  useNavigate,
-} from '@tanstack/solid-router';
+import { createFileRoute, Link, Outlet, useLocation, useNavigate } from '@tanstack/solid-router';
 import { Compass, Inbox, Plus, Rss, Sparkles } from 'lucide-solid';
 import { posthog } from 'posthog-js';
 import { createEffect, createSignal, For, on, onCleanup, onMount, Show, Suspense } from 'solid-js';

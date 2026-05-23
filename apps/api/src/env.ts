@@ -59,7 +59,9 @@ export const env = createEnv({
             .string()
             .refine(
               (s) => s.startsWith('chrome-extension://') || s.startsWith('moz-extension://'),
-              { message: 'Extension origin must start with chrome-extension:// or moz-extension://' },
+              {
+                message: 'Extension origin must start with chrome-extension:// or moz-extension://',
+              },
             ),
         ),
       ),
