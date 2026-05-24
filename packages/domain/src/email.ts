@@ -3,15 +3,15 @@ import { Resend } from 'resend';
 import { env } from './env';
 
 // Lazy-initialized Resend client
-let _resend: Resend | null = null;
-let _resendChecked = false;
+let resendClient: Resend | null = null;
+let resendChecked = false;
 
 function getResend(): Resend | null {
-  if (!_resendChecked) {
-    _resend = env.RESEND_API_KEY ? new Resend(env.RESEND_API_KEY) : null;
-    _resendChecked = true;
+  if (!resendChecked) {
+    resendClient = env.RESEND_API_KEY ? new Resend(env.RESEND_API_KEY) : null;
+    resendChecked = true;
   }
-  return _resend;
+  return resendClient;
 }
 
 const FROM_EMAIL = 'OpenFeeds <hello@mail.openfeeds.app>';

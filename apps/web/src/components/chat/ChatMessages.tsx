@@ -58,7 +58,7 @@ export function ChatMessages() {
   const lastAssistantId = createMemo(() => {
     const msgs = chat.messages();
     for (let i = msgs.length - 1; i >= 0; i--) {
-      if (msgs[i]!.role === 'assistant') return msgs[i]!.id;
+      if (msgs[i].role === 'assistant') return msgs[i].id;
     }
     return null;
   });
@@ -69,7 +69,7 @@ export function ChatMessages() {
   const hasPendingToolCall = createMemo(() => {
     const msgs = chat.messages();
     if (msgs.length === 0) return false;
-    const last = msgs[msgs.length - 1]!;
+    const last = msgs[msgs.length - 1];
     if (last.role !== 'assistant') return false;
     return last.parts.some(
       (p) => p.type === 'tool-call' && p.output == null && p.state !== 'input-complete',
@@ -79,7 +79,7 @@ export function ChatMessages() {
   const emptyLastAssistant = createMemo(() => {
     const msgs = chat.messages();
     if (msgs.length === 0) return false;
-    const last = msgs[msgs.length - 1]!;
+    const last = msgs[msgs.length - 1];
     if (last.role !== 'assistant') return false;
     // Check if the last assistant message has no text parts with content
     return !last.parts.some(

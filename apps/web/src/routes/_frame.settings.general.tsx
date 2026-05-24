@@ -100,7 +100,7 @@ function SettingsGeneralPage() {
                   <p class="text-base-content text-sm font-medium">Auto-archive articles</p>
                   <p class="text-base-content-gray text-xs">
                     Articles older than this are automatically archived.
-                    <Show when={settings()!.autoArchiveDays !== null}>
+                    <Show when={settings().autoArchiveDays !== null}>
                       {' '}
                       <button
                         type="button"
@@ -118,7 +118,7 @@ function SettingsGeneralPage() {
                     class="input input-bordered input-sm w-20 text-center"
                     min="1"
                     max="365"
-                    value={getEffectiveAutoArchiveDays(settings()!)}
+                    value={getEffectiveAutoArchiveDays(settings())}
                     onChange={(e) => handleAutoArchiveDaysChange(e.target.value)}
                   />
                   <span class="text-base-content-gray text-sm">days</span>
@@ -159,7 +159,7 @@ function SettingsGeneralPage() {
                       <p class="text-base-content text-sm font-medium">Archive old articles</p>
                       <p class="text-base-content-gray text-xs">
                         Manually archive articles older than{' '}
-                        {getEffectiveAutoArchiveDays(settings()!)} days.
+                        {getEffectiveAutoArchiveDays(settings())} days.
                       </p>
                     </div>
                     <button

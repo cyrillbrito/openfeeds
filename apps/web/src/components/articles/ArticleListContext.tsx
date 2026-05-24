@@ -30,6 +30,28 @@ export { type ReadStatus } from './ReadStatusToggle';
 
 export const ARTICLES_PER_PAGE = 20;
 
+function addArticleTag(articleId: string, tagId: string) {
+  articleTagsCollection.insert({
+    id: createId(),
+    userId: '', // Will be set by server
+    articleId,
+    tagId,
+  });
+}
+
+function removeArticleTag(articleTagId: string) {
+  articleTagsCollection.delete(articleTagId);
+}
+
+function createArticleTagsAccessorFn(articleId: string): Accessor<ArticleTag[]> {
+  const query = useLiveQuery((q) =>
+    q
+      .from({ articleTag: articleTagsCollection })
+      .where(({ articleTag }) => eq(articleTag.articleId, articleId)),
+  );
+  return () => (query() as ArticleTag[] | undefined) ?? [];
+}
+
 type SortDirection = 'asc' | 'desc';
 
 export interface ArticleQueryFilter {
@@ -155,28 +177,6 @@ export function ArticleListProvider(props: ArticleListProviderProps) {
     }
   };
 
-  const addTag = (articleId: string, tagId: string) => {
-    articleTagsCollection.insert({
-      id: createId(),
-      userId: '', // Will be set by server
-      articleId,
-      tagId,
-    });
-  };
-
-  const removeTag = (articleTagId: string) => {
-    articleTagsCollection.delete(articleTagId);
-  };
-
-  const createArticleTagsAccessor = (articleId: string): Accessor<ArticleTag[]> => {
-    const query = useLiveQuery((q) =>
-      q
-        .from({ articleTag: articleTagsCollection })
-        .where(({ articleTag }) => eq(articleTag.articleId, articleId)),
-    );
-    return () => (query() as ArticleTag[] | undefined) ?? [];
-  };
-
   const value: ArticleListContextValue = {
     articles,
     totalCount,
@@ -190,9 +190,9 @@ export function ArticleListProvider(props: ArticleListProviderProps) {
     loadMore,
     updateArticle,
     markAllArchived,
-    addTag,
-    removeTag,
-    createArticleTagsAccessor,
+    addTag: addArticleTag,
+    removeTag: removeArticleTag,
+    createArticleTagsAccessor: createArticleTagsAccessorFn,
   };
 
   return <ArticleListContext.Provider value={value}>{props.children}</ArticleListContext.Provider>;

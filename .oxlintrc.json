@@ -48,7 +48,14 @@
       "files": ["apps/marketing/src/components/PostHog.astro"],
       "rules": {
         "no-unused-expressions": "off",
-        "number-arg-out-of-range": "off"
+        "number-arg-out-of-range": "off",
+        "no-underscore-dangle": "off"
+      }
+    },
+    {
+      "files": ["apps/web/src/globals.d.ts"],
+      "rules": {
+        "no-underscore-dangle": "off"
       }
     },
     {

@@ -57,7 +57,7 @@ function UsageLimitsCard() {
       >
         <Show when={usage()}>
           <div class="space-y-4">
-            <For each={flattenUsage(usage()!)}>
+            <For each={flattenUsage(usage())}>
               {(item) => {
                 const unlimited = isUnlimited(item.limit);
                 const pct = () => (unlimited ? 0 : Math.round((item.used / item.limit!) * 100));

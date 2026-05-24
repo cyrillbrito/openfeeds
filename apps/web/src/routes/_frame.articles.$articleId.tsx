@@ -30,6 +30,10 @@ export const Route = createFileRoute('/_frame/articles/$articleId')({
   }),
 });
 
+function handleRemoveTag(articleTagId: string) {
+  articleTagsCollection.delete(articleTagId);
+}
+
 function ArticleView() {
   const params = Route.useParams();
   const router = useRouter();
@@ -109,10 +113,6 @@ function ArticleView() {
       articleId: articleId(),
       tagId,
     });
-  };
-
-  const handleRemoveTag = (articleTagId: string) => {
-    articleTagsCollection.delete(articleTagId);
   };
 
   const feed = () => (feedsQuery() ?? [])[0] ?? null;
@@ -224,7 +224,7 @@ function ArticleView() {
                         params={{ feedId: art().feedId! }}
                         class="text-primary font-medium hover:underline"
                       >
-                        {feed()!.title}
+                        {feed().title}
                       </Link>
                     </Show>
                   </div>
