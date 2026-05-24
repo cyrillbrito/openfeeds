@@ -25,3 +25,7 @@ export {
 
 // App version (pure, browser-safe)
 export { setAppVersion, getAppVersion } from './version';
+
+// Re-exported from @repo/discovery so consumers don't depend on it directly.
+// Discovery is a leaf package — domain is the public surface.
+export type { DiscoveredFeed } from '@repo/discovery/browser';

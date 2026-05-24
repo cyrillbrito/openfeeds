@@ -18,7 +18,6 @@
     "@repo/auth": "workspace:*",
     "@repo/db": "workspace:*",
     "@repo/domain": "workspace:*",
-    "@repo/shared": "workspace:*",
     "@t3-oss/env-core": "^0.13.11",
     "@tanstack/ai": "^0.21.1",
     "@tanstack/ai-anthropic": "^0.10.2",
