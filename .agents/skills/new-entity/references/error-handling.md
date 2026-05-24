@@ -30,15 +30,15 @@ Sits between domain and each transport. Classifies errors:
 2. Export from `packages/domain/src/index.ts`.
 3. Add to `DOMAIN_ERRORS` array in `packages/domain/src/error-boundary.ts` — so the boundary passes it through instead of sanitizing.
 4. Throw from domain functions.
-5. Update API route error mapping if needed for specific HTTP status.
+5. If the new error needs a specific HTTP status, update `app.onError()` in `apps/server/src/index.ts`.
 
 ## Client-Side Error Flow
 
-TanStack Start's `ShallowErrorPlugin` serializes errors — only `message` survives. Client code uses `err.message` only. No `instanceof`, no `code` property.
+Hono routes return errors as JSON: `{ message: string }` with the HTTP status. The `unwrap()` helper in `apps/web/src/lib/api-client.ts` checks `res.ok` and throws `new Error(message)` on non-2xx. Client code uses `err.message` only — no `instanceof`, no `code` property.
 
 ```typescript
 try {
-  await $$createFeed({ data });
+  await unwrap(api.api.feeds.create.$post({ json: feeds }));
 } catch (err) {
   setError(err instanceof Error ? err.message : 'Something went wrong');
 }

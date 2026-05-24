@@ -9,7 +9,7 @@ import type { Transaction } from './config';
  * that matches what PostgreSQL sends in logical replication streams
  * (which is what Electric SQL uses to track sync progress).
  *
- * Used by server functions to return `{ txid }` to TanStack DB collection
+ * Used by Hono route handlers to return `{ txid }` to TanStack DB collection
  * handlers, keeping the optimistic overlay active until Electric confirms
  * the mutation has been synced.
  */

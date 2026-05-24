@@ -37,7 +37,8 @@ Tired of algorithmic feeds deciding what you should see? OpenFeeds puts you back
 | Layer        | Technology                                         |
 | ------------ | -------------------------------------------------- |
 | **Frontend** | SolidJS, TanStack Router, Tailwind CSS v4, DaisyUI |
-| **Backend**  | TanStack Start, Bun                                |
+| **Backend**  | Bun, Hono                                          |
+| **Sync**     | TanStack DB, Electric SQL                          |
 | **Database** | PostgreSQL, Drizzle ORM                            |
 | **Auth**     | Better Auth                                        |
 | **Jobs**     | BullMQ, Redis                                      |
@@ -77,8 +78,8 @@ Coming soon.
 ```
 openfeeds/
 ├── apps/
-│   ├── web/          # SolidJS frontend
-│   ├── server/       # Elysia API server
+│   ├── web/          # SolidJS SPA (Vite)
+│   ├── server/       # Bun + Hono API server
 │   ├── worker/       # Background job processor
 │   └── e2e/          # Playwright test suite
 └── packages/

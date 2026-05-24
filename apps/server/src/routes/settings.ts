@@ -20,9 +20,10 @@ export const settingsRoutes = new Hono<AuthedEnv>()
     const settings = await getSettings(user.id, db);
     return c.json(settings);
   })
-  // Settings is a singleton — client sends a single-element array (matches the
-  // legacy server-fn contract `z.array(UpdateSettingsSchema)`), we take the
-  // first element. Keeps the collection optimistic-mutation pipeline uniform.
+  // Settings is a singleton — client sends a single-element array so this
+  // endpoint matches the batched shape every other entity mutation uses
+  // (`z.array(Schema)` in, `{ txid }` out). Keeps the collection
+  // optimistic-mutation pipeline uniform; we just take the first element.
   .patch('/update', zValidator('json', z.array(UpdateSettingsSchema)), async (c) => {
     const user = c.var.user;
     const data = c.req.valid('json');

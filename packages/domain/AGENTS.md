@@ -1,6 +1,6 @@
 # Domain Package - Business Logic
 
-All business logic for OpenFeeds. Shared by web (server functions) and worker (job processing).
+All business logic for OpenFeeds. Shared by the API server (Hono route handlers) and worker (job processing).
 
 ## Architecture
 

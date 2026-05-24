@@ -48,20 +48,20 @@ Use for values that should always exist but TypeScript can't prove (e.g., `array
 ```
 Domain Layer                    Error Boundary                  Transport Layer                 Client/Consumer
 ─────────────                   ──────────────                  ───────────────                 ───────────────
-throw NotFoundError()    →    passes through (domain)    →    Server function (seroval)     →    catch (err)
-                                                              only message survives              display err.message
+throw NotFoundError()    →    passes through (domain)    →    Hono route → JSON response    →    api-client unwrap()
+                                                               { message, status }                throws Error(message)
 
-throw DrizzleQueryError  →    log + report + sanitize    →    Server function (seroval)     →    catch (err)
-  (Postgres/infra)            becomes UnexpectedError          "An unexpected error occurred"     display err.message
+throw DrizzleQueryError  →    log + report + sanitize    →    Hono route → JSON response    →    api-client unwrap()
+  (Postgres/infra)            becomes UnexpectedError          { message: "An unexpected ..." }   throws Error(message)
 
-throw ConflictError()    →    passes through (domain)    →    API route catch block         →    HTTP 409 response
-                                                              instanceof works (same process)
+throw ConflictError()    →    passes through (domain)    →    Hono onError → 409 response   →    unwrap throws on !ok
+                                                               instanceof works (same process)
 
-throw DrizzleQueryError  →    log + report + sanitize    →    API route catch block         →    HTTP 500 response
+throw DrizzleQueryError  →    log + report + sanitize    →    Hono onError → 500 response   →    unwrap throws on !ok
   (Postgres/infra)            becomes UnexpectedError          instanceof works (same process)
 
 throw NotFoundError()    →    passes through (domain)    →    Worker try-catch              →    Log + retry/skip
-                                                              instanceof works (same process)
+                                                               instanceof works (same process)
 ```
 
 **DB connection resilience:** `ERR_POSTGRES_CONNECTION_CLOSED` errors are prevented proactively in `packages/db/src/config.ts` by configuring `idleTimeout: 30` and `maxLifetime: 3600` on the Bun SQL client. This causes Bun to close idle connections after 30 seconds and recycle connections after 1 hour — before the server or any proxy (PgBouncer, Supavisor, etc.) kills them. Bun SQL has no native retry option; proactive idle connection management is the correct approach.
@@ -89,11 +89,11 @@ try {
 
 ### Why this exists
 
-Without the boundary, Drizzle wraps Postgres errors in `DrizzleQueryError` with the raw SQL in `.message` and the actual Postgres error in `.cause`. TanStack Start's `ShallowErrorPlugin` serializes only `.message` — the `.cause` (with the real error code and detail) is lost. The client receives a useless `Error("Failed query: INSERT INTO...")` with raw SQL exposed.
+Without the boundary, Drizzle wraps Postgres errors in `DrizzleQueryError` with the raw SQL in `.message` and the actual Postgres error in `.cause`. When the route serializes the error to JSON for the client, only `.message` survives — the `.cause` (with the real error code and detail) is lost. The client would receive a useless `Error("Failed query: INSERT INTO...")` with raw SQL exposed.
 
 The boundary ensures:
 
-- PostHog gets the **full error** with `.cause` server-side, before serialization strips it
+- PostHog gets the **full error** with `.cause` server-side, before any serialization
 - The client only ever sees clean, user-safe error messages
 - No SQL or internal details leak to the browser
 
@@ -103,24 +103,20 @@ Each transport wires the boundary at its own level:
 
 | Transport         | Wiring                                          | File                                      |
 | ----------------- | ----------------------------------------------- | ----------------------------------------- |
-| Server functions  | Global `functionMiddleware` via `createStart()` | `apps/web/src/start.ts`                   |
-| API routes        | Global `requestMiddleware` via `createStart()`  | `apps/web/src/start.ts`                   |
-| API routes (Hono) | `app.onError()` global handler                  | `packages/api/` (future)                  |
+| Hono routes       | `app.onError()` global handler                  | `apps/server/src/index.ts`                |
 | Workers           | `worker.on('failed')` handler                   | `apps/worker/src/workers.ts`              |
 | Auth layer        | `onAPIError.onError` in Better Auth config      | `packages/auth/src/index.ts`              |
-| Auth middleware   | `captureException` in each middleware/guard     | `apps/web/src/server/middleware/auth.ts`, `apps/web/src/lib/guards.ts` |
+| Auth middleware   | `captureException` in each middleware           | `apps/server/src/middleware/auth.ts`, `apps/web/src/lib/guards.ts` |
 
-**Note on double-reporting:** Auth middleware and guards call `captureException` then re-throw `UnexpectedError` (a domain error) — not the raw infra error. This prevents the global boundaries in `start.ts` from reporting the same error a second time, since domain errors pass through unchanged.
+**Note on double-reporting:** Auth middleware and guards call `captureException` then re-throw `UnexpectedError` (a domain error) — not the raw infra error. This prevents the global Hono boundary from reporting the same error a second time, since domain errors pass through unchanged.
 
-**Note on API route auth errors:** API route handlers that require auth use `authRequestMiddleware` in `server.middleware[]` (the same pattern as shape proxy routes). This middleware handles `getSession` errors directly — reporting to PostHog and returning a 500 response — before the global `requestMiddleware` boundary ever sees them. The global boundary catches any other unhandled infra errors that escape individual route handlers.
+## Web App: API Calls
 
-## Web App: Server Functions
-
-TanStack Start uses seroval's `ShallowErrorPlugin` to serialize errors. Only `message` survives — `instanceof`, `name`, `stack`, and custom properties are stripped. The client receives a plain `Error(message)`. Server stack traces are never sent.
+The Hono server returns errors as JSON: `{ message: string }` with the appropriate HTTP status. The `unwrap()` helper in `apps/web/src/lib/api-client.ts` checks `res.ok` and throws `new Error(message)` otherwise. Client code sees only a plain `Error` with the user-safe message — no `instanceof`, no `code`, no stack from the server.
 
 ```typescript
 try {
-  await $$createFeed({ data });
+  await unwrap(api.api.feeds.create.$post({ json: feeds }));
 } catch (err) {
   setError(err instanceof Error ? err.message : 'Something went wrong');
 }
@@ -146,8 +142,8 @@ Error boundaries catch errors during **rendering** — as opposed to try-catch i
 Component tree error       →  Nearest SolidJS ErrorBoundary  →  Inline error + retry
 Route rendering error      →  DefaultCatchBoundary           →  Full-page error + "Try Again"
 Unmatched route            →  NotFound                       →  Full-page 404
-Server function throw      →  try-catch in handler           →  setError(err.message)
-Uncaught server fn throw   →  DefaultCatchBoundary           →  Full-page error
+API call throw (unwrap)    →  try-catch in handler           →  setError(err.message)
+Uncaught API call throw    →  DefaultCatchBoundary           →  Full-page error
 ```
 
 ## Web App: Collection Errors (TanStack DB + Electric SQL)
@@ -164,7 +160,7 @@ onInsert: collectionErrorHandler('feeds.onInsert', async ({ transaction }) => {
     const feed = mutation.modified;
     return { id: mutation.key as string, url: feed.url };
   });
-  await $$createFeeds({ data: feeds });
+  await unwrap(api.api.feeds.create.$post({ json: feeds }));
 }),
 ```
 
@@ -202,22 +198,23 @@ This is safe because mutation handlers only fire from user interactions (post-mo
 | `src/providers/toast.tsx`      | Wires `toastService.showToast` on mount                                            |
 | `src/entities/*.ts`            | All collections use both handlers                                                  |
 
-## Web App: API Routes
+## Web App: Hono Routes (apps/server/)
 
-API routes run server-side where `instanceof` works. Map domain errors to HTTP status codes:
+Hono routes run server-side where `instanceof` works. A single `app.onError()` in `apps/server/src/index.ts` maps domain errors to HTTP status codes — handlers themselves don't catch:
 
 ```typescript
-try {
-  const [result] = await createFeeds([data], userId);
-  return Response.json(result, { status: 201 });
-} catch (error) {
-  if (error instanceof ConflictError)
-    return Response.json({ message: error.message }, { status: 409 });
-  if (error instanceof BadRequestError)
-    return Response.json({ message: error.message }, { status: 400 });
-  return Response.json({ message: 'Internal server error' }, { status: 500 });
-}
+// apps/server/src/index.ts (simplified)
+app.onError((err, c) => {
+  if (err instanceof NotFoundError) return c.json({ message: err.message }, 404);
+  if (err instanceof ConflictError) return c.json({ message: err.message }, 409);
+  if (err instanceof BadRequestError) return c.json({ message: err.message }, 400);
+  // ...
+  const sanitized = handleBoundaryError(err, { source: 'hono', userId: c.var.user?.id });
+  return c.json({ message: sanitized.message }, 500);
+});
 ```
+
+Route handlers stay thin — validate, call domain, return result. See `apps/server/src/routes/tags.ts` for the canonical shape.
 
 ## Worker
 
@@ -232,7 +229,7 @@ See [feed-sync.md](./feed-sync.md) for the full feed sync retry and health track
 
 **PostHog** captures exceptions across all layers:
 
-- **Server-side (error boundary):** `handleBoundaryError` catches infrastructure errors at each transport boundary. Reports the full error with `.cause` chain to PostHog via `captureException` before sanitizing. This is the primary source of truth for production errors. Tagged `source: 'server-function'` for server functions and `source: 'api-route'` for API route handlers.
+- **Server-side (error boundary):** `handleBoundaryError` catches infrastructure errors at each transport boundary. Reports the full error with `.cause` chain to PostHog via `captureException` before sanitizing. This is the primary source of truth for production errors. Tagged `source: 'hono'` for Hono routes.
 - **Server-side (Better Auth):** `onAPIError.onError` in the Better Auth config captures all errors thrown internally by Better Auth (login DB failures, session lookups, OAuth callbacks). Tagged with `source: 'better-auth'`.
 - **Server-side (manual):** `captureException(error, metadata)` called explicitly in auth middleware/guards (tagged with `source`), feed sync, OPML import, and worker error handlers for expected per-item failures.
 - **Client-side:** `posthog.captureException(err)` in `collectionErrorHandler` / `shapeErrorHandler` for client-visible errors. These only see the post-serialization error (no `.cause`), so server-side capture is preferred.
@@ -247,4 +244,4 @@ See [feed-sync.md](./feed-sync.md) for the full feed sync retry and health track
 2. Export from `packages/domain/src/index.ts`
 3. Add to `DOMAIN_ERRORS` array in `packages/domain/src/error-boundary.ts` — so the boundary passes it through instead of sanitizing it
 4. Throw from domain functions — don't catch/wrap at domain level
-5. Update API route error mapping if needed for specific HTTP status
+5. Update `app.onError()` in `apps/server/src/index.ts` if the new error needs a specific HTTP status

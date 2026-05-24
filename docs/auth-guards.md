@@ -1,6 +1,6 @@
 # Auth Guards & Route Protection
 
-`apps/web/` is a pure SPA. There is no SSR pre-render and no server-side guard. Route guards run on the client in `beforeLoad` and act as a **UX optimization** — they redirect users to `/login` (or away from guest-only pages) before the protected layout starts loading. The session cookie is `httpOnly`, so the server app (`apps/server/`) is the real security boundary.
+`apps/web/` is an SPA. Route guards run on the client in `beforeLoad` and act as a **UX optimization** — they redirect users to `/login` (or away from guest-only pages) before the protected layout starts loading. The session cookie is `httpOnly`, so the server app (`apps/server/`) is the real security boundary.
 
 ## Key Files
 

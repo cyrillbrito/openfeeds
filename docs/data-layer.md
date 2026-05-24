@@ -19,15 +19,15 @@ TanStack DB provides an **abstraction layer** over data synchronization:
 
 ```
 Frontend (TanStack DB Collections)
-         ↓ sync via server functions
-    TanStack Start Server Functions
+         ↓ sync via Hono RPC
+    Hono Routes (apps/server/)
          ↓
     Domain Logic (@repo/domain)
          ↓
     Database (PostgreSQL)
 ```
 
-**Key principle**: Frontend code only interacts with TanStack DB collections. The sync mechanism is abstracted away via server functions.
+**Key principle**: Frontend code only interacts with TanStack DB collections. The sync mechanism is abstracted away — collections call typed `hc<App>` RPC endpoints on the Hono server.
 
 ## Collections
 
@@ -61,7 +61,7 @@ Same pattern applies to feed-tags if needed later.
 
 ## Current Implementation
 
-Using **Electric SQL-powered collections** (`electricCollectionOptions`) with real-time sync and TanStack Start server functions for mutations.
+Using **Electric SQL-powered collections** (`electricCollectionOptions`) with real-time sync. Mutations call typed Hono RPC routes via `hc<App>` (`apps/web/src/lib/api-client.ts`).
 
 ```typescript
 // Collection (client-side with Electric SQL sync)
@@ -83,19 +83,24 @@ export const feedsCollection = createCollection(
         const feed = mutation.modified;
         return { id: mutation.key as string, url: feed.url };
       });
-      return await $$createFeeds({ data: feeds });
+      return await unwrap(api.api.feeds.create.$post({ json: feeds }));
     }),
     onUpdate: collectionErrorHandler('feeds.onUpdate', async ({ transaction }) => {
-      return await $$updateFeeds({ data: /* batch updates */ });
+      const updates = transaction.mutations.map((m) => ({
+        id: String(m.key),
+        ...m.changes,
+      }));
+      return await unwrap(api.api.feeds.update.$patch({ json: updates }));
     }),
     onDelete: collectionErrorHandler('feeds.onDelete', async ({ transaction }) => {
-      return await $$deleteFeeds({ data: /* batch deletes */ });
+      const ids = transaction.mutations.map((m) => String(m.key));
+      return await unwrap(api.api.feeds.delete.$post({ json: ids }));
     }),
   }),
 );
 ```
 
-Server functions provide type-safe RPC calls with auth middleware, replacing traditional REST endpoints.
+Hono RPC provides type-safe end-to-end calls (`api.api.feeds.create.$post`) without codegen — the client infers request and response shapes from `typeof app` on the server.
 
 ## Fire-and-Forget Mutations
 
@@ -115,7 +120,7 @@ await tx.isPersisted.promise; // Don't do this
 
 1. **Optimistic updates**: TanStack DB applies changes immediately to local state
 2. **Live queries**: UI updates automatically via reactive live queries
-3. **Background sync**: Collection handlers (`onUpdate`, `onInsert`, `onDelete`) call server functions
+3. **Background sync**: Collection handlers (`onUpdate`, `onInsert`, `onDelete`) call Hono RPC routes
 4. **Auto-rollback**: If sync fails, TanStack DB reverts optimistic state
 
 **Future enhancement**: Client-generated UUIDs for inserts would eliminate temp ID mapping entirely, making inserts truly fire-and-forget without server round-trip for ID resolution.

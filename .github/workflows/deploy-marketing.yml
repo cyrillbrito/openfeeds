@@ -12,7 +12,7 @@ permissions:
 
 jobs:
   deploy:
-    name: Deploy to Cloudflare Pages
+    name: Deploy to Cloudflare Workers
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -43,5 +43,5 @@ jobs:
         uses: cloudflare/wrangler-action@9acf94ace14e7dc412b076f2c5c20b8ce93c79cd # v3.15.0
         with:
           workingDirectory: apps/marketing
-          command: pages deploy
+          command: deploy
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}

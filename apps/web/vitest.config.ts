@@ -3,16 +3,15 @@ import { fileURLToPath } from 'node:url';
 import { storybookTest } from '@storybook/addon-vitest/vitest-plugin';
 import { playwright } from '@vitest/browser-playwright';
 import { defineConfig, mergeConfig } from 'vitest/config';
-import storybookViteConfig from './vite.config.storybook';
+import viteConfig from './vite.config';
 
 const dirname =
   typeof __dirname !== 'undefined' ? __dirname : path.dirname(fileURLToPath(import.meta.url));
 
 // Vitest config for running Storybook stories as tests in CI.
-// Uses the minimal storybook Vite config (no Nitro/TanStack Start) to avoid
-// spawning background server processes that prevent clean exit.
+// Inherits the main Vite config.
 export default mergeConfig(
-  storybookViteConfig,
+  viteConfig,
   defineConfig({
     test: {
       projects: [

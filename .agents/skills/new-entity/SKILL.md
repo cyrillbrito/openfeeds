@@ -1,11 +1,11 @@
 ---
 name: new-entity
-description: "Add a new entity or feature end-to-end across the full stack: domain, database, collections, server functions, and error handling. Use when creating a new data type or feature that needs client-server sync. Do not use for database-only changes (use database skill) or UI-only changes (use solidjs skill)."
+description: "Add a new entity or feature end-to-end across the full stack: domain, database, collections, server routes, and error handling. Use when creating a new data type or feature that needs client-server sync. Do not use for database-only changes (use database skill) or UI-only changes (use solidjs skill)."
 ---
 
 # New Entity Skill
 
-Create a new entity spanning domain, database, web collections, and server functions. Follow these steps in order.
+Create a new entity spanning domain, database, web collections, and Hono routes. Follow these steps in order.
 
 ## Step 1: Domain Schema
 
@@ -23,6 +23,9 @@ export const EntitySchema = z.object({
 });
 
 export type Entity = z.infer<typeof EntitySchema>;
+
+export const CreateEntitySchema = EntitySchema.pick({ id: true, name: true });
+export type CreateEntityInput = z.infer<typeof CreateEntitySchema>;
 ```
 
 Export from `@repo/domain/client` entry point.
@@ -39,15 +42,16 @@ export * from './<entity>.schema';
 import type { TransactionContext } from '../domain-context';
 import { entities } from '@repo/db';
 
-export async function createEntity(ctx: TransactionContext, data: CreateEntityInput) {
-  const [result] = await ctx.conn
+export async function createEntities(ctx: TransactionContext, data: CreateEntityInput[]) {
+  const rows = await ctx.conn
     .insert(entities)
-    .values({ ...data, userId: ctx.userId })
+    .values(data.map((d) => ({ ...d, userId: ctx.userId })))
     .returning();
-  assert(result, 'Created entity must exist');
 
-  ctx.afterCommit(() => trackEvent(ctx.userId, 'entities:entity_create', { entity_id: result.id }));
-  return result;
+  ctx.afterCommit(() =>
+    rows.forEach((r) => trackEvent(ctx.userId, 'entities:entity_create', { entity_id: r.id })),
+  );
+  return rows;
 }
 ```
 
@@ -63,72 +67,120 @@ Load the `database` skill. Follow its new table procedure for UUIDv7 PKs, user_i
 
 ## Step 4: Web Collection
 
-Create `apps/web/src/entities/<entity>.ts` with Electric SQL sync.
+Create `apps/web/src/entities/<entity>.ts` with Electric SQL sync. Mutations call typed Hono RPC routes via `api` from `~/lib/api-client`.
 
 ```typescript
-import { createCollection } from '@tanstack/solid-db';
-import { electricCollectionOptions } from '@tanstack/solid-db-electric';
+import { snakeCamelMapper } from '@electric-sql/client';
 import { EntitySchema } from '@repo/domain/client';
+import { electricCollectionOptions } from '@tanstack/electric-db-collection';
+import { BasicIndex, createCollection, useLiveQuery } from '@tanstack/solid-db';
+import { api, unwrap } from '~/lib/api-client';
 import { collectionErrorHandler, shapeErrorHandler } from '~/lib/collection-errors';
+import { getShapeUrl, timestampParser } from '~/lib/electric-client';
 
 export const entitiesCollection = createCollection(
   electricCollectionOptions({
     id: 'entities',
     schema: EntitySchema,
     getKey: (item) => item.id,
+
+    autoIndex: 'eager' as const,
+    defaultIndexType: BasicIndex,
+
     shapeOptions: {
       url: getShapeUrl('entities'),
       parser: timestampParser,
       columnMapper: snakeCamelMapper(),
       onError: shapeErrorHandler('entities.shape'),
     },
+
     onInsert: collectionErrorHandler('entities.onInsert', async ({ transaction }) => {
       const items = transaction.mutations.map((m) => ({
-        id: m.key as string,
+        id: String(m.key),
         name: m.modified.name,
       }));
-      return await $$createEntities({ data: items });
+      return await unwrap(api.api.entities.create.$post({ json: items }));
     }),
     onUpdate: collectionErrorHandler('entities.onUpdate', async ({ transaction }) => {
-      return await $$updateEntities({ data: /* batch updates */ });
+      const updates = transaction.mutations.map((m) => ({
+        id: String(m.key),
+        ...m.changes,
+      }));
+      return await unwrap(api.api.entities.update.$patch({ json: updates }));
     }),
     onDelete: collectionErrorHandler('entities.onDelete', async ({ transaction }) => {
-      return await $$deleteEntities({ data: /* batch deletes */ });
+      const ids = transaction.mutations.map((m) => String(m.key));
+      return await unwrap(api.api.entities.delete.$post({ json: ids }));
     }),
   }),
 );
+
+export function useEntities() {
+  return useLiveQuery((q) => q.from({ entity: entitiesCollection }));
+}
 ```
 
 Read `references/collection-pattern.md` for error handler details, fire-and-forget mutation patterns, and toast service wiring.
 
-## Step 5: Server Functions
+## Step 5: Hono Route
 
-Create `apps/web/src/entities/<entity>.functions.ts`.
+Create `apps/server/src/routes/<entity>.ts`. Routes are thin — validate, wrap in `withTransaction`, return `{ txid }` for the optimistic handshake.
 
 ```typescript
-import { createServerFn } from '@tanstack/solid-start';
-import { authMiddleware } from '~/server/middleware';
-import * as domain from '@repo/domain';
+import { zValidator } from '@hono/zod-validator';
 import { db, getTxId } from '@repo/db';
-import { withTransaction } from '@repo/domain';
+import {
+  createEntities,
+  CreateEntitySchema,
+  deleteEntities,
+  updateEntities,
+  UpdateEntitySchema,
+  withTransaction,
+} from '@repo/domain';
+import { Hono } from 'hono';
+import { z } from 'zod';
+import { requireAuthMiddleware, type AuthedEnv } from '~/middleware/auth';
 
-export const $$createEntities = createServerFn({ method: 'POST' })
-  .middleware([authMiddleware])
-  .handler(async ({ data, context }) => {
-    return await withTransaction(db, context.user.id, async (ctx) => {
-      await domain.createEntities(ctx, data);
+export const entitiesRoutes = new Hono<AuthedEnv>()
+  .use('*', requireAuthMiddleware)
+  .post('/create', zValidator('json', z.array(CreateEntitySchema)), async (c) => {
+    const user = c.var.user;
+    const data = c.req.valid('json');
+    const result = await withTransaction(db, user.id, user.plan, async (ctx) => {
+      await createEntities(ctx, data);
       return { txid: await getTxId(ctx.conn) };
     });
+    return c.json(result);
+  })
+  .patch('/update', zValidator('json', z.array(UpdateEntitySchema)), async (c) => {
+    const user = c.var.user;
+    const data = c.req.valid('json');
+    const result = await withTransaction(db, user.id, user.plan, async (ctx) => {
+      await updateEntities(ctx, data);
+      return { txid: await getTxId(ctx.conn) };
+    });
+    return c.json(result);
+  })
+  .post('/delete', zValidator('json', z.array(z.uuidv7())), async (c) => {
+    const user = c.var.user;
+    const ids = c.req.valid('json');
+    const result = await withTransaction(db, user.id, user.plan, async (ctx) => {
+      await deleteEntities(ctx, ids);
+      return { txid: await getTxId(ctx.conn) };
+    });
+    return c.json(result);
   });
 ```
 
-Rules for server functions:
-1. Always use `authMiddleware`.
-2. Wrap mutation domain calls in `withTransaction` and return `{ txid }`.
-3. Use `inputValidator` for Zod validation on complex inputs.
-4. Import from `@repo/domain` (full server exports), not `@repo/domain/client`.
+Mount in `apps/server/src/index.ts` by chaining `.route('/api/entities', entitiesRoutes)` onto the existing `app` builder. Don't reassign — Hono's RPC type inference depends on a single chained reference.
 
-Read `references/server-functions.md` for import protection rules and API routes vs server functions.
+Rules for routes:
+1. Always use `requireAuthMiddleware` on protected entity routes — handlers get `c.var.user` typed non-null.
+2. Wrap mutation domain calls in `withTransaction` and return `{ txid }`.
+3. Validate every body with `zValidator('json', schema)` — schemas come from `@repo/domain`.
+4. Keep handlers thin: validate → call domain → return. No business logic.
+
+Read `references/server-functions.md` for the full Hono pattern, public-API routes (cross-origin), and RPC type-inference gotchas.
 
 ## Step 6: Error Handling
 
@@ -138,9 +190,10 @@ Quick procedure for a new domain error:
 1. Define error class in `packages/domain/src/errors.ts` with user-safe default message.
 2. Add to `DOMAIN_ERRORS` array in `packages/domain/src/error-boundary.ts`.
 3. Export from `packages/domain/src/index.ts`.
+4. If the new error needs a specific HTTP status, update `app.onError()` in `apps/server/src/index.ts`.
 
-Client code only sees `err.message` — no `instanceof`, no `code` property.
+Client code only sees `err.message` from the JSON `{ message }` body — no `instanceof`, no `code` property.
 
 ## Step 7: Shape Handler
 
-Add Electric SQL shape proxy for the new table in the web app's shape configuration. Filter by `user_id`.
+Add the Electric SQL shape proxy for the new table in `apps/server/src/routes/shapes.ts`. Filter by `user_id` so each shape stream is scoped to the requesting user.

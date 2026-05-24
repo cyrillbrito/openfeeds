@@ -8,9 +8,11 @@
   },
   "dependencies": {
     "@repo/db": "workspace:*",
+    "@repo/domain": "workspace:*",
     "@t3-oss/env-core": "^0.13.11",
     "better-auth": "^1.6.11",
     "bullmq": "^5.77.0",
+    "drizzle-orm": "^0.45.2",
     "feedsmith": "^2.9.4",
     "zod": "^4.4.3"
   },

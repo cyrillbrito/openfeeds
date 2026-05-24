@@ -124,7 +124,7 @@ if (currentCount + data.length > limits.feeds) {
 
 **4. Thread plan through from auth:**
 
-In server functions, the auth middleware already provides `context.user`. After adding the `plan` column, `context.user.plan` is available. Pass it when creating domain contexts:
+In Hono route handlers, the `requireAuthMiddleware` already provides `c.var.user` with the `plan` column included. Pass it when creating domain contexts:
 
 ```typescript
 // apps/web/src/entities/feeds.functions.ts

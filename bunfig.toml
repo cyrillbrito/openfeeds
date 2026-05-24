@@ -1,6 +1,4 @@
-# With isolate packages, there were some build issues with vite version
-
 [install]
-linker = "hoisted"
+linker = "isolated"
 minimumReleaseAge = 172800 # 2 days in seconds
 minimumReleaseAgeExcludes = ["unrun"] # 0.2.38 ships broken; 0.2.39 fixes it but is too new

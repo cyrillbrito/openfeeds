@@ -7,7 +7,7 @@ Local-first SolidJS single-page app. Data lives in client-side TanStack Solid DB
 - **SolidJS** — UI and reactivity. Use the `solidjs` skill for patterns.
 - **TanStack Solid Router** — file-based routing under `src/routes/`. Code generation via `@tanstack/router-plugin/vite`.
 - **TanStack Solid DB + Electric SQL** — local collections in `src/entities/`, synced through the server's shape proxy at `/api/shapes/*`.
-- **Vite** — pure SPA build. `index.html` is the entry; no SSR, no Nitro.
+- **Vite** — SPA build. `index.html` is the entry.
 - **Hono `hc`** — typed RPC to apps/server/ via `import type { App } from '@repo/server/client'`. See `src/lib/api-client.ts`.
 
 ## Commands
@@ -37,7 +37,7 @@ src/
   assets/           # Bundled fonts, images
   globals.d.ts      # __APP_VERSION__ + VITE_* env types
 index.html          # SPA shell — blocking theme script, <div id="root">, main.tsx <script>
-vite.config.ts      # SPA-only — tanstackRouter() + solidPlugin(), no Nitro/Start
+vite.config.ts      # tanstackRouter() + solidPlugin()
 ```
 
 ## Data Layer
@@ -80,5 +80,4 @@ Use the `playwright-cli` skill for browser interaction. Auth state saved at `.pl
 
 - Path mapping: `~/*` → `./src/*`. Never use `../`.
 - TypeScript strict mode, **`noUncheckedIndexedAccess` deliberately off** — Hono RPC inference is incompatible with it (the `ClientResponse` union collapses to `any`). Don't reintroduce it.
-- Devtools enabled in development via `@tanstack/solid-devtools`.
-- No `.server.ts` / `*.functions.ts` patterns; no `createServerFn`. All server code lives in `apps/server/`.
+- All server code lives in `apps/server/`. This app is browser-only.
