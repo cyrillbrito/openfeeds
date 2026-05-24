@@ -1,7 +1,7 @@
 # Packaging only — build happens on CI runner
 # turbo prune + bun install + bun build runs on the runner,
 # producing a self-contained pruned monorepo in out/
-FROM oven/bun:1
+FROM oven/bun:1.3.12
 
 WORKDIR /app
 

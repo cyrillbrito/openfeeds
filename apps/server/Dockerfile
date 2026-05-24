@@ -4,7 +4,7 @@
 # (writes to apps/web/dist/). This Dockerfile just copies the result and
 # runs the Hono server, which serves /api/* + the SPA fallback (see
 # SERVE_SPA in apps/server/src/index.ts).
-FROM oven/bun:1
+FROM oven/bun:1.3.12
 
 WORKDIR /app
 
