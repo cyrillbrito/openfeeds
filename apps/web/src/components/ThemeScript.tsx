@@ -2,7 +2,7 @@
  * Blocking inline script that prevents theme flash on page load.
  *
  * The real app uses the equivalent inline `<script>` in `apps/web/index.html`
- * (which is the only way to run code before first paint in a pure SPA). This
+ * (which is the only way to run code before first paint in an SPA). This
  * component exists solely for Storybook, which renders its own document shell
  * and needs the same flash-prevention logic. Keep the two in sync.
  */

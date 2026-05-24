@@ -11,7 +11,7 @@ interface Location {
 /**
  * Guard for protected routes. Redirects unauthenticated users to /login.
  *
- * Pure SPA implementation: reads the cached session promise from `~/lib/session`.
+ * Reads the cached session promise from `~/lib/session`.
  * The first guard call on a cold load triggers one `get-session` request; every
  * subsequent navigation awaits the same memoized promise (no network).
  */

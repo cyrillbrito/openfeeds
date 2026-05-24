@@ -23,6 +23,7 @@
     "@tanstack/ai": "^0.21.1",
     "@tanstack/ai-anthropic": "^0.10.2",
     "better-auth": "^1.6.11",
+    "drizzle-orm": "^0.45.2",
     "hono": "^4.12.21",
     "zod": "^4.4.3"
   },

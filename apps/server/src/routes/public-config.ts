@@ -4,9 +4,6 @@ import type { Env } from '~/middleware/auth';
 
 /**
  * Public runtime config exposed to the web client. No auth required.
- * Port of `apps/web/src/server/public-config.functions.ts` (migration —
- * see docs/records/011-migrate-server-off-tanstack-start.md).
- *
  * Web fetches this once at root-route boot and caches the result client-side.
  */
 export const publicConfigRoutes = new Hono<Env>().get('/config', (c) =>

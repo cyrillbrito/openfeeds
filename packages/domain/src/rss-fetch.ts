@@ -5,7 +5,7 @@ export type { ParseFeedResult } from '@repo/shared/rss';
 
 /**
  * Base class for all expected failures when fetching/parsing a remote feed.
- * Boundary handlers (workers, server functions) can use `instanceof FeedFetchError`
+ * Boundary handlers (workers, route handlers) can use `instanceof FeedFetchError`
  * to distinguish operational fetch errors from genuine bugs.
  */
 export class FeedFetchError extends Error {

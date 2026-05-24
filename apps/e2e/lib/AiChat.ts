@@ -176,17 +176,15 @@ export class AiChat {
   // ─── Actions ───
 
   async openPopover() {
-    // The FAB is at bottom-right, often overlapped by TanStack Devtools panel.
-    // Use dispatchEvent to ensure the click reaches SolidJS's event handler.
-    await this.getFab().dispatchEvent('click');
+    await this.getFab().click();
   }
 
   async closePopover() {
-    await this.getPopoverCloseButton().dispatchEvent('click');
+    await this.getPopoverCloseButton().click();
   }
 
   async expandToFullPage() {
-    await this.getPopoverExpandButton().dispatchEvent('click');
+    await this.getPopoverExpandButton().click();
   }
 
   async sendMessage(text: string) {
@@ -197,7 +195,7 @@ export class AiChat {
 
   async sendPopoverMessage(text: string) {
     await this.getPopoverTextarea().fill(text);
-    await this.getPopoverSendButton().dispatchEvent('click');
+    await this.getPopoverSendButton().click();
   }
 
   async openSwitcher() {

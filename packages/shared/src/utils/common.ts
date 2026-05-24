@@ -1,4 +1,4 @@
-/// <reference types="bun-types" />
+/// <reference types="@types/bun" />
 
 /**
  * Async timeout utility for delaying execution

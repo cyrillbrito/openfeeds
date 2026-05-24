@@ -1,6 +1,6 @@
 # Marketing App
 
-Astro-based marketing website deployed to Cloudflare Pages.
+Astro-based marketing website deployed to Cloudflare Workers (with static assets).
 
 ## Asset Placement Rules
 
@@ -24,7 +24,7 @@ Benefits: cache-busting hashes, image optimization, tree-shaking.
 
 ### Email assets: `public/_emails/`
 
-Assets used in email templates (e.g., `logo.png`) go in `public/_emails/`. This folder is excluded from Astro's Cloudflare adapter routing, allowing direct static serving. Email templates reference these as `https://openfeeds.app/_emails/logo.png`.
+Assets used in email templates (e.g., `logo.png`) go in `public/_emails/`. They are served directly as static assets by Cloudflare Workers (the worker runtime is only invoked when no matching static asset exists). Email templates reference these as `https://openfeeds.app/_emails/logo.png`.
 
 ### Example
 

@@ -1,6 +1,6 @@
 ---
 name: database
-description: "Work with the database layer: create tables, modify schema, generate migrations, and wire domain context for mutations. Use when changing database structure or writing functions that mutate data. Do not use for frontend collections or server functions — use the new-entity skill instead."
+description: "Work with the database layer: create tables, modify schema, generate migrations, and wire domain context for mutations. Use when changing database structure or writing functions that mutate data. Do not use for frontend collections or Hono route handlers — use the new-entity skill instead."
 ---
 
 # Database Skill
@@ -59,7 +59,7 @@ All domain mutation functions take an explicit context object (`ctx`) as their f
 - **`DomainContext`** — use for read/write operations without deferred side effects (e.g., `syncSingleFeed`).
 - **No context** — use for pure functions and standalone reads. Accept explicit params directly.
 
-Callers (`apps/web` server functions, `apps/worker`) own the transaction boundary via `withTransaction()` or `createDomainContext()`. Domain functions never create their own top-level transactions.
+Callers (`apps/server` route handlers, `apps/worker`) own the transaction boundary via `withTransaction()` or `createDomainContext()`. Domain functions never create their own top-level transactions.
 
 ## Electric SQL
 

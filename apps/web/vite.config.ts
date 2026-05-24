@@ -1,6 +1,5 @@
 import { readFileSync } from 'node:fs';
 import tailwindcss from '@tailwindcss/vite';
-import { devtools } from '@tanstack/devtools-vite';
 import { tanstackRouter } from '@tanstack/router-plugin/vite';
 import { defineConfig, type Plugin } from 'vite';
 import lucidePreprocess from 'vite-plugin-lucide-preprocess';
@@ -9,9 +8,9 @@ import solidPlugin from 'vite-plugin-solid';
 const rootPkg = JSON.parse(readFileSync('../../package.json', 'utf-8'));
 
 /**
- * Pure Vite SPA. All server-side concerns (auth, MCP, well-known, entity
+ * Vite SPA. All server-side concerns (auth, MCP, well-known, entity
  * mutations, Electric shape proxies, OAuth provider) live in apps/server/
- * (Bun + Hono) — see docs/records/011-migrate-server-off-tanstack-start.md.
+ * (Bun + Hono).
  *
  * The dev proxy forwards `/api/*` (everything Better Auth, Hono RPC, and
  * the Electric shape proxies use) to the server on :3401 so the browser
@@ -27,9 +26,6 @@ export default defineConfig({
   },
   plugins: [
     lucidePreprocess(),
-    devtools(),
-    // MUST come before solidPlugin so the router's file-based code generation
-    // sees route files before the Solid compiler.
     tanstackRouter({
       target: 'solid',
       autoCodeSplitting: true,

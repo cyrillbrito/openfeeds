@@ -76,9 +76,9 @@ Tracked via `trackEvent()` in `packages/domain/src/analytics.ts`. Preferred over
 
 ### Exception Capture
 
-- **Server (error boundary):** `handleBoundaryError()` in `packages/domain/src/error-boundary.ts` catches infrastructure errors (Drizzle, Postgres, etc.) at each transport boundary and reports the full error with `.cause` chain via `captureException`. This is the primary source for production error monitoring — it captures errors before TanStack Start's `ShallowErrorPlugin` strips `.cause` during serialization.
+- **Server (error boundary):** `handleBoundaryError()` in `packages/domain/src/error-boundary.ts` catches infrastructure errors (Drizzle, Postgres, etc.) at each transport boundary and reports the full error with `.cause` chain via `captureException`. This is the primary source for production error monitoring — it captures errors with their full cause chain before any HTTP serialization strips `.cause` away.
 - **Server (manual):** `captureException()` called explicitly in feed sync, OPML import, and worker error handlers.
-- **Client:** `posthog.captureException()` in collection error handlers (`collectionErrorHandler`, `shapeErrorHandler`) and unexpected auth errors (sign-in, sign-up, reset-password, forgot-password). Client-side captures only see post-serialization errors (no `.cause`).
+- **Client:** `posthog.captureException()` in collection error handlers (`collectionErrorHandler`, `shapeErrorHandler`) and unexpected auth errors (sign-in, sign-up, reset-password, forgot-password). Client-side captures only see the post-serialization error message (no `.cause`).
 
 ## Links
 

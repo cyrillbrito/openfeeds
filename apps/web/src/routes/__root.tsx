@@ -1,6 +1,4 @@
-import { TanStackDevtools } from '@tanstack/solid-devtools';
 import { createRootRoute, Outlet } from '@tanstack/solid-router';
-import { TanStackRouterDevtoolsPanel } from '@tanstack/solid-router-devtools';
 import { posthog } from 'posthog-js';
 import { onMount, Suspense } from 'solid-js';
 import { SessionReadProvider } from '~/providers/session-read';
@@ -30,15 +28,6 @@ function RootComponent() {
         <SessionReadProvider>
           <ToastProvider>
             <Outlet />
-            <TanStackDevtools
-              config={{ hideUntilHover: true }}
-              plugins={[
-                {
-                  name: 'TanStack Router',
-                  render: () => <TanStackRouterDevtoolsPanel />,
-                },
-              ]}
-            />
           </ToastProvider>
         </SessionReadProvider>
       </ThemeProvider>

@@ -2,14 +2,12 @@
 
 Local-first RSS reader. SolidJS SPA on the client, TanStack Solid DB with Electric SQL sync, Bun + Hono server.
 
-## Architecture (end state)
+## Architecture
 
-- `apps/web/` is a **pure Vite SPA** — no SSR, no Nitro, no TanStack Start. `index.html` is the entry; everything happens in the browser.
-- `apps/server/` is a **standalone Bun + Hono HTTP server** that owns all server-side concerns (auth, Electric SQL shape proxies, entity mutations, OAuth, MCP, well-known endpoints) and also serves the built SPA in production.
+- `apps/web/` is a Vite SPA. `index.html` is the entry; everything happens in the browser.
+- `apps/server/` is a Bun + Hono HTTP server that owns all server-side concerns (auth, Electric SQL shape proxies, entity mutations, OAuth, MCP, well-known endpoints) and serves the built SPA in production.
 - The web app talks to the server over Hono's typed `hc<App>` RPC client — end-to-end types, no codegen. See [docs/hono-rpc.md](docs/hono-rpc.md).
-- Folder = layer. No `.server.ts` suffix, no `createServerFn`, no dynamic-import dance.
-
-Historical context: the server layer was migrated off TanStack Start (Nitro + Start `createServerFn`) in 2026. An earlier attempt used Elysia + Eden Treaty and was abandoned after unrecoverable TypeScript inference bugs. See `docs/records/011-migrate-server-off-tanstack-start.md` for the full story and the reasoning behind the current shape. **Do not reintroduce Elysia, TanStack Start server functions, Nitro, or `*.server.ts` patterns in `apps/web/`.**
+- Folder = layer.
 
 ## Commands
 
@@ -23,7 +21,7 @@ Each app/package has its own `AGENTS.md` with specific patterns and guidelines.
 
 **Apps:**
 
-- `apps/web/` — SolidJS SPA (pure Vite, no SSR)
+- `apps/web/` — SolidJS SPA (Vite)
 - `apps/server/` — Bun + Hono HTTP server (all server-side code lives here)
 - `apps/worker/` — BullMQ jobs
 - `apps/migrator/` — DB migrations
@@ -97,7 +95,7 @@ Load the relevant doc when working in these areas. Docs are in `docs/`.
 - `docs/recommendation-system.md` — Working on article ranking, recommendations, or personalisation
 - `docs/ai-chat.md` — Working on the AI chat feature, tool calling, or conversation persistence
 - `docs/tanstack-db-0.6-upgrade-notes.md` — Upgrading or debugging TanStack DB collection behaviour after a version bump
-- `docs/nitro-bundling.md` — Historical: debugging context from the Nitro/TanStack Start era. Nitro is no longer used (web is a pure Vite SPA, server is plain Bun). Read only when investigating why something was the way it was. See record 011.
+- `docs/nitro-bundling.md` — Historical: debugging context from when the server used Nitro. Read only when investigating why something was the way it was. See record 011.
 
 `docs/records/` — Numbered, chronological log of past decisions, specs, ideas, and dropped experiments. Skim when investigating why something is the way it is, or before proposing changes that may have prior context. See `docs/records/README.md` for the convention.
 

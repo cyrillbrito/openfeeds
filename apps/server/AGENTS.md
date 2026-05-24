@@ -68,4 +68,4 @@ Call shape on the client: `client.api.feeds.discover.$post({ json: { url } })` r
 
 - Path mapping: `~/*` → `./src/*` (Bun resolves via tsconfig paths)
 - TypeScript strict mode
-- No `.server.ts` suffix — folder = layer here, suffix has no meaning
+- Folder = layer here; no special filename suffixes.
