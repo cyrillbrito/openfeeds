@@ -15,8 +15,12 @@ export async function runMigrations() {
   console.log('Running migrations...');
   console.log(`Migrations folder: ${migrationsFolder}`);
 
-  // List available migration files
-  const files = readdirSync(migrationsFolder).filter((f) => f.endsWith('.sql'));
+  // List available migration files (sorted for stable, ordered logging —
+  // readdirSync returns entries in arbitrary directory order; the actual
+  // apply order is determined by drizzle from _journal.json, not this list).
+  const files = readdirSync(migrationsFolder)
+    .filter((f) => f.endsWith('.sql'))
+    .sort();
   console.log(`Found ${files.length} migration file(s):`);
   for (const file of files) {
     const content = readFileSync(join(migrationsFolder, file), 'utf-8');

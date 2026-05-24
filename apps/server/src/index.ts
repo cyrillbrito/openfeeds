@@ -151,9 +151,16 @@ app.onError((err, c) => {
 
 console.log(`🚀 server listening on http://localhost:${env.SERVER_PORT}`);
 
-export default {
+// Explicit Bun.serve() rather than `export default { port, fetch }`. The
+// default-export shorthand only auto-registers a server when Bun detects the
+// default export before the module finishes evaluating; with top-level
+// `await runMigrations()` above, the timing is fragile — empirically the
+// process exits cleanly after migrations instead of starting the server.
+// Calling Bun.serve() directly keeps the server reference alive and is
+// unambiguous about when listening starts.
+Bun.serve({
   port: env.SERVER_PORT,
   fetch: app.fetch,
-};
+});
 
 export type App = typeof app;
