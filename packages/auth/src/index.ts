@@ -117,6 +117,8 @@ export const auth = betterAuth({
       allowUnauthenticatedClientRegistration: true, // Required for MCP clients (public clients)
       scopes: ['openid', 'profile', 'email', 'offline_access', 'mcp:tools'],
       validAudiences: [`${env.BASE_URL}/api/mcp`],
+      // Discovery endpoints are served from apps/server/src/routes/well-known.ts.
+      silenceWarnings: { oauthAuthServerConfig: true, openidConfig: true },
     }),
   ],
 });
