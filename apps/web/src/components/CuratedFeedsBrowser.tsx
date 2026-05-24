@@ -34,9 +34,18 @@ import {
   X,
   type LucideProps,
 } from 'lucide-solid';
-import { createMemo, createSignal, For, Show, type Component } from 'solid-js';
+import { createMemo, createResource, createSignal, For, Show, type Component } from 'solid-js';
 import { Card } from '~/components/Card';
-import curatedCategories from '~/data/curated-feeds.json';
+
+// Curated feeds JSON is served from `public/` so it lives in its own
+// browser-cached HTTP response instead of getting bundled into the discover
+// route chunk. Saves ~47 KB gzip from the route's initial payload and lets
+// the JSON survive deploys (it isn't part of the hashed JS chunks).
+async function fetchCuratedCategories(): Promise<CuratedCategory[]> {
+  const res = await fetch('/curated-feeds.json');
+  if (!res.ok) throw new Error(`Failed to load curated feeds: ${res.status}`);
+  return (await res.json()) as CuratedCategory[];
+}
 
 // ---------------------------------------------------------------------------
 // Types
@@ -119,7 +128,8 @@ export function CuratedFeedsBrowser(props: {
   const [selectedCategory, setSelectedCategory] = createSignal<string | null>(null);
   const [visibleCount, setVisibleCount] = createSignal(FEEDS_PER_PAGE);
 
-  const categories = curatedCategories as CuratedCategory[];
+  const [categoriesResource] = createResource(fetchCuratedCategories);
+  const categories = createMemo(() => categoriesResource() ?? []);
 
   // Count matching feeds per category for the current search query (ignoring selected category)
   const categoryMatchCounts = createMemo(() => {
@@ -127,7 +137,7 @@ export function CuratedFeedsBrowser(props: {
     if (!query) return null; // no search — all categories are "active"
 
     const counts = new Map<string, number>();
-    for (const cat of categories) {
+    for (const cat of categories()) {
       let count = 0;
       for (const feed of cat.feeds) {
         const titleMatch = feed.title.toLowerCase().includes(query);
@@ -143,9 +153,9 @@ export function CuratedFeedsBrowser(props: {
     const query = searchQuery().toLowerCase().trim();
     const catSlug = selectedCategory();
 
-    let sourceCats = categories;
+    let sourceCats = categories();
     if (catSlug) {
-      sourceCats = categories.filter((c) => c.slug === catSlug);
+      sourceCats = categories().filter((c) => c.slug === catSlug);
     }
 
     const results: CuratedFeedWithCategory[] = [];
@@ -216,7 +226,7 @@ export function CuratedFeedsBrowser(props: {
           >
             All
           </button>
-          <For each={categories}>
+          <For each={categories()}>
             {(cat) => {
               const LucideIcon = LUCIDE_ICONS[cat.icon];
               const isEmpty = () => categoryMatchCounts()?.get(cat.slug) === 0;
@@ -248,7 +258,7 @@ export function CuratedFeedsBrowser(props: {
             {filteredFeeds().length} {filteredFeeds().length === 1 ? 'feed' : 'feeds'}
             <Show when={selectedCategory()}>
               {' '}
-              in {categories.find((c) => c.slug === selectedCategory())?.name}
+              in {categories().find((c) => c.slug === selectedCategory())?.name}
             </Show>
             <Show when={searchQuery()}> matching "{searchQuery()}"</Show>
           </p>
