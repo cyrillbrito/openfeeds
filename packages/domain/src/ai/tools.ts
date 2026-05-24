@@ -140,9 +140,13 @@ export function createTools(user: AiUser) {
   const updateArticles = toolDefinition({
     name: 'update_articles',
     description:
-      'Update article properties in bulk. Can mark articles as read/unread or archived/unarchived. Accepts one or more article IDs (from list_articles) and the changes to apply. Set isRead=true to mark read, isRead=false to mark unread, isArchived=true to archive, isArchived=false to unarchive. You can combine both changes in a single call.',
+      'Update article properties in bulk. Can mark articles as read/unread or archived/unarchived. Accepts up to 25 article IDs per call (from list_articles) and the changes to apply. For larger batches, call this tool multiple times. Set isRead=true to mark read, isRead=false to mark unread, isArchived=true to archive, isArchived=false to unarchive. You can combine both changes in a single call.',
     inputSchema: z.object({
-      articleIds: z.array(z.string()).min(1).describe('Article IDs to update'),
+      articleIds: z
+        .array(z.string())
+        .min(1)
+        .max(25)
+        .describe('Article IDs to update (max 25 per call — split larger batches)'),
       changes: z.object({
         isRead: z.boolean().optional().describe('Mark as read (true) or unread (false)'),
         isArchived: z.boolean().optional().describe('Archive (true) or unarchive (false)'),

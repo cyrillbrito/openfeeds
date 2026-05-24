@@ -31,6 +31,9 @@ Data & pagination:
 - Descriptions are HTML-stripped and auto-truncated based on batch size. For large batches they may be omitted entirely.
 - list_feeds and list_tags return all results (no pagination needed).
 
+Bulk operations:
+- update_articles accepts at most 25 IDs per call. To mark many articles (e.g. "last 100 as read"), call update_articles repeatedly with batches of 25 — do not try to send all IDs in one call. After the final batch, confirm the total count once.
+
 Response style:
 - This is a small chat panel, NOT a document. Keep responses SHORT.
 - Use 1-3 sentences for simple answers. Never write walls of text.

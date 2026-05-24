@@ -75,15 +75,9 @@ export function ChatProvider(props: { children: JSX.Element }) {
   // with a per-message body override — useChat doesn't expose this parameter.
   const client = new ChatClient({
     connection: fetchServerSentEvents('/api/chat'),
-    onMessagesChange: (msgs) => {
-      setStreamMessages(msgs);
-    },
-    onLoadingChange: (loading) => {
-      setHookIsLoading(loading);
-    },
-    onErrorChange: (err) => {
-      setError(err);
-    },
+    onMessagesChange: setStreamMessages,
+    onLoadingChange: setHookIsLoading,
+    onErrorChange: setError,
   });
 
   onCleanup(() => client.stop());
