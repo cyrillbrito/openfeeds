@@ -72,7 +72,6 @@
         "@repo/auth": "workspace:*",
         "@repo/db": "workspace:*",
         "@repo/domain": "workspace:*",
-        "@repo/shared": "workspace:*",
         "@t3-oss/env-core": "^0.13.11",
         "@tanstack/ai": "^0.21.1",
         "@tanstack/ai-anthropic": "^0.10.2",
@@ -115,7 +114,6 @@
         "solid-markdown": "^2.1.1",
         "tailwind-merge": "^3.6.0",
         "tailwindcss": "^4.3.0",
-        "zod": "^4.4.3",
       },
       "devDependencies": {
         "@storybook/addon-a11y": "^10.4.0",
@@ -141,7 +139,6 @@
         "@repo/domain": "workspace:*",
         "@t3-oss/env-core": "^0.13.11",
         "bullmq": "^5.77.0",
-        "drizzle-orm": "^0.45.2",
         "zod": "^4.4.3",
       },
       "devDependencies": {

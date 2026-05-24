@@ -36,8 +36,7 @@
     "solid-js": "^1.9.13",
     "solid-markdown": "^2.1.1",
     "tailwind-merge": "^3.6.0",
-    "tailwindcss": "^4.3.0",
-    "zod": "^4.4.3"
+    "tailwindcss": "^4.3.0"
   },
   "devDependencies": {
     "@storybook/addon-a11y": "^10.4.0",
