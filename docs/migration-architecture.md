@@ -34,9 +34,9 @@ Recovery from a bad schema change is a new forward migration.
 ## Running
 
 - **Local:** `bun migrate`, or just `bun dev` (server applies pending migrations on boot).
-- **CI:** `bun packages/db/src/migrate-cli.ts` before tests (see `.github/workflows/ci.yml`).
+- **CI:** the server's boot-time `runMigrations()` covers it — no explicit migration step in workflows. The "Start server + SPA" step fails loudly if migrations fail.
 - **Prod (docker compose):** `docker compose up` — server applies migrations on boot before serving traffic.
-- **Prod (manual deploy):** run `bun migrate` against the prod DB first, then deploy server. Belt-and-braces: server will also re-run `runMigrations()` on boot (no-op if already applied).
+- **Prod (manual deploy):** server applies migrations on boot. Use `bun migrate` against the prod DB only for out-of-band runs that shouldn't piggyback on a deploy (e.g. `CREATE INDEX CONCURRENTLY`).
 
 ## Not in scope
 

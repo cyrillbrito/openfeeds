@@ -95,9 +95,6 @@ jobs:
         run: bunx playwright install chromium --with-deps
         working-directory: apps/e2e
 
-      - name: Run migrations
-        run: bun packages/db/src/migrate-cli.ts
-
       - name: Build @repo/emails
         run: bun run --cwd packages/emails build
 
