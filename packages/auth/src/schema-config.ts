@@ -51,6 +51,7 @@ export const auth = betterAuth({
       allowDynamicClientRegistration: true,
       allowUnauthenticatedClientRegistration: true,
       scopes: ['openid', 'profile', 'email', 'offline_access', 'mcp:tools'],
+      silenceWarnings: { oauthAuthServerConfig: true, openidConfig: true },
     }),
   ],
 });
