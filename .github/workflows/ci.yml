@@ -73,13 +73,9 @@ jobs:
         working-directory: apps/web
 
   e2e:
-    name: E2E Tests (shard ${{ matrix.shard }}/${{ strategy.job-total }})
+    name: E2E Tests
     if: github.event.action != 'closed'
     runs-on: ubuntu-latest
-    strategy:
-      fail-fast: false
-      matrix:
-        shard: [1, 2]
     permissions:
       contents: write # for gh-pages report push
       pull-requests: write # for the report comment
@@ -212,7 +208,8 @@ jobs:
         # No --update-snapshots: CI must fail on visual regressions, not
         # silently regenerate. Use the 'Update E2E snapshots' workflow
         # (workflow_dispatch) to refresh snapshots from a PR branch.
-        run: bunx playwright test --shard=${{ matrix.shard }}/${{ strategy.job-total }}
+        # Parallelism comes from playwright's `workers` config (see playwright.config.ts).
+        run: bunx playwright test
         working-directory: apps/e2e
 
       - name: Dump server logs on failure
@@ -227,33 +224,48 @@ jobs:
           if [ -n "${SERVER_PID:-}" ] && kill -0 "$SERVER_PID" 2>/dev/null; then
             kill "$SERVER_PID" || true
           fi
+
+      # Publish the report to gh-pages so reviewers can click through. Single
+      # writer per PR (concurrency group serialises this), so no in-PR race.
+      # Cross-PR race is rare and handled by the retry loop.
       - name: Publish report to GitHub Pages
         if: ${{ !cancelled() }}
         env:
           PR_NUMBER: ${{ github.event.pull_request.number }}
-          SHARD: ${{ matrix.shard }}
           GH_TOKEN: ${{ github.token }}
           REPO: ${{ github.repository }}
         run: |
-          PR_DIR="playwright-report/pr-${PR_NUMBER}/shard-${SHARD}"
-          # Clone gh-pages into a separate directory to avoid conflicts with working tree
-          git clone --single-branch --branch gh-pages "https://x-access-token:${GH_TOKEN}@github.com/${REPO}.git" gh-pages-deploy
+          PR_DIR="playwright-report/pr-${PR_NUMBER}"
+          git clone --single-branch --branch gh-pages \
+            "https://x-access-token:${GH_TOKEN}@github.com/${REPO}.git" gh-pages-deploy
           cd gh-pages-deploy
-          rm -rf "$PR_DIR"
-          mkdir -p "$PR_DIR"
-          cp -r "$GITHUB_WORKSPACE/apps/e2e/playwright-report/"* "$PR_DIR/"
-          git add "$PR_DIR"
-          git -c user.name="github-actions" -c user.email="github-actions@github.com" \
-            commit -m "chore: update playwright report for PR #${PR_NUMBER} shard ${SHARD}" --allow-empty
-          # Retry on push race with concurrent E2E runs writing to gh-pages.
+          git config user.name "github-actions"
+          git config user.email "github-actions@github.com"
+
+          publish() {
+            rm -rf "$PR_DIR"
+            mkdir -p "$PR_DIR"
+            cp -r "$GITHUB_WORKSPACE/apps/e2e/playwright-report/"* "$PR_DIR/"
+            git add "$PR_DIR"
+            git commit -m "chore: update playwright report for PR #${PR_NUMBER}" --allow-empty
+          }
+
+          publish
+
+          # set +e so a failed rebase doesn't abort before we can retry.
+          set +e
           for attempt in 1 2 3 4 5; do
             if git push; then
               echo "gh-pages push succeeded on attempt $attempt"
               exit 0
             fi
             echo "Push failed (attempt $attempt), rebasing on remote and retrying..."
-            git fetch origin gh-pages
-            git rebase origin/gh-pages
+            git fetch origin gh-pages || true
+            if ! git rebase origin/gh-pages; then
+              git rebase --abort || true
+              git reset --hard origin/gh-pages
+              publish
+            fi
             sleep $((attempt * 2))
           done
           echo "gh-pages push failed after 5 attempts"
@@ -264,8 +276,8 @@ jobs:
         uses: daun/playwright-report-summary@1229105480a2a4bdd91598d8a146fbab41343fce # v3.11.0
         with:
           report-file: apps/e2e/results.json
-          comment-title: 'Playwright E2E Report (shard ${{ matrix.shard }}/${{ strategy.job-total }})'
-          report-url: 'https://cyrillbrito.github.io/openfeeds/playwright-report/pr-${{ github.event.pull_request.number }}/shard-${{ matrix.shard }}/'
+          comment-title: 'Playwright E2E Report'
+          report-url: 'https://cyrillbrito.github.io/openfeeds/playwright-report/pr-${{ github.event.pull_request.number }}/'
 
   # Clean up GitHub Pages report when PR is closed/merged
   cleanup-report:
@@ -284,22 +296,35 @@ jobs:
         env:
           PR_NUMBER: ${{ github.event.pull_request.number }}
         run: |
-          if [ -d "playwright-report/pr-${PR_NUMBER}" ]; then
-            rm -rf "playwright-report/pr-${PR_NUMBER}"
-            git add -A
-            git -c user.name="github-actions" -c user.email="github-actions@github.com" \
-              commit -m "chore: remove playwright report for PR #${PR_NUMBER}" --allow-empty
-            # Retry on push race with concurrent E2E runs writing to gh-pages.
-            for attempt in 1 2 3 4 5; do
-              if git push origin gh-pages; then
-                exit 0
-              fi
-              echo "Push failed (attempt $attempt), pulling and retrying..."
-              git pull --rebase origin gh-pages
-              sleep $((attempt * 2))
-            done
-            echo "gh-pages push failed after 5 attempts"
-            exit 1
-          else
+          PR_DIR="playwright-report/pr-${PR_NUMBER}"
+          if [ ! -d "$PR_DIR" ]; then
             echo "No report found for PR #${PR_NUMBER}, skipping"
+            exit 0
           fi
+          git config user.name "github-actions"
+          git config user.email "github-actions@github.com"
+
+          remove() {
+            rm -rf "$PR_DIR"
+            git add -A
+            git commit -m "chore: remove playwright report for PR #${PR_NUMBER}" --allow-empty
+          }
+
+          remove
+
+          set +e
+          for attempt in 1 2 3 4 5; do
+            if git push origin gh-pages; then
+              exit 0
+            fi
+            echo "Push failed (attempt $attempt), pulling and retrying..."
+            if ! git pull --rebase origin gh-pages; then
+              git rebase --abort || true
+              git fetch origin gh-pages || true
+              git reset --hard origin/gh-pages
+              [ -d "$PR_DIR" ] && remove
+            fi
+            sleep $((attempt * 2))
+          done
+          echo "gh-pages push failed after 5 attempts"
+          exit 1
