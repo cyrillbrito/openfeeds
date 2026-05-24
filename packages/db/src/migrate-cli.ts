@@ -11,7 +11,6 @@ import { runMigrations } from './migrate';
 try {
   await runMigrations();
   process.exit(0);
-} catch (error) {
-  console.error('Migration failed:', error);
+} catch {
   process.exit(1);
 }
