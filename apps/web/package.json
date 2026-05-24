@@ -15,7 +15,6 @@
     "@dnd-kit/helpers": "^0.4.0",
     "@dnd-kit/solid": "^0.4.0",
     "@electric-sql/client": "^1.5.18",
-    "@repo/discovery": "workspace:*",
     "@repo/domain": "workspace:*",
     "@repo/server": "workspace:*",
     "@repo/shared": "workspace:*",

@@ -65,8 +65,31 @@ Knip also finds unused exports and files. Run occasionally; don't auto-fix witho
 
 ## 5. Heuristics for this codebase
 
+### Layering
+
+```
+              web, extension, marketing
+                       │
+                    domain ────────┐
+                   /     \         │
+              db      shared    discovery, readability, emails  (leaf)
+                                   │
+                              safe-fetch  (leaf)
+```
+
+- **Leaf packages — never import directly from app code.** They are implementation details, reached through `domain` (or `server` for server-only concerns):
+  - `@repo/discovery` — RSS discovery internals (jsdom, parsers). Domain re-exports `DiscoveredFeed` and exposes `discoverRssFeeds()`.
+  - `@repo/readability` — article extraction.
+  - `@repo/safe-fetch` — hardened fetch (used by discovery/readability).
+  - `@repo/emails` — React Email templates.
+- **Domain is the public surface for business concepts.** If web needs a type from a leaf package, re-export it from `@repo/domain/client`. Keeps leaf packages swappable.
+- Apps may depend on: `@repo/domain`, `@repo/shared`, `@repo/server` (types only), `@repo/db` (server-side only), `@repo/auth` (server-side only).
+
+### Web-specific
+
 - `@repo/server` in `apps/web/package.json` is expected — types only. Bundle should show 0 bytes from it.
-- `@repo/domain` in the web bundle should only be Zod schemas (`*.schema.ts`) and `version.ts`. Anything else means a non-type import slipped through a barrel re-export.
+- Web must use `@repo/domain/client` (browser-safe entry), never `@repo/domain` (pulls in `@repo/db`).
+- `@repo/domain/client` in the web bundle should only be Zod schemas (`*.schema.ts`) + `version.ts` + re-exported types. Anything else means a non-type import slipped through a barrel re-export.
 - `hono` ~3 KB in the web bundle is the `hc` RPC client; expected.
 - Turbo build edges ≠ runtime bundle deps. Always confirm with the analyzer.
 

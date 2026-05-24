@@ -1,4 +1,4 @@
-import type { DiscoveredFeed } from '@repo/discovery/server';
+import type { DiscoveredFeed } from '@repo/domain/client';
 import type { FollowFeedsWithTags } from '@repo/domain/client';
 import { createId } from '@repo/shared/utils';
 import { createFileRoute } from '@tanstack/solid-router';
