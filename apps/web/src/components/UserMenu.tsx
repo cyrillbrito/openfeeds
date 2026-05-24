@@ -7,6 +7,17 @@ import { invalidateSession } from '~/lib/session';
 import { useTheme } from '~/providers/theme';
 import { Dropdown } from './Dropdown';
 
+async function handleSignOut() {
+  try {
+    await authClient.signOut();
+    invalidateSession();
+    posthog.reset();
+    window.location.href = '/login';
+  } catch (error) {
+    posthog.captureException(error);
+  }
+}
+
 export function UserMenu() {
   const { theme, setTheme, actualTheme } = useTheme();
   const session = authClient.useSession();
@@ -45,17 +56,6 @@ export function UserMenu() {
       .map((word: string) => word.charAt(0).toUpperCase())
       .join('')
       .slice(0, 2);
-  };
-
-  const handleSignOut = async () => {
-    try {
-      await authClient.signOut();
-      invalidateSession();
-      posthog.reset();
-      window.location.href = '/login';
-    } catch (error) {
-      posthog.captureException(error);
-    }
   };
 
   return (

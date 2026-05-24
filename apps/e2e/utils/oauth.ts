@@ -9,13 +9,13 @@ const AUTH_BASE = `${BASE_URL}/api/auth`;
  * testing against localhost but the server's BASE_URL is a Tailscale hostname).
  * We cache the result so we only fetch once per test run.
  */
-let _mcpResource: string | undefined;
+let cachedMcpResource: string | undefined;
 export async function getMcpResource(request: APIRequestContext) {
-  if (_mcpResource) return _mcpResource;
+  if (cachedMcpResource) return cachedMcpResource;
   const response = await request.get(`${BASE_URL}/.well-known/oauth-protected-resource`);
   const data = await response.json();
-  _mcpResource = data.resource;
-  return _mcpResource!;
+  cachedMcpResource = data.resource;
+  return cachedMcpResource!;
 }
 
 /**

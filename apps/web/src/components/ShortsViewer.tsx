@@ -116,7 +116,7 @@ export function ShortsViewer(props: ShortsViewerProps) {
                     </>
                   )}
                 </Show>
-                <TimeAgo date={currentShort()!.pubDate || ''} tooltipBottom />
+                <TimeAgo date={currentShort().pubDate || ''} tooltipBottom />
               </Suspense>
             </div>
           </Show>
@@ -241,8 +241,8 @@ export function ShortsViewer(props: ShortsViewerProps) {
                 </Show>
 
                 <YouTubeShortsEmbed
-                  url={currentShort()!.url!}
-                  title={currentShort()!.title}
+                  url={currentShort().url!}
+                  title={currentShort().title}
                   autoplay={true}
                   class="mx-auto aspect-9/16 min-h-0 max-w-full flex-1 sm:p-2"
                 />

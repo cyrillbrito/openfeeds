@@ -63,7 +63,7 @@ export function ArticleAudioPlayer(props: ArticleAudioPlayerProps) {
       const timings = localWordTimings();
       let foundIndex = -1;
       for (let i = 0; i < timings.length; i++) {
-        const timing = timings[i]!;
+        const timing = timings[i];
         if (time >= timing.start && time <= timing.end) {
           foundIndex = i;
           break;

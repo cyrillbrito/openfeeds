@@ -178,7 +178,7 @@ function wrapWordsWithTimings(html: string, timings: WordTiming[]): string {
 
           if (normalizedPart && ttsIndex < ttsWords.length) {
             // First, try exact match at current position
-            if (wordsMatch(normalizedPart, ttsWords[ttsIndex]!)) {
+            if (wordsMatch(normalizedPart, ttsWords[ttsIndex])) {
               matchedIndex = ttsIndex;
               ttsIndex++;
             } else {
@@ -188,7 +188,7 @@ function wrapWordsWithTimings(html: string, timings: WordTiming[]): string {
                 ahead <= LOOKAHEAD && ttsIndex + ahead < ttsWords.length;
                 ahead++
               ) {
-                if (wordsMatch(normalizedPart, ttsWords[ttsIndex + ahead]!)) {
+                if (wordsMatch(normalizedPart, ttsWords[ttsIndex + ahead])) {
                   // Found a match ahead - skip to it
                   ttsIndex = ttsIndex + ahead;
                   matchedIndex = ttsIndex;

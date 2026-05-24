@@ -12,16 +12,16 @@ export interface UserFeedJobData {
   feedId: string;
 }
 
-let _feedSyncOrchestratorQueue: Queue | null = null;
+let feedSyncOrchestratorQueue: Queue | null = null;
 export function getFeedSyncOrchestratorQueue(): Queue {
-  return (_feedSyncOrchestratorQueue ??= new Queue(QUEUE_NAMES.FEED_SYNC_ORCHESTRATOR, {
+  return (feedSyncOrchestratorQueue ??= new Queue(QUEUE_NAMES.FEED_SYNC_ORCHESTRATOR, {
     connection: redisConnection,
   }));
 }
 
-let _singleFeedSyncQueue: Queue<FeedSyncJobData> | null = null;
+let singleFeedSyncQueue: Queue<FeedSyncJobData> | null = null;
 export function getSingleFeedSyncQueue(): Queue<FeedSyncJobData> {
-  return (_singleFeedSyncQueue ??= new Queue<FeedSyncJobData>(QUEUE_NAMES.SINGLE_FEED_SYNC, {
+  return (singleFeedSyncQueue ??= new Queue<FeedSyncJobData>(QUEUE_NAMES.SINGLE_FEED_SYNC, {
     connection: redisConnection,
     defaultJobOptions: {
       // 10 attempts with exponential backoff (5min base).
@@ -36,9 +36,9 @@ export function getSingleFeedSyncQueue(): Queue<FeedSyncJobData> {
   }));
 }
 
-let _feedDetailQueue: Queue<UserFeedJobData> | null = null;
+let feedDetailQueue: Queue<UserFeedJobData> | null = null;
 export function getFeedDetailQueue(): Queue<UserFeedJobData> {
-  return (_feedDetailQueue ??= new Queue<UserFeedJobData>(QUEUE_NAMES.FEED_DETAIL, {
+  return (feedDetailQueue ??= new Queue<UserFeedJobData>(QUEUE_NAMES.FEED_DETAIL, {
     connection: redisConnection,
     defaultJobOptions: {
       attempts: 3,
@@ -50,14 +50,14 @@ export function getFeedDetailQueue(): Queue<UserFeedJobData> {
   }));
 }
 
-let _autoArchiveQueue: Queue | null = null;
+let autoArchiveQueue: Queue | null = null;
 export function getAutoArchiveQueue(): Queue {
-  return (_autoArchiveQueue ??= new Queue(QUEUE_NAMES.AUTO_ARCHIVE, {
+  return (autoArchiveQueue ??= new Queue(QUEUE_NAMES.AUTO_ARCHIVE, {
     connection: redisConnection,
   }));
 }
 
-let _queuesInitialized = false;
+let queuesInitialized = false;
 
 /**
  * Enqueue a single feed sync job.
@@ -138,7 +138,7 @@ export function enqueueFeedDetail(userId: string, feedId: string) {
  * Should be called once at startup
  */
 export async function initializeScheduledJobs() {
-  if (_queuesInitialized) {
+  if (queuesInitialized) {
     return;
   }
 
@@ -174,5 +174,5 @@ export async function initializeScheduledJobs() {
     },
   );
 
-  _queuesInitialized = true;
+  queuesInitialized = true;
 }
