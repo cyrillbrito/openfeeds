@@ -96,7 +96,7 @@ jobs:
         working-directory: apps/e2e
 
       - name: Run migrations
-        run: bun --cwd=apps/migrator src/index.ts
+        run: bun packages/db/src/migrate-cli.ts
 
       - name: Build @repo/emails
         run: bun run --cwd packages/emails build

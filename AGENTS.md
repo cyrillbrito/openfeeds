@@ -22,9 +22,8 @@ Each app/package has its own `AGENTS.md` with specific patterns and guidelines.
 **Apps:**
 
 - `apps/web/` — SolidJS SPA (Vite)
-- `apps/server/` — Bun + Hono HTTP server (all server-side code lives here)
+- `apps/server/` — Bun + Hono HTTP server (all server-side code lives here; also runs DB migrations on boot)
 - `apps/worker/` — BullMQ jobs
-- `apps/migrator/` — DB migrations
 - `apps/e2e/` — Playwright tests
 - `apps/extension/` — browser extension
 - `apps/marketing/` — marketing site

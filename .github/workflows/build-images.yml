@@ -70,13 +70,6 @@ jobs:
             dockerfile: apps/worker/Dockerfile
             build: true
             sourcemaps: false
-          # Migrator has no build step (runs TS directly).
-          - name: migrator
-            packages: '@repo/migrator'
-            image: ghcr.io/cyrillbrito/openfeeds-migrations
-            dockerfile: apps/migrator/Dockerfile
-            build: false
-            sourcemaps: false
     steps:
       - name: Checkout
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2

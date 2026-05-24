@@ -35,7 +35,7 @@ Read `references/denormalization-example.md` when creating any new table.
 
 ## Migration Workflow
 
-**Never modify existing migration files.** Migrations run via `apps/migrator`.
+**Never modify existing migration files.** Migrations run on server boot via `runMigrations()` in `apps/server/src/index.ts`; `bun migrate` is the manual CLI.
 
 ### User schema changes
 

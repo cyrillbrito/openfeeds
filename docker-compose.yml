@@ -45,17 +45,6 @@ services:
         condition: service_healthy
     restart: unless-stopped
 
-  migrator:
-    image: ghcr.io/cyrillbrito/openfeeds-migrations:latest
-    environment:
-      - DATABASE_URL=postgresql://postgres:postgres@postgres:5432/openfeeds
-    networks:
-      - openfeeds-network
-    depends_on:
-      postgres:
-        condition: service_healthy
-    restart: 'no'
-
   web:
     image: ghcr.io/cyrillbrito/openfeeds-web:latest
     ports:
@@ -83,8 +72,6 @@ services:
         condition: service_started
       postgres:
         condition: service_healthy
-      migrator:
-        condition: service_completed_successfully
     networks:
       - openfeeds-network
     restart: unless-stopped
@@ -105,8 +92,6 @@ services:
         condition: service_started
       postgres:
         condition: service_healthy
-      migrator:
-        condition: service_completed_successfully
     networks:
       - openfeeds-network
     restart: unless-stopped

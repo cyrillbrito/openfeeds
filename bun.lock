@@ -53,15 +53,6 @@
         "wrangler": "^4.93.1",
       },
     },
-    "apps/migrator": {
-      "name": "@repo/migrator",
-      "dependencies": {
-        "@repo/db": "workspace:*",
-      },
-      "devDependencies": {
-        "@types/bun": "^1.3.14",
-      },
-    },
     "apps/server": {
       "name": "@repo/server",
       "dependencies": {
@@ -919,8 +910,6 @@
     "@repo/extension": ["@repo/extension@workspace:apps/extension"],
 
     "@repo/marketing": ["@repo/marketing@workspace:apps/marketing"],
-
-    "@repo/migrator": ["@repo/migrator@workspace:apps/migrator"],
 
     "@repo/readability": ["@repo/readability@workspace:packages/readability"],
 

@@ -1,3 +1,4 @@
+import { runMigrations } from '@repo/db';
 import {
   BadRequestError,
   ConflictError,
@@ -46,6 +47,14 @@ import { wellKnownRoutes } from '~/routes/well-known';
  * `app` reference. Splitting routes across reassigned variables breaks the
  * RPC type inference. See "Hono Client (RPC)" in the hono skill.
  */
+
+// Apply pending DB migrations before the server starts accepting traffic.
+// Single-replica deployment, so no writer-race. A failed migration throws,
+// the process exits non-zero, and the deploy fails loudly. For out-of-band
+// migrations (e.g. CREATE INDEX CONCURRENTLY) use `bun migrate` directly
+// against the prod DB without redeploying. See docs/migration-architecture.md.
+await runMigrations();
+
 const app = new Hono<Env>()
   // CORS — dev only really matters here. Origin is the web dev server.
   // `credentials: true` requires an explicit origin (not `*`) so the browser
