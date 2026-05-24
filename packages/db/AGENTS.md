@@ -14,7 +14,7 @@ Load the `database` skill for migration workflow, ID strategy, user_id denormali
 
 - **All user-data PKs:** `uuid().default(sql`uuidv7()`).primaryKey()`
 - **Every table MUST have `user_id`** with an index (Electric SQL requirement)
-- **Never modify migration files manually.** Migrations run via `apps/migrator`.
+- **Never modify migration files manually.** Migrations run automatically on server boot via `runMigrations()` (called from `apps/server/src/index.ts`). For out-of-band runs (e.g. `CREATE INDEX CONCURRENTLY`), use `bunx drizzle-kit migrate` ad-hoc.
 
 ## Electric SQL
 

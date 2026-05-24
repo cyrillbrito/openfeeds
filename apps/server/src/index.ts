@@ -1,3 +1,4 @@
+import { runMigrations } from '@repo/db';
 import {
   BadRequestError,
   ConflictError,
@@ -46,6 +47,14 @@ import { wellKnownRoutes } from '~/routes/well-known';
  * `app` reference. Splitting routes across reassigned variables breaks the
  * RPC type inference. See "Hono Client (RPC)" in the hono skill.
  */
+
+// Apply pending DB migrations before the server starts accepting traffic.
+// Single-replica deployment, so no writer-race. A failed migration throws,
+// the process exits non-zero, and the deploy fails loudly. For out-of-band
+// migrations (e.g. CREATE INDEX CONCURRENTLY), run `bunx drizzle-kit migrate`
+// directly against the prod DB. See docs/migration-architecture.md.
+await runMigrations();
+
 const app = new Hono<Env>()
   // CORS — dev only really matters here. Origin is the web dev server.
   // `credentials: true` requires an explicit origin (not `*`) so the browser
@@ -140,11 +149,18 @@ app.onError((err, c) => {
   return c.json({ message: 'Internal server error' }, 500);
 });
 
-console.log(`🚀 server listening on http://localhost:${env.SERVER_PORT}`);
-
-export default {
+// Explicit Bun.serve() rather than `export default { port, fetch }`. The
+// default-export shorthand only auto-registers a server when Bun detects the
+// default export before the module finishes evaluating; with top-level
+// `await runMigrations()` above, the timing is fragile — empirically the
+// process exits cleanly after migrations instead of starting the server.
+// Calling Bun.serve() directly keeps the server reference alive and is
+// unambiguous about when listening starts.
+Bun.serve({
   port: env.SERVER_PORT,
   fetch: app.fetch,
-};
+});
+
+console.log(`🚀 server listening on http://localhost:${env.SERVER_PORT}`);
 
 export type App = typeof app;
