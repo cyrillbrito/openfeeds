@@ -149,8 +149,6 @@ app.onError((err, c) => {
   return c.json({ message: 'Internal server error' }, 500);
 });
 
-console.log(`🚀 server listening on http://localhost:${env.SERVER_PORT}`);
-
 // Explicit Bun.serve() rather than `export default { port, fetch }`. The
 // default-export shorthand only auto-registers a server when Bun detects the
 // default export before the module finishes evaluating; with top-level
@@ -162,5 +160,7 @@ Bun.serve({
   port: env.SERVER_PORT,
   fetch: app.fetch,
 });
+
+console.log(`🚀 server listening on http://localhost:${env.SERVER_PORT}`);
 
 export type App = typeof app;
