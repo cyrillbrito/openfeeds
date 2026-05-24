@@ -63,6 +63,19 @@ export function ChatMessages() {
     return null;
   });
 
+  // True when the last assistant message has a tool call that is still running.
+  // Its own spinner is shown by <ToolCallIndicator>, so we suppress the global
+  // "Thinking..." indicator to avoid two spinners stacking.
+  const hasPendingToolCall = createMemo(() => {
+    const msgs = chat.messages();
+    if (msgs.length === 0) return false;
+    const last = msgs[msgs.length - 1]!;
+    if (last.role !== 'assistant') return false;
+    return last.parts.some(
+      (p) => p.type === 'tool-call' && p.output == null && p.state !== 'input-complete',
+    );
+  });
+
   const emptyLastAssistant = createMemo(() => {
     const msgs = chat.messages();
     if (msgs.length === 0) return false;
@@ -97,7 +110,7 @@ export function ChatMessages() {
         )}
       </Index>
 
-      <Show when={chat.isLoading()}>
+      <Show when={chat.isLoading() && !hasPendingToolCall()}>
         <div class="text-base-content/40 flex items-center gap-1.5 text-xs">
           <span class="loading loading-spinner loading-xs" />
           <span>Thinking...</span>
