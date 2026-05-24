@@ -1,10 +1,13 @@
 import type { ToolCallPart, UIMessage } from '@tanstack/ai-client';
+import DOMPurify from 'dompurify';
 import { AlertTriangle, Sparkles } from 'lucide-solid';
-import remarkBreaks from 'remark-breaks';
-import remarkGfm from 'remark-gfm';
+import { marked } from 'marked';
 import { createEffect, createMemo, Index, on, Show, Switch, Match } from 'solid-js';
-import { SolidMarkdown } from 'solid-markdown';
 import { useChatContext } from './chat-context.shared';
+
+// GFM tables / strikethrough / task lists + treat single newlines as <br>.
+// Same surface as the previous remark-gfm + remark-breaks setup.
+marked.setOptions({ gfm: true, breaks: true });
 
 /** Extract a human-readable error message from API errors. */
 function friendlyError(err: Error): string {
@@ -190,18 +193,17 @@ function AiMessage(props: { message: UIMessage; isStreaming: boolean }) {
   );
 }
 
-const remarkPlugins = [remarkGfm, remarkBreaks];
-
 function MarkdownPart(props: { content: string; isStreaming: boolean }) {
+  const html = createMemo(() =>
+    // marked.parse is sync when no async extensions are configured.
+    DOMPurify.sanitize(marked.parse(props.content) as string),
+  );
   return (
     <div
       class="prose prose-sm prose-chat text-base-content prose-headings:text-base-content prose-a:text-primary prose-code:text-base-content max-w-none break-words"
       classList={{ 'markdown-streaming': props.isStreaming }}
-    >
-      <SolidMarkdown renderingStrategy="reconcile" remarkPlugins={remarkPlugins}>
-        {props.content}
-      </SolidMarkdown>
-    </div>
+      innerHTML={html()}
+    />
   );
 }
 
