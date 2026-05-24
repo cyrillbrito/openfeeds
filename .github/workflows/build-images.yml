@@ -143,6 +143,6 @@ jobs:
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
-          # Per-image GHA cache keeps web/worker/migrator layers separate.
+          # Per-image GHA cache keeps web/worker layers separate.
           cache-from: type=gha,scope=${{ matrix.name }}
           cache-to: type=gha,mode=max,scope=${{ matrix.name }}
