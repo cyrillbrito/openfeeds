@@ -1,5 +1,30 @@
 # Changelog
 
+## [0.16.0](https://github.com/cyrillbrito/openfeeds/compare/v0.15.2...v0.16.0) (2026-05-24)
+
+
+### ⚠ BREAKING CHANGES
+
+* migrate server layer from TanStack Start to Bun + Hono ([#308](https://github.com/cyrillbrito/openfeeds/issues/308))
+
+### Features
+
+* introduce Elysia + Bun server prototype, extract @repo/auth ([#303](https://github.com/cyrillbrito/openfeeds/issues/303)) ([b846bd1](https://github.com/cyrillbrito/openfeeds/commit/b846bd193c35ee701b1986e6316aa3f4db83bc4b))
+* migrate server layer from TanStack Start to Bun + Hono ([#308](https://github.com/cyrillbrito/openfeeds/issues/308)) ([2034026](https://github.com/cyrillbrito/openfeeds/commit/203402643dace04fcf786268dedb6e63cb705bff))
+
+
+### Bug Fixes
+
+* **ai-chat:** prevent stream hangs on large bulk operations ([#322](https://github.com/cyrillbrito/openfeeds/issues/322)) ([27ae7b8](https://github.com/cyrillbrito/openfeeds/commit/27ae7b80de76ce2df2b9017cdbffbbeff64072f7))
+* **chat:** parse request body via AG-UI RunAgentInput ([#315](https://github.com/cyrillbrito/openfeeds/issues/315)) ([5ab221c](https://github.com/cyrillbrito/openfeeds/commit/5ab221c673df06c4225b970468c0780e1c78d9af))
+* **ci:** drop e2e sharding, single job pushes report to gh-pages ([#321](https://github.com/cyrillbrito/openfeeds/issues/321)) ([4e8d5e8](https://github.com/cyrillbrito/openfeeds/commit/4e8d5e8b0e4388879513f657083dae490b65b01c))
+* **ci:** pass Cloudflare account ID to marketing deploy ([#323](https://github.com/cyrillbrito/openfeeds/issues/323)) ([9b649e8](https://github.com/cyrillbrito/openfeeds/commit/9b649e813a96472831e40468d6773b7a818efd96))
+* **ci:** swap solid-markdown for marked, pin Bun to 1.3.12 ([#320](https://github.com/cyrillbrito/openfeeds/issues/320)) ([e362c9b](https://github.com/cyrillbrito/openfeeds/commit/e362c9b582f8482a5a43caa469712715c981d832))
+* **web:** finalize archive-revert fix; remove debug instrumentation ([#291](https://github.com/cyrillbrito/openfeeds/issues/291)) ([2e5ed1d](https://github.com/cyrillbrito/openfeeds/commit/2e5ed1da0d4e8ea010212817d6f46d05a3b55912))
+* **web:** hide TimeAgo tooltip on mobile to prevent horizontal overflow ([#293](https://github.com/cyrillbrito/openfeeds/issues/293)) ([71e1d08](https://github.com/cyrillbrito/openfeeds/commit/71e1d08e7360f3d402fa093f0ae85f4b5c0201e3))
+* **web:** refresh article cards on in-place updates ([#294](https://github.com/cyrillbrito/openfeeds/issues/294)) ([48e98a8](https://github.com/cyrillbrito/openfeeds/commit/48e98a8cf08645d11834c3fa52a3107c4e45950f))
+* **web:** restore tag page content when returning from shorts viewer ([#296](https://github.com/cyrillbrito/openfeeds/issues/296)) ([6df0bd7](https://github.com/cyrillbrito/openfeeds/commit/6df0bd789a07903330c33b41b3eb4c4cdb03b1c3))
+
 ## [0.15.2](https://github.com/cyrillbrito/openfeeds/compare/v0.15.1...v0.15.2) (2026-05-16)
 
 
