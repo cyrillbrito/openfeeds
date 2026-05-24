@@ -10,7 +10,7 @@
  *
  * Imports from chat-context.shared (lightweight, no server deps).
  */
-import type { UIMessage } from '@tanstack/ai';
+import type { UIMessage } from '@tanstack/ai-client';
 import { createSignal } from 'solid-js';
 import type { JSX } from 'solid-js';
 import { ChatContext } from './chat-context.shared';

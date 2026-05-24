@@ -1,6 +1,5 @@
 import { createId } from '@repo/shared/utils';
-import type { UIMessage } from '@tanstack/ai';
-import { ChatClient } from '@tanstack/ai-client';
+import { ChatClient, type UIMessage } from '@tanstack/ai-client';
 import { fetchServerSentEvents } from '@tanstack/ai-solid';
 import { eq, useLiveQuery } from '@tanstack/solid-db';
 import { createEffect, createMemo, createSignal, on, onCleanup } from 'solid-js';

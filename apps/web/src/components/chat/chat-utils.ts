@@ -1,6 +1,5 @@
 import type { StoredMessage } from '@repo/domain/client';
-import type { UIMessage } from '@tanstack/ai';
-import { modelMessagesToUIMessages } from '@tanstack/ai';
+import { modelMessagesToUIMessages, type UIMessage } from '@tanstack/ai-client';
 
 /** Derive a title from the first user message */
 export function deriveTitle(msgs: UIMessage[]): string {

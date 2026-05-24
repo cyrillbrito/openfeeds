@@ -12,7 +12,7 @@
   },
   "dependencies": {
     "@better-auth/oauth-provider": "^1.6.11",
-    "@electric-sql/client": "^1.5.17",
+    "@electric-sql/client": "^1.5.18",
     "@hono/zod-validator": "^0.8.0",
     "@modelcontextprotocol/sdk": "^1.29.0",
     "@repo/auth": "workspace:*",
@@ -20,8 +20,8 @@
     "@repo/domain": "workspace:*",
     "@repo/shared": "workspace:*",
     "@t3-oss/env-core": "^0.13.11",
-    "@tanstack/ai": "^0.18.0",
-    "@tanstack/ai-anthropic": "^0.8.8",
+    "@tanstack/ai": "^0.21.1",
+    "@tanstack/ai-anthropic": "^0.10.2",
     "better-auth": "^1.6.11",
     "hono": "^4.12.21",
     "zod": "^4.4.3"
