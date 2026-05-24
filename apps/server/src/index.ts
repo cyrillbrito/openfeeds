@@ -51,8 +51,8 @@ import { wellKnownRoutes } from '~/routes/well-known';
 // Apply pending DB migrations before the server starts accepting traffic.
 // Single-replica deployment, so no writer-race. A failed migration throws,
 // the process exits non-zero, and the deploy fails loudly. For out-of-band
-// migrations (e.g. CREATE INDEX CONCURRENTLY) use `bun migrate` directly
-// against the prod DB without redeploying. See docs/migration-architecture.md.
+// migrations (e.g. CREATE INDEX CONCURRENTLY), run `bunx drizzle-kit migrate`
+// directly against the prod DB. See docs/migration-architecture.md.
 await runMigrations();
 
 const app = new Hono<Env>()

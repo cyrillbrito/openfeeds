@@ -11,7 +11,7 @@ Local-first RSS reader. SolidJS SPA on the client, TanStack Solid DB with Electr
 
 ## Commands
 
-**Use bun only (not npm/pnpm/yarn).** Run `bun checks` after every change. Ask the user before running `bun migrate`.
+**Use bun only (not npm/pnpm/yarn).** Run `bun checks` after every change. Migrations run automatically on server boot — no manual migrate command. For out-of-band runs (e.g. `CREATE INDEX CONCURRENTLY`), use `bunx drizzle-kit migrate` from `packages/db`.
 
 For database schema changes and migrations, load the `database` skill.
 

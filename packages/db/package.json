@@ -5,8 +5,7 @@
     ".": "./src/index.ts"
   },
   "scripts": {
-    "generate:auth-schema": "bunx --bun @better-auth/cli@latest generate --config ../auth/src/schema-config.ts --output ./src/schema/auth.ts --yes",
-    "migrate": "bun --env-file=../../.env src/migrate-cli.ts"
+    "generate:auth-schema": "bunx --bun @better-auth/cli@latest generate --config ../auth/src/schema-config.ts --output ./src/schema/auth.ts --yes"
   },
   "dependencies": {
     "@t3-oss/env-core": "^0.13.11",
