@@ -16,6 +16,7 @@ function RootComponent() {
     posthog.init(posthogKey, {
       api_host: 'https://ph.openfeeds.app',
       ui_host: 'https://eu.posthog.com',
+      defaults: '2025-05-24',
       person_profiles: 'identified_only',
       capture_exceptions: true,
     });
