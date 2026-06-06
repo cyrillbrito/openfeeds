@@ -12,7 +12,7 @@ export default function SubscribeForm() {
     setError('');
 
     try {
-      const response = await fetch('/api/waitlist.json', {
+      const response = await fetch('/api/waitlist', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

@@ -12,6 +12,7 @@ import { Hono } from 'hono';
 import { serveStatic } from 'hono/bun';
 import { cors } from 'hono/cors';
 import { HTTPException } from 'hono/http-exception';
+import { logger } from 'hono/logger';
 import { auth } from '~/auth';
 import { env } from '~/env';
 import type { Env } from '~/middleware/auth';
@@ -29,6 +30,7 @@ import { publicConfigRoutes } from '~/routes/public-config';
 import { settingsRoutes } from '~/routes/settings';
 import { shapesRoutes } from '~/routes/shapes';
 import { tagsRoutes } from '~/routes/tags';
+import { waitlistRoutes } from '~/routes/waitlist';
 import { wellKnownRoutes } from '~/routes/well-known';
 
 /**
@@ -56,6 +58,10 @@ import { wellKnownRoutes } from '~/routes/well-known';
 await runMigrations();
 
 const app = new Hono<Env>()
+  // Request/response logger — logs every incoming request with method/path on
+  // arrival and status + duration on completion. First in the chain so it
+  // captures CORS preflights and any auth/validation failures further down.
+  .use('*', logger())
   // CORS — dev only really matters here. Origin is the web dev server.
   // `credentials: true` requires an explicit origin (not `*`) so the browser
   // accepts the Better Auth session cookie.
@@ -90,21 +96,56 @@ const app = new Hono<Env>()
   // RFC 8615 / OpenID Discovery mandates root-level paths under /.well-known/*
   .route('/.well-known', wellKnownRoutes)
   .route('/api/mcp', mcpRoutes)
-  .route('/api/public-config', publicConfigRoutes);
+  .route('/api/public-config', publicConfigRoutes)
+  .route('/api/waitlist', waitlistRoutes);
 
-// SPA serving (prod only). In dev the web Vite server on :3400 owns the
-// browser origin and proxies /api/* here, so we don't want this app to
-// shadow Vite's HMR. In prod the Docker image copies the built SPA into
-// ./web-dist alongside this server, and Hono serves it: static assets
-// first, then `index.html` for any unmatched route (deep links, refreshes).
+// SPA + marketing serving (prod only). In dev the web Vite server on :3400
+// owns the browser origin and proxies /api/* here, so we don't want this
+// app to shadow Vite's HMR. In prod the Docker image copies both bundles
+// into ./web-dist (the SPA) and ./marketing-dist (Astro static output)
+// alongside this server.
 //
 // SERVE_SPA is set by the prod Dockerfile. Order matters: this MUST come
 // after all /api/* and /.well-known/* mounts so they win over the SPA fallback.
+//
+// Layering inside this block (top to bottom = first match wins):
+//
+//  1. Marketing's hashed assets (`/_astro/*`) and email-template assets
+//     (`/_emails/*`) — root paths owned by Astro, never overlap with the SPA.
+//  2. Static pages `/terms` and `/privacy` — always marketing.
+//  3. Root `/` — cookie-sniff: logged-in (Better Auth `better-auth.session_token`
+//     cookie present) → `next()` so the SPA's `index.html` is served below;
+//     logged-out → marketing landing. We sniff the raw cookie header instead
+//     of running the auth middleware here to keep this path zero-DB-cost.
+//  4. SPA static assets at the web-dist root (so files Vite copies from
+//     `apps/web/public/` — `curated-feeds.json`, `favicon.svg`,
+//     `apple-touch-icon.png`, `logo.svg`, etc. — resolve at their root paths).
+//  5. SPA fallback `index.html` for any unmatched route (deep links,
+//     refreshes) so TanStack Router takes over.
+//
+// `serveStatic` calls `next()` when no file matches, so non-existent
+// marketing assets fall through to the SPA layers naturally.
 if (env.SERVE_SPA) {
-  app.use('/assets/*', serveStatic({ root: './web-dist' }));
-  app.get('/favicon.ico', serveStatic({ path: './web-dist/favicon.ico' }));
-  // SPA fallback — any non-API GET returns index.html so client-side
-  // routing (TanStack Router) handles the URL.
+  // 1. Marketing static assets
+  app.use('/_astro/*', serveStatic({ root: './marketing-dist' }));
+  app.use('/_emails/*', serveStatic({ root: './marketing-dist' }));
+
+  // 2. Static marketing pages
+  app.get('/terms', serveStatic({ path: './marketing-dist/terms/index.html' }));
+  app.get('/privacy', serveStatic({ path: './marketing-dist/privacy/index.html' }));
+
+  // 3. Cookie-gated root
+  app.get('/', async (c, next) => {
+    const cookie = c.req.header('cookie') ?? '';
+    if (cookie.includes('better-auth.session_token')) {
+      return next();
+    }
+    return serveStatic({ path: './marketing-dist/index.html' })(c, next);
+  });
+
+  // 4. SPA static files at root
+  app.use('*', serveStatic({ root: './web-dist' }));
+  // 5. SPA fallback
   app.get('*', serveStatic({ path: './web-dist/index.html' }));
 }
 
@@ -159,6 +200,12 @@ app.onError((err, c) => {
 Bun.serve({
   port: env.SERVER_PORT,
   fetch: app.fetch,
+  // Electric SQL's `live=true` shape requests are long polls that hold the
+  // connection open for ~20–30s waiting for changes. Bun's default
+  // `idleTimeout` is 10s, which causes 499s and a sync loop that never
+  // settles, leaving collections stuck in initial-load. Bun caps this at
+  // 255s; 60s comfortably covers Electric's poll window.
+  idleTimeout: 60,
 });
 
 console.log(`🚀 server listening on http://localhost:${env.SERVER_PORT}`);
