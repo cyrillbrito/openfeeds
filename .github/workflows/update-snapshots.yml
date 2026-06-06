@@ -106,6 +106,14 @@ jobs:
       - name: Symlink web dist into server
         run: ln -s "$GITHUB_WORKSPACE/apps/web/dist" "$GITHUB_WORKSPACE/apps/server/web-dist"
 
+      # Build the static marketing site so the server can serve it from
+      # ./marketing-dist. Same setup as ci.yml — see comment there.
+      - name: Build marketing site
+        run: bun run --cwd apps/marketing build
+
+      - name: Symlink marketing dist into server
+        run: ln -s "$GITHUB_WORKSPACE/apps/marketing/dist" "$GITHUB_WORKSPACE/apps/server/marketing-dist"
+
       - name: Start server + SPA
         run: |
           bun --cwd=apps/server --bun src/index.ts > /tmp/server.log 2>&1 &

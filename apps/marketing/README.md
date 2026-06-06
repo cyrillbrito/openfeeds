@@ -1,10 +1,9 @@
 ## From scratch
 
 ```
-bun create cloudflare@latest marketing --framework=astro --platform=pages
+bun create astro@latest marketing
 bun astro add solid
 bun astro add tailwind
-bun add resend
 
 bun prettier -w .
 ```

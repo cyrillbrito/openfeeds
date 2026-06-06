@@ -106,11 +106,14 @@ export default defineConfig({
       timeout: 10_000,
     },
     {
-      // From apps/e2e: build the SPA, then run the server with SERVE_SPA=true.
+      // From apps/e2e: build the SPA + marketing site, symlink both into
+      // apps/server, then run the server with SERVE_SPA=true.
       // Mirrors the CI step (.github/workflows/ci.yml).
       command:
         'bun --cwd ../web run build && ' +
+        'bun --cwd ../marketing run build && ' +
         'ln -sfn "$PWD/../web/dist" ../server/web-dist && ' +
+        'ln -sfn "$PWD/../marketing/dist" ../server/marketing-dist && ' +
         'SERVE_SPA=true SERVER_PORT=3400 bun --cwd ../server --bun src/index.ts',
       url: 'http://localhost:3400',
       // CI starts the server out-of-band; reuse it instead of spawning a duplicate.

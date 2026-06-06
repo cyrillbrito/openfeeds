@@ -9,6 +9,7 @@ export const env = createEnv({
     POSTHOG_PUBLIC_KEY: z.string().optional(),
     POSTHOG_APP: z.string().default('server'),
     RESEND_API_KEY: z.string().optional(),
+    RESEND_AUDIENCE_ID: z.string().optional(),
     DATA_PATH: z.string().optional(),
     UNREAL_SPEECH_API_KEY: z.string().optional(),
     TTS_DEFAULT_VOICE: z.string().default('Sierra'),
