@@ -18,7 +18,6 @@ export interface ArticleListContextValue {
   shortsExist: Accessor<boolean>;
   readStatus: Accessor<ReadStatus>;
   context: 'inbox' | 'feed' | 'tag';
-  loadMore: () => void;
   updateArticle: (articleId: string, updates: { isRead?: boolean; isArchived?: boolean }) => void;
   markAllArchived: () => Promise<void>;
   addTag: (articleId: string, tagId: string) => void;
