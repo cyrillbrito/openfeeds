@@ -1,6 +1,6 @@
 import { Link } from '@tanstack/solid-router';
-import { ChevronDown } from 'lucide-solid';
-import { For, Show, type JSX } from 'solid-js';
+import { createWindowVirtualizer } from '@tanstack/solid-virtual';
+import { For, Show, createSignal, onCleanup, onMount, type JSX } from 'solid-js';
 import {
   AllCaughtUpIllustration,
   FeedIllustration,
@@ -21,6 +21,24 @@ interface ArticleListProps {
     };
   };
 }
+
+/**
+ * Rough average card height in px. Used as the virtualizer's initial estimate
+ * before any item has been measured. Once items render, `measureElement` +
+ * `ResizeObserver` correct each row to its real height. The estimate doesn't
+ * need to be exact — it just affects how the spacer sizes itself before
+ * measurement and how aggressively `overscan` pre-renders. ~200px matches a
+ * text-only card; cards with YouTube thumbnails are taller and will be
+ * corrected after first layout.
+ */
+const ESTIMATED_CARD_HEIGHT = 200;
+
+/**
+ * Number of extra items rendered above and below the visible area. Higher
+ * values mean smoother scrolling (no blank flashes during fast scroll) at the
+ * cost of more DOM nodes. 5 is a reasonable middle ground.
+ */
+const OVERSCAN = 5;
 
 export function ArticleList(props: ArticleListProps) {
   const ctx = useArticleList();
@@ -106,8 +124,53 @@ export function ArticleList(props: ArticleListProps) {
   };
 
   const emptyState = getContextualEmptyState();
-  const hasMoreArticles = () => ctx.articles().length < ctx.totalCount();
-  const remainingCount = () => ctx.totalCount() - ctx.articles().length;
+
+  // Virtualizer setup — uses the window as the scroll element so the existing
+  // page layout (sticky header, content-container) keeps working as-is and
+  // the router's `scrollRestoration: true` continues to handle back-nav.
+  //
+  // `scrollMargin` accounts for everything rendered above the list (page
+  // header, page heading, toolbar, etc.). The virtualizer needs to know this
+  // offset so `virtualRow.start` is in document coordinates and our
+  // `translateY` math (start - scrollMargin) positions items correctly inside
+  // the spacer div.
+  let parentRef: HTMLDivElement | undefined;
+  const [scrollMargin, setScrollMargin] = createSignal(0);
+
+  onMount(() => {
+    const updateMargin = () => {
+      if (!parentRef) return;
+      // Distance from the top of the document to the start of the list.
+      // Recomputed on resize because the header/toolbar above can change height.
+      const rect = parentRef.getBoundingClientRect();
+      setScrollMargin(rect.top + window.scrollY);
+    };
+
+    updateMargin();
+    // ResizeObserver on the body catches layout shifts above the list (e.g.
+    // toolbar wrapping on mobile, font loading, sticky header height changes).
+    const ro = new ResizeObserver(updateMargin);
+    ro.observe(document.body);
+    window.addEventListener('resize', updateMargin);
+    onCleanup(() => {
+      ro.disconnect();
+      window.removeEventListener('resize', updateMargin);
+    });
+  });
+
+  const virtualizer = createWindowVirtualizer({
+    get count() {
+      return ctx.articles().length;
+    },
+    estimateSize: () => ESTIMATED_CARD_HEIGHT,
+    overscan: OVERSCAN,
+    get scrollMargin() {
+      return scrollMargin();
+    },
+    // Stable key per article so the virtualizer can match rows across
+    // reorders (e.g. archive removes an item, list shifts up).
+    getItemKey: (index) => ctx.articles()[index]?.id ?? index,
+  });
 
   return (
     <Show
@@ -140,18 +203,43 @@ export function ArticleList(props: ArticleListProps) {
         </div>
       }
     >
-      <div class="divide-base-300 w-full divide-y">
-        <For each={ctx.articles()}>{(article) => <ArticleCard article={article} />}</For>
+      {/* Spacer — absorbs the total scrollable height so the page can scroll
+          even though only ~10–15 children are mounted. */}
+      <div
+        ref={(el) => (parentRef = el)}
+        class="relative w-full"
+        style={{ height: `${virtualizer.getTotalSize()}px` }}
+      >
+        <For each={virtualizer.getVirtualItems()}>
+          {(virtualRow) => {
+            const article = () => ctx.articles()[virtualRow.index];
+            return (
+              <Show when={article()}>
+                {(a) => (
+                  <div
+                    ref={(el) => {
+                      // Solid sets dynamic attributes via createEffect AFTER ref
+                      // callbacks fire, so `data-index={virtualRow.index}` would
+                      // be unset when measureElement runs and indexFromElement()
+                      // returns -1. Set it ourselves first so the virtualizer
+                      // can read the index, observe the element, and record its
+                      // measured height.
+                      el.setAttribute('data-index', String(virtualRow.index));
+                      virtualizer.measureElement(el);
+                    }}
+                    class="border-base-300 absolute top-0 left-0 w-full border-b"
+                    style={{
+                      transform: `translateY(${virtualRow.start - virtualizer.options.scrollMargin}px)`,
+                    }}
+                  >
+                    <ArticleCard article={a()} />
+                  </div>
+                )}
+              </Show>
+            );
+          }}
+        </For>
       </div>
-
-      <Show when={hasMoreArticles()}>
-        <div class="mt-6 flex justify-center">
-          <button class="btn btn-outline btn-wide gap-2" onClick={ctx.loadMore}>
-            <ChevronDown size={20} />
-            Load More ({remainingCount()} remaining)
-          </button>
-        </div>
-      </Show>
     </Show>
   );
 }

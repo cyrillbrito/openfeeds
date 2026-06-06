@@ -27,6 +27,7 @@
     "@tanstack/electric-db-collection": "^0.3.4",
     "@tanstack/solid-db": "^0.2.20",
     "@tanstack/solid-router": "^1.170.7",
+    "@tanstack/solid-virtual": "^3.13.28",
     "better-auth": "^1.6.11",
     "daisyui": "^5.5.20",
     "dompurify": "^3.4.5",
