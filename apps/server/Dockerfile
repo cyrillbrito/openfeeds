@@ -1,20 +1,24 @@
 # Packaging only — build happens on CI runner.
-# CI runs `turbo prune @repo/server @repo/web` so the pruned monorepo in out/
-# contains both apps. Then `bun install` + `bun run build` builds the SPA
-# (writes to apps/web/dist/). This Dockerfile just copies the result and
-# runs the Hono server, which serves /api/* + the SPA fallback (see
-# SERVE_SPA in apps/server/src/index.ts).
+# CI runs `turbo prune @repo/server @repo/web @repo/marketing` so the pruned
+# monorepo in out/ contains all three apps. Then `bun install` + `bun run build`
+# builds the SPA (writes to apps/web/dist/) and the Astro static marketing
+# bundle (writes to apps/marketing/dist/). This Dockerfile just copies the
+# result and runs the Hono server, which serves /api/* + the marketing
+# pages + the SPA fallback (see SERVE_SPA in apps/server/src/index.ts).
 FROM oven/bun:1.3.12
 
 WORKDIR /app
 
-# Pruned monorepo: node_modules + sources + apps/web/dist (built on CI).
+# Pruned monorepo: node_modules + sources + apps/web/dist + apps/marketing/dist
+# (both built on CI).
 COPY out/ .
 
-# The SPA bundle lives in ./web-dist relative to the server process cwd
-# (apps/server/). Symlink it so `hono/bun` serveStatic finds it without us
-# hardcoding a long relative path in the source.
-RUN ln -s /app/apps/web/dist /app/apps/server/web-dist
+# The SPA bundle lives in ./web-dist and the marketing static bundle in
+# ./marketing-dist, both relative to the server process cwd (apps/server/).
+# Symlink them so `hono/bun` serveStatic finds them without us hardcoding
+# long relative paths in the source.
+RUN ln -s /app/apps/web/dist /app/apps/server/web-dist \
+ && ln -s /app/apps/marketing/dist /app/apps/server/marketing-dist
 
 # Pre-create data directory with correct ownership before switching to non-root.
 RUN mkdir -p /data && chown bun:bun /data

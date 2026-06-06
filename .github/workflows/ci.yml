@@ -169,6 +169,15 @@ jobs:
       - name: Symlink web dist into server
         run: ln -s "$GITHUB_WORKSPACE/apps/web/dist" "$GITHUB_WORKSPACE/apps/server/web-dist"
 
+      # Build the static marketing site so the server can serve it from
+      # ./marketing-dist (see marketing-dist routing block in
+      # apps/server/src/index.ts). Mirrors the production Docker image.
+      - name: Build marketing site
+        run: bun run --cwd apps/marketing build
+
+      - name: Symlink marketing dist into server
+        run: ln -s "$GITHUB_WORKSPACE/apps/marketing/dist" "$GITHUB_WORKSPACE/apps/server/marketing-dist"
+
       # Single process serves /api/* + the SPA on :3400 — same port as the
       # dev Vite server, so BASE_URL/TRUSTED_ORIGINS/E2E defaults stay
       # consistent between local dev and CI.
