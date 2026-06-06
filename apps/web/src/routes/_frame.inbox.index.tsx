@@ -37,14 +37,6 @@ function Inbox() {
         const base = eq(article.isArchived, false);
         return readStatusWhere ? and(base, readStatusWhere(article)) : base;
       }),
-    buildCountQuery: (q, { readStatusWhere }) =>
-      q
-        .from({ article: articlesCollection })
-        .where(({ article }: any) => {
-          const base = eq(article.isArchived, false);
-          return readStatusWhere ? and(base, readStatusWhere(article)) : base;
-        })
-        .select(({ article }: any) => ({ id: article.id })),
     buildUnreadQuery: (q) =>
       q
         .from({ article: articlesCollection })
