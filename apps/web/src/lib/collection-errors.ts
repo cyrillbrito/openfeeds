@@ -109,9 +109,7 @@ export function shapeErrorHandler(
     const message = sanitizeErrorMessage(error);
     const status = error instanceof FetchError ? error.status : undefined;
 
-    posthog.captureException(error, { context, status });
-
-    // 401 = session expired — stop retrying and redirect to login
+    // 401 = session expired — expected, not a bug worth tracking as an exception
     if (status === 401) {
       if (!hasToasted) {
         toastService.error('Session expired. Redirecting to login…');
@@ -121,6 +119,8 @@ export function shapeErrorHandler(
       window.location.href = '/login';
       return undefined; // stop syncing
     }
+
+    posthog.captureException(error, { context, status });
 
     if (!hasToasted) {
       toastService.error(message);

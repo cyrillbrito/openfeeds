@@ -6,7 +6,7 @@ Analytics powered by [PostHog](https://posthog.com/) with EU data residency.
 
 | Component | SDK                   | Host                                       | Init Location                                 |
 | --------- | --------------------- | ------------------------------------------ | --------------------------------------------- |
-| Web app   | `posthog-js`          | `https://ph.openfeeds.app` (reverse proxy) | `apps/web/src/utils/posthog.ts`               |
+| Web app   | `posthog-js`          | `https://ph.openfeeds.app` (reverse proxy) | `apps/web/src/routes/__root.tsx`              |
 | Marketing | `posthog-js` (inline) | `https://ph.openfeeds.app` (reverse proxy) | `apps/marketing/src/components/PostHog.astro` |
 | Server    | `posthog-node`        | `https://eu.i.posthog.com` (direct)        | `packages/domain/src/config.ts`               |
 
