@@ -6,7 +6,7 @@ Analytics powered by [PostHog](https://posthog.com/) with EU data residency.
 
 | Component | SDK                   | Host                                       | Init Location                                 |
 | --------- | --------------------- | ------------------------------------------ | --------------------------------------------- |
-| Web app   | `posthog-js`          | `https://ph.openfeeds.app` (reverse proxy) | `apps/web/src/utils/posthog.ts`               |
+| Web app   | `posthog-js`          | `https://ph.openfeeds.app` (reverse proxy) | `apps/web/src/routes/__root.tsx`              |
 | Marketing | `posthog-js` (inline) | `https://ph.openfeeds.app` (reverse proxy) | `apps/marketing/src/components/PostHog.astro` |
 | Server    | `posthog-node`        | `https://eu.i.posthog.com` (direct)        | `packages/domain/src/config.ts`               |
 
@@ -16,11 +16,12 @@ Analytics powered by [PostHog](https://posthog.com/) with EU data residency.
 
 ### Env Vars
 
-| Var                  | Package                       | Required               | Notes                            |
-| -------------------- | ----------------------------- | ---------------------- | -------------------------------- |
-| `POSTHOG_PUBLIC_KEY` | `packages/domain`, `apps/web` | No                     | Disabled when absent (local dev) |
-| `POSTHOG_APP`        | `packages/domain`             | No, default `'server'` | Attached to exception metadata   |
-| `PUBLIC_POSTHOG_KEY` | `apps/marketing`              | No                     | Astro public env convention      |
+| Var                  | Package           | Required               | Notes                            |
+| -------------------- | ----------------- | ---------------------- | -------------------------------- |
+| `POSTHOG_PUBLIC_KEY` | `packages/domain` | No                     | Disabled when absent (local dev) |
+| `VITE_POSTHOG_KEY`   | `apps/web`        | No                     | Vite build-time env convention   |
+| `POSTHOG_APP`        | `packages/domain` | No, default `'server'` | Attached to exception metadata   |
+| `PUBLIC_POSTHOG_KEY` | `apps/marketing`  | No                     | Astro public env convention      |
 
 ## User Identification
 
@@ -47,22 +48,23 @@ Allowed verbs: `click`, `submit`, `create`, `view`, `add`, `invite`, `update`, `
 
 Tracked via `trackEvent()` in `packages/domain/src/analytics.ts`. Preferred over client-side for reliability.
 
-| Event                             | Properties                                | Location                                                                |
-| --------------------------------- | ----------------------------------------- | ----------------------------------------------------------------------- |
-| `auth:account_create`             | `method`                                  | `apps/web/src/server/auth.ts`                                           |
-| `auth:session_create`             | `method`                                  | `apps/web/src/server/auth.ts`                                           |
-| `feeds:feed_create`               | `feed_id`, `feed_url`                     | `packages/domain/src/entities/feed.ts`                                  |
-| `feeds:feed_delete`               | `feed_id`                                 | `packages/domain/src/entities/feed.ts`                                  |
-| `feeds:opml_import`               | `feed_count`, `tag_count`, `failed_count` | `packages/domain/src/import.ts`                                         |
-| `tags:tag_create`                 | `tag_id`, `color`                         | `packages/domain/src/entities/tag.ts`                                   |
-| `tags:tag_delete`                 | `tag_id`                                  | `packages/domain/src/entities/tag.ts`                                   |
-| `filters:rule_create`             | `feed_id`, `operator`                     | `packages/domain/src/entities/filter-rule.ts`                           |
-| `tts:audio_generate`              | `article_id`, `duration_ms`               | `packages/domain/src/tts.ts`                                            |
-| `limits:feeds_limit_hit`          | `source`, `current_usage`, `limit`        | `packages/domain/src/entities/feed.ts`, `packages/domain/src/import.ts` |
-| `limits:filter_rules_limit_hit`   | `current_usage`, `limit`                  | `packages/domain/src/entities/filter-rule.ts`                           |
-| `limits:saved_articles_limit_hit` | `current_usage`, `limit`                  | `packages/domain/src/entities/article.ts`                               |
-| `limits:extractions_limit_hit`    | `window`, `current_usage`, `limit`        | `packages/domain/src/entities/article.ts`                               |
-| `limits:tts_limit_hit`            | `window`, `current_usage`, `limit`        | `packages/domain/src/tts.ts`                                            |
+| Event                             | Properties                                        | Location                                              |
+| --------------------------------- | ------------------------------------------------- | ----------------------------------------------------- |
+| `auth:account_create`             | `method`                                          | `packages/auth/src/index.ts`                          |
+| `auth:session_create`             | `method`                                          | `packages/auth/src/index.ts`                          |
+| `feeds:feed_create`               | `feed_url`, `feed_domain`                         | `packages/domain/src/entities/feed.ts`                |
+| `feeds:feed_delete`               | `count`                                           | `packages/domain/src/entities/feed.ts`                |
+| `feeds:opml_import`               | `feed_count`, `tag_count`, `failed_count`         | `packages/domain/src/import.ts`                       |
+| `tags:tag_create`                 | `tag_name`, `color`                               | `packages/domain/src/entities/tag.ts`                 |
+| `tags:tag_delete`                 | `count`                                           | `packages/domain/src/entities/tag.ts`                 |
+| `articles:article_create`         | `article_url`                                     | `packages/domain/src/entities/article.ts`             |
+| `filters:rule_create`             | `operator`                                        | `packages/domain/src/entities/filter-rule.ts`         |
+| `tts:audio_generate`              | `duration_ms?`                                    | `packages/domain/src/tts.ts`                          |
+| `limits:feeds_limit_hit`          | `source`, `current_usage`, `limit`, `plan`        | `packages/domain/src/limits.ts`                       |
+| `limits:filter_rules_limit_hit`   | `current_usage`, `limit`, `plan`                  | `packages/domain/src/limits.ts`                       |
+| `limits:saved_articles_limit_hit` | `current_usage`, `limit`, `plan`                  | `packages/domain/src/limits.ts`                       |
+| `limits:extractions_limit_hit`    | `window`, `current_usage`, `limit`                | `packages/domain/src/limits.ts`                       |
+| `limits:tts_limit_hit`            | `window`, `current_usage`, `limit`                | `packages/domain/src/limits.ts`                       |
 
 ### Client-Side (posthog-js)
 

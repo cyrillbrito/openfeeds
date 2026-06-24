@@ -8,7 +8,6 @@ import type { Env } from '~/middleware/auth';
  */
 export const publicConfigRoutes = new Hono<Env>().get('/config', (c) =>
   c.json({
-    posthogKey: env.POSTHOG_PUBLIC_KEY,
     socialProviders: {
       google: Boolean(env.GOOGLE_CLIENT_ID && env.GOOGLE_CLIENT_SECRET),
       apple: Boolean(env.APPLE_CLIENT_ID && env.APPLE_CLIENT_SECRET),
