@@ -73,7 +73,7 @@ function LoginPage() {
         });
         setError(err.error?.message || err.message);
       } else {
-        posthog.captureException(err);
+        posthog.captureException(err, { source: 'login_form' });
         posthog.capture('auth:login_fail', {
           source: 'login_form',
           code: 'unknown',
