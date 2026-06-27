@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.17.0](https://github.com/cyrillbrito/openfeeds/compare/v0.16.0...v0.17.0) (2026-06-27)
+
+
+### Miscellaneous Chores
+
+* release 0.17.0 ([0436c25](https://github.com/cyrillbrito/openfeeds/commit/0436c255b41d04e8e8beded60b40c00ff3cd905c))
+
 ## [0.16.0](https://github.com/cyrillbrito/openfeeds/compare/v0.15.2...v0.16.0) (2026-05-24)
 
 
