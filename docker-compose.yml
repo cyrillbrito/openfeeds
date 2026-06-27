@@ -1,4 +1,4 @@
-# Production: all services internal except web
+# Production: all services internal except server
 services:
   postgres:
     image: postgres:18.1-alpine
@@ -32,12 +32,12 @@ services:
     restart: unless-stopped
     command: redis-server --save 60 1 --loglevel warning
 
-  # Electric SQL sync service (proxied through web app for auth)
+  # Electric SQL sync service (proxied through server app for auth)
   electric:
     image: electricsql/electric:latest
     environment:
       DATABASE_URL: postgresql://postgres:postgres@postgres:5432/openfeeds?sslmode=disable
-      ELECTRIC_INSECURE: true # Safe - proxied through authenticated web app
+      ELECTRIC_INSECURE: true # Safe - proxied through authenticated server app
     networks:
       - openfeeds-network
     depends_on:
@@ -45,8 +45,8 @@ services:
         condition: service_healthy
     restart: unless-stopped
 
-  web:
-    image: ghcr.io/cyrillbrito/openfeeds-web:latest
+  server:
+    image: ghcr.io/cyrillbrito/openfeeds-server:latest
     ports:
       - '3000:3000'
     environment:

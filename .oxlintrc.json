@@ -75,5 +75,5 @@
     "builtin": true
   },
   "globals": {},
-  "ignorePatterns": ["out/**", ".agents/**"]
+  "ignorePatterns": ["out/**", ".agents/**", "apps/server/dist/**"]
 }

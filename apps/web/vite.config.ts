@@ -18,7 +18,7 @@ const rootPkg = JSON.parse(readFileSync('../../package.json', 'utf-8'));
  * refresh via `historyApiFallback` (Vite's SPA default).
  *
  * No `preview` block: prod-like runs (CI E2E, Docker) don't use `vite
- * preview` — the server serves the built SPA directly via `SERVE_SPA=true`.
+ * preview` — the server serves the built SPA directly from apps/server/dist/web.
  */
 export default defineConfig({
   resolve: {

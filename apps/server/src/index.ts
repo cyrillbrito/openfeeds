@@ -10,6 +10,7 @@ import {
 } from '@repo/domain';
 import { Hono } from 'hono';
 import { serveStatic } from 'hono/bun';
+import { getCookie } from 'hono/cookie';
 import { cors } from 'hono/cors';
 import { HTTPException } from 'hono/http-exception';
 import { logger } from 'hono/logger';
@@ -38,7 +39,7 @@ import { wellKnownRoutes } from '~/routes/well-known';
  *
  * Dev: web (Vite, :3400) calls this server cross-origin on :3401. CORS with
  * credentials enabled below so the shared Better Auth session cookie is sent.
- * Production: this same process also serves the built SPA from ./web-dist
+ * Production: this same process also serves static artifacts from ./dist
  * (see SPA fallback at the bottom of this file) on :3000, so the browser
  * sees one origin and CORS is unused.
  *
@@ -99,59 +100,35 @@ const app = new Hono<Env>()
   .route('/api/public-config', publicConfigRoutes)
   .route('/api/waitlist', waitlistRoutes);
 
-// SPA + marketing serving (prod only). In dev the web Vite server on :3400
-// owns the browser origin and proxies /api/* here, so we don't want this
-// app to shadow Vite's HMR. In prod the Docker image copies both bundles
-// into ./web-dist (the SPA) and ./marketing-dist (Astro static output)
-// alongside this server.
-//
-// SERVE_SPA is set by the prod Dockerfile. Order matters: this MUST come
-// after all /api/* and /.well-known/* mounts so they win over the SPA fallback.
-//
-// Layering inside this block (top to bottom = first match wins):
-//
-//  1. Marketing's hashed assets (`/_astro/*`) and email-template assets
-//     (`/_emails/*`) — root paths owned by Astro, never overlap with the SPA.
-//  2. Static pages `/terms` and `/privacy` — always marketing.
-//  3. Root `/` — cookie-sniff: logged-in (Better Auth `better-auth.session_token`
-//     cookie present) → `next()` so the SPA's `index.html` is served below;
-//     logged-out → marketing landing. We sniff the raw cookie header instead
-//     of running the auth middleware here to keep this path zero-DB-cost.
-//  4. SPA static assets at the web-dist root (so files Vite copies from
-//     `apps/web/public/` — `curated-feeds.json`, `favicon.svg`,
-//     `apple-touch-icon.png`, `logo.svg`, etc. — resolve at their root paths).
-//  5. SPA fallback `index.html` for any unmatched route (deep links,
-//     refreshes) so TanStack Router takes over.
-//
-// `serveStatic` calls `next()` when no file matches, so non-existent
-// marketing assets fall through to the SPA layers naturally.
-if (env.SERVE_SPA) {
-  // 1. Marketing static assets
-  app.use('/_astro/*', serveStatic({ root: './marketing-dist' }));
-  app.use('/_emails/*', serveStatic({ root: './marketing-dist' }));
+// Static serving is always registered. In dev, browsers normally hit Vite on
+// :3400 and only proxy /api/* here; production links static artifacts under
+// ./dist. Keep this after all /api/* and
+// /.well-known/* mounts so API routes win over the SPA fallback.
+app.use('/_astro/*', serveStatic({ root: './dist/marketing' }));
+app.use('/_astro/*', async (c) => c.notFound());
+app.use('/emails/*', serveStatic({ root: './dist' }));
+app.use('/emails/*', async (c) => c.notFound());
 
-  // 2. Static marketing pages
-  app.get('/terms', serveStatic({ path: './marketing-dist/terms/index.html' }));
-  app.get('/privacy', serveStatic({ path: './marketing-dist/privacy/index.html' }));
+app.get('/terms', serveStatic({ path: './dist/marketing/terms/index.html' }));
+app.get('/terms/', serveStatic({ path: './dist/marketing/terms/index.html' }));
+app.get('/privacy', serveStatic({ path: './dist/marketing/privacy/index.html' }));
+app.get('/privacy/', serveStatic({ path: './dist/marketing/privacy/index.html' }));
 
-  // 3. Cookie-gated root
-  app.get('/', async (c, next) => {
-    const cookie = c.req.header('cookie') ?? '';
-    // Match the session cookie by NAME boundary (not a loose substring, which
-    // another cookie's value could trip) while allowing Better Auth's
-    // production `__Secure-` prefix — the real prod cookie name is
-    // `__Secure-better-auth.session_token`, so the prefix must be optional.
-    if (/(?:^|;\s*)(?:__Secure-)?better-auth\.session_token=/.test(cookie)) {
-      return next();
-    }
-    return serveStatic({ path: './marketing-dist/index.html' })(c, next);
-  });
+// Logged-in users get the SPA; logged-out visitors get the marketing home. A
+// cookie-name check avoids a DB read on the landing page.
+app.get('/', async (c, next) => {
+  if (
+    getCookie(c, 'better-auth.session_token') ||
+    getCookie(c, '__Secure-better-auth.session_token')
+  ) {
+    return next();
+  }
+  return serveStatic({ path: './dist/marketing/index.html' })(c, next);
+});
 
-  // 4. SPA static files at root
-  app.use('*', serveStatic({ root: './web-dist' }));
-  // 5. SPA fallback
-  app.get('*', serveStatic({ path: './web-dist/index.html' }));
-}
+// Root-level SPA files first; then index.html for app deep links.
+app.use('*', serveStatic({ root: './dist/web' }));
+app.get('*', serveStatic({ path: './dist/web/index.html' }));
 
 // Error mapping — runs for any thrown error or HTTPException. Validation
 // errors from @hono/zod-validator return 400 automatically with a default

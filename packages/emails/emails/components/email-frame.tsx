@@ -39,7 +39,7 @@ export function EmailFrame({ preview, children, footerText, showUnsubscribe }: E
         <Container style={container}>
           <Section style={logoContainer}>
             <Img
-              src="https://openfeeds.app/_emails/logo.png"
+              src="https://openfeeds.app/emails/logo.png"
               width="40"
               height="30"
               alt="OpenFeeds"

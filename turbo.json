@@ -26,7 +26,6 @@
         "REDIS_PORT",
         "RESEND_API_KEY",
         "RESEND_AUDIENCE_ID",
-        "SERVE_SPA",
         "SIMPLE_AUTH",
         "TRUSTED_ORIGINS",
         "GOOGLE_CLIENT_ID",

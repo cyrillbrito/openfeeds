@@ -15,14 +15,9 @@ const RATE_LIMIT_MAX = 5;
 const rateLimitBuckets = new Map<string, { count: number; resetAt: number }>();
 
 function isRateLimited(c: Context): boolean {
-  // Cloudflare overwrites CF-Connecting-IP with the real client IP, so it's
-  // the trustworthy key when traffic comes through the CDN. Fall back to the
-  // first X-Forwarded-For hop, then a shared bucket so a missing header can't
-  // disable limiting entirely.
-  const ip =
-    c.req.header('cf-connecting-ip') ??
-    c.req.header('x-forwarded-for')?.split(',')[0]?.trim() ??
-    'unknown';
+  // Only trust Cloudflare's client IP header. If the origin is reached
+  // directly, don't let spoofed forwarding headers bypass the limiter.
+  const ip = c.req.header('cf-connecting-ip') ?? 'unknown';
   const now = Date.now();
 
   // Opportunistically evict expired buckets so the map can't grow unbounded
@@ -65,6 +60,7 @@ export const waitlistRoutes = new Hono().post(
     if (!result.success) {
       return c.json({ success: false, error: 'Invalid email address' }, 400);
     }
+    return undefined;
   }),
   async (c) => {
     const { email } = c.req.valid('json');

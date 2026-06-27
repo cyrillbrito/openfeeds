@@ -60,7 +60,7 @@ jobs:
           # build output lands in the same pruned tree.
           - name: server
             packages: '@repo/server @repo/web @repo/marketing'
-            image: ghcr.io/cyrillbrito/openfeeds-web
+            image: ghcr.io/cyrillbrito/openfeeds-server
             dockerfile: apps/server/Dockerfile
             build: true
             sourcemaps: true
@@ -149,6 +149,6 @@ jobs:
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
-          # Per-image GHA cache keeps web/worker layers separate.
+          # Per-image GHA cache keeps server/worker layers separate.
           cache-from: type=gha,scope=${{ matrix.name }}
           cache-to: type=gha,mode=max,scope=${{ matrix.name }}

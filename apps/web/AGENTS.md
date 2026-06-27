@@ -22,8 +22,8 @@ bun build    # Production SPA build
 To run a prod-like build locally (real bundle, served by the server on a single port — exactly what CI E2E and Docker do):
 
 1. `bun run --cwd apps/web build` and `bun run --cwd apps/marketing build`
-2. From `apps/server/`, symlink both bundles: `ln -sfn ../web/dist web-dist && ln -sfn ../marketing/dist marketing-dist`
-3. Start the server: `SERVE_SPA=true SERVER_PORT=3400 bun --bun src/index.ts`
+2. From repo root, link server assets: `mkdir -p apps/server/dist && ln -sfn ../../web/dist apps/server/dist/web && ln -sfn ../../marketing/dist apps/server/dist/marketing && ln -sfn ../../../packages/emails/public/emails apps/server/dist/emails`
+3. Start the server: `bun start`
 
 ## Directory Structure
 
