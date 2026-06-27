@@ -54,12 +54,13 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          # server: bundles the built SPA (apps/web/dist) and serves it from Hono
-          # alongside /api/*. Prune scope includes both packages so the web
+          # server: bundles the built SPA (apps/web/dist) and the static
+          # marketing site (apps/marketing/dist), and serves them all from Hono
+          # alongside /api/*. Prune scope includes all three packages so every
           # build output lands in the same pruned tree.
           - name: server
-            packages: '@repo/server @repo/web'
-            image: ghcr.io/cyrillbrito/openfeeds-web
+            packages: '@repo/server @repo/web @repo/marketing'
+            image: ghcr.io/cyrillbrito/openfeeds-server
             dockerfile: apps/server/Dockerfile
             build: true
             sourcemaps: true
@@ -96,6 +97,11 @@ jobs:
         if: matrix.build
         run: bun run build
         working-directory: out
+        env:
+          # Astro bakes PUBLIC_* into the marketing client bundle at build
+          # time. Other apps (web, server) read PostHog config at runtime, so
+          # this var only matters when matrix.packages includes @repo/marketing.
+          PUBLIC_POSTHOG_KEY: ${{ secrets.PUBLIC_POSTHOG_KEY }}
 
       - name: Read version from package.json
         if: matrix.sourcemaps
@@ -143,6 +149,6 @@ jobs:
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
-          # Per-image GHA cache keeps web/worker layers separate.
+          # Per-image GHA cache keeps server/worker layers separate.
           cache-from: type=gha,scope=${{ matrix.name }}
           cache-to: type=gha,mode=max,scope=${{ matrix.name }}

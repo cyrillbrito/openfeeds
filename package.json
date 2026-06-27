@@ -8,7 +8,9 @@
   ],
   "scripts": {
     "dev": "turbo run dev --filter=@repo/web --filter=@repo/server --filter=@repo/worker",
-    "build": "turbo run build",
+    "build": "turbo run build && bun run _link-server-assets",
+    "start": "SERVER_PORT=3400 bun --cwd apps/server --env-file=../../.env --bun src/index.ts",
+    "_link-server-assets": "if [ -d apps/server ]; then test -d apps/web/dist && test -d apps/marketing/dist && test -d packages/emails/public/emails && mkdir -p apps/server/dist && ln -sfn ../../web/dist apps/server/dist/web && ln -sfn ../../marketing/dist apps/server/dist/marketing && ln -sfn ../../../packages/emails/public/emails apps/server/dist/emails; fi",
     "lint": "oxlint",
     "format:check": "oxfmt --check .",
     "format": "oxfmt --write .",

@@ -19,7 +19,11 @@ bun build    # Production SPA build
 
 `bun dev` requires the server app to be running on :3401. Run `bun dev` at the monorepo root to start both.
 
-To run a prod-like build locally (real bundle, served by the server on a single port — exactly what CI E2E and Docker do): `bun run build`, then in `apps/server/`: `SERVE_SPA=true SERVER_PORT=3400 bun --bun src/index.ts` (after symlinking `apps/web/dist` to `apps/server/web-dist`).
+To run a prod-like build locally (real bundle, served by the server on a single port — exactly what CI E2E and Docker do):
+
+1. `bun run --cwd apps/web build` and `bun run --cwd apps/marketing build`
+2. From repo root, link server assets: `mkdir -p apps/server/dist && ln -sfn ../../web/dist apps/server/dist/web && ln -sfn ../../marketing/dist apps/server/dist/marketing && ln -sfn ../../../packages/emails/public/emails apps/server/dist/emails`
+3. Start the server: `bun start`
 
 ## Directory Structure
 

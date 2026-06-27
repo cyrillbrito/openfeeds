@@ -10,8 +10,10 @@ import {
 } from '@repo/domain';
 import { Hono } from 'hono';
 import { serveStatic } from 'hono/bun';
+import { getCookie } from 'hono/cookie';
 import { cors } from 'hono/cors';
 import { HTTPException } from 'hono/http-exception';
+import { logger } from 'hono/logger';
 import { auth } from '~/auth';
 import { env } from '~/env';
 import type { Env } from '~/middleware/auth';
@@ -29,6 +31,7 @@ import { publicConfigRoutes } from '~/routes/public-config';
 import { settingsRoutes } from '~/routes/settings';
 import { shapesRoutes } from '~/routes/shapes';
 import { tagsRoutes } from '~/routes/tags';
+import { waitlistRoutes } from '~/routes/waitlist';
 import { wellKnownRoutes } from '~/routes/well-known';
 
 /**
@@ -36,7 +39,7 @@ import { wellKnownRoutes } from '~/routes/well-known';
  *
  * Dev: web (Vite, :3400) calls this server cross-origin on :3401. CORS with
  * credentials enabled below so the shared Better Auth session cookie is sent.
- * Production: this same process also serves the built SPA from ./web-dist
+ * Production: this same process also serves static artifacts from ./dist
  * (see SPA fallback at the bottom of this file) on :3000, so the browser
  * sees one origin and CORS is unused.
  *
@@ -56,6 +59,10 @@ import { wellKnownRoutes } from '~/routes/well-known';
 await runMigrations();
 
 const app = new Hono<Env>()
+  // Request/response logger — logs every incoming request with method/path on
+  // arrival and status + duration on completion. First in the chain so it
+  // captures CORS preflights and any auth/validation failures further down.
+  .use('*', logger())
   // CORS — dev only really matters here. Origin is the web dev server.
   // `credentials: true` requires an explicit origin (not `*`) so the browser
   // accepts the Better Auth session cookie.
@@ -90,23 +97,38 @@ const app = new Hono<Env>()
   // RFC 8615 / OpenID Discovery mandates root-level paths under /.well-known/*
   .route('/.well-known', wellKnownRoutes)
   .route('/api/mcp', mcpRoutes)
-  .route('/api/public-config', publicConfigRoutes);
+  .route('/api/public-config', publicConfigRoutes)
+  .route('/api/waitlist', waitlistRoutes);
 
-// SPA serving (prod only). In dev the web Vite server on :3400 owns the
-// browser origin and proxies /api/* here, so we don't want this app to
-// shadow Vite's HMR. In prod the Docker image copies the built SPA into
-// ./web-dist alongside this server, and Hono serves it: static assets
-// first, then `index.html` for any unmatched route (deep links, refreshes).
-//
-// SERVE_SPA is set by the prod Dockerfile. Order matters: this MUST come
-// after all /api/* and /.well-known/* mounts so they win over the SPA fallback.
-if (env.SERVE_SPA) {
-  app.use('/assets/*', serveStatic({ root: './web-dist' }));
-  app.get('/favicon.ico', serveStatic({ path: './web-dist/favicon.ico' }));
-  // SPA fallback — any non-API GET returns index.html so client-side
-  // routing (TanStack Router) handles the URL.
-  app.get('*', serveStatic({ path: './web-dist/index.html' }));
-}
+// Static serving is always registered. In dev, browsers normally hit Vite on
+// :3400 and only proxy /api/* here; production links static artifacts under
+// ./dist. Keep this after all /api/* and
+// /.well-known/* mounts so API routes win over the SPA fallback.
+app.use('/_astro/*', serveStatic({ root: './dist/marketing' }));
+app.use('/_astro/*', async (c) => c.notFound());
+app.use('/emails/*', serveStatic({ root: './dist' }));
+app.use('/emails/*', async (c) => c.notFound());
+
+app.get('/terms', serveStatic({ path: './dist/marketing/terms/index.html' }));
+app.get('/terms/', serveStatic({ path: './dist/marketing/terms/index.html' }));
+app.get('/privacy', serveStatic({ path: './dist/marketing/privacy/index.html' }));
+app.get('/privacy/', serveStatic({ path: './dist/marketing/privacy/index.html' }));
+
+// Logged-in users get the SPA; logged-out visitors get the marketing home. A
+// cookie-name check avoids a DB read on the landing page.
+app.get('/', async (c, next) => {
+  if (
+    getCookie(c, 'better-auth.session_token') ||
+    getCookie(c, '__Secure-better-auth.session_token')
+  ) {
+    return next();
+  }
+  return serveStatic({ path: './dist/marketing/index.html' })(c, next);
+});
+
+// Root-level SPA files first; then index.html for app deep links.
+app.use('*', serveStatic({ root: './dist/web' }));
+app.get('*', serveStatic({ path: './dist/web/index.html' }));
 
 // Error mapping — runs for any thrown error or HTTPException. Validation
 // errors from @hono/zod-validator return 400 automatically with a default
@@ -159,6 +181,12 @@ app.onError((err, c) => {
 Bun.serve({
   port: env.SERVER_PORT,
   fetch: app.fetch,
+  // Electric SQL's `live=true` shape requests are long polls that hold the
+  // connection open for ~20–30s waiting for changes. Bun's default
+  // `idleTimeout` is 10s, which causes 499s and a sync loop that never
+  // settles, leaving collections stuck in initial-load. Bun caps this at
+  // 255s; 60s comfortably covers Electric's poll window.
+  idleTimeout: 60,
 });
 
 console.log(`🚀 server listening on http://localhost:${env.SERVER_PORT}`);

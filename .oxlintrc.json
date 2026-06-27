@@ -59,9 +59,10 @@
       }
     },
     {
-      "files": ["apps/marketing/src/env.d.ts"],
+      "files": ["apps/server/src/index.ts"],
       "rules": {
-        "typescript/consistent-type-imports": "off"
+        // Composition root by design — imports every route module.
+        "import/max-dependencies": "off"
       }
     }
   ],
@@ -74,5 +75,5 @@
     "builtin": true
   },
   "globals": {},
-  "ignorePatterns": ["out/**", ".agents/**"]
+  "ignorePatterns": ["out/**", ".agents/**", "apps/server/dist/**"]
 }

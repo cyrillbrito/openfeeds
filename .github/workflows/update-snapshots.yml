@@ -95,24 +95,15 @@ jobs:
         run: bunx playwright install chromium --with-deps
         working-directory: apps/e2e
 
-      - name: Build @repo/emails
-        run: bun run --cwd packages/emails build
-
-      # Build the SPA so the server can serve it (SERVE_SPA below). Same setup
-      # as ci.yml — see comment there.
-      - name: Build web SPA
-        run: bun run --cwd apps/web build
-
-      - name: Symlink web dist into server
-        run: ln -s "$GITHUB_WORKSPACE/apps/web/dist" "$GITHUB_WORKSPACE/apps/server/web-dist"
+      # Builds the SPA + marketing site and links server-served assets.
+      # Same setup as ci.yml — see comment there.
+      - name: Build app bundles
+        run: bun run build
 
       - name: Start server + SPA
         run: |
-          bun --cwd=apps/server --bun src/index.ts > /tmp/server.log 2>&1 &
+          bun run start > /tmp/server.log 2>&1 &
           echo "SERVER_PID=$!" >> "$GITHUB_ENV"
-        env:
-          SERVER_PORT: '3400'
-          SERVE_SPA: 'true'
 
       - name: Wait for server
         run: |

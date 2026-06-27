@@ -50,3 +50,29 @@ export async function sendPasswordResetEmail(email: string, url: string) {
     react: ResetPassword({ resetUrl: url }),
   });
 }
+
+// Adds an email to the configured Resend "Audience" (mailing list). Used by
+// the marketing waitlist subscribe form. No email is sent — the audience is
+// later targeted by a broadcast campaign. Returns a discriminated result so
+// the caller (an HTTP route handler) doesn't have to translate exceptions:
+// "not configured" and "Resend rejected the contact" both map to a 500 with
+// a user-safe message.
+export async function addContactToWaitlist(
+  email: string,
+): Promise<{ success: true } | { success: false; error: string }> {
+  const resend = getResend();
+  if (!resend || !env.RESEND_AUDIENCE_ID) {
+    return { success: false, error: 'Subscribe service not configured' };
+  }
+
+  try {
+    await resend.contacts.create({
+      email,
+      audienceId: env.RESEND_AUDIENCE_ID,
+    });
+    return { success: true };
+  } catch (err) {
+    console.error('[Waitlist] Resend contacts.create failed:', err);
+    return { success: false, error: 'Failed to subscribe' };
+  }
+}

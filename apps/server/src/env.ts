@@ -6,12 +6,6 @@ export const env = createEnv({
     NODE_ENV: z.enum(['development', 'test', 'production']).default('development'),
     SERVER_PORT: z.coerce.number().default(3401),
     /**
-     * When true, this server also serves the built SPA from ./web-dist
-     * (assets + index.html fallback). Set in the prod Docker image. Off in
-     * dev so Vite (on :3400) owns the browser origin and HMR works.
-     */
-    SERVE_SPA: z.stringbool().default(false),
-    /**
      * Public origin that external clients use to reach this API. In dev
      * this is typically the web Vite server (http://localhost:3400), which
      * proxies /api/* → :3401 — so browsers, MCP clients, and OAuth flows

@@ -1,6 +1,6 @@
 # Server Application - Bun + Hono
 
-Standalone HTTP server. Owns all server-side concerns: auth, Electric SQL shape proxies, entity mutations, OAuth, MCP, well-known endpoints. Also serves the built SPA in production (`SERVE_SPA=true`). End-to-end typed to `apps/web/` via Hono's `hc` client (`@repo/server/client`).
+Standalone HTTP server. Owns all server-side concerns: auth, Electric SQL shape proxies, entity mutations, OAuth, MCP, well-known endpoints. Also serves built static artifacts from `apps/server/dist/`. End-to-end typed to `apps/web/` via Hono's `hc` client (`@repo/server/client`).
 
 ## Commands
 

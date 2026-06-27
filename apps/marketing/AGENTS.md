@@ -1,12 +1,18 @@
 # Marketing App
 
-Astro-based marketing website deployed to Cloudflare Workers (with static assets).
+Astro static site. Built to `apps/marketing/dist/` and served by the Hono server from `apps/server/dist/marketing`. There is no Astro runtime in production; the waitlist signup is a Hono route at `POST /api/waitlist` that wraps `addContactToWaitlist` from `@repo/domain`.
+
+Routes:
+
+- `/` — cookie-gated by the Hono server: logged-out visitors see the marketing landing; logged-in users get the SPA. Uses the Better Auth `better-auth.session_token` cookie via a raw header sniff (no DB hit).
+- `/terms`, `/privacy` — always marketing.
+- `/_astro/*` — marketing static assets.
 
 ## Asset Placement Rules
 
 **Prefer `src/assets/` over `public/` for all assets.**
 
-A Cloudflare Worker routes traffic between marketing and the main app based on URL paths. Marketing assets are served from `/_astro/` (Astro's default build output). Placing assets in `src/assets/` ensures they're bundled to `/_astro/` and easily distinguished from app assets.
+The Hono server treats `/_astro/*` as a marketing-owned root path. Placing assets in `src/assets/` ensures they're bundled to `/_astro/` (with cache-busting hashes) and never collide with SPA assets.
 
 ### Use `src/assets/` for:
 
@@ -21,10 +27,6 @@ Benefits: cache-busting hashes, image optimization, tree-shaking.
 
 - Browsers expect exact paths (e.g., favicons, `robots.txt`)
 - Third-party scripts require specific paths
-
-### Email assets: `public/_emails/`
-
-Assets used in email templates (e.g., `logo.png`) go in `public/_emails/`. They are served directly as static assets by Cloudflare Workers (the worker runtime is only invoked when no matching static asset exists). Email templates reference these as `https://openfeeds.app/_emails/logo.png`.
 
 ### Example
 

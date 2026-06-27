@@ -1,4 +1,4 @@
-# Production: all services internal except web
+# Production: all services internal except server
 services:
   postgres:
     image: postgres:18.1-alpine
@@ -32,12 +32,12 @@ services:
     restart: unless-stopped
     command: redis-server --save 60 1 --loglevel warning
 
-  # Electric SQL sync service (proxied through web app for auth)
+  # Electric SQL sync service (proxied through server app for auth)
   electric:
     image: electricsql/electric:latest
     environment:
       DATABASE_URL: postgresql://postgres:postgres@postgres:5432/openfeeds?sslmode=disable
-      ELECTRIC_INSECURE: true # Safe - proxied through authenticated web app
+      ELECTRIC_INSECURE: true # Safe - proxied through authenticated server app
     networks:
       - openfeeds-network
     depends_on:
@@ -45,8 +45,8 @@ services:
         condition: service_healthy
     restart: unless-stopped
 
-  web:
-    image: ghcr.io/cyrillbrito/openfeeds-web:latest
+  server:
+    image: ghcr.io/cyrillbrito/openfeeds-server:latest
     ports:
       - '3000:3000'
     environment:
@@ -62,6 +62,8 @@ services:
       - APPLE_CLIENT_ID=$APPLE_CLIENT_ID
       - APPLE_CLIENT_SECRET=$APPLE_CLIENT_SECRET
       - POSTHOG_PUBLIC_KEY=$POSTHOG_PUBLIC_KEY
+      - RESEND_API_KEY=$RESEND_API_KEY
+      - RESEND_AUDIENCE_ID=$RESEND_AUDIENCE_ID
       - UNREAL_SPEECH_API_KEY=$UNREAL_SPEECH_API_KEY
       - TTS_DEFAULT_VOICE=$TTS_DEFAULT_VOICE
       - DATA_PATH=${DATA_PATH:-/data}

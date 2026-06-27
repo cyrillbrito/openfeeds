@@ -2,7 +2,7 @@ import { createSignal, For, Match, onMount, Switch } from 'solid-js';
 import logoUrl from '@/assets/logo.svg';
 import { initTheme } from '@/utils/theme';
 import type { DiscoveredFeed, MessageType } from '@/utils/types';
-import './App.css';
+import './app.css';
 
 type PopupState = 'loading' | 'no-feeds' | 'feeds-list' | 'error';
 
