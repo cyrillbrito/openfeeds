@@ -7,12 +7,12 @@
   },
   "scripts": {},
   "dependencies": {
-    "@better-auth/drizzle-adapter": "^1.6.11",
-    "@better-auth/oauth-provider": "^1.6.11",
+    "@better-auth/drizzle-adapter": "^1.6.20",
+    "@better-auth/oauth-provider": "^1.6.20",
     "@repo/db": "workspace:*",
     "@repo/domain": "workspace:*",
     "@t3-oss/env-core": "^0.13.11",
-    "better-auth": "^1.6.11",
+    "better-auth": "^1.6.20",
     "zod": "^4.4.3"
   },
   "devDependencies": {

@@ -13,9 +13,9 @@
   "dependencies": {
     "@mixmark-io/domino": "^2.2.0",
     "@repo/safe-fetch": "workspace:*",
-    "defuddle": "^0.18.1",
+    "defuddle": "^0.19.1",
     "jsdom": "^29.1.1",
-    "sanitize-html": "^2.17.4",
+    "sanitize-html": "^2.17.5",
     "turndown": "^7.2.4"
   },
   "devDependencies": {
