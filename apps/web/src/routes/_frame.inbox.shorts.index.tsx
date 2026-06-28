@@ -1,6 +1,7 @@
-import { and, eq, ilike, queryOnce } from '@tanstack/solid-db';
-import { createFileRoute } from '@tanstack/solid-router';
-import { createResource, Show } from 'solid-js';
+import { and, eq, ilike, queryOnce } from '@tanstack/react-db';
+import { createFileRoute } from '@tanstack/react-router';
+import { useEffect, useState } from 'react';
+import type { Article } from '@repo/domain/client';
 import type { ReadStatus } from '~/components/articles/ReadStatusToggle';
 import { CenterLoader } from '~/components/Loader';
 import { ShortsViewer } from '~/components/ShortsViewer';
@@ -16,14 +17,16 @@ export const Route = createFileRoute('/_frame/inbox/shorts/')({
 
 function InboxShorts() {
   const search = Route.useSearch();
-  const readStatus = (): ReadStatus => search()?.readStatus || 'unread';
-  const feedsQuery = useFeeds();
+  const readStatus: ReadStatus = search?.readStatus || 'unread';
+  const feeds = useFeeds();
 
-  // One-shot snapshot — refetches when readStatus changes. Frozen list so
-  // mark-as-read doesn't reorder/remove items mid-session.
-  const [snapshot, { mutate: mutateSnapshot }] = createResource(readStatus, async (status) => {
-    const filter = readStatusWhere(status);
-    return queryOnce((q) =>
+  const [snapshot, setSnapshot] = useState<Article[] | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    setLoading(true);
+    const filter = readStatusWhere(readStatus);
+    queryOnce((q) =>
       q
         .from({ article: articlesCollection })
         .where(({ article }) => {
@@ -34,25 +37,27 @@ function InboxShorts() {
           return filter ? and(base, filter(article)) : base;
         })
         .orderBy(({ article }) => article.pubDate, 'desc'),
-    );
-  });
+    )
+      .then((result) => setSnapshot(result as Article[]))
+      .finally(() => setLoading(false));
+  }, [readStatus]);
 
   const setRead = (articleId: string, isRead: boolean) => {
-    mutateSnapshot((prev) => prev?.map((a) => (a.id === articleId ? { ...a, isRead } : a)));
+    setSnapshot((prev) => prev?.map((a) => (a.id === articleId ? { ...a, isRead } : a)) ?? null);
     articlesCollection.update(articleId, (draft) => {
       draft.isRead = isRead;
     });
   };
 
+  if (loading) return <CenterLoader />;
+
   return (
-    <Show when={snapshot.state !== 'pending'} fallback={<CenterLoader />}>
-      <ShortsViewer
-        readStatus={readStatus()}
-        shorts={snapshot() ?? []}
-        feeds={feedsQuery() || []}
-        backLink={{ to: '/inbox', text: 'Back to Inbox' }}
-        onSetRead={setRead}
-      />
-    </Show>
+    <ShortsViewer
+      readStatus={readStatus}
+      shorts={snapshot ?? []}
+      feeds={feeds}
+      backLink={{ to: '/inbox', text: 'Back to Inbox' }}
+      onSetRead={setRead}
+    />
   );
 }

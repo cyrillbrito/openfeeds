@@ -7,34 +7,24 @@
  * We call `router.load()` eagerly so that internal router state (location,
  * matches, etc.) is populated before any `<Link>` component tries to read it.
  */
-import type { AnyRouter } from '@tanstack/solid-router';
 import {
   createMemoryHistory,
   createRootRoute,
   createRoute,
   createRouter,
-  RouterContextProvider,
-} from '@tanstack/solid-router';
-import { type JSXElement, Suspense } from 'solid-js';
+  RouterProvider,
+} from '@tanstack/react-router';
+import type { ComponentType } from 'react';
 
-const rootRoute = createRootRoute();
-
-const indexRoute = createRoute({
-  getParentRoute: () => rootRoute,
-  path: '/',
-  component: () => null,
-});
-
-// Catch-all so `<Link to="/articles/$articleId">` etc. don't warn about missing routes
-const catchAllRoute = createRoute({
-  getParentRoute: () => rootRoute,
-  path: '$',
-  component: () => null,
-});
-
-const routeTree = rootRoute.addChildren([indexRoute, catchAllRoute]);
-
-function createStoryRouter() {
+function createStoryRouter(Story: ComponentType) {
+  const rootRoute = createRootRoute({ component: Story as any });
+  // Catch-all so `<Link to="/articles/$articleId">` etc. don't warn about missing routes
+  const catchAllRoute = createRoute({
+    getParentRoute: () => rootRoute,
+    path: '$',
+    component: () => null,
+  });
+  const routeTree = rootRoute.addChildren([catchAllRoute]);
   const router = createRouter({
     routeTree,
     history: createMemoryHistory({ initialEntries: ['/'] }),
@@ -52,15 +42,7 @@ function createStoryRouter() {
  * Usage:
  *   decorators: [withRouter]
  */
-export function withRouter(Story: () => JSXElement) {
-  const router = createStoryRouter();
-  return (
-    <RouterContextProvider router={router as unknown as AnyRouter}>
-      {() => (
-        <Suspense>
-          <Story />
-        </Suspense>
-      )}
-    </RouterContextProvider>
-  );
+export function withRouter(Story: ComponentType) {
+  const router = createStoryRouter(Story);
+  return <RouterProvider router={router} />;
 }

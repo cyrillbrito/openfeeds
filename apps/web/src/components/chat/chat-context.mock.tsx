@@ -11,8 +11,7 @@
  * Imports from chat-context.shared (lightweight, no server deps).
  */
 import type { UIMessage } from '@tanstack/ai-client';
-import { createSignal } from 'solid-js';
-import type { JSX } from 'solid-js';
+import type { ReactNode } from 'react';
 import { ChatContext } from './chat-context.shared';
 import type { SessionSummary } from './chat-context.shared';
 
@@ -33,31 +32,25 @@ export interface MockChatProviderProps {
   onLoadSession?: (id: string) => void;
   /** Override for deleteSession */
   onDeleteSession?: (id: string) => void;
-  children: JSX.Element;
+  children: ReactNode;
 }
 
 const noop = () => {};
 
 export function MockChatProvider(props: MockChatProviderProps) {
-  const [messages] = createSignal(props.messages ?? []);
-  const [isLoading] = createSignal(props.isLoading ?? false);
-  const [error] = createSignal<Error | undefined>(props.error);
-  const [sessionId] = createSignal(props.sessionId ?? 'mock-session-id');
-  const [sessions] = createSignal(props.sessions ?? []);
-
   const value = {
-    messages,
-    isLoading,
-    error,
+    messages: props.messages ?? [],
+    isLoading: props.isLoading ?? false,
+    error: props.error,
     sendMessage: async (text: string) => {
       void (props.onSendMessage ?? noop)(text);
     },
     stop: () => {
       (props.onStop ?? noop)();
     },
-    sessionId,
-    currentTitle: () => props.currentTitle ?? 'New chat',
-    sessions,
+    sessionId: props.sessionId ?? 'mock-session-id',
+    currentTitle: props.currentTitle ?? 'New chat',
+    sessions: props.sessions ?? [],
     startNewChat: () => {
       (props.onStartNewChat ?? noop)();
     },

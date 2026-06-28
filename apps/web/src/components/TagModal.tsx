@@ -1,7 +1,7 @@
 import type { Tag, TagColor } from '@repo/domain/client';
 import { createId } from '@repo/shared/utils';
-import { CircleAlert } from 'lucide-solid';
-import { createEffect, createSignal, For, Show } from 'solid-js';
+import { CircleAlert } from 'lucide-react';
+import { useEffect, useRef, useState } from 'react';
 import { tagsCollection, useTags } from '~/entities/tags';
 import { availableTagColors, getTagDotColor } from '~/utils/tagColors';
 import { ColorIndicator } from './ColorIndicator';
@@ -13,23 +13,23 @@ interface TagModalProps {
   onEditComplete?: () => void;
 }
 
-export function TagModal(props: TagModalProps) {
-  let modalController!: ModalController;
-  const isEditMode = () => !!props.editTag;
+export function TagModal({ controller, editTag, onEditComplete }: TagModalProps) {
+  const modalRef = useRef<ModalController>(null!);
+  const isEditMode = !!editTag;
 
   return (
     <LazyModal
-      controller={(controller) => {
-        modalController = controller;
-        props.controller(controller);
+      controller={(ctrl) => {
+        modalRef.current = ctrl;
+        controller(ctrl);
       }}
-      class="max-w-md"
-      title={isEditMode() ? 'Edit Tag' : 'Create New Tag'}
+      className="max-w-md"
+      title={isEditMode ? 'Edit Tag' : 'Create New Tag'}
     >
       <TagForm
-        editTag={props.editTag}
-        onEditComplete={props.onEditComplete}
-        onClose={() => modalController.close()}
+        editTag={editTag}
+        onEditComplete={onEditComplete}
+        onClose={() => modalRef.current.close()}
       />
     </LazyModal>
   );
@@ -41,17 +41,16 @@ interface TagFormProps {
   onClose: () => void;
 }
 
-function TagForm(props: TagFormProps) {
-  const isEditMode = () => !!props.editTag;
+function TagForm({ editTag, onEditComplete, onClose }: TagFormProps) {
+  const isEditMode = !!editTag;
   const tags = useTags();
 
-  const [tagName, setTagName] = createSignal('');
-  const [tagColor, setTagColor] = createSignal<TagColor>(null);
-  const [error, setError] = createSignal<string | null>(null);
+  const [tagName, setTagName] = useState('');
+  const [tagColor, setTagColor] = useState<TagColor>(null);
+  const [error, setError] = useState<string | null>(null);
 
-  // Reset form when editTag changes (for edit mode)
-  createEffect(() => {
-    const editTag = props.editTag;
+  // Reset form when editTag changes
+  useEffect(() => {
     if (editTag) {
       setTagName(editTag.name);
       setTagColor(editTag.color);
@@ -60,11 +59,11 @@ function TagForm(props: TagFormProps) {
       setTagColor(null);
     }
     setError(null);
-  });
+  }, [editTag]);
 
-  const handleSubmit = (e: Event) => {
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    const name = tagName().trim();
+    const name = tagName.trim();
 
     if (!name) {
       setError('Tag name is required');
@@ -73,21 +72,20 @@ function TagForm(props: TagFormProps) {
 
     setError(null);
 
-    if (isEditMode()) {
-      tagsCollection.update(props.editTag!.id, (draft) => {
+    if (isEditMode) {
+      tagsCollection.update(editTag!.id, (draft) => {
         draft.name = name;
-        draft.color = tagColor();
+        draft.color = tagColor;
       });
-      props.onEditComplete?.();
+      onEditComplete?.();
     } else {
       const now = new Date().toISOString();
-      const currentTags = tags();
-      const maxOrder = currentTags ? Math.max(-1, ...currentTags.map((t) => t.order)) : -1;
+      const maxOrder = tags.length > 0 ? Math.max(-1, ...tags.map((t) => t.order)) : -1;
       tagsCollection.insert({
         id: createId(),
-        userId: '', // Will be set by server
+        userId: '',
         name,
-        color: tagColor(),
+        color: tagColor,
         order: maxOrder + 1,
         createdAt: now,
         updatedAt: now,
@@ -96,76 +94,73 @@ function TagForm(props: TagFormProps) {
 
     setTagName('');
     setTagColor(null);
-    props.onClose();
+    onClose();
   };
 
   return (
     <form onSubmit={handleSubmit}>
-      <div class="form-control mb-4 w-full">
-        <label class="label">
-          <span class="label-text">Tag Name</span>
+      <div className="form-control mb-4 w-full">
+        <label className="label">
+          <span className="label-text">Tag Name</span>
         </label>
         <input
           type="text"
           placeholder="Enter tag name"
-          class="input input-bordered w-full"
-          value={tagName()}
-          onInput={(e) => setTagName(e.currentTarget.value)}
+          className="input input-bordered w-full"
+          value={tagName}
+          onChange={(e) => setTagName(e.currentTarget.value)}
           required
         />
       </div>
 
-      <div class="form-control mb-4 w-full">
-        <label class="label">
-          <span class="label-text">Tag Color</span>
+      <div className="form-control mb-4 w-full">
+        <label className="label">
+          <span className="label-text">Tag Color</span>
         </label>
-        <div class="mb-3 flex flex-wrap gap-2">
+        <div className="mb-3 flex flex-wrap gap-2">
           <button
             type="button"
-            class={`badge badge-md sm:badge-lg border-base-300 cursor-pointer gap-1.5 border px-3 py-2 transition-all sm:gap-2 sm:px-4 sm:py-3 ${
-              tagColor() === null
-                ? 'ring-primary ring-2'
-                : 'hover:ring-base-content/20 hover:ring-1'
+            className={`badge badge-md sm:badge-lg border-base-300 cursor-pointer gap-1.5 border px-3 py-2 transition-all sm:gap-2 sm:px-4 sm:py-3 ${
+              tagColor === null ? 'ring-primary ring-2' : 'hover:ring-base-content/20 hover:ring-1'
             }`}
             onClick={() => setTagColor(null)}
             title="Default (gray)"
           >
-            <ColorIndicator class={getTagDotColor(null)} />
-            <span class="text-xs sm:text-sm">Default</span>
+            <ColorIndicator className={getTagDotColor(null)} />
+            <span className="text-xs sm:text-sm">Default</span>
           </button>
-          <For each={availableTagColors}>
-            {(colorOption) => (
-              <button
-                type="button"
-                class={`badge badge-md sm:badge-lg border-base-300 cursor-pointer gap-1.5 border px-3 py-2 transition-all sm:gap-2 sm:px-4 sm:py-3 ${
-                  tagColor() === colorOption
-                    ? 'ring-primary ring-2'
-                    : 'hover:ring-base-content/20 hover:ring-1'
-                }`}
-                onClick={() => setTagColor(colorOption)}
-                title={colorOption}
-              >
-                <ColorIndicator class={getTagDotColor(colorOption)} />
-                <span class="text-xs capitalize sm:text-sm">{colorOption}</span>
-              </button>
-            )}
-          </For>
+          {availableTagColors.map((colorOption) => (
+            <button
+              key={colorOption}
+              type="button"
+              className={`badge badge-md sm:badge-lg border-base-300 cursor-pointer gap-1.5 border px-3 py-2 transition-all sm:gap-2 sm:px-4 sm:py-3 ${
+                tagColor === colorOption
+                  ? 'ring-primary ring-2'
+                  : 'hover:ring-base-content/20 hover:ring-1'
+              }`}
+              onClick={() => setTagColor(colorOption)}
+              title={colorOption}
+            >
+              <ColorIndicator className={getTagDotColor(colorOption)} />
+              <span className="text-xs capitalize sm:text-sm">{colorOption}</span>
+            </button>
+          ))}
         </div>
       </div>
 
-      <Show when={error()}>
-        <div class="alert alert-error mb-4">
+      {error && (
+        <div className="alert alert-error mb-4">
           <CircleAlert size={20} />
-          <span>{error()}</span>
+          <span>{error}</span>
         </div>
-      </Show>
+      )}
 
-      <div class="modal-action">
-        <button type="button" class="btn" onClick={() => props.onClose()}>
+      <div className="modal-action">
+        <button type="button" className="btn" onClick={onClose}>
           Cancel
         </button>
-        <button type="submit" class="btn btn-primary">
-          {isEditMode() ? 'Update Tag' : 'Create Tag'}
+        <button type="submit" className="btn btn-primary">
+          {isEditMode ? 'Update Tag' : 'Create Tag'}
         </button>
       </div>
     </form>

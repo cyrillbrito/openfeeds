@@ -1,4 +1,4 @@
-import type { Meta, StoryObj } from 'storybook-solidjs-vite';
+import type { Meta, StoryObj } from '@storybook/react-vite';
 import { TimeAgo } from '~/components/TimeAgo';
 
 const meta: Meta<typeof TimeAgo> = {

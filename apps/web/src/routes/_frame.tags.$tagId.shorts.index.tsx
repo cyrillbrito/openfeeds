@@ -1,6 +1,7 @@
-import { and, eq, ilike, queryOnce } from '@tanstack/solid-db';
-import { createFileRoute } from '@tanstack/solid-router';
-import { createResource, Show } from 'solid-js';
+import { and, eq, ilike, queryOnce } from '@tanstack/react-db';
+import { createFileRoute } from '@tanstack/react-router';
+import { useEffect, useState } from 'react';
+import type { Article } from '@repo/domain/client';
 import type { ReadStatus } from '~/components/articles/ReadStatusToggle';
 import { CenterLoader } from '~/components/Loader';
 import { ShortsViewer } from '~/components/ShortsViewer';
@@ -16,57 +17,58 @@ export const Route = createFileRoute('/_frame/tags/$tagId/shorts/')({
 });
 
 function TagShorts() {
-  const params = Route.useParams();
+  const { tagId } = Route.useParams();
   const search = Route.useSearch();
-  const tagId = () => params()?.tagId;
-  const readStatus = (): ReadStatus => search()?.readStatus || 'unread';
-  const feedsQuery = useFeeds();
+  const readStatus: ReadStatus = search?.readStatus || 'unread';
+  const feeds = useFeeds();
 
-  // One-shot snapshot — refetches when tagId or readStatus changes.
-  const [snapshot, { mutate: mutateSnapshot }] = createResource(
-    () => ({ id: tagId(), status: readStatus() }),
-    async ({ id, status }) => {
-      const filter = readStatusWhere(status);
-      return queryOnce((q) =>
-        q
-          .from({ article: articlesCollection })
-          .innerJoin({ articleTag: articleTagsCollection }, ({ article, articleTag }) =>
-            eq(article.id, articleTag.articleId),
-          )
-          .where(({ article, articleTag }) => {
-            const base = and(
-              eq(articleTag.tagId, id),
-              eq(article.isArchived, false),
-              ilike(article.url, '%youtube.com/shorts%'),
-            );
-            return filter ? and(base, filter(article)) : base;
-          })
-          .select(({ article }) => article)
-          .orderBy(({ article }) => article.pubDate, 'desc'),
-      );
-    },
-  );
+  const [snapshot, setSnapshot] = useState<Article[] | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    setLoading(true);
+    const filter = readStatusWhere(readStatus);
+    queryOnce((q) =>
+      q
+        .from({ article: articlesCollection })
+        .innerJoin({ articleTag: articleTagsCollection }, ({ article, articleTag }) =>
+          eq(article.id, articleTag.articleId),
+        )
+        .where(({ article, articleTag }) => {
+          const base = and(
+            eq(articleTag.tagId, tagId),
+            eq(article.isArchived, false),
+            ilike(article.url, '%youtube.com/shorts%'),
+          );
+          return filter ? and(base, filter(article)) : base;
+        })
+        .select(({ article }) => article)
+        .orderBy(({ article }) => article.pubDate, 'desc'),
+    )
+      .then((result) => setSnapshot(result as Article[]))
+      .finally(() => setLoading(false));
+  }, [tagId, readStatus]);
 
   const setRead = (articleId: string, isRead: boolean) => {
-    mutateSnapshot((prev) => prev?.map((a) => (a.id === articleId ? { ...a, isRead } : a)));
+    setSnapshot((prev) => prev?.map((a) => (a.id === articleId ? { ...a, isRead } : a)) ?? null);
     articlesCollection.update(articleId, (draft) => {
       draft.isRead = isRead;
     });
   };
 
+  if (loading) return <CenterLoader />;
+
   return (
-    <Show when={snapshot.state !== 'pending'} fallback={<CenterLoader />}>
-      <ShortsViewer
-        readStatus={readStatus()}
-        shorts={snapshot() ?? []}
-        feeds={feedsQuery() ?? []}
-        backLink={{
-          to: '/tags/$tagId/articles',
-          text: 'Back to Tag',
-          params: { tagId: tagId() },
-        }}
-        onSetRead={setRead}
-      />
-    </Show>
+    <ShortsViewer
+      readStatus={readStatus}
+      shorts={snapshot ?? []}
+      feeds={feeds}
+      backLink={{
+        to: '/tags/$tagId/articles',
+        text: 'Back to Tag',
+        params: { tagId },
+      }}
+      onSetRead={setRead}
+    />
   );
 }

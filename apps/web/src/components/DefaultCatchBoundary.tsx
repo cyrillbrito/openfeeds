@@ -1,11 +1,11 @@
-import { Link, useRouter, type ErrorComponentProps } from '@tanstack/solid-router';
-import { TriangleAlert } from 'lucide-solid';
+import { Link, useRouter, type ErrorComponentProps } from '@tanstack/react-router';
+import { TriangleAlert } from 'lucide-react';
 import { posthog } from 'posthog-js';
-import { createSignal, Show } from 'solid-js';
+import { useState } from 'react';
 
 export function DefaultCatchBoundary({ error }: ErrorComponentProps) {
   const router = useRouter();
-  const [showDetails, setShowDetails] = createSignal(false);
+  const [showDetails, setShowDetails] = useState(false);
 
   console.error('DefaultCatchBoundary Error:', error);
   posthog.captureException(error);
@@ -17,42 +17,44 @@ export function DefaultCatchBoundary({ error }: ErrorComponentProps) {
       : undefined;
 
   return (
-    <div class="hero bg-base-200 min-h-screen">
-      <div class="hero-content text-center">
-        <div class="w-full max-w-lg">
-          <div class="mb-8 flex flex-col items-center gap-4">
-            <TriangleAlert class="size-16 text-amber-600 dark:text-amber-400" />
-            <h1 class="text-base-content text-2xl font-bold">Something went wrong</h1>
+    <div className="hero bg-base-200 min-h-screen">
+      <div className="hero-content text-center">
+        <div className="w-full max-w-lg">
+          <div className="mb-8 flex flex-col items-center gap-4">
+            <TriangleAlert className="size-16 text-amber-600 dark:text-amber-400" />
+            <h1 className="text-base-content text-2xl font-bold">Something went wrong</h1>
           </div>
 
-          <div class="bg-base-300 mb-6 rounded-lg p-4 text-left">
-            <p class="text-error font-mono text-sm wrap-break-word">{errorMessage}</p>
+          <div className="bg-base-300 mb-6 rounded-lg p-4 text-left">
+            <p className="text-error font-mono text-sm wrap-break-word">{errorMessage}</p>
 
-            <Show when={errorStack}>
-              <button
-                class="text-base-content/70 hover:text-base-content mt-3 text-xs underline"
-                onClick={() => setShowDetails(!showDetails())}
-              >
-                {showDetails() ? 'Hide details' : 'Show details'}
-              </button>
-              <Show when={showDetails()}>
-                <pre class="text-base-content/60 mt-2 max-h-48 overflow-x-auto overflow-y-auto text-xs break-words whitespace-pre-wrap">
-                  {errorStack}
-                </pre>
-              </Show>
-            </Show>
+            {errorStack && (
+              <>
+                <button
+                  className="text-base-content/70 hover:text-base-content mt-3 text-xs underline"
+                  onClick={() => setShowDetails((v) => !v)}
+                >
+                  {showDetails ? 'Hide details' : 'Show details'}
+                </button>
+                {showDetails && (
+                  <pre className="text-base-content/60 mt-2 max-h-48 overflow-x-auto overflow-y-auto text-xs break-words whitespace-pre-wrap">
+                    {errorStack}
+                  </pre>
+                )}
+              </>
+            )}
           </div>
 
-          <div class="flex flex-wrap items-center justify-center gap-3">
+          <div className="flex flex-wrap items-center justify-center gap-3">
             <button
               onClick={() => {
                 void router.invalidate();
               }}
-              class="btn btn-primary"
+              className="btn btn-primary"
             >
               Try Again
             </button>
-            <Link to="/" class="btn btn-outline">
+            <Link to="/" className="btn btn-outline">
               Home
             </Link>
           </div>

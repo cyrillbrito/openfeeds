@@ -1,6 +1,5 @@
-import { Link, type LinkProps } from '@tanstack/solid-router';
-import { Video } from 'lucide-solid';
-import { Show } from 'solid-js';
+import { Link, type LinkProps } from '@tanstack/react-router';
+import { Video } from 'lucide-react';
 
 interface ShortsButtonProps {
   shortsExist: boolean;
@@ -8,13 +7,13 @@ interface ShortsButtonProps {
 }
 
 /** Renders a "Shorts" button that only appears when YouTube Shorts exist. */
-export function ShortsButton(props: ShortsButtonProps) {
+export function ShortsButton({ shortsExist, linkProps }: ShortsButtonProps) {
+  if (!shortsExist) return null;
+
   return (
-    <Show when={props.shortsExist}>
-      <Link {...props.linkProps} class="btn btn-accent btn-sm">
-        <Video size={20} />
-        <span class="hidden sm:inline">Shorts</span>
-      </Link>
-    </Show>
+    <Link {...linkProps} className="btn btn-accent btn-sm">
+      <Video size={20} />
+      <span className="hidden sm:inline">Shorts</span>
+    </Link>
   );
 }

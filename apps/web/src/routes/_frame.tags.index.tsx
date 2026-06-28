@@ -1,10 +1,24 @@
-import { move } from '@dnd-kit/helpers';
-import { DragDropProvider } from '@dnd-kit/solid';
-import { useSortable } from '@dnd-kit/solid/sortable';
+import {
+  closestCenter,
+  DndContext,
+  KeyboardSensor,
+  PointerSensor,
+  type DragEndEvent,
+  useSensor,
+  useSensors,
+} from '@dnd-kit/core';
+import {
+  arrayMove,
+  SortableContext,
+  sortableKeyboardCoordinates,
+  useSortable,
+  verticalListSortingStrategy,
+} from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
 import type { Tag } from '@repo/domain/client';
-import { createFileRoute } from '@tanstack/solid-router';
-import { EllipsisVertical, GripVertical, Plus } from 'lucide-solid';
-import { createSignal, For, Show, Suspense } from 'solid-js';
+import { createFileRoute } from '@tanstack/react-router';
+import { EllipsisVertical, GripVertical, Plus } from 'lucide-react';
+import { useRef, useState } from 'react';
 import { ColorIndicator } from '~/components/ColorIndicator';
 import { DeleteTagModal } from '~/components/DeleteTagModal';
 import { Dropdown } from '~/components/Dropdown';
@@ -21,47 +35,47 @@ export const Route = createFileRoute('/_frame/tags/')({
   component: TagsComponent,
 });
 
-function SortableTagItem(props: {
+function SortableTagItem({
+  tag,
+  onEdit,
+  onDelete,
+}: {
   tag: Tag;
-  index: number;
   onEdit: (tag: Tag) => void;
   onDelete: (tag: Tag) => void;
 }) {
-  const { ref, handleRef, isDragging } = useSortable({
-    get id() {
-      return props.tag.id;
-    },
-    get index() {
-      return props.index;
-    },
-    transition: {
-      duration: 200,
-      easing: 'ease',
-      idle: true,
-    },
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
+    id: tag.id,
   });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.5 : 1,
+  };
 
   return (
     <div
-      ref={ref}
-      class="border-base-300 bg-base-100 flex items-center gap-2 rounded-lg border px-3 py-3 shadow-sm"
-      style={{ opacity: isDragging() ? 0.5 : 1 }}
+      ref={setNodeRef}
+      style={style}
+      className="border-base-300 bg-base-100 flex items-center gap-2 rounded-lg border px-3 py-3 shadow-sm"
     >
       <button
-        ref={handleRef}
-        class="text-base-content/50 hover:text-base-content/80 shrink-0 cursor-grab touch-none p-1 active:cursor-grabbing"
+        {...attributes}
+        {...listeners}
+        className="text-base-content/50 hover:text-base-content/80 shrink-0 cursor-grab touch-none p-1 active:cursor-grabbing"
         aria-label="Drag to reorder"
       >
         <GripVertical size={20} />
       </button>
 
-      <div class="min-w-0 flex-1">
-        <div class="flex items-center gap-2">
-          <ColorIndicator class={getTagDotColor(props.tag.color)} />
-          <span class="truncate font-medium">{props.tag.name}</span>
+      <div className="min-w-0 flex-1">
+        <div className="flex items-center gap-2">
+          <ColorIndicator className={getTagDotColor(tag.color)} />
+          <span className="truncate font-medium">{tag.name}</span>
         </div>
-        <div class="text-base-content-gray mt-1 text-xs">
-          Created <TimeAgo date={props.tag.createdAt} />
+        <div className="text-base-content-gray mt-1 text-xs">
+          Created <TimeAgo date={tag.createdAt} />
         </div>
       </div>
 
@@ -72,10 +86,10 @@ function SortableTagItem(props: {
           btnContent={<EllipsisVertical size={16} />}
         >
           <li>
-            <button onClick={() => props.onEdit(props.tag)}>Edit</button>
+            <button onClick={() => onEdit(tag)}>Edit</button>
           </li>
           <li>
-            <button class="text-error" onClick={() => props.onDelete(props.tag)}>
+            <button className="text-error" onClick={() => onDelete(tag)}>
               Delete
             </button>
           </li>
@@ -86,115 +100,123 @@ function SortableTagItem(props: {
 }
 
 function TagsComponent() {
-  const tagsQuery = useTags();
+  const tags = useTags();
 
-  // Modal controllers
-  let tagModalController!: ModalController;
-  let deleteModalController!: ModalController;
+  const tagModalRef = useRef<ModalController>(null!);
+  const deleteModalRef = useRef<ModalController>(null!);
 
-  // Edit tag state
-  const [editingTag, setEditingTag] = createSignal<Tag | null>(null);
+  const [editingTag, setEditingTag] = useState<Tag | null>(null);
+  const [tagToDelete, setTagToDelete] = useState<Tag | null>(null);
 
-  // Delete confirmation state
-  const [tagToDelete, setTagToDelete] = createSignal<Tag | null>(null);
+  const sensors = useSensors(
+    useSensor(PointerSensor),
+    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }),
+  );
 
   const handleEditTag = (tag: Tag) => {
     setEditingTag(tag);
-    tagModalController.open();
+    tagModalRef.current.open();
   };
 
   const handleCreateTag = () => {
     setEditingTag(null);
-    tagModalController.open();
+    tagModalRef.current.open();
   };
 
   const handleDeleteTag = (tag: Tag) => {
     setTagToDelete(tag);
-    deleteModalController.open();
+    deleteModalRef.current.open();
   };
+
+  const handleDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event;
+    if (!over || active.id === over.id) return;
+
+    const oldIndex = tags.findIndex((t) => t.id === active.id);
+    const newIndex = tags.findIndex((t) => t.id === over.id);
+    if (oldIndex === -1 || newIndex === -1) return;
+
+    const reordered = arrayMove(tags, oldIndex, newIndex);
+    for (let i = 0; i < reordered.length; i++) {
+      const tag = reordered[i];
+      if (tag && tag.order !== i) {
+        tagsCollection.update(tag.id, (draft) => {
+          draft.order = i;
+        });
+      }
+    }
+  };
+
+  if (!tags) return <CenterLoader />;
 
   return (
     <PageLayout
       title="Manage Tags"
       headerActions={
-        <button class="btn btn-primary btn-sm" onClick={handleCreateTag}>
+        <button className="btn btn-primary btn-sm" onClick={handleCreateTag}>
           <Plus size={20} />
-          <span class="hidden sm:inline">Create Tag</span>
+          <span className="hidden sm:inline">Create Tag</span>
         </button>
       }
     >
-      <div class="mb-6">
-        <p class="text-base-content-gray">Organize your feeds with custom tags and colors</p>
+      <div className="mb-6">
+        <p className="text-base-content-gray">Organize your feeds with custom tags and colors</p>
       </div>
 
       <TagModal
-        controller={(controller) => (tagModalController = controller)}
-        editTag={editingTag()}
+        controller={(c) => {
+          tagModalRef.current = c;
+        }}
+        editTag={editingTag}
         onEditComplete={() => setEditingTag(null)}
       />
 
       <DeleteTagModal
-        controller={(controller) => (deleteModalController = controller)}
-        tag={tagToDelete()}
+        controller={(c) => {
+          deleteModalRef.current = c;
+        }}
+        tag={tagToDelete}
         onDeleteComplete={() => setTagToDelete(null)}
         onClose={() => setTagToDelete(null)}
       />
-      <Suspense fallback={<CenterLoader />}>
-        <Show
-          when={tagsQuery() && tagsQuery().length > 0}
-          fallback={
-            <div class="py-16 text-center">
-              <div class="mb-8 flex justify-center">
-                <TagsIllustration />
-              </div>
 
-              <h2 class="mb-4 text-3xl font-bold">No Tags Yet</h2>
-              <p class="text-base-content-gray mx-auto mb-8 max-w-md">
-                Create tags to organize and categorize your feeds. Tags help you quickly find and
-                filter related content.
-              </p>
+      {tags.length === 0 ? (
+        <div className="py-16 text-center">
+          <div className="mb-8 flex justify-center">
+            <TagsIllustration />
+          </div>
 
-              <button class="btn btn-primary btn-lg" onClick={() => tagModalController.open()}>
-                <Plus size={20} class="mr-2" />
-                Create Your First Tag
-              </button>
-            </div>
-          }
+          <h2 className="mb-4 text-3xl font-bold">No Tags Yet</h2>
+          <p className="text-base-content-gray mx-auto mb-8 max-w-md">
+            Create tags to organize and categorize your feeds. Tags help you quickly find and filter
+            related content.
+          </p>
+
+          <button className="btn btn-primary btn-lg" onClick={() => tagModalRef.current.open()}>
+            <Plus size={20} className="mr-2" />
+            Create Your First Tag
+          </button>
+        </div>
+      ) : (
+        <DndContext
+          sensors={sensors}
+          collisionDetection={closestCenter}
+          onDragEnd={handleDragEnd}
         >
-          <DragDropProvider
-            onDragEnd={(event) => {
-              const tags = tagsQuery();
-              if (!tags) return;
-
-              const updated = move(tags, event);
-              if (updated === tags) return;
-
-              // Optimistically update order via the collection so local-first sync works
-              for (let i = 0; i < updated.length; i++) {
-                const tag = updated[i];
-                if (tag && tag.order !== i) {
-                  tagsCollection.update(tag.id, (draft) => {
-                    draft.order = i;
-                  });
-                }
-              }
-            }}
-          >
-            <div class="flex flex-col gap-2">
-              <For each={tagsQuery()}>
-                {(tag, index) => (
-                  <SortableTagItem
-                    tag={tag}
-                    index={index()}
-                    onEdit={handleEditTag}
-                    onDelete={handleDeleteTag}
-                  />
-                )}
-              </For>
+          <SortableContext items={tags.map((t) => t.id)} strategy={verticalListSortingStrategy}>
+            <div className="flex flex-col gap-2">
+              {tags.map((tag) => (
+                <SortableTagItem
+                  key={tag.id}
+                  tag={tag}
+                  onEdit={handleEditTag}
+                  onDelete={handleDeleteTag}
+                />
+              ))}
             </div>
-          </DragDropProvider>
-        </Show>
-      </Suspense>
+          </SortableContext>
+        </DndContext>
+      )}
     </PageLayout>
   );
 }

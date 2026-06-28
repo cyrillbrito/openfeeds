@@ -1,4 +1,5 @@
 import type { Feed } from '@repo/domain/client';
+import { useRef } from 'react';
 import { feedsCollection } from '~/entities/feeds';
 import { LazyModal, type ModalController } from './LazyModal';
 
@@ -8,39 +9,39 @@ interface DeleteFeedModalProps {
   onDeleteComplete?: () => void;
 }
 
-export function DeleteFeedModal(props: DeleteFeedModalProps) {
-  let modalController!: ModalController;
+export function DeleteFeedModal({ controller, feeds, onDeleteComplete }: DeleteFeedModalProps) {
+  const modalRef = useRef<ModalController>(null!);
 
-  const count = () => props.feeds.length;
+  const count = feeds.length;
 
   const handleConfirm = () => {
-    feedsCollection.delete(props.feeds.map((f) => f.id));
-    props.onDeleteComplete?.();
-    modalController.close();
+    feedsCollection.delete(feeds.map((f) => f.id));
+    onDeleteComplete?.();
+    modalRef.current.close();
   };
 
   return (
     <LazyModal
-      controller={(controller) => {
-        modalController = controller;
-        props.controller(controller);
+      controller={(ctrl) => {
+        modalRef.current = ctrl;
+        controller(ctrl);
       }}
-      class="max-w-sm"
-      title={count() === 1 ? 'Unfollow Feed' : 'Unfollow Feeds'}
+      className="max-w-sm"
+      title={count === 1 ? 'Unfollow Feed' : 'Unfollow Feeds'}
     >
-      <p class="text-base-content/70 text-sm">
+      <p className="text-base-content/70 text-sm">
         Unfollow{' '}
-        <span class="text-base-content font-medium">
-          {count() === 1 ? props.feeds[0]?.title : `${count()} feeds`}
+        <span className="text-base-content font-medium">
+          {count === 1 ? feeds[0]?.title : `${count} feeds`}
         </span>
-        ? All {count() === 1 ? 'its' : 'their'} articles will also be removed.
+        ? All {count === 1 ? 'its' : 'their'} articles will also be removed.
       </p>
 
-      <div class="modal-action">
-        <button type="button" class="btn btn-ghost btn-sm" onClick={() => modalController.close()}>
+      <div className="modal-action">
+        <button type="button" className="btn btn-ghost btn-sm" onClick={() => modalRef.current.close()}>
           Cancel
         </button>
-        <button type="button" class="btn btn-error btn-sm" onClick={handleConfirm}>
+        <button type="button" className="btn btn-error btn-sm" onClick={handleConfirm}>
           Unfollow
         </button>
       </div>

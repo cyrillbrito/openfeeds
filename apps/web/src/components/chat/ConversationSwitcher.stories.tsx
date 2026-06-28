@@ -1,4 +1,5 @@
-import type { Meta, StoryObj } from 'storybook-solidjs-vite';
+import type { Meta, StoryObj } from '@storybook/react-vite';
+import type { ComponentType } from 'react';
 import { expect, fn, userEvent, within } from 'storybook/test';
 import { MockChatProvider } from './chat-context.mock';
 import { sessionFixtures } from './chat-stories.fixtures';
@@ -22,14 +23,14 @@ type Story = StoryObj;
 /** Populated session list grouped by time period */
 export const WithSessions: Story = {
   decorators: [
-    (Story: () => any) => (
+    (Story: ComponentType) => (
       <MockChatProvider
         sessions={sessionFixtures}
         sessionId="session-1"
         onLoadSession={loadSession}
         onDeleteSession={deleteSession}
       >
-        <div style={{ position: 'relative', 'min-height': '300px' }}>
+        <div style={{ position: 'relative', minHeight: '300px' }}>
           <Story />
         </div>
       </MockChatProvider>
@@ -48,9 +49,9 @@ export const WithSessions: Story = {
 /** Empty state — no conversations yet */
 export const Empty: Story = {
   decorators: [
-    (Story: () => any) => (
+    (Story: ComponentType) => (
       <MockChatProvider sessions={[]}>
-        <div style={{ position: 'relative', 'min-height': '100px' }}>
+        <div style={{ position: 'relative', minHeight: '100px' }}>
           <Story />
         </div>
       </MockChatProvider>
@@ -65,13 +66,13 @@ export const Empty: Story = {
 /** Clicking a non-active session fires loadSession */
 export const SelectSession: Story = {
   decorators: [
-    (Story: () => any) => (
+    (Story: ComponentType) => (
       <MockChatProvider
         sessions={sessionFixtures}
         sessionId="session-1"
         onLoadSession={loadSession}
       >
-        <div style={{ position: 'relative', 'min-height': '300px' }}>
+        <div style={{ position: 'relative', minHeight: '300px' }}>
           <Story />
         </div>
       </MockChatProvider>
@@ -90,9 +91,9 @@ export const SelectSession: Story = {
 /** Active session shows checkmark instead of delete button */
 export const ActiveSession: Story = {
   decorators: [
-    (Story: () => any) => (
+    (Story: ComponentType) => (
       <MockChatProvider sessions={sessionFixtures} sessionId="session-1">
-        <div style={{ position: 'relative', 'min-height': '300px' }}>
+        <div style={{ position: 'relative', minHeight: '300px' }}>
           <Story />
         </div>
       </MockChatProvider>

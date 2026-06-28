@@ -1,6 +1,6 @@
 import { twMerge } from 'tailwind-merge';
 
-type IconProps = { class?: string };
+type IconProps = { className?: string };
 
 export function FeedIllustration(props?: IconProps) {
   return (
@@ -10,27 +10,27 @@ export function FeedIllustration(props?: IconProps) {
       viewBox="0 0 160 160"
       fill="none"
       xmlns="http://www.w3.org/2000/svg"
-      class={twMerge('text-base-content/30', props?.class)}
+      className={twMerge('text-base-content/30', props?.className)}
     >
       {/* Soft background circle */}
-      <circle cx="80" cy="80" r="60" fill="currentColor" fill-opacity="0.08" />
+      <circle cx="80" cy="80" r="60" fill="currentColor" fillOpacity="0.08" />
       {/* RSS dot */}
       <circle cx="64" cy="104" r="6" fill="currentColor" />
       {/* Inner arc */}
       <path
         d="M64 88 A16 16 0 0 1 80 104"
         stroke="currentColor"
-        stroke-width="4"
+        strokeWidth="4"
         fill="none"
-        stroke-linecap="round"
+        strokeLinecap="round"
       />
       {/* Outer arc */}
       <path
         d="M64 72 A32 32 0 0 1 96 104"
         stroke="currentColor"
-        stroke-width="4"
+        strokeWidth="4"
         fill="none"
-        stroke-linecap="round"
+        strokeLinecap="round"
       />
     </svg>
   );
@@ -45,76 +45,20 @@ export function TagsIllustration(props?: IconProps) {
       viewBox="0 0 160 120"
       fill="none"
       xmlns="http://www.w3.org/2000/svg"
-      class={twMerge('text-base-content/30', props?.class)}
+      className={twMerge('text-base-content/30', props?.className)}
     >
-      <rect
-        x="20"
-        y="30"
-        width="50"
-        height="20"
-        rx="10"
-        fill="currentColor"
-        fill-opacity="0.2"
-        stroke="currentColor"
-        stroke-width="2"
-      />
-      <rect
-        x="80"
-        y="20"
-        width="40"
-        height="20"
-        rx="10"
-        fill="currentColor"
-        fill-opacity="0.3"
-        stroke="currentColor"
-        stroke-width="2"
-      />
-      <rect
-        x="30"
-        y="60"
-        width="60"
-        height="20"
-        rx="10"
-        fill="currentColor"
-        fill-opacity="0.25"
-        stroke="currentColor"
-        stroke-width="2"
-      />
-      <rect
-        x="100"
-        y="50"
-        width="35"
-        height="20"
-        rx="10"
-        fill="currentColor"
-        fill-opacity="0.2"
-        stroke="currentColor"
-        stroke-width="2"
-      />
-      <rect
-        x="50"
-        y="90"
-        width="45"
-        height="20"
-        rx="10"
-        fill="currentColor"
-        fill-opacity="0.3"
-        stroke="currentColor"
-        stroke-width="2"
-      />
-      <circle
-        cx="80"
-        cy="80"
-        r="15"
-        stroke="currentColor"
-        stroke-width="2"
-        stroke-dasharray="4,4"
-      />
-      <line x1="80" y1="72" x2="80" y2="88" stroke="currentColor" stroke-width="2" />
-      <line x1="72" y1="80" x2="88" y2="80" stroke="currentColor" stroke-width="2" />
+      <rect x="20" y="30" width="50" height="20" rx="10" fill="currentColor" fillOpacity="0.2" stroke="currentColor" strokeWidth="2" />
+      <rect x="80" y="20" width="40" height="20" rx="10" fill="currentColor" fillOpacity="0.3" stroke="currentColor" strokeWidth="2" />
+      <rect x="30" y="60" width="60" height="20" rx="10" fill="currentColor" fillOpacity="0.25" stroke="currentColor" strokeWidth="2" />
+      <rect x="100" y="50" width="35" height="20" rx="10" fill="currentColor" fillOpacity="0.2" stroke="currentColor" strokeWidth="2" />
+      <rect x="50" y="90" width="45" height="20" rx="10" fill="currentColor" fillOpacity="0.3" stroke="currentColor" strokeWidth="2" />
+      <circle cx="80" cy="80" r="15" stroke="currentColor" strokeWidth="2" strokeDasharray="4,4" />
+      <line x1="80" y1="72" x2="80" y2="88" stroke="currentColor" strokeWidth="2" />
+      <line x1="72" y1="80" x2="88" y2="80" stroke="currentColor" strokeWidth="2" />
     </svg>
   );
 }
+
 /** Manually edited */
 export function CircleIcon(props?: IconProps) {
   return (
@@ -122,13 +66,13 @@ export function CircleIcon(props?: IconProps) {
       xmlns="http://www.w3.org/2000/svg"
       fill="none"
       viewBox="0 0 24 24"
-      stroke-width="1.5"
+      strokeWidth="1.5"
       stroke="currentColor"
-      class={twMerge('size-6', props?.class)}
+      className={twMerge('size-6', props?.className)}
     >
       <path
-        stroke-linecap="round"
-        stroke-linejoin="round"
+        strokeLinecap="round"
+        strokeLinejoin="round"
         d="M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"
       />
     </svg>
@@ -142,13 +86,13 @@ export function CircleDotIcon(props?: IconProps) {
       xmlns="http://www.w3.org/2000/svg"
       fill="none"
       viewBox="0 0 24 24"
-      stroke-width="1.5"
+      strokeWidth="1.5"
       stroke="currentColor"
-      class={twMerge('size-6', props?.class)}
+      className={twMerge('size-6', props?.className)}
     >
       <path
-        stroke-linecap="round"
-        stroke-linejoin="round"
+        strokeLinecap="round"
+        strokeLinejoin="round"
         d="M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"
       />
       <circle cx="12" cy="12" r="4" fill="currentColor" />
@@ -164,30 +108,22 @@ export function AllCaughtUpIllustration(props?: IconProps) {
       viewBox="0 0 160 120"
       fill="none"
       xmlns="http://www.w3.org/2000/svg"
-      class={twMerge('text-success/80', props?.class)}
+      className={twMerge('text-success/80', props?.className)}
     >
-      <circle cx="80" cy="60" r="40" fill="currentColor" fill-opacity="0.25" />
-      <circle
-        cx="80"
-        cy="60"
-        r="30"
-        stroke="currentColor"
-        stroke-width="3"
-        stroke-dasharray="6,4"
-        fill="none"
-      />
+      <circle cx="80" cy="60" r="40" fill="currentColor" fillOpacity="0.25" />
+      <circle cx="80" cy="60" r="30" stroke="currentColor" strokeWidth="3" strokeDasharray="6,4" fill="none" />
       <path
         d="M65 60 L75 70 L95 50"
         stroke="currentColor"
-        stroke-width="4"
-        stroke-linecap="round"
-        stroke-linejoin="round"
+        strokeWidth="4"
+        strokeLinecap="round"
+        strokeLinejoin="round"
         fill="none"
       />
-      <circle cx="30" cy="30" r="8" fill="currentColor" fill-opacity="0.5" />
-      <circle cx="130" cy="25" r="6" fill="currentColor" fill-opacity="0.5" />
-      <circle cx="140" cy="90" r="10" fill="currentColor" fill-opacity="0.4" />
-      <circle cx="25" cy="85" r="5" fill="currentColor" fill-opacity="0.5" />
+      <circle cx="30" cy="30" r="8" fill="currentColor" fillOpacity="0.5" />
+      <circle cx="130" cy="25" r="6" fill="currentColor" fillOpacity="0.5" />
+      <circle cx="140" cy="90" r="10" fill="currentColor" fillOpacity="0.4" />
+      <circle cx="25" cy="85" r="5" fill="currentColor" fillOpacity="0.5" />
     </svg>
   );
 }
@@ -200,32 +136,14 @@ export function NoReadArticlesIllustration(props?: IconProps) {
       viewBox="0 0 160 120"
       fill="none"
       xmlns="http://www.w3.org/2000/svg"
-      class={twMerge('text-base-content/30', props?.class)}
+      className={twMerge('text-base-content/30', props?.className)}
     >
-      <rect
-        x="40"
-        y="25"
-        width="80"
-        height="70"
-        rx="4"
-        fill="currentColor"
-        fill-opacity="0.1"
-        stroke="currentColor"
-        stroke-width="2"
-      />
-      <rect x="50" y="40" width="60" height="4" rx="2" fill="currentColor" fill-opacity="0.3" />
-      <rect x="50" y="50" width="45" height="4" rx="2" fill="currentColor" fill-opacity="0.2" />
-      <rect x="50" y="60" width="55" height="4" rx="2" fill="currentColor" fill-opacity="0.2" />
-      <rect x="50" y="70" width="35" height="4" rx="2" fill="currentColor" fill-opacity="0.2" />
-      <circle
-        cx="80"
-        cy="55"
-        r="25"
-        stroke="currentColor"
-        stroke-width="2"
-        stroke-dasharray="4,4"
-        fill="none"
-      />
+      <rect x="40" y="25" width="80" height="70" rx="4" fill="currentColor" fillOpacity="0.1" stroke="currentColor" strokeWidth="2" />
+      <rect x="50" y="40" width="60" height="4" rx="2" fill="currentColor" fillOpacity="0.3" />
+      <rect x="50" y="50" width="45" height="4" rx="2" fill="currentColor" fillOpacity="0.2" />
+      <rect x="50" y="60" width="55" height="4" rx="2" fill="currentColor" fillOpacity="0.2" />
+      <rect x="50" y="70" width="35" height="4" rx="2" fill="currentColor" fillOpacity="0.2" />
+      <circle cx="80" cy="55" r="25" stroke="currentColor" strokeWidth="2" strokeDasharray="4,4" fill="none" />
     </svg>
   );
 }

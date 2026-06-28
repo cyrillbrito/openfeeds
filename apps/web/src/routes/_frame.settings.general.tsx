@@ -1,6 +1,6 @@
 import { getEffectiveAutoArchiveDays, type ArchiveResult } from '@repo/domain/client';
-import { createFileRoute } from '@tanstack/solid-router';
-import { createSignal, Show } from 'solid-js';
+import { createFileRoute } from '@tanstack/react-router';
+import { useRef, useState } from 'react';
 import { Card } from '~/components/Card';
 import { LazyModal, type ModalController } from '~/components/LazyModal';
 import { settingsCollection, triggerAutoArchive, useSettings } from '~/entities/settings';
@@ -11,30 +11,28 @@ export const Route = createFileRoute('/_frame/settings/general')({
 });
 
 function SettingsGeneralPage() {
-  const settings = useSettings();
-  let archiveResultModalController!: ModalController;
-  const [archiveResult, setArchiveResult] = createSignal<ArchiveResult | null>(null);
-  const [isArchiving, setIsArchiving] = createSignal(false);
-  const [archiveError, setArchiveError] = createSignal<string | null>(null);
-  const [isExporting, setIsExporting] = createSignal(false);
+  const { settings, isLoading, isError } = useSettings();
+  const archiveResultModalRef = useRef<ModalController>(null!);
+  const [archiveResult, setArchiveResult] = useState<ArchiveResult | null>(null);
+  const [isArchiving, setIsArchiving] = useState(false);
+  const [archiveError, setArchiveError] = useState<string | null>(null);
+  const [isExporting, setIsExporting] = useState(false);
 
   const handleAutoArchiveDaysChange = (value: string) => {
-    const currentSettings = settings();
-    if (!currentSettings) return;
+    if (!settings) return;
 
     const parsed = parseInt(value);
     if (isNaN(parsed) || parsed < 1 || parsed > 365) return;
 
-    settingsCollection.update(currentSettings.userId, (draft) => {
+    settingsCollection.update(settings.userId, (draft) => {
       draft.autoArchiveDays = parsed;
     });
   };
 
   const handleResetAutoArchiveDays = () => {
-    const currentSettings = settings();
-    if (!currentSettings) return;
+    if (!settings) return;
 
-    settingsCollection.update(currentSettings.userId, (draft) => {
+    settingsCollection.update(settings.userId, (draft) => {
       draft.autoArchiveDays = null;
     });
   };
@@ -63,7 +61,7 @@ function SettingsGeneralPage() {
       setArchiveError(null);
       const result = await triggerAutoArchive();
       setArchiveResult(result);
-      archiveResultModalController.open();
+      archiveResultModalRef.current.open();
     } catch (err) {
       console.error('Failed to trigger auto-archive:', err);
       setArchiveError(err instanceof Error ? err.message : 'Failed to archive');
@@ -74,137 +72,143 @@ function SettingsGeneralPage() {
 
   return (
     <>
-      <Show when={settings.isLoading}>
-        <div class="flex items-center justify-center py-8">
-          <span class="loading loading-spinner loading-lg mr-3"></span>
-          <span class="text-lg">Loading settings...</span>
+      {isLoading && (
+        <div className="flex items-center justify-center py-8">
+          <span className="loading loading-spinner loading-lg mr-3"></span>
+          <span className="text-lg">Loading settings...</span>
         </div>
-      </Show>
+      )}
 
-      <Show when={settings.isError}>
-        <div class="alert alert-error">
+      {isError && (
+        <div className="alert alert-error">
           <span>Error loading settings</span>
         </div>
-      </Show>
+      )}
 
-      <Show when={settings() && !settings.isLoading}>
-        <div class="space-y-8">
-          {/* Preferences */}
+      {settings && !isLoading && (
+        <div className="space-y-8">
           <section>
-            <h2 class="text-base-content mb-3 text-sm font-semibold tracking-wide uppercase opacity-60">
+            <h2 className="text-base-content mb-3 text-sm font-semibold tracking-wide uppercase opacity-60">
               Preferences
             </h2>
             <Card>
-              <div class="flex items-center justify-between gap-4">
-                <div class="min-w-0">
-                  <p class="text-base-content text-sm font-medium">Auto-archive articles</p>
-                  <p class="text-base-content-gray text-xs">
+              <div className="flex items-center justify-between gap-4">
+                <div className="min-w-0">
+                  <p className="text-base-content text-sm font-medium">Auto-archive articles</p>
+                  <p className="text-base-content-gray text-xs">
                     Articles older than this are automatically archived.
-                    <Show when={settings().autoArchiveDays !== null}>
-                      {' '}
-                      <button
-                        type="button"
-                        class="link link-primary"
-                        onClick={handleResetAutoArchiveDays}
-                      >
-                        Reset to default
-                      </button>
-                    </Show>
+                    {settings.autoArchiveDays !== null && (
+                      <>
+                        {' '}
+                        <button
+                          type="button"
+                          className="link link-primary"
+                          onClick={handleResetAutoArchiveDays}
+                        >
+                          Reset to default
+                        </button>
+                      </>
+                    )}
                   </p>
                 </div>
-                <div class="flex shrink-0 items-center gap-2">
+                <div className="flex shrink-0 items-center gap-2">
                   <input
                     type="number"
-                    class="input input-bordered input-sm w-20 text-center"
+                    className="input input-bordered input-sm w-20 text-center"
                     min="1"
                     max="365"
-                    value={getEffectiveAutoArchiveDays(settings())}
+                    value={getEffectiveAutoArchiveDays(settings)}
                     onChange={(e) => handleAutoArchiveDaysChange(e.target.value)}
                   />
-                  <span class="text-base-content-gray text-sm">days</span>
+                  <span className="text-base-content-gray text-sm">days</span>
                 </div>
               </div>
             </Card>
           </section>
 
-          {/* Data */}
           <section>
-            <h2 class="text-base-content mb-3 text-sm font-semibold tracking-wide uppercase opacity-60">
+            <h2 className="text-base-content mb-3 text-sm font-semibold tracking-wide uppercase opacity-60">
               Data
             </h2>
             <Card>
-              <div class="divide-base-300 divide-y">
-                <div class="flex items-center justify-between gap-4 pb-4">
-                  <div class="min-w-0">
-                    <p class="text-base-content text-sm font-medium">Export feeds</p>
-                    <p class="text-base-content-gray text-xs">
+              <div className="divide-base-300 divide-y">
+                <div className="flex items-center justify-between gap-4 pb-4">
+                  <div className="min-w-0">
+                    <p className="text-base-content text-sm font-medium">Export feeds</p>
+                    <p className="text-base-content-gray text-xs">
                       Download all your feeds as an OPML file.
                     </p>
                   </div>
                   <button
-                    class="btn btn-primary btn-sm shrink-0"
+                    className="btn btn-primary btn-sm shrink-0"
                     onClick={handleExportOpml}
-                    disabled={isExporting()}
+                    disabled={isExporting}
                   >
-                    <Show when={isExporting()}>
-                      <span class="loading loading-spinner loading-xs mr-2"></span>
-                    </Show>
+                    {isExporting && (
+                      <span className="loading loading-spinner loading-xs mr-2"></span>
+                    )}
                     Export OPML
                   </button>
                 </div>
 
-                <div class="pt-4">
-                  <div class="flex items-center justify-between gap-4">
-                    <div class="min-w-0">
-                      <p class="text-base-content text-sm font-medium">Archive old articles</p>
-                      <p class="text-base-content-gray text-xs">
+                <div className="pt-4">
+                  <div className="flex items-center justify-between gap-4">
+                    <div className="min-w-0">
+                      <p className="text-base-content text-sm font-medium">Archive old articles</p>
+                      <p className="text-base-content-gray text-xs">
                         Manually archive articles older than{' '}
-                        {getEffectiveAutoArchiveDays(settings())} days.
+                        {getEffectiveAutoArchiveDays(settings)} days.
                       </p>
                     </div>
                     <button
-                      class="btn btn-warning btn-sm shrink-0"
+                      className="btn btn-warning btn-sm shrink-0"
                       onClick={handleTriggerAutoArchive}
-                      disabled={isArchiving()}
+                      disabled={isArchiving}
                     >
-                      <Show when={isArchiving()}>
-                        <span class="loading loading-spinner loading-xs mr-2"></span>
-                      </Show>
+                      {isArchiving && (
+                        <span className="loading loading-spinner loading-xs mr-2"></span>
+                      )}
                       Archive now
                     </button>
                   </div>
-                  <Show when={archiveError()}>
-                    <div class="alert alert-error alert-sm mt-3">
-                      <span class="text-xs">Error: {archiveError()}</span>
+                  {archiveError && (
+                    <div className="alert alert-error alert-sm mt-3">
+                      <span className="text-xs">Error: {archiveError}</span>
                     </div>
-                  </Show>
+                  )}
                 </div>
               </div>
             </Card>
           </section>
         </div>
-      </Show>
+      )}
 
-      {/* Archive Result Dialog */}
       <LazyModal
-        controller={(c) => (archiveResultModalController = c)}
+        controller={(c) => {
+          archiveResultModalRef.current = c;
+        }}
         title="Archive Results"
         onClose={() => setArchiveResult(null)}
       >
-        <Show when={archiveResult()}>
-          <div class="space-y-3">
-            <div class="stat">
-              <div class="stat-title">Articles Archived</div>
-              <div class="stat-value text-2xl">{archiveResult()!.markedCount}</div>
+        {archiveResult && (
+          <div className="space-y-3">
+            <div className="stat">
+              <div className="stat-title">Articles Archived</div>
+              <div className="stat-value text-2xl">{archiveResult.markedCount}</div>
             </div>
-            <div class="stat">
-              <div class="stat-title">Cutoff Date</div>
-              <div class="stat-desc">{new Date(archiveResult()!.cutoffDate).toLocaleString()}</div>
+            <div className="stat">
+              <div className="stat-title">Cutoff Date</div>
+              <div className="stat-desc">
+                {new Date(archiveResult.cutoffDate).toLocaleString()}
+              </div>
             </div>
           </div>
-        </Show>
-        <div class="modal-action">
-          <button class="btn btn-primary" onClick={() => archiveResultModalController.close()}>
+        )}
+        <div className="modal-action">
+          <button
+            className="btn btn-primary"
+            onClick={() => archiveResultModalRef.current.close()}
+          >
             Close
           </button>
         </div>
