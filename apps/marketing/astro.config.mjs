@@ -1,3 +1,4 @@
+import sitemap from '@astrojs/sitemap';
 // @ts-check
 import solidJs from '@astrojs/solid-js';
 import tailwindcss from '@tailwindcss/vite';
@@ -10,9 +11,10 @@ import { defineConfig } from 'astro/config';
 // There is no Astro runtime in production;
 // per-request logic (the waitlist signup) lives in the Hono server.
 export default defineConfig({
+  site: 'https://openfeeds.app',
   output: 'static',
 
-  integrations: [solidJs()],
+  integrations: [solidJs(), sitemap()],
 
   vite: {
     plugins: [tailwindcss()],

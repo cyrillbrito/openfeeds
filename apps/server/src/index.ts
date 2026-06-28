@@ -108,6 +108,10 @@ app.use('/_astro/*', serveStatic({ root: './dist/marketing' }));
 app.use('/_astro/*', async (c) => c.notFound());
 app.use('/emails/*', serveStatic({ root: './dist' }));
 app.use('/emails/*', async (c) => c.notFound());
+app.get('/robots.txt', serveStatic({ path: './dist/marketing/robots.txt' }));
+app.get('/sitemap.xml', (c) => c.redirect('/sitemap-index.xml', 301));
+app.get('/sitemap-index.xml', serveStatic({ path: './dist/marketing/sitemap-index.xml' }));
+app.get('/sitemap-:index.xml', serveStatic({ root: './dist/marketing' }));
 
 app.get('/terms', serveStatic({ path: './dist/marketing/terms/index.html' }));
 app.get('/terms/', serveStatic({ path: './dist/marketing/terms/index.html' }));

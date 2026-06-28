@@ -1,12 +1,25 @@
 ---
 import Header from '../components/Header.astro';
 import PostHog from '../components/PostHog.astro';
+import socialImageUrlPath from '../assets/article-reader-view.png?url';
 import '../styles/global.css';
 import favicon from '../assets/logo-alt-simple.svg';
 
-const title = 'OpenFeeds - Your feed, your rules';
-const description =
-  'A centralized RSS feed reader where you control what you see. No algorithms, no distractions. Just the content you choose to follow, organized your way.';
+interface Props {
+  title?: string;
+  description?: string;
+  path?: string;
+}
+
+const siteUrl = Astro.site ?? new URL('https://openfeeds.app');
+const {
+  title = 'OpenFeeds - Track open web content in one place',
+  description =
+    'OpenFeeds is an open-source content tracking app for following blogs, news, podcasts, YouTube channels, and RSS feeds without algorithmic noise.',
+  path = '/',
+} = Astro.props;
+const canonicalUrl = new URL(path, siteUrl).toString();
+const socialImageUrl = new URL(socialImageUrlPath, siteUrl).toString();
 ---
 
 <!doctype html>
@@ -16,6 +29,7 @@ const description =
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="description" content={description} />
     <meta name="theme-color" content="#f3f0e3" />
+    <link rel="canonical" href={canonicalUrl} />
 
     <link rel="icon" type="image/svg+xml" href={favicon.src} />
     <link rel="apple-touch-icon" href={favicon.src} />
@@ -27,13 +41,14 @@ const description =
     <meta property="og:title" content={title} />
     <meta property="og:description" content={description} />
     <meta property="og:type" content="website" />
-    <meta property="og:image" content="/article-reader-view.png" />
+    <meta property="og:url" content={canonicalUrl} />
+    <meta property="og:image" content={socialImageUrl} />
 
     <!-- Twitter -->
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:title" content={title} />
     <meta name="twitter:description" content={description} />
-    <meta name="twitter:image" content="/article-reader-view.png" />
+    <meta name="twitter:image" content={socialImageUrl} />
 
     <PostHog />
     <script is:inline>
