@@ -124,7 +124,9 @@ export const chatRoutes = new Hono<AuthedEnv>()
         createPersistenceMiddleware(user.id, sessionId),
         createAnalyticsMiddleware(user.id),
       ],
-      maxTokens: 4096,
+      modelOptions: {
+        max_tokens: 4096,
+      },
       abortController,
     });
 
