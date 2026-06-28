@@ -28,7 +28,6 @@ function createMockCtx(overrides?: Partial<ArticleListContextValue>): ArticleLis
     shortsExist: () => false,
     readStatus: () => 'all',
     context: 'inbox',
-    loadMore: fn().mockName('loadMore'),
     updateArticle: fn().mockName('updateArticle'),
     markAllArchived: fn().mockName('markAllArchived') as any,
     addTag: fn().mockName('addTag'),
