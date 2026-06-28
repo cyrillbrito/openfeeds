@@ -88,17 +88,17 @@ function InboxContent(props: { readStatus: ReadStatus; sortOrder: string }) {
   return (
     <PageLayout
       title="Inbox"
-      headerActions={
-        <div class="flex flex-wrap gap-2">
+      responsiveTitle
+      subtitle="Latest articles from all your feeds"
+      actions={() => (
+        <>
           <ShortsButton
             shortsExist={ctx.shortsExist()}
             linkProps={{ to: '/inbox/shorts', search: { readStatus: props.readStatus } }}
           />
-        </div>
-      }
+        </>
+      )}
     >
-      <p class="text-base-content-gray mb-4">Latest articles from all your feeds</p>
-
       <ArticleListToolbar
         leftContent={
           <>

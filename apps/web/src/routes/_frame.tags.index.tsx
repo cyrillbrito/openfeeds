@@ -116,17 +116,15 @@ function TagsComponent() {
   return (
     <PageLayout
       title="Manage Tags"
-      headerActions={
+      responsiveTitle
+      subtitle="Organize your feeds with custom tags and colors"
+      actions={() => (
         <button class="btn btn-primary btn-sm" onClick={handleCreateTag}>
           <Plus size={20} />
           <span class="hidden sm:inline">Create Tag</span>
         </button>
-      }
+      )}
     >
-      <div class="mb-6">
-        <p class="text-base-content-gray">Organize your feeds with custom tags and colors</p>
-      </div>
-
       <TagModal
         controller={(controller) => (tagModalController = controller)}
         editTag={editingTag()}

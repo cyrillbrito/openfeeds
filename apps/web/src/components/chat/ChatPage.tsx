@@ -53,7 +53,7 @@ export function ChatPage() {
   return (
     <div class="flex h-dvh flex-col" data-testid="chat-page">
       {/* Header */}
-      <header class="bg-base-100 border-base-300 sticky top-0 z-10 border-b shadow">
+      <header class="bg-base-100 border-base-300 sticky top-0 z-10 border-b shadow lg:hidden">
         <div class="content-container flex items-center justify-between py-3">
           <div class="flex items-center gap-3">
             <label for="my-drawer" class="btn btn-square btn-ghost lg:hidden">
@@ -85,6 +85,28 @@ export function ChatPage() {
 
       {/* Chat area */}
       <div class="mx-auto flex min-h-0 w-full max-w-3xl flex-1 flex-col">
+        <div class="hidden items-center justify-between py-3 lg:flex">
+          <ChatTitleSwitcher
+            onSessionSelected={(id) => {
+              void navigate({
+                to: '/ai/$sessionId',
+                params: { sessionId: id },
+                replace: true,
+              });
+            }}
+          />
+
+          <Show when={chat.messages().length > 0}>
+            <button
+              class="btn btn-ghost btn-sm btn-circle"
+              onClick={handleNewChat}
+              title="New chat"
+            >
+              <Plus size={18} />
+            </button>
+          </Show>
+        </div>
+
         <ChatMessages />
         <ChatInput autoFocus />
       </div>
