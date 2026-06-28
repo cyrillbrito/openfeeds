@@ -48,7 +48,7 @@
     "@vitest/coverage-v8": "^4.1.9",
     "playwright": "^1.61.1",
     "storybook": "^10.4.6",
-    "storybook-solidjs-vite": "^10.5.2",
+    "storybook-solidjs-vite": "10.0.13",
     "vite": "8.1.0",
     "vite-plugin-lucide-preprocess": "^1.5.0",
     "vite-plugin-solid": "^2.11.12",
