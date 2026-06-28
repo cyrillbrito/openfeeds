@@ -147,12 +147,14 @@ function ArticleView() {
   return (
     <PageLayout
       title={article()?.title ?? 'Article'}
-      headerActions={
+      responsiveTitle
+      desktopTitle={false}
+      actions={() => (
         <button onClick={handleBack} class="btn btn-ghost btn-sm">
           <ArrowLeft size={20} />
           <span class="hidden sm:inline">Back</span>
         </button>
-      }
+      )}
       class="min-h-screen py-4 md:py-6"
     >
       {/* Content */}
@@ -182,6 +184,10 @@ function ArticleView() {
                     {art().title}
                   </h1>
                   <div class="flex shrink-0 gap-2 print:hidden">
+                    <button onClick={handleBack} class="btn btn-ghost btn-sm hidden lg:flex">
+                      <ArrowLeft size={20} />
+                      Back
+                    </button>
                     <PrintIconButton />
                     <ArchiveIconButton
                       read={art().isRead || false}
