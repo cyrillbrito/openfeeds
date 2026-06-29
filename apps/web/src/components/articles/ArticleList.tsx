@@ -1,6 +1,6 @@
-import { Link } from '@tanstack/solid-router';
-import { ChevronDown } from 'lucide-solid';
-import { For, Show, type JSX } from 'solid-js';
+import { Link } from '@tanstack/react-router';
+import { ChevronDown } from 'lucide-react';
+import { useMemo, type ReactNode } from 'react';
 import {
   AllCaughtUpIllustration,
   FeedIllustration,
@@ -12,7 +12,7 @@ import { useArticleList } from './ArticleListContext.shared';
 
 interface ArticleListProps {
   emptyState?: {
-    icon: string | JSX.Element;
+    icon: string | ReactNode;
     title: string;
     description: string;
     actions?: {
@@ -22,13 +22,13 @@ interface ArticleListProps {
   };
 }
 
-export function ArticleList(props: ArticleListProps) {
+export function ArticleList({ emptyState }: ArticleListProps) {
   const ctx = useArticleList();
 
-  const getContextualEmptyState = (): NonNullable<ArticleListProps['emptyState']> => {
-    if (props.emptyState) return props.emptyState;
+  const state = useMemo((): NonNullable<ArticleListProps['emptyState']> => {
+    if (emptyState) return emptyState;
 
-    const readStatus = ctx.readStatus();
+    const readStatus = ctx.readStatus;
     const context = ctx.context;
 
     if (readStatus === 'unread') {
@@ -103,55 +103,50 @@ export function ArticleList(props: ArticleListProps) {
       },
     };
     return contextMessages[context];
-  };
+  }, [emptyState, ctx.readStatus, ctx.context]);
+  const hasMoreArticles = ctx.articles.length < ctx.totalCount;
+  const remainingCount = ctx.totalCount - ctx.articles.length;
 
-  const emptyState = getContextualEmptyState();
-  const hasMoreArticles = () => ctx.articles().length < ctx.totalCount();
-  const remainingCount = () => ctx.totalCount() - ctx.articles().length;
+  if (ctx.articles.length === 0) {
+    return (
+      <div className="py-16 text-center">
+        <div className="mb-4 flex justify-center">{state.icon}</div>
+        <h2 className="mb-2 text-2xl font-semibold">{state.title}</h2>
+        <p className="text-base-content-gray mb-6">{state.description}</p>
+        {state.actions && (
+          <div className="flex justify-center gap-4">
+            {state.actions.primary && (
+              <Link to={state.actions.primary.href as any} className="btn btn-primary">
+                {state.actions.primary.text}
+              </Link>
+            )}
+            {state.actions.secondary && (
+              <Link to={state.actions.secondary.href as any} className="btn btn-outline">
+                {state.actions.secondary.text}
+              </Link>
+            )}
+          </div>
+        )}
+      </div>
+    );
+  }
 
   return (
-    <Show
-      when={ctx.articles().length > 0}
-      fallback={
-        <div class="py-16 text-center">
-          <div class="mb-4 flex justify-center">{emptyState.icon}</div>
-          <h2 class="mb-2 text-2xl font-semibold">{emptyState.title}</h2>
-          <p class="text-base-content-gray mb-6">{emptyState.description}</p>
-          <Show when={emptyState.actions}>
-            {(actions) => (
-              <div class="flex justify-center gap-4">
-                <Show when={actions().primary}>
-                  {(primary) => (
-                    <Link to={primary().href} class="btn btn-primary">
-                      {primary().text}
-                    </Link>
-                  )}
-                </Show>
-                <Show when={actions().secondary}>
-                  {(secondary) => (
-                    <Link to={secondary().href} class="btn btn-outline">
-                      {secondary().text}
-                    </Link>
-                  )}
-                </Show>
-              </div>
-            )}
-          </Show>
-        </div>
-      }
-    >
-      <div class="divide-base-300 w-full divide-y">
-        <For each={ctx.articles()}>{(article) => <ArticleCard article={article} />}</For>
+    <>
+      <div className="divide-base-300 w-full divide-y">
+        {ctx.articles.map((article) => (
+          <ArticleCard key={article.id} article={article} />
+        ))}
       </div>
 
-      <Show when={hasMoreArticles()}>
-        <div class="mt-6 flex justify-center">
-          <button class="btn btn-outline btn-wide gap-2" onClick={ctx.loadMore}>
+      {hasMoreArticles && (
+        <div className="mt-6 flex justify-center">
+          <button className="btn btn-outline btn-wide gap-2" onClick={ctx.loadMore}>
             <ChevronDown size={20} />
-            Load More ({remainingCount()} remaining)
+            Load More ({remainingCount} remaining)
           </button>
         </div>
-      </Show>
-    </Show>
+      )}
+    </>
   );
 }

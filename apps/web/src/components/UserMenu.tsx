@@ -1,7 +1,6 @@
-import { Link } from '@tanstack/solid-router';
-import { ChevronsUpDown, LogOut, Monitor, Moon, Settings, Sun } from 'lucide-solid';
+import { Link } from '@tanstack/react-router';
+import { ChevronsUpDown, LogOut, Monitor, Moon, Settings, Sun } from 'lucide-react';
 import { posthog } from 'posthog-js';
-import { Suspense } from 'solid-js';
 import { authClient } from '~/lib/auth-client';
 import { invalidateSession } from '~/lib/session';
 import { useTheme } from '~/providers/theme';
@@ -22,36 +21,25 @@ export function UserMenu() {
   const { theme, setTheme, actualTheme } = useTheme();
   const session = authClient.useSession();
 
-  const user = () => session().data?.user;
+  const user = session.data?.user;
 
   const getThemeIcon = () => {
-    const current = theme();
-    const actual = actualTheme();
-
-    if (current === 'system') {
-      return <Monitor size={16} />;
-    }
-
-    if (actual === 'dracula') {
-      return <Moon size={16} />;
-    }
-
+    if (theme === 'system') return <Monitor size={16} />;
+    if (actualTheme === 'dracula') return <Moon size={16} />;
     return <Sun size={16} />;
   };
 
   const getThemeLabel = () => {
-    const current = theme();
-    if (current === 'system') {
-      const friendly = actualTheme() === 'dracula' ? 'Dark' : 'Light';
+    if (theme === 'system') {
+      const friendly = actualTheme === 'dracula' ? 'Dark' : 'Light';
       return `System (${friendly})`;
     }
-    return current.charAt(0).toUpperCase() + current.slice(1);
+    return theme.charAt(0).toUpperCase() + theme.slice(1);
   };
 
   const getUserInitials = () => {
-    const u = user();
-    if (!u?.name) return 'U';
-    return u.name
+    if (!user?.name) return 'U';
+    return user.name
       .split(' ')
       .map((word: string) => word.charAt(0).toUpperCase())
       .join('')
@@ -59,30 +47,30 @@ export function UserMenu() {
   };
 
   return (
-    <Suspense fallback={<div class="h-13" />}>
+    <>
       <Dropdown
         top
         btnClasses="btn-ghost btn-sm flex h-auto items-center gap-3 px-3 py-2 w-full"
         btnContent={
           <>
-            <div class="avatar avatar-placeholder">
-              <div class="bg-neutral text-neutral-content w-8 rounded-full">
-                <span class="text-xs font-medium">{getUserInitials()}</span>
+            <div className="avatar avatar-placeholder">
+              <div className="bg-neutral text-neutral-content w-8 rounded-full">
+                <span className="text-xs font-medium">{getUserInitials()}</span>
               </div>
             </div>
-            <div class="min-w-0 flex-1 text-left">
-              <div class="text-base-content text-sm font-semibold">{user()?.name || 'User'}</div>
-              <div class="text-base-content-gray truncate text-xs" data-testid="user-email">
-                {user()?.email || ''}
+            <div className="min-w-0 flex-1 text-left">
+              <div className="text-base-content text-sm font-semibold">{user?.name || 'User'}</div>
+              <div className="text-base-content-gray truncate text-xs" data-testid="user-email">
+                {user?.email || ''}
               </div>
             </div>
-            <ChevronsUpDown size={16} class="text-base-content-gray shrink-0" />
+            <ChevronsUpDown size={16} className="text-base-content-gray shrink-0" />
           </>
         }
       >
         {/* Settings */}
         <li>
-          <Link to="/settings/general" class="flex items-center gap-3 px-4 py-2">
+          <Link to="/settings/general" className="flex items-center gap-3 px-4 py-2">
             <Settings size={16} />
             <span>Settings</span>
           </Link>
@@ -91,17 +79,17 @@ export function UserMenu() {
         {/* Theme Submenu */}
         <li>
           <details>
-            <summary class="flex items-center justify-between px-4 py-2">
-              <div class="flex items-center gap-3">
+            <summary className="flex items-center justify-between px-4 py-2">
+              <div className="flex items-center gap-3">
                 {getThemeIcon()}
                 <span>{getThemeLabel()}</span>
               </div>
             </summary>
-            <ul class="p-2">
+            <ul className="p-2">
               <li>
                 <button
                   onClick={() => setTheme('light')}
-                  class={`flex items-center gap-3 ${theme() === 'light' ? 'active' : ''}`}
+                  className={`flex items-center gap-3 ${theme === 'light' ? 'active' : ''}`}
                 >
                   <Sun size={16} />
                   Light
@@ -110,7 +98,7 @@ export function UserMenu() {
               <li>
                 <button
                   onClick={() => setTheme('dark')}
-                  class={`flex items-center gap-3 ${theme() === 'dark' ? 'active' : ''}`}
+                  className={`flex items-center gap-3 ${theme === 'dark' ? 'active' : ''}`}
                 >
                   <Moon size={16} />
                   Dark
@@ -119,7 +107,7 @@ export function UserMenu() {
               <li>
                 <button
                   onClick={() => setTheme('system')}
-                  class={`flex items-center gap-3 ${theme() === 'system' ? 'active' : ''}`}
+                  className={`flex items-center gap-3 ${theme === 'system' ? 'active' : ''}`}
                 >
                   <Monitor size={16} />
                   System
@@ -129,22 +117,22 @@ export function UserMenu() {
           </details>
         </li>
 
-        <div class="divider my-1"></div>
+        <div className="divider my-1"></div>
 
         {/* Sign Out */}
         <li>
           <button
             onClick={handleSignOut}
-            class="text-error hover:text-error flex items-center gap-3 px-4 py-2"
+            className="text-error hover:text-error flex items-center gap-3 px-4 py-2"
           >
             <LogOut size={16} />
             <span>Sign Out</span>
           </button>
         </li>
       </Dropdown>
-      <div class="mt-1 text-center">
-        <span class="text-base-content/40 text-xs">Version {__APP_VERSION__}</span>
+      <div className="mt-1 text-center">
+        <span className="text-base-content/40 text-xs">Version {__APP_VERSION__}</span>
       </div>
-    </Suspense>
+    </>
   );
 }

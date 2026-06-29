@@ -33,23 +33,16 @@ import {
   Wallet,
   X,
   type LucideProps,
-} from 'lucide-solid';
-import { createMemo, createResource, createSignal, For, Show, type Component } from 'solid-js';
+} from 'lucide-react';
+import type { ComponentType } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Card } from '~/components/Card';
 
-// Curated feeds JSON is served from `public/` so it lives in its own
-// browser-cached HTTP response instead of getting bundled into the discover
-// route chunk. Saves ~47 KB gzip from the route's initial payload and lets
-// the JSON survive deploys (it isn't part of the hashed JS chunks).
 async function fetchCuratedCategories(): Promise<CuratedCategory[]> {
   const res = await fetch('/curated-feeds.json');
   if (!res.ok) throw new Error(`Failed to load curated feeds: ${res.status}`);
   return (await res.json()) as CuratedCategory[];
 }
-
-// ---------------------------------------------------------------------------
-// Types
-// ---------------------------------------------------------------------------
 
 type CuratedFeed = {
   title: string;
@@ -72,13 +65,7 @@ type CuratedCategory = {
   feeds: CuratedFeed[];
 };
 
-// ---------------------------------------------------------------------------
-// Lucide icon resolver — maps icon name strings (from curated-feeds.json) to
-// components. The JSON is the single source of truth for which icon each
-// category uses; this map just resolves names to imports.
-// ---------------------------------------------------------------------------
-
-const LUCIDE_ICONS: Record<string, Component<LucideProps>> = {
+const LUCIDE_ICONS: Record<string, ComponentType<LucideProps>> = {
   Apple,
   Armchair,
   BookOpen,
@@ -114,30 +101,29 @@ const LUCIDE_ICONS: Record<string, Component<LucideProps>> = {
 
 const FEEDS_PER_PAGE = 20;
 
-// ---------------------------------------------------------------------------
-// Component
-// ---------------------------------------------------------------------------
-
 export function CuratedFeedsBrowser(props: {
   existingFeedUrls: Set<string>;
   addedFeeds: Set<string>;
   onFollow: (feed: CuratedFeedWithCategory) => void;
   onFollowAll: (feeds: CuratedFeedWithCategory[]) => void;
 }) {
-  const [searchQuery, setSearchQuery] = createSignal('');
-  const [selectedCategory, setSelectedCategory] = createSignal<string | null>(null);
-  const [visibleCount, setVisibleCount] = createSignal(FEEDS_PER_PAGE);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
+  const [visibleCount, setVisibleCount] = useState(FEEDS_PER_PAGE);
+  const [categories, setCategories] = useState<CuratedCategory[]>([]);
 
-  const [categoriesResource] = createResource(fetchCuratedCategories);
-  const categories = createMemo(() => categoriesResource() ?? []);
+  useEffect(() => {
+    fetchCuratedCategories()
+      .then(setCategories)
+      .catch((err) => console.error('Failed to load curated feeds:', err));
+  }, []);
 
-  // Count matching feeds per category for the current search query (ignoring selected category)
-  const categoryMatchCounts = createMemo(() => {
-    const query = searchQuery().toLowerCase().trim();
-    if (!query) return null; // no search — all categories are "active"
+  const categoryMatchCounts = useMemo(() => {
+    const query = searchQuery.toLowerCase().trim();
+    if (!query) return null;
 
     const counts = new Map<string, number>();
-    for (const cat of categories()) {
+    for (const cat of categories) {
       let count = 0;
       for (const feed of cat.feeds) {
         const titleMatch = feed.title.toLowerCase().includes(query);
@@ -147,15 +133,15 @@ export function CuratedFeedsBrowser(props: {
       counts.set(cat.slug, count);
     }
     return counts;
-  });
+  }, [categories, searchQuery]);
 
-  const filteredFeeds = createMemo(() => {
-    const query = searchQuery().toLowerCase().trim();
-    const catSlug = selectedCategory();
+  const filteredFeeds = useMemo(() => {
+    const query = searchQuery.toLowerCase().trim();
+    const catSlug = selectedCategory;
 
-    let sourceCats = categories();
+    let sourceCats = categories;
     if (catSlug) {
-      sourceCats = categories().filter((c) => c.slug === catSlug);
+      sourceCats = categories.filter((c) => c.slug === catSlug);
     }
 
     const results: CuratedFeedWithCategory[] = [];
@@ -170,12 +156,11 @@ export function CuratedFeedsBrowser(props: {
       }
     }
     return results;
-  });
+  }, [categories, searchQuery, selectedCategory]);
 
-  const visibleFeeds = createMemo(() => filteredFeeds().slice(0, visibleCount()));
-  const hasMore = createMemo(() => visibleCount() < filteredFeeds().length);
+  const visibleFeeds = filteredFeeds.slice(0, visibleCount);
+  const hasMore = visibleCount < filteredFeeds.length;
 
-  // Reset visible count when filters change
   const handleSearch = (value: string) => {
     setSearchQuery(value);
     setVisibleCount(FEEDS_PER_PAGE);
@@ -188,169 +173,153 @@ export function CuratedFeedsBrowser(props: {
 
   return (
     <>
-      <div class="divider sm:my-8">or</div>
+      <div className="divider sm:my-8">or</div>
 
       <div>
-        <h3 class="mb-4 text-lg font-semibold sm:mb-5">Popular Feeds</h3>
+        <h3 className="mb-4 text-lg font-semibold sm:mb-5">Popular Feeds</h3>
 
-        <label class="input input-bordered input-sm mb-4 flex items-center gap-2 sm:mb-5">
-          <Search size={14} class="opacity-50" />
+        <label className="input input-bordered input-sm mb-4 flex items-center gap-2 sm:mb-5">
+          <Search size={14} className="opacity-50" />
           <input
             type="text"
             placeholder="Filter feeds..."
-            class="grow"
-            value={searchQuery()}
-            onInput={(e) => handleSearch(e.currentTarget.value)}
+            className="grow"
+            value={searchQuery}
+            onChange={(e) => handleSearch(e.currentTarget.value)}
           />
-          <Show when={searchQuery()}>
+          {searchQuery && (
             <button
               type="button"
-              class="btn btn-ghost btn-xs btn-circle"
+              className="btn btn-ghost btn-xs btn-circle"
               onClick={() => handleSearch('')}
             >
               <X size={14} />
             </button>
-          </Show>
+          )}
         </label>
 
         {/* Category pills — horizontal scroll */}
-        <div class="-mx-4 mb-4 flex scrollbar-none gap-2 overflow-x-auto px-4 pb-2 sm:-mx-6 sm:mb-5 sm:scrollbar-thin sm:px-6">
+        <div className="-mx-4 mb-4 flex scrollbar-none gap-2 overflow-x-auto px-4 pb-2 sm:-mx-6 sm:mb-5 sm:scrollbar-thin sm:px-6">
           <button
             type="button"
-            class="btn btn-sm shrink-0 rounded-full"
-            classList={{
-              'btn-primary': selectedCategory() === null,
-              'btn-outline': selectedCategory() !== null,
-            }}
+            className={`btn btn-sm shrink-0 rounded-full ${selectedCategory === null ? 'btn-primary' : 'btn-outline'}`}
             onClick={() => handleCategorySelect(null)}
           >
             All
           </button>
-          <For each={categories()}>
-            {(cat) => {
-              const LucideIcon = LUCIDE_ICONS[cat.icon];
-              const isEmpty = () => categoryMatchCounts()?.get(cat.slug) === 0;
-              const isSelected = () => selectedCategory() === cat.slug;
-              return (
-                <button
-                  type="button"
-                  class="btn btn-sm shrink-0 gap-1.5 rounded-full"
-                  classList={{
-                    'btn-primary': isSelected(),
-                    'btn-outline': !isSelected(),
-                    'btn-disabled opacity-40': isEmpty() && !isSelected(),
-                  }}
-                  onClick={() => handleCategorySelect(isSelected() ? null : cat.slug)}
-                >
-                  <Show when={LucideIcon} keyed fallback={<span class="text-sm">{cat.icon}</span>}>
-                    {(Icon) => <Icon size={14} strokeWidth={2.5} />}
-                  </Show>
-                  {cat.name}
-                </button>
-              );
-            }}
-          </For>
+          {categories.map((cat) => {
+            const LucideIcon = LUCIDE_ICONS[cat.icon];
+            const isEmpty = categoryMatchCounts?.get(cat.slug) === 0;
+            const isSelected = selectedCategory === cat.slug;
+            return (
+              <button
+                key={cat.slug}
+                type="button"
+                className={`btn btn-sm shrink-0 gap-1.5 rounded-full ${isSelected ? 'btn-primary' : 'btn-outline'}${isEmpty && !isSelected ? ' btn-disabled opacity-40' : ''}`}
+                onClick={() => handleCategorySelect(isSelected ? null : cat.slug)}
+              >
+                {LucideIcon ? (
+                  <LucideIcon size={14} strokeWidth={2.5} />
+                ) : (
+                  <span className="text-sm">{cat.icon}</span>
+                )}
+                {cat.name}
+              </button>
+            );
+          })}
         </div>
 
         {/* Results count + Follow all */}
-        <div class="mb-3 flex items-center justify-between sm:mb-4">
-          <p class="text-base-content/50 text-sm">
-            {filteredFeeds().length} {filteredFeeds().length === 1 ? 'feed' : 'feeds'}
-            <Show when={selectedCategory()}>
-              {' '}
-              in {categories().find((c) => c.slug === selectedCategory())?.name}
-            </Show>
-            <Show when={searchQuery()}> matching "{searchQuery()}"</Show>
+        <div className="mb-3 flex items-center justify-between sm:mb-4">
+          <p className="text-base-content/50 text-sm">
+            {filteredFeeds.length} {filteredFeeds.length === 1 ? 'feed' : 'feeds'}
+            {selectedCategory && (
+              <> in {categories.find((c) => c.slug === selectedCategory)?.name}</>
+            )}
+            {searchQuery && <> matching "{searchQuery}"</>}
           </p>
-          <Show when={selectedCategory() && filteredFeeds().length > 0}>
+          {selectedCategory && filteredFeeds.length > 0 && (
             <button
               type="button"
-              class="btn btn-ghost btn-xs"
-              onClick={() => props.onFollowAll(filteredFeeds())}
+              className="btn btn-ghost btn-xs"
+              onClick={() => props.onFollowAll(filteredFeeds)}
             >
               Follow all
             </button>
-          </Show>
+          )}
         </div>
 
         {/* Feed cards */}
-        <div class="grid gap-3 sm:gap-4">
-          <For each={visibleFeeds()}>
-            {(feed) => {
-              const isAdded = () =>
-                props.addedFeeds.has(feed.feedUrl) || props.existingFeedUrls.has(feed.feedUrl);
+        <div className="grid gap-3 sm:gap-4">
+          {visibleFeeds.map((feed) => {
+            const isAdded =
+              props.addedFeeds.has(feed.feedUrl) || props.existingFeedUrls.has(feed.feedUrl);
 
-              return (
-                <Card>
-                  <div class="flex items-start gap-3">
-                    {/* Image or fallback icon */}
-                    <Show
-                      when={feed.icon}
-                      fallback={
-                        <div class="bg-base-200 flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-lg">
-                          <Rss size={20} class="text-base-content/50" />
-                        </div>
-                      }
-                    >
-                      <img
-                        src={feed.icon!}
-                        alt=""
-                        class="bg-base-200 h-10 w-10 flex-shrink-0 rounded-lg object-cover"
-                        loading="lazy"
-                        onError={(e) => {
-                          e.currentTarget.style.display = 'none';
-                        }}
-                      />
-                    </Show>
-
-                    <div class="min-w-0 flex-1">
-                      <div class="font-medium">{feed.title}</div>
-                      <Show when={feed.description}>
-                        <div class="text-base-content/60 mt-0.5 line-clamp-2 text-sm">
-                          {feed.description}
-                        </div>
-                      </Show>
-                      <div class="text-base-content/40 mt-1 truncate text-xs">{feed.url}</div>
+            return (
+              <Card key={feed.feedUrl}>
+                <div className="flex items-start gap-3">
+                  {feed.icon ? (
+                    <img
+                      src={feed.icon}
+                      alt=""
+                      className="bg-base-200 h-10 w-10 flex-shrink-0 rounded-lg object-cover"
+                      loading="lazy"
+                      onError={(e) => {
+                        e.currentTarget.style.display = 'none';
+                      }}
+                    />
+                  ) : (
+                    <div className="bg-base-200 flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-lg">
+                      <Rss size={20} className="text-base-content/50" />
                     </div>
+                  )}
 
-                    <Show
-                      when={!isAdded()}
-                      fallback={<span class="badge badge-success gap-1">Following</span>}
-                    >
-                      <button
-                        type="button"
-                        class="btn btn-primary btn-sm flex-shrink-0"
-                        onClick={() => props.onFollow(feed)}
-                      >
-                        Follow
-                      </button>
-                    </Show>
+                  <div className="min-w-0 flex-1">
+                    <div className="font-medium">{feed.title}</div>
+                    {feed.description && (
+                      <div className="text-base-content/60 mt-0.5 line-clamp-2 text-sm">
+                        {feed.description}
+                      </div>
+                    )}
+                    <div className="text-base-content/40 mt-1 truncate text-xs">{feed.url}</div>
                   </div>
-                </Card>
-              );
-            }}
-          </For>
+
+                  {isAdded ? (
+                    <span className="badge badge-success gap-1">Following</span>
+                  ) : (
+                    <button
+                      type="button"
+                      className="btn btn-primary btn-sm flex-shrink-0"
+                      onClick={() => props.onFollow(feed)}
+                    >
+                      Follow
+                    </button>
+                  )}
+                </div>
+              </Card>
+            );
+          })}
         </div>
 
         {/* Load more */}
-        <Show when={hasMore()}>
-          <div class="mt-4 text-center">
+        {hasMore && (
+          <div className="mt-4 text-center">
             <button
               type="button"
-              class="btn btn-outline btn-sm"
+              className="btn btn-outline btn-sm"
               onClick={() => setVisibleCount((prev) => prev + FEEDS_PER_PAGE)}
             >
-              Show more ({filteredFeeds().length - visibleCount()} remaining)
+              Show more ({filteredFeeds.length - visibleCount} remaining)
             </button>
           </div>
-        </Show>
+        )}
 
         {/* No results */}
-        <Show when={filteredFeeds().length === 0}>
-          <div class="text-base-content/40 py-8 text-center text-sm">
+        {filteredFeeds.length === 0 && (
+          <div className="text-base-content/40 py-8 text-center text-sm">
             No feeds found. Try a different search or category.
           </div>
-        </Show>
+        )}
       </div>
     </>
   );

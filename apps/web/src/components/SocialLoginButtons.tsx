@@ -1,4 +1,4 @@
-import { createSignal, onMount, Show } from 'solid-js';
+import { useEffect, useState } from 'react';
 import { AppleIcon } from '~/components/AppleIcon';
 import { GoogleIcon } from '~/components/GoogleIcon';
 import { Loader } from '~/components/Loader';
@@ -16,90 +16,76 @@ function getSocialProviders(): Promise<SocialProviders> {
 }
 
 function LastUsedBadge() {
-  return <span class="badge badge-sm badge-info absolute -top-2 -right-2">Last used</span>;
+  return <span className="badge badge-sm badge-info absolute -top-2 -right-2">Last used</span>;
 }
 
-/**
- * Returns the last login method from the cookie-based plugin. Read in
- * `onMount` so the value is computed only after hydration / first paint;
- * the cookie itself is always client-readable in a SPA.
- */
 export function useLastLoginMethod() {
-  const [method, setMethod] = createSignal<string | null>(null);
-  onMount(() => {
+  const [method, setMethod] = useState<string | null>(null);
+  useEffect(() => {
     setMethod(authClient.getLastUsedLoginMethod());
-  });
+  }, []);
   return method;
 }
 
-export function SocialLoginButtons(props: {
+export function SocialLoginButtons({
+  callbackURL,
+  onError,
+}: {
   callbackURL: string;
   onError: (message: string) => void;
 }) {
-  const [socialProviders, setSocialProviders] = createSignal<SocialProviders | undefined>(
-    undefined,
-  );
+  const [socialProviders, setSocialProviders] = useState<SocialProviders | undefined>(undefined);
   const lastMethod = useLastLoginMethod();
-  const [loadingProvider, setLoadingProvider] = createSignal<string | null>(null);
+  const [loadingProvider, setLoadingProvider] = useState<string | null>(null);
 
-  onMount(() => {
-    // Fire-and-forget; buttons appear once the response lands. Cached at
-    // module scope so subsequent mounts (e.g., login → signup nav) are sync.
+  useEffect(() => {
     void getSocialProviders().then(setSocialProviders);
-  });
+  }, []);
 
-  const hasSocialProviders = () => socialProviders()?.google || socialProviders()?.apple;
+  const hasSocialProviders = socialProviders?.google || socialProviders?.apple;
 
   const handleSocialSignIn = async (provider: 'google' | 'apple') => {
     setLoadingProvider(provider);
     try {
       await authClient.signIn.social({
         provider,
-        callbackURL: props.callbackURL,
+        callbackURL,
       });
     } catch {
-      props.onError(`Failed to sign in with ${provider}`);
+      onError(`Failed to sign in with ${provider}`);
       setLoadingProvider(null);
     }
   };
 
-  return (
-    <Show when={hasSocialProviders()}>
-      <div class="space-y-3">
-        <Show when={socialProviders()?.google}>
-          <button
-            type="button"
-            class="btn btn-outline relative w-full"
-            disabled={!!loadingProvider()}
-            onClick={() => handleSocialSignIn('google')}
-          >
-            <Show when={loadingProvider() === 'google'} fallback={<GoogleIcon class="h-5 w-5" />}>
-              <Loader />
-            </Show>
-            Continue with Google
-            <Show when={lastMethod() === 'google'}>
-              <LastUsedBadge />
-            </Show>
-          </button>
-        </Show>
+  if (!hasSocialProviders) return null;
 
-        <Show when={socialProviders()?.apple}>
-          <button
-            type="button"
-            class="btn btn-outline relative w-full"
-            disabled={!!loadingProvider()}
-            onClick={() => handleSocialSignIn('apple')}
-          >
-            <Show when={loadingProvider() === 'apple'} fallback={<AppleIcon class="h-5 w-5" />}>
-              <Loader />
-            </Show>
-            Continue with Apple
-            <Show when={lastMethod() === 'apple'}>
-              <LastUsedBadge />
-            </Show>
-          </button>
-        </Show>
-      </div>
-    </Show>
+  return (
+    <div className="space-y-3">
+      {socialProviders?.google && (
+        <button
+          type="button"
+          className="btn btn-outline relative w-full"
+          disabled={!!loadingProvider}
+          onClick={() => handleSocialSignIn('google')}
+        >
+          {loadingProvider === 'google' ? <Loader /> : <GoogleIcon className="h-5 w-5" />}
+          Continue with Google
+          {lastMethod === 'google' && <LastUsedBadge />}
+        </button>
+      )}
+
+      {socialProviders?.apple && (
+        <button
+          type="button"
+          className="btn btn-outline relative w-full"
+          disabled={!!loadingProvider}
+          onClick={() => handleSocialSignIn('apple')}
+        >
+          {loadingProvider === 'apple' ? <Loader /> : <AppleIcon className="h-5 w-5" />}
+          Continue with Apple
+          {lastMethod === 'apple' && <LastUsedBadge />}
+        </button>
+      )}
+    </div>
   );
 }

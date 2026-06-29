@@ -1,9 +1,9 @@
 import { twMerge } from 'tailwind-merge';
 
 interface ColorIndicatorProps {
-  class: string;
+  className: string;
 }
 
-export function ColorIndicator(props: ColorIndicatorProps) {
-  return <div class={twMerge('h-3 w-3 rounded-full', props.class)} />;
+export function ColorIndicator({ className }: ColorIndicatorProps) {
+  return <div className={twMerge('h-3 w-3 rounded-full', className)} />;
 }

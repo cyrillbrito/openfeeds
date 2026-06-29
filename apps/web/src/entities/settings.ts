@@ -1,7 +1,7 @@
 import { snakeCamelMapper } from '@electric-sql/client';
 import { SettingsSchema, type ArchiveResult } from '@repo/domain/client';
 import { electricCollectionOptions } from '@tanstack/electric-db-collection';
-import { createCollection, useLiveQuery } from '@tanstack/solid-db';
+import { createCollection, useLiveQuery } from '@tanstack/react-db';
 import { api, unwrap } from '~/lib/api-client';
 import { collectionErrorHandler, shapeErrorHandler } from '~/lib/collection-errors';
 import { getShapeUrl, timestampParser } from '~/lib/electric-client';
@@ -38,22 +38,13 @@ export const settingsCollection = createCollection(
 
 /**
  * Hook to get the current user settings.
- * Returns a callable that provides the first (and only) settings row for the user.
- * Also exposes `.isLoading` and `.isError` properties.
+ * Returns the first (and only) settings row for the user, plus loading/error state.
  */
 export function useSettings() {
-  const query = useLiveQuery((q) => q.from({ settings: settingsCollection }));
-
-  const accessor = () => query()?.[0];
-
-  Object.defineProperty(accessor, 'isLoading', {
-    get: () => query.isLoading,
-  });
-  Object.defineProperty(accessor, 'isError', {
-    get: () => query.isError,
-  });
-
-  return accessor as typeof accessor & { isLoading: boolean; isError: boolean };
+  const { data, isLoading, isError } = useLiveQuery((q) =>
+    q.from({ settings: settingsCollection }),
+  );
+  return { settings: data?.[0], isLoading, isError };
 }
 
 /**

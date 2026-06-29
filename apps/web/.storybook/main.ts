@@ -1,6 +1,6 @@
 import { dirname } from 'path';
 import { fileURLToPath } from 'url';
-import type { StorybookConfig } from 'storybook-solidjs-vite';
+import type { StorybookConfig } from '@storybook/react-vite';
 
 function getAbsolutePath(value: string) {
   return dirname(fileURLToPath(import.meta.resolve(`${value}/package.json`)));
@@ -13,7 +13,7 @@ const config: StorybookConfig = {
     getAbsolutePath('@storybook/addon-a11y'),
     getAbsolutePath('@storybook/addon-docs'),
   ],
-  framework: getAbsolutePath('storybook-solidjs-vite'),
+  framework: getAbsolutePath('@storybook/react-vite'),
   // Allow arbitrary hostnames (Tailscale, LAN IPs, etc.). Storybook's manager
   // server does its own host check separate from Vite, so both layers need it.
   core: { allowedHosts: true },

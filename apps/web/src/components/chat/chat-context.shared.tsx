@@ -1,22 +1,21 @@
 import type { UIMessage } from '@tanstack/ai-client';
-import { createContext, useContext } from 'solid-js';
-import type { Accessor } from 'solid-js';
+import { createContext, use } from 'react';
 
 export type SessionSummary = { id: string; title: string; updatedAt: Date };
 
 export interface ChatContextValue {
-  messages: Accessor<UIMessage[]>;
+  messages: UIMessage[];
   /** True only when the active SSE stream belongs to the currently viewed session */
-  isLoading: Accessor<boolean>;
-  error: Accessor<Error | undefined>;
+  isLoading: boolean;
+  error: Error | undefined;
   sendMessage: (text: string) => Promise<void>;
   stop: () => void;
 
   // Session state
-  sessionId: Accessor<string>;
-  currentTitle: Accessor<string>;
+  sessionId: string;
+  currentTitle: string;
   /** All chat sessions for the current user, ordered by updatedAt desc */
-  sessions: Accessor<SessionSummary[]>;
+  sessions: SessionSummary[];
 
   // Actions
   startNewChat: () => void;
@@ -24,10 +23,10 @@ export interface ChatContextValue {
   deleteSession: (id: string) => void;
 }
 
-export const ChatContext = createContext<ChatContextValue>();
+export const ChatContext = createContext<ChatContextValue | undefined>(undefined);
 
 export function useChatContext(): ChatContextValue {
-  const ctx = useContext(ChatContext);
+  const ctx = use(ChatContext);
   if (!ctx) throw new Error('useChatContext must be used within ChatProvider');
   return ctx;
 }

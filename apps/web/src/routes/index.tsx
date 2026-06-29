@@ -1,4 +1,4 @@
-import { createFileRoute, redirect } from '@tanstack/solid-router';
+import { createFileRoute, redirect } from '@tanstack/react-router';
 import { api, unwrap } from '~/lib/api-client';
 import { authGuard } from '~/lib/guards';
 

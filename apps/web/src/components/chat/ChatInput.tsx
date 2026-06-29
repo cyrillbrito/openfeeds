@@ -1,95 +1,88 @@
-import { ArrowUp, Square } from 'lucide-solid';
-import { createEffect, createSignal, on, Show } from 'solid-js';
+import { ArrowUp, Square } from 'lucide-react';
+import { useEffect, useRef, useState } from 'react';
 import { useChatContext } from './chat-context.shared';
 
 interface ChatInputProps {
   autoFocus?: boolean;
 }
 
-export function ChatInput(props: ChatInputProps) {
+export function ChatInput({ autoFocus }: ChatInputProps) {
   const chat = useChatContext();
-  const [input, setInput] = createSignal('');
-  let textareaRef: HTMLTextAreaElement | undefined;
+  const [input, setInput] = useState('');
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   const resize = () => {
-    const el = textareaRef;
+    const el = textareaRef.current;
     if (!el) return;
     el.style.height = 'auto';
     el.style.height = `${Math.min(el.scrollHeight, 160)}px`;
   };
 
-  createEffect(
-    on(
-      () => props.autoFocus,
-      (shouldFocus) => {
-        if (shouldFocus) {
-          requestAnimationFrame(() => textareaRef?.focus());
-        }
-      },
-    ),
-  );
+  useEffect(() => {
+    if (autoFocus) {
+      requestAnimationFrame(() => textareaRef.current?.focus());
+    }
+  }, [autoFocus]);
 
-  const handleSubmit = (e: Event) => {
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    const text = input().trim();
-    if (text && !chat.isLoading()) {
+    const text = input.trim();
+    if (text && !chat.isLoading) {
       void chat.sendMessage(text);
       setInput('');
-      // Reset textarea height after send
       requestAnimationFrame(() => {
-        if (textareaRef) {
-          textareaRef.style.height = 'auto';
+        if (textareaRef.current) {
+          textareaRef.current.style.height = 'auto';
         }
       });
     }
   };
 
-  const handleKeyDown = (e: KeyboardEvent) => {
+  const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
-      handleSubmit(e);
+      handleSubmit(e as unknown as React.FormEvent);
     }
   };
 
-  const canSend = () => input().trim() && !chat.isLoading();
+  const canSend = input.trim() && !chat.isLoading;
 
   return (
-    <form onSubmit={handleSubmit} class="border-base-300 border-t px-3 py-3">
+    <form onSubmit={handleSubmit} className="border-base-300 border-t px-3 py-3">
       <div
-        class="flex items-end gap-2 rounded-xl px-3 py-2"
-        classList={{
-          'bg-base-200/50': !chat.isLoading(),
-          'bg-base-200/30': chat.isLoading(),
-        }}
+        className={`flex items-end gap-2 rounded-xl px-3 py-2${chat.isLoading ? ' bg-base-200/30' : ' bg-base-200/50'}`}
       >
         <textarea
-          ref={(el) => (textareaRef = el)}
-          class="max-h-40 min-h-[1.5rem] flex-1 resize-none bg-transparent p-0 text-sm leading-6 outline-none placeholder:text-sm placeholder:leading-6"
-          classList={{ 'opacity-50': chat.isLoading() }}
-          placeholder={chat.isLoading() ? 'Generating response...' : 'Ask me anything...'}
-          value={input()}
-          onInput={(e) => {
+          ref={textareaRef}
+          className={`max-h-40 min-h-[1.5rem] flex-1 resize-none bg-transparent p-0 text-sm leading-6 outline-none placeholder:text-sm placeholder:leading-6${chat.isLoading ? ' opacity-50' : ''}`}
+          placeholder={chat.isLoading ? 'Generating response...' : 'Ask me anything...'}
+          value={input}
+          onChange={(e) => {
             setInput(e.currentTarget.value);
             resize();
           }}
           onKeyDown={handleKeyDown}
           rows={1}
         />
-        <Show when={chat.isLoading()}>
+        {chat.isLoading && (
           <button
             type="button"
-            class="btn btn-error btn-circle btn-xs shrink-0"
+            className="btn btn-error btn-circle btn-xs shrink-0"
             title="Stop generating"
             onClick={() => chat.stop()}
           >
             <Square size={10} fill="currentColor" />
           </button>
-        </Show>
-        <Show when={canSend()}>
-          <button type="submit" class="btn btn-primary btn-circle btn-xs shrink-0" title="Send">
+        )}
+        {canSend && (
+          <button
+            type="submit"
+            className="btn btn-primary btn-circle btn-xs shrink-0"
+            title="Send"
+          >
             <ArrowUp size={14} strokeWidth={2.5} />
           </button>
-        </Show>
+        )}
       </div>
     </form>
   );
