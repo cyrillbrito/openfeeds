@@ -7,16 +7,16 @@ interface TagBadgeProps {
   name: string;
   color: TagColor | null;
   size?: 'xs' | 'sm' | 'md';
-  class?: string;
+  className?: string;
 }
 
-export function TagBadge(props: TagBadgeProps) {
-  const sizeClass = props.size === 'xs' ? 'badge-xs' : props.size === 'sm' ? 'badge-sm' : '';
+export function TagBadge({ name, color, size, className }: TagBadgeProps) {
+  const sizeClass = size === 'xs' ? 'badge-xs' : size === 'sm' ? 'badge-sm' : '';
 
   return (
-    <div class={twMerge('badge gap-1.5', sizeClass, props.class)}>
-      <ColorIndicator class={getTagDotColor(props.color)} />
-      <span>{props.name}</span>
+    <div className={twMerge('badge gap-1.5', sizeClass, className)}>
+      <ColorIndicator className={getTagDotColor(color)} />
+      <span>{name}</span>
     </div>
   );
 }

@@ -1,48 +1,56 @@
-import { EllipsisVertical } from 'lucide-solid';
-import { Show, type JSXElement } from 'solid-js';
+import { EllipsisVertical } from 'lucide-react';
+import type { ReactNode } from 'react';
 import { Dropdown } from '~/components/Dropdown';
 import type { ReadStatus } from './ReadStatusToggle';
 
 interface ArticleListToolbarProps {
-  leftContent: JSXElement;
-  menuContent?: JSXElement;
+  leftContent: ReactNode;
+  menuContent?: ReactNode;
   unreadCount?: number;
   totalCount?: number;
   readStatus?: ReadStatus;
 }
 
-export function ArticleListToolbar(props: ArticleListToolbarProps) {
+export function ArticleListToolbar({
+  leftContent,
+  menuContent,
+  unreadCount,
+  totalCount,
+  readStatus,
+}: ArticleListToolbarProps) {
   const getCountLabel = () => {
-    if (!props.readStatus) return null;
+    if (!readStatus) return null;
 
-    if (props.readStatus === 'unread' && props.unreadCount !== undefined && props.unreadCount > 0) {
-      return `• ${props.unreadCount} unread`;
+    if (readStatus === 'unread' && unreadCount !== undefined && unreadCount > 0) {
+      return `• ${unreadCount} unread`;
     }
 
-    if (props.readStatus === 'all' && props.totalCount !== undefined && props.totalCount > 0) {
-      return `• ${props.totalCount} articles`;
+    if (readStatus === 'all' && totalCount !== undefined && totalCount > 0) {
+      return `• ${totalCount} articles`;
     }
 
     return null;
   };
 
+  const countLabel = getCountLabel();
+
   return (
-    <div class="mb-4">
-      <div class="flex items-center justify-between gap-3">
-        <div class="flex flex-wrap items-center gap-2">
-          {props.leftContent}
-          <Show when={getCountLabel()}>
-            <span class="text-base-content/60 ml-1 text-sm">{getCountLabel()}</span>
-          </Show>
+    <div className="mb-4">
+      <div className="flex items-center justify-between gap-3">
+        <div className="flex flex-wrap items-center gap-2">
+          {leftContent}
+          {countLabel && (
+            <span className="text-base-content/60 ml-1 text-sm">{countLabel}</span>
+          )}
         </div>
 
-        <Show when={props.menuContent}>
+        {menuContent && (
           <Dropdown end btnClasses="btn-sm" btnContent={<EllipsisVertical size={20} />}>
-            {props.menuContent}
+            {menuContent}
           </Dropdown>
-        </Show>
+        )}
       </div>
-      <div class="border-base-300/50 mt-2.5 border-t" />
+      <div className="border-base-300/50 mt-2.5 border-t" />
     </div>
   );
 }

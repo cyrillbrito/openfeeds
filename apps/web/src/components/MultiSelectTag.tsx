@@ -1,13 +1,9 @@
 import type { Tag } from '@repo/domain/client';
-import { autofocus } from '@solid-primitives/autofocus';
-import { Check, ChevronDown, Search, Tag as TagIcon } from 'lucide-solid';
-import { createSignal, createUniqueId, For, Show } from 'solid-js';
+import { Check, ChevronDown, Search, Tag as TagIcon } from 'lucide-react';
+import { useId, useState } from 'react';
 import { getTagDotColor } from '~/utils/tagColors';
 import { ColorIndicator } from './ColorIndicator';
 import { TagBadge } from './TagBadge';
-
-// prevents from being tree-shaken by TS
-void autofocus;
 
 interface MultiSelectTagProps {
   tags: Tag[];
@@ -16,47 +12,43 @@ interface MultiSelectTagProps {
   disabled?: boolean;
 }
 
-export function MultiSelectTag(props: MultiSelectTagProps) {
-  const id = `multi-select-tag-${createUniqueId()}`;
-  const anchor = `--multi-select-tag-${createUniqueId()}`;
+export function MultiSelectTag({ tags, selectedIds, onSelectionChange }: MultiSelectTagProps) {
+  const uid = useId();
+  const id = `multi-select-tag-${uid}`;
+  const anchor = `--multi-select-tag-${uid}`;
 
-  const [isOpen, setIsOpen] = createSignal(false);
+  const [isOpen, setIsOpen] = useState(false);
 
-  const selectedTags = () => props.tags.filter((t) => props.selectedIds.includes(t.id));
+  const selectedTags = tags.filter((t) => selectedIds.includes(t.id));
 
   return (
-    <div class="relative">
+    <div className="relative">
       {/* Trigger */}
       <button
         type="button"
-        class="border-base-300 bg-base-100 hover:bg-base-200 flex min-h-12 w-full cursor-pointer items-center rounded-lg border px-3 py-2 text-left transition-colors"
-        classList={{ 'ring-primary/50 ring-2': isOpen() }}
+        className={`border-base-300 bg-base-100 hover:bg-base-200 flex min-h-12 w-full cursor-pointer items-center rounded-lg border px-3 py-2 text-left transition-colors${isOpen ? ' ring-primary/50 ring-2' : ''}`}
         role="combobox"
         aria-haspopup="listbox"
-        aria-expanded={isOpen()}
+        aria-expanded={isOpen}
         aria-controls={id}
-        popovertarget={id}
-        style={{ 'anchor-name': anchor }}
+        popoverTarget={id}
+        style={{ anchorName: anchor } as React.CSSProperties}
       >
-        <Show
-          when={selectedTags().length > 0}
-          fallback={
-            <div class="text-base-content/40 flex flex-1 items-center gap-2">
-              <TagIcon size={14} />
-              <span class="text-sm">Select tags...</span>
-            </div>
-          }
-        >
-          <div class="flex flex-1 flex-wrap gap-1.5">
-            <For each={selectedTags()}>
-              {(tag) => <TagBadge name={tag.name} color={tag.color} size="sm" />}
-            </For>
+        {selectedTags.length > 0 ? (
+          <div className="flex flex-1 flex-wrap gap-1.5">
+            {selectedTags.map((tag) => (
+              <TagBadge key={tag.id} name={tag.name} color={tag.color} size="sm" />
+            ))}
           </div>
-        </Show>
+        ) : (
+          <div className="text-base-content/40 flex flex-1 items-center gap-2">
+            <TagIcon size={14} />
+            <span className="text-sm">Select tags...</span>
+          </div>
+        )}
         <ChevronDown
           size={16}
-          class="text-base-content/40 ml-2 shrink-0 transition-transform"
-          classList={{ 'rotate-180': isOpen() }}
+          className={`text-base-content/40 ml-2 shrink-0 transition-transform${isOpen ? ' rotate-180' : ''}`}
         />
       </button>
 
@@ -64,18 +56,20 @@ export function MultiSelectTag(props: MultiSelectTagProps) {
       <div
         id={id}
         popover="auto"
-        class="border-base-300 bg-base-100 m-0 rounded-lg border p-0 shadow-lg"
-        style={{
-          'position-anchor': anchor,
-          'position-area': 'bottom span-right',
-          width: `anchor-size(width)`,
-        }}
+        className="border-base-300 bg-base-100 m-0 rounded-lg border p-0 shadow-lg"
+        style={
+          {
+            positionAnchor: anchor,
+            positionArea: 'bottom span-right',
+            width: 'anchor-size(width)',
+          } as React.CSSProperties
+        }
         onToggle={(e) => setIsOpen(e.newState === 'open')}
       >
         <MultiSelectTagDropdown
-          tags={props.tags}
-          selectedIds={props.selectedIds}
-          onSelectionChange={props.onSelectionChange}
+          tags={tags}
+          selectedIds={selectedIds}
+          onSelectionChange={onSelectionChange}
         />
       </div>
     </div>
@@ -88,60 +82,55 @@ interface MultiSelectTagDropdownProps {
   onSelectionChange: (ids: string[]) => void;
 }
 
-function MultiSelectTagDropdown(props: MultiSelectTagDropdownProps) {
-  const showSearch = () => props.tags.length > 5;
+function MultiSelectTagDropdown({ tags, selectedIds, onSelectionChange }: MultiSelectTagDropdownProps) {
+  const showSearch = tags.length > 5;
+  const [searchQuery, setSearchQuery] = useState('');
 
-  const [searchQuery, setSearchQuery] = createSignal('');
-
-  const filteredTags = () => {
-    const query = searchQuery().toLowerCase();
-    return props.tags.filter((tag) => tag.name.toLowerCase().includes(query));
-  };
+  const filteredTags = tags.filter((tag) =>
+    tag.name.toLowerCase().includes(searchQuery.toLowerCase()),
+  );
 
   const toggle = (tagId: string) => {
-    const isSelected = props.selectedIds.includes(tagId);
+    const isSelected = selectedIds.includes(tagId);
     const newIds = isSelected
-      ? props.selectedIds.filter((id) => id !== tagId)
-      : [...props.selectedIds, tagId];
-    props.onSelectionChange(newIds);
+      ? selectedIds.filter((id) => id !== tagId)
+      : [...selectedIds, tagId];
+    onSelectionChange(newIds);
   };
 
   return (
     <>
       {/* Search Input */}
-      <Show when={showSearch()}>
-        <label class="input input-ghost outline-none!">
-          <Search size={16} />
-          <input
-            type="text"
-            placeholder="Search tags..."
-            autofocus
-            value={searchQuery()}
-            onInput={(e) => setSearchQuery(e.currentTarget.value)}
-          />
-        </label>
-        <div class="bg-base-300 h-px w-full"></div>
-      </Show>
+      {showSearch && (
+        <>
+          <label className="input input-ghost outline-none!">
+            <Search size={16} />
+            <input
+              type="text"
+              placeholder="Search tags..."
+              autoFocus
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.currentTarget.value)}
+            />
+          </label>
+          <div className="bg-base-300 h-px w-full"></div>
+        </>
+      )}
 
       {/* Tag List */}
-      <div role="listbox" aria-multiselectable="true" class="max-h-60 overflow-y-auto p-1">
-        <For
-          each={filteredTags()}
-          fallback={<div class="text-base-content/60 py-4 text-center text-sm">No tags found</div>}
-        >
-          {(tag) => {
-            const isSelected = () => props.selectedIds.includes(tag.id);
-
+      <div role="listbox" aria-multiselectable="true" className="max-h-60 overflow-y-auto p-1">
+        {filteredTags.length === 0 ? (
+          <div className="text-base-content/60 py-4 text-center text-sm">No tags found</div>
+        ) : (
+          filteredTags.map((tag) => {
+            const isSelected = selectedIds.includes(tag.id);
             return (
               <div
+                key={tag.id}
                 role="option"
-                aria-selected={isSelected()}
-                tabIndex="0"
-                class="focus:ring-primary/50 flex cursor-pointer items-center gap-2.5 rounded-md px-2.5 py-2 outline-none focus:ring-2"
-                classList={{
-                  'bg-primary/10 hover:bg-primary/15': isSelected(),
-                  'hover:bg-base-200 focus:bg-base-200': !isSelected(),
-                }}
+                aria-selected={isSelected}
+                tabIndex={0}
+                className={`focus:ring-primary/50 flex cursor-pointer items-center gap-2.5 rounded-md px-2.5 py-2 outline-none focus:ring-2${isSelected ? ' bg-primary/10 hover:bg-primary/15' : ' hover:bg-base-200 focus:bg-base-200'}`}
                 onClick={() => toggle(tag.id)}
                 onKeyDown={(e) => {
                   if (e.key === 'Enter' || e.key === ' ') {
@@ -150,17 +139,15 @@ function MultiSelectTagDropdown(props: MultiSelectTagDropdownProps) {
                   }
                 }}
               >
-                <div class="flex w-5 items-center justify-center">
-                  <Show when={isSelected()}>
-                    <Check size={16} class="text-primary" />
-                  </Show>
+                <div className="flex w-5 items-center justify-center">
+                  {isSelected && <Check size={16} className="text-primary" />}
                 </div>
-                <ColorIndicator class={getTagDotColor(tag.color)} />
-                <div class="flex-1 text-sm">{tag.name}</div>
+                <ColorIndicator className={getTagDotColor(tag.color)} />
+                <div className="flex-1 text-sm">{tag.name}</div>
               </div>
             );
-          }}
-        </For>
+          })
+        )}
       </div>
     </>
   );

@@ -1,18 +1,13 @@
-import { onCleanup, onMount } from 'solid-js';
+import { type RefObject, useEffect } from 'react';
 
-/**
- * Calls `handler` when a click lands outside the element returned by `ref`.
- * Attaches on mount, cleans up automatically.
- */
-export function useClickOutside(ref: () => HTMLElement | undefined, handler: () => void) {
-  onMount(() => {
+export function useClickOutside(ref: RefObject<HTMLElement | null>, handler: () => void) {
+  useEffect(() => {
     const onClick = (e: MouseEvent) => {
-      const el = ref();
-      if (el && !el.contains(e.target as Node)) {
+      if (ref.current && !ref.current.contains(e.target as Node)) {
         handler();
       }
     };
     document.addEventListener('pointerdown', onClick, true);
-    onCleanup(() => document.removeEventListener('pointerdown', onClick, true));
-  });
+    return () => document.removeEventListener('pointerdown', onClick, true);
+  }, [ref, handler]);
 }

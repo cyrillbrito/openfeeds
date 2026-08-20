@@ -1,8 +1,8 @@
 import { BetterFetchError } from '@better-fetch/fetch';
-import { createFileRoute, Link, useNavigate } from '@tanstack/solid-router';
-import { CircleX } from 'lucide-solid';
+import { createFileRoute, Link, useNavigate } from '@tanstack/react-router';
+import { CircleX } from 'lucide-react';
 import { posthog } from 'posthog-js';
-import { createSignal, Show } from 'solid-js';
+import { useState } from 'react';
 import { Card } from '~/components/Card';
 import { Loader } from '~/components/Loader';
 import { authClient } from '~/lib/auth-client';
@@ -22,25 +22,24 @@ export const Route = createFileRoute('/reset-password')({
 function ResetPasswordPage() {
   const navigate = useNavigate();
   const search = Route.useSearch();
-  const [password, setPassword] = createSignal('');
-  const [confirmPassword, setConfirmPassword] = createSignal('');
-  const [error, setError] = createSignal<string | null>(null);
-  const [isLoading, setIsLoading] = createSignal(false);
+  const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [error, setError] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
 
-  // Check for token error from Better Auth redirect
-  const tokenError = () => search()?.error;
-  const token = () => search()?.token;
+  const tokenError = search?.error;
+  const token = search?.token;
 
-  const handleSubmit = async (e: Event) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
 
-    if (password() !== confirmPassword()) {
+    if (password !== confirmPassword) {
       setError('Passwords do not match');
       return;
     }
 
-    if (!token()) {
+    if (!token) {
       setError('Invalid or missing reset token');
       return;
     }
@@ -48,17 +47,8 @@ function ResetPasswordPage() {
     setIsLoading(true);
 
     try {
-      await authClient.resetPassword(
-        {
-          newPassword: password(),
-          token: token()!,
-        },
-        { throw: true },
-      );
-
+      await authClient.resetPassword({ newPassword: password, token }, { throw: true });
       setIsLoading(false);
-
-      // Redirect to sign in after successful password reset
       void navigate({ to: '/login', replace: true });
     } catch (err) {
       setIsLoading(false);
@@ -72,93 +62,88 @@ function ResetPasswordPage() {
   };
 
   return (
-    <div class="bg-base-200 flex min-h-screen items-center justify-center px-4">
-      <Card class="max-w-md">
-        <div class="mb-6 text-center">
-          <h1 class="text-base-content text-3xl font-bold">Set New Password</h1>
-          <p class="text-base-content-gray mt-2">Enter your new password below</p>
+    <div className="bg-base-200 flex min-h-screen items-center justify-center px-4">
+      <Card className="max-w-md">
+        <div className="mb-6 text-center">
+          <h1 className="text-base-content text-3xl font-bold">Set New Password</h1>
+          <p className="text-base-content-gray mt-2">Enter your new password below</p>
         </div>
 
-        <Show
-          when={!tokenError() && token()}
-          fallback={
-            <div class="space-y-4">
-              <div class="alert alert-error">
-                <CircleX class="h-6 w-6 shrink-0" />
-                <span>
-                  {tokenError() === 'INVALID_TOKEN'
-                    ? 'This reset link is invalid or has expired'
-                    : 'Missing or invalid reset link'}
-                </span>
-              </div>
-              <div class="text-center">
-                <Link to="/forgot-password" class="btn btn-primary">
-                  Request New Reset Link
-                </Link>
-              </div>
-            </div>
-          }
-        >
-          <form onSubmit={handleSubmit} class="space-y-4">
-            <div class="form-control">
-              <label class="label">
-                <span class="label-text">New Password</span>
+        {!tokenError && token ? (
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div className="form-control">
+              <label className="label">
+                <span className="label-text">New Password</span>
               </label>
               <input
                 type="password"
                 placeholder="Enter new password"
-                class="input input-bordered w-full"
-                value={password()}
-                onInput={(e) => setPassword(e.currentTarget.value)}
+                className="input input-bordered w-full"
+                value={password}
+                onChange={(e) => setPassword(e.currentTarget.value)}
                 required
-                disabled={isLoading()}
+                disabled={isLoading}
               />
-              <label class="label">
-                <span class="label-text-alt text-base-content-gray">
+              <label className="label">
+                <span className="label-text-alt text-base-content-gray">
                   Must be at least 6 characters
                 </span>
               </label>
             </div>
 
-            <div class="form-control">
-              <label class="label">
-                <span class="label-text">Confirm Password</span>
+            <div className="form-control">
+              <label className="label">
+                <span className="label-text">Confirm Password</span>
               </label>
               <input
                 type="password"
                 placeholder="Confirm new password"
-                class="input input-bordered w-full"
-                value={confirmPassword()}
-                onInput={(e) => setConfirmPassword(e.currentTarget.value)}
+                className="input input-bordered w-full"
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.currentTarget.value)}
                 required
-                disabled={isLoading()}
+                disabled={isLoading}
               />
             </div>
 
-            <Show when={error()}>
-              <div class="alert alert-error">
-                <CircleX class="h-6 w-6 shrink-0" />
-                <span>{error()}</span>
+            {error && (
+              <div className="alert alert-error">
+                <CircleX className="h-6 w-6 shrink-0" />
+                <span>{error}</span>
               </div>
-            </Show>
+            )}
 
-            <div class="form-control mt-6">
-              <button type="submit" class="btn btn-primary w-full" disabled={isLoading()}>
-                <Show when={isLoading()}>
-                  <Loader />
-                </Show>
-                {isLoading() ? 'Resetting...' : 'Reset Password'}
+            <div className="form-control mt-6">
+              <button type="submit" className="btn btn-primary w-full" disabled={isLoading}>
+                {isLoading && <Loader />}
+                {isLoading ? 'Resetting...' : 'Reset Password'}
               </button>
             </div>
           </form>
-        </Show>
+        ) : (
+          <div className="space-y-4">
+            <div className="alert alert-error">
+              <CircleX className="h-6 w-6 shrink-0" />
+              <span>
+                {tokenError === 'INVALID_TOKEN'
+                  ? 'This reset link is invalid or has expired'
+                  : 'Missing or invalid reset link'}
+              </span>
+            </div>
+            <div className="text-center">
+              <Link to="/forgot-password" className="btn btn-primary">
+                Request New Reset Link
+              </Link>
+            </div>
+          </div>
+        )}
 
-        <div class="divider">or</div>
+        <div className="divider">or</div>
 
-        <div class="text-center">
-          <p class="text-base-content-gray text-sm">
+        <div className="text-center">
+          <p className="text-base-content-gray text-sm">
             Remember your password?{' '}
-            <Link to="/login" class="link link-primary font-medium">
+            <Link to="/login" className="link link-primary font-medium">
               Log in
             </Link>
           </p>

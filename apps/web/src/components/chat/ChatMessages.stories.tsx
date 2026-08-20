@@ -1,4 +1,5 @@
-import type { Meta, StoryObj } from 'storybook-solidjs-vite';
+import type { Meta, StoryObj } from '@storybook/react-vite';
+import type { ComponentType } from 'react';
 import { expect, within } from 'storybook/test';
 import { MockChatProvider } from './chat-context.mock';
 import {
@@ -21,9 +22,9 @@ type Story = StoryObj;
 /** Empty chat — "How can I help?" prompt */
 export const EmptyState: Story = {
   decorators: [
-    (Story: () => any) => (
+    (Story: ComponentType) => (
       <MockChatProvider>
-        <div style={{ 'min-height': '300px', display: 'flex', 'flex-direction': 'column' }}>
+        <div style={{ minHeight: '300px', display: 'flex', flexDirection: 'column' }}>
           <Story />
         </div>
       </MockChatProvider>
@@ -38,7 +39,7 @@ export const EmptyState: Story = {
 /** Multi-turn conversation with markdown table */
 export const Conversation: Story = {
   decorators: [
-    (Story: () => any) => (
+    (Story: ComponentType) => (
       <MockChatProvider messages={conversation}>
         <Story />
       </MockChatProvider>
@@ -55,7 +56,7 @@ export const Conversation: Story = {
 /** Tool call indicator with checkmark */
 export const ToolCall: Story = {
   decorators: [
-    (Story: () => any) => (
+    (Story: ComponentType) => (
       <MockChatProvider messages={[userMessage, toolCallMessage]}>
         <Story />
       </MockChatProvider>
@@ -71,7 +72,7 @@ export const ToolCall: Story = {
 /** Error state — rate limit */
 export const ErrorState: Story = {
   decorators: [
-    (Story: () => any) => (
+    (Story: ComponentType) => (
       <MockChatProvider messages={[userMessage]} error={new Error('429 Rate limited')}>
         <Story />
       </MockChatProvider>
@@ -88,7 +89,7 @@ export const ErrorState: Story = {
 /** Loading state — "Thinking..." spinner */
 export const Loading: Story = {
   decorators: [
-    (Story: () => any) => (
+    (Story: ComponentType) => (
       <MockChatProvider messages={[userMessage, aiMessage]} isLoading>
         <Story />
       </MockChatProvider>
@@ -103,7 +104,7 @@ export const Loading: Story = {
 /** Empty assistant response — amber warning */
 export const EmptyResponse: Story = {
   decorators: [
-    (Story: () => any) => (
+    (Story: ComponentType) => (
       <MockChatProvider messages={[userMessage, emptyAssistantMessage]}>
         <Story />
       </MockChatProvider>

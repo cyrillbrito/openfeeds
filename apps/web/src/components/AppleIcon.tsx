@@ -2,9 +2,9 @@
 // Light variant: https://svgl.app/library/apple.svg
 // Dark variant: https://svgl.app/library/apple_dark.svg
 
-import type { JSX } from 'solid-js';
+import type { SVGProps } from 'react';
 
-export function AppleIcon(props: JSX.SvgSVGAttributes<SVGSVGElement>) {
+export function AppleIcon(props: SVGProps<SVGSVGElement>) {
   return (
     <svg
       xmlns="http://www.w3.org/2000/svg"

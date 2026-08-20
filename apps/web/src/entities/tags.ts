@@ -1,7 +1,7 @@
 import { snakeCamelMapper } from '@electric-sql/client';
 import { TagSchema } from '@repo/domain/client';
 import { electricCollectionOptions } from '@tanstack/electric-db-collection';
-import { BasicIndex, createCollection, useLiveQuery } from '@tanstack/solid-db';
+import { BasicIndex, createCollection, useLiveQuery } from '@tanstack/react-db';
 import { api, unwrap } from '~/lib/api-client';
 import { collectionErrorHandler, shapeErrorHandler } from '~/lib/collection-errors';
 import { getShapeUrl, timestampParser } from '~/lib/electric-client';
@@ -51,7 +51,8 @@ export const tagsCollection = createCollection(
 );
 
 export function useTags() {
-  return useLiveQuery((q) =>
+  const { data } = useLiveQuery((q) =>
     q.from({ tag: tagsCollection }).orderBy(({ tag }) => tag.order, 'asc'),
   );
+  return data ?? [];
 }

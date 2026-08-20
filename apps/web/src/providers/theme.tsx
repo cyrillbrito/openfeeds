@@ -1,77 +1,54 @@
-import {
-  createContext,
-  createEffect,
-  createSignal,
-  onCleanup,
-  onMount,
-  useContext,
-  type ParentComponent,
-} from 'solid-js';
+import { createContext, use, useEffect, useMemo, useState } from 'react';
 
 type ThemeMode = 'light' | 'dark' | 'system';
 
 interface ThemeContextType {
-  theme: () => ThemeMode;
+  theme: ThemeMode;
   setTheme: (theme: ThemeMode) => void;
-  actualTheme: () => 'garden' | 'dracula';
+  actualTheme: 'garden' | 'dracula';
 }
 
-const ThemeContext = createContext<ThemeContextType>();
+const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 
-export const ThemeProvider: ParentComponent = (props) => {
-  const [theme, setTheme] = createSignal<ThemeMode>('system');
+export function ThemeProvider({ children }: { children: React.ReactNode }) {
+  const [theme, setTheme] = useState<ThemeMode>('system');
+  const [systemPrefersDark, setSystemPrefersDark] = useState(false);
 
-  // Track system preference reactively so "system" mode updates live
-  const [systemPrefersDark, setSystemPrefersDark] = createSignal(false);
+  const actualTheme = useMemo<'garden' | 'dracula'>(() => {
+    if (theme === 'system') return systemPrefersDark ? 'dracula' : 'garden';
+    if (theme === 'dark') return 'dracula';
+    return 'garden';
+  }, [theme, systemPrefersDark]);
 
-  // Get actual theme based on mode and system preference
-  const actualTheme = () => {
-    const currentTheme = theme();
-    if (currentTheme === 'system') {
-      return systemPrefersDark() ? ('dracula' as const) : ('garden' as const);
-    } else if (currentTheme === 'dark') {
-      return 'dracula' as const;
-    } else {
-      return 'garden' as const;
-    }
-  };
-
-  // Load saved theme from localStorage
-  onMount(() => {
+  useEffect(() => {
     const saved = localStorage.getItem('theme') as ThemeMode;
     if (saved && ['light', 'dark', 'system'].includes(saved)) {
       setTheme(saved);
     }
 
-    // Listen for system theme preference changes
     const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
     setSystemPrefersDark(mediaQuery.matches);
 
-    const handler = (e: MediaQueryListEvent) => {
-      setSystemPrefersDark(e.matches);
-    };
+    const handler = (e: MediaQueryListEvent) => setSystemPrefersDark(e.matches);
     mediaQuery.addEventListener('change', handler);
-    onCleanup(() => mediaQuery.removeEventListener('change', handler));
-  });
+    return () => mediaQuery.removeEventListener('change', handler);
+  }, []);
 
-  // Apply theme to document
-  createEffect(() => {
-    const themeToApply = actualTheme();
-    document.documentElement.setAttribute('data-theme', themeToApply);
-    localStorage.setItem('theme', theme());
-  });
+  useEffect(() => {
+    document.documentElement.setAttribute('data-theme', actualTheme);
+    localStorage.setItem('theme', theme);
+  }, [actualTheme, theme]);
 
-  const value: ThemeContextType = {
-    theme,
-    setTheme,
-    actualTheme,
-  };
+  const value = useMemo<ThemeContextType>(
+    () => ({ theme, setTheme, actualTheme }),
+    [theme, setTheme, actualTheme],
+  );
 
-  return <ThemeContext.Provider value={value}>{props.children}</ThemeContext.Provider>;
-};
+  return <ThemeContext.Provider value={value}>{children}</ThemeContext.Provider>;
+}
 
 export function useTheme(): ThemeContextType {
-  const context = useContext(ThemeContext);
+  const context = use(ThemeContext);
   if (!context) {
     throw new Error('useTheme must be used within ThemeProvider');
   }

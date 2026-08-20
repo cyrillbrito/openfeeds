@@ -1,5 +1,5 @@
-import { ChevronDown, Sparkles } from 'lucide-solid';
-import { createSignal, Show } from 'solid-js';
+import { ChevronDown, Sparkles } from 'lucide-react';
+import { useRef, useState } from 'react';
 import { useClickOutside } from '~/utils/useClickOutside';
 import { useChatContext } from './chat-context.shared';
 import { ConversationSwitcher } from './ConversationSwitcher';
@@ -13,48 +13,42 @@ interface ChatTitleSwitcherProps {
   onSessionSelected?: (id: string) => void;
 }
 
-/** Title button + conversation switcher dropdown with click-outside handling */
-export function ChatTitleSwitcher(props: ChatTitleSwitcherProps) {
+export function ChatTitleSwitcher({ size, dropdownClass, onSessionSelected }: ChatTitleSwitcherProps) {
   const chat = useChatContext();
-  const [open, setOpen] = createSignal(false);
-  const [ref, setRef] = createSignal<HTMLDivElement>();
-  const sm = () => (props.size ?? 'md') === 'sm';
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+  const sm = (size ?? 'md') === 'sm';
 
   useClickOutside(ref, () => {
-    if (open()) setOpen(false);
+    if (open) setOpen(false);
   });
 
   return (
-    <div ref={setRef} class="relative">
+    <div ref={ref} className="relative">
       <button
-        class="hover:bg-base-200 flex items-center gap-1.5 rounded-lg px-2 py-1 transition-colors"
-        onClick={() => setOpen(!open())}
+        className="hover:bg-base-200 flex items-center gap-1.5 rounded-lg px-2 py-1 transition-colors"
+        onClick={() => setOpen(!open)}
         title="Switch conversation"
       >
-        <Sparkles size={sm() ? 14 : 16} class="text-primary shrink-0" />
+        <Sparkles size={sm ? 14 : 16} className="text-primary shrink-0" />
         <span
-          class="truncate"
-          classList={{
-            'max-w-48 text-sm font-medium': sm(),
-            'max-w-64 text-lg font-semibold': !sm(),
-          }}
+          className={`truncate${sm ? ' max-w-48 text-sm font-medium' : ' max-w-64 text-lg font-semibold'}`}
         >
-          {chat.currentTitle()}
+          {chat.currentTitle}
         </span>
         <ChevronDown
-          size={sm() ? 14 : 16}
-          class="text-base-content/50 shrink-0 transition-transform"
-          classList={{ 'rotate-180': open() }}
+          size={sm ? 14 : 16}
+          className={`text-base-content/50 shrink-0 transition-transform${open ? ' rotate-180' : ''}`}
         />
       </button>
 
-      <Show when={open()}>
+      {open && (
         <ConversationSwitcher
           onClose={() => setOpen(false)}
-          onSessionSelected={props.onSessionSelected}
-          class={props.dropdownClass}
+          onSessionSelected={onSessionSelected}
+          className={dropdownClass}
         />
-      </Show>
+      )}
     </div>
   );
 }

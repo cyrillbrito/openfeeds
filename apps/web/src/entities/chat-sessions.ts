@@ -1,7 +1,7 @@
 import { snakeCamelMapper } from '@electric-sql/client';
 import { ChatSessionSchema } from '@repo/domain/client';
 import { electricCollectionOptions } from '@tanstack/electric-db-collection';
-import { BasicIndex, createCollection } from '@tanstack/solid-db';
+import { BasicIndex, createCollection } from '@tanstack/react-db';
 import { api, unwrap } from '~/lib/api-client';
 import { collectionErrorHandler, shapeErrorHandler } from '~/lib/collection-errors';
 import { getShapeUrl, timestampParser } from '~/lib/electric-client';

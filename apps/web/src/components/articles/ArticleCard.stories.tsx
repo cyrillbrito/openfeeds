@@ -1,10 +1,10 @@
-import type { Meta, StoryObj } from 'storybook-solidjs-vite';
+import type { ComponentType } from 'react';
+import type { Meta, StoryObj } from '@storybook/react-vite';
 import { expect, fn, within } from 'storybook/test';
 import { ArticleCard } from './ArticleCard';
 import { MockArticleListProvider, type ArticleListContextValue } from './ArticleListContext.shared';
 import { withRouter } from './articles-stories.decorator';
 import {
-  articleTagFixtures,
   feedFixtures,
   htmlDescriptionArticle,
   noFeedArticle,
@@ -14,26 +14,22 @@ import {
   youtubeArticle,
 } from './articles-stories.fixtures';
 
-const createFixtureTagsAccessor = (articleId: string) => () =>
-  articleTagFixtures.filter((at) => at.articleId === articleId);
-
 function createMockCtx(overrides?: Partial<ArticleListContextValue>): ArticleListContextValue {
   return {
-    articles: () => [],
-    totalCount: () => 0,
-    unreadCount: () => 0,
-    archivableCount: () => 0,
-    feeds: () => feedFixtures,
-    tags: () => tagFixtures,
-    shortsExist: () => false,
-    readStatus: () => 'all',
+    articles: [],
+    totalCount: 0,
+    unreadCount: 0,
+    archivableCount: 0,
+    feeds: feedFixtures,
+    tags: tagFixtures,
+    shortsExist: false,
+    readStatus: 'all',
     context: 'inbox',
     loadMore: fn().mockName('loadMore'),
     updateArticle: fn().mockName('updateArticle'),
     markAllArchived: fn().mockName('markAllArchived') as any,
     addTag: fn().mockName('addTag'),
     removeTag: fn().mockName('removeTag'),
-    createArticleTagsAccessor: createFixtureTagsAccessor,
     ...overrides,
   };
 }
@@ -43,9 +39,9 @@ const meta: Meta<typeof ArticleCard> = {
   component: ArticleCard,
   decorators: [
     withRouter,
-    (Story: () => any) => (
+    (Story: ComponentType) => (
       <MockArticleListProvider value={createMockCtx()}>
-        <div class="divide-base-300 w-full max-w-2xl divide-y">
+        <div className="divide-base-300 w-full max-w-2xl divide-y">
           <Story />
         </div>
       </MockArticleListProvider>
@@ -100,14 +96,13 @@ export const NoTags: Story = {
   args: { article: unreadArticle },
   decorators: [
     withRouter,
-    (Story: () => any) => (
+    (Story: ComponentType) => (
       <MockArticleListProvider
         value={createMockCtx({
-          tags: () => [],
-          createArticleTagsAccessor: () => () => [],
+          tags: [],
         })}
       >
-        <div class="divide-base-300 w-full max-w-2xl divide-y">
+        <div className="divide-base-300 w-full max-w-2xl divide-y">
           <Story />
         </div>
       </MockArticleListProvider>

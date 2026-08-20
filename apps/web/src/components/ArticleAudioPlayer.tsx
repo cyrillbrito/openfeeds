@@ -1,7 +1,8 @@
 import type { WordTiming } from '@repo/domain/client';
-import { Headphones, Loader2, Pause, Play, Wifi } from 'lucide-solid';
+import { Headphones, Loader2, Pause, Play, Wifi } from 'lucide-react';
 import { posthog } from 'posthog-js';
-import { createEffect, createResource, createSignal, onCleanup, onMount, Show } from 'solid-js';
+import { useEffect, useRef, useState } from 'react';
+import { twMerge } from 'tailwind-merge';
 import { api, unwrap } from '~/lib/api-client';
 import { useArticleAudio } from './ArticleAudioContext';
 
@@ -15,52 +16,33 @@ function formatTime(seconds: number) {
   return `${mins}:${secs.toString().padStart(2, '0')}`;
 }
 
-export function ArticleAudioPlayer(props: ArticleAudioPlayerProps) {
+export function ArticleAudioPlayer({ articleId }: ArticleAudioPlayerProps) {
   const audio = useArticleAudio();
-  const [audioUrl, setAudioUrl] = createSignal<string | null>(null);
-  const [localWordTimings, setLocalWordTimings] = createSignal<WordTiming[]>([]);
-  const [duration, setDuration] = createSignal<number>(0);
-  const [currentTime, setCurrentTime] = createSignal<number>(0);
-  const [error, setError] = createSignal<string | null>(null);
-  const [buffering, setBuffering] = createSignal(false);
+  const [audioUrl, setAudioUrl] = useState<string | null>(null);
+  const [localWordTimings, setLocalWordTimings] = useState<WordTiming[]>([]);
+  const [duration, setDuration] = useState<number>(0);
+  const [currentTime, setCurrentTime] = useState<number>(0);
+  const [error, setError] = useState<string | null>(null);
+  const [buffering, setBuffering] = useState(false);
+  const [ttsAvailable, setTtsAvailable] = useState<boolean | null>(null);
+  const [ttsLoading, setTtsLoading] = useState(true);
 
-  // Check if TTS is available on the server
-  const [ttsAvailable] = createResource(() => unwrap(api.api['article-audio'].available.$get({})));
-  const isTtsAvailable = () => ttsAvailable()?.available ?? false;
+  const audioRef = useRef<HTMLAudioElement>(null);
+  const animationFrameIdRef = useRef<number | undefined>(undefined);
 
-  let audioRef: HTMLAudioElement | undefined;
-  let animationFrameId: number | undefined;
+  // Refs for values accessed inside the rAF loop (avoids stale closures)
+  const audioStateRef = useRef(audio.audioState);
+  const localWordTimingsRef = useRef(localWordTimings);
+  audioStateRef.current = audio.audioState;
+  localWordTimingsRef.current = localWordTimings;
 
-  // Register seek handler so HighlightedArticleContent can request seeks
-  onMount(() => {
-    audio.onSeekRequest((wordIndex) => {
-      const timings = localWordTimings();
-      if (!audioRef || wordIndex < 0 || wordIndex >= timings.length) return;
-
-      const timing = timings[wordIndex];
-      if (timing) {
-        audioRef.currentTime = timing.start;
-        setCurrentTime(timing.start);
-        audio.setCurrentWordIndex(wordIndex);
-
-        // Start playing if not already
-        if (audio.audioState() !== 'playing') {
-          void audioRef.play();
-          audio.setAudioState('playing');
-          startProgressLoop();
-        }
-      }
-    });
-  });
-
-  // Use requestAnimationFrame for smooth progress updates
-  const updateProgress = () => {
-    if (audioRef && audio.audioState() === 'playing') {
-      const time = audioRef.currentTime;
+  const updateProgressRef = useRef<(() => void) | undefined>(undefined);
+  updateProgressRef.current = () => {
+    if (audioRef.current && audioStateRef.current === 'playing') {
+      const time = audioRef.current.currentTime;
       setCurrentTime(time);
 
-      // Find current word based on time
-      const timings = localWordTimings();
+      const timings = localWordTimingsRef.current;
       let foundIndex = -1;
       for (let i = 0; i < timings.length; i++) {
         const timing = timings[i];
@@ -71,40 +53,76 @@ export function ArticleAudioPlayer(props: ArticleAudioPlayerProps) {
       }
       audio.setCurrentWordIndex(foundIndex);
 
-      animationFrameId = requestAnimationFrame(updateProgress);
+      animationFrameIdRef.current = requestAnimationFrame(() => updateProgressRef.current?.());
     }
   };
 
   const startProgressLoop = () => {
-    if (animationFrameId) cancelAnimationFrame(animationFrameId);
-    animationFrameId = requestAnimationFrame(updateProgress);
+    if (animationFrameIdRef.current !== undefined) cancelAnimationFrame(animationFrameIdRef.current);
+    animationFrameIdRef.current = requestAnimationFrame(() => updateProgressRef.current?.());
   };
 
   const stopProgressLoop = () => {
-    if (animationFrameId) {
-      cancelAnimationFrame(animationFrameId);
-      animationFrameId = undefined;
+    if (animationFrameIdRef.current !== undefined) {
+      cancelAnimationFrame(animationFrameIdRef.current);
+      animationFrameIdRef.current = undefined;
     }
   };
 
-  // Check if audio already exists on mount
-  createEffect(async () => {
-    const articleId = props.articleId;
+  useEffect(() => {
+    void unwrap(api.api['article-audio'].available.$get({}))
+      .then((result) => setTtsAvailable(result.available))
+      .catch(() => setTtsAvailable(false))
+      .finally(() => setTtsLoading(false));
+  }, []);
+
+  // Register seek handler once — uses refs for always-fresh values
+  useEffect(() => {
+    audio.onSeekRequest((wordIndex) => {
+      const timings = localWordTimingsRef.current;
+      if (!audioRef.current || wordIndex < 0 || wordIndex >= timings.length) return;
+
+      const timing = timings[wordIndex];
+      if (timing) {
+        audioRef.current.currentTime = timing.start;
+        setCurrentTime(timing.start);
+        audio.setCurrentWordIndex(wordIndex);
+
+        if (audioStateRef.current !== 'playing') {
+          void audioRef.current.play();
+          audio.setAudioState('playing');
+          startProgressLoop();
+        }
+      }
+    });
+  }, []);
+
+  // Check if audio already exists on the server
+  useEffect(() => {
     if (!articleId) return;
 
-    try {
-      const result = await unwrap(api.api['article-audio'].metadata.$get({ query: { articleId } }));
-      if (result.exists) {
-        setAudioUrl(result.audioUrl);
-        setLocalWordTimings(result.wordTimings);
-        audio.setWordTimings(result.wordTimings);
-        setDuration(result.duration);
-        audio.setAudioState('ready');
+    void (async () => {
+      try {
+        const result = await unwrap(api.api['article-audio'].metadata.$get({ query: { articleId } }));
+        if (result.exists) {
+          setAudioUrl(result.audioUrl);
+          setLocalWordTimings(result.wordTimings);
+          audio.setWordTimings(result.wordTimings);
+          setDuration(result.duration);
+          audio.setAudioState('ready');
+        }
+      } catch {
+        // Audio doesn't exist yet — expected for articles without generated audio
       }
-    } catch {
-      // Audio doesn't exist yet — expected for articles without generated audio
-    }
-  });
+    })();
+  }, [articleId]);
+
+  useEffect(() => {
+    return () => {
+      stopProgressLoop();
+      audioRef.current?.pause();
+    };
+  }, []);
 
   const generateAudio = async () => {
     audio.setAudioState('generating');
@@ -112,7 +130,7 @@ export function ArticleAudioPlayer(props: ArticleAudioPlayerProps) {
 
     try {
       const result = await unwrap(
-        api.api['article-audio'].generate.$post({ json: { articleId: props.articleId } }),
+        api.api['article-audio'].generate.$post({ json: { articleId } }),
       );
       setAudioUrl(result.audioUrl);
       setLocalWordTimings(result.wordTimings);
@@ -126,14 +144,14 @@ export function ArticleAudioPlayer(props: ArticleAudioPlayerProps) {
   };
 
   const togglePlayPause = () => {
-    if (!audioRef) return;
+    if (!audioRef.current) return;
 
-    if (audio.audioState() === 'playing') {
-      audioRef.pause();
+    if (audio.audioState === 'playing') {
+      audioRef.current.pause();
       audio.setAudioState('paused');
       stopProgressLoop();
     } else {
-      void audioRef.play();
+      void audioRef.current.play();
       audio.setAudioState('playing');
       startProgressLoop();
     }
@@ -147,14 +165,14 @@ export function ArticleAudioPlayer(props: ArticleAudioPlayerProps) {
   };
 
   const handleLoadedMetadata = () => {
-    if (audioRef) {
-      setDuration(audioRef.duration);
+    if (audioRef.current) {
+      setDuration(audioRef.current.duration);
     }
   };
 
   const handleAudioError = () => {
     stopProgressLoop();
-    const mediaError = audioRef?.error;
+    const mediaError = audioRef.current?.error;
     const errorMsg =
       mediaError?.code === MediaError.MEDIA_ERR_NETWORK
         ? 'Audio download failed — check your connection'
@@ -168,140 +186,120 @@ export function ArticleAudioPlayer(props: ArticleAudioPlayerProps) {
     });
   };
 
-  onCleanup(() => {
-    stopProgressLoop();
-    if (audioRef) {
-      audioRef.pause();
-    }
-  });
+  if (ttsLoading || !ttsAvailable) return null;
 
-  // Player becomes sticky once audio is ready (not just idle)
-  const isSticky = () => {
-    const state = audio.audioState();
-    return state === 'ready' || state === 'playing' || state === 'paused';
-  };
+  const isSticky =
+    audio.audioState === 'ready' || audio.audioState === 'playing' || audio.audioState === 'paused';
 
   return (
-    <Show when={!ttsAvailable.loading && isTtsAvailable()}>
-      <div
-        class="border-base-300 bg-base-200 mb-6 rounded-lg border p-4 transition-all print:hidden"
-        classList={{
-          'sticky top-18 z-10 shadow-md': isSticky(),
-        }}
-      >
-        {/* Hidden audio element */}
-        <Show when={audioUrl()}>
-          <audio
-            ref={(el) => (audioRef = el)}
-            src={audioUrl()!}
-            onEnded={handleEnded}
-            onLoadedMetadata={handleLoadedMetadata}
-            onError={handleAudioError}
-            onWaiting={() => setBuffering(true)}
-            onPlaying={() => setBuffering(false)}
-            onStalled={() => setBuffering(true)}
-            preload="metadata"
-          />
-        </Show>
+    <div
+      className={twMerge(
+        'border-base-300 bg-base-200 mb-6 rounded-lg border p-4 transition-all print:hidden',
+        isSticky && 'sticky top-18 z-10 shadow-md',
+      )}
+    >
+      {audioUrl && (
+        <audio
+          ref={audioRef}
+          src={audioUrl}
+          onEnded={handleEnded}
+          onLoadedMetadata={handleLoadedMetadata}
+          onError={handleAudioError}
+          onWaiting={() => setBuffering(true)}
+          onPlaying={() => setBuffering(false)}
+          onStalled={() => setBuffering(true)}
+          preload="metadata"
+        />
+      )}
 
-        <div class="flex items-center gap-4">
-          {/* Play/Generate button */}
-          <Show when={audio.audioState() === 'idle'}>
-            <button
-              class="btn btn-primary btn-sm gap-2"
-              onClick={generateAudio}
-              title="Generate audio for this article"
-            >
-              <Headphones size={18} />
-              <span>Listen</span>
-            </button>
-          </Show>
-
-          <Show when={audio.audioState() === 'generating'}>
-            <button class="btn btn-primary btn-sm gap-2" disabled>
-              <Loader2 size={18} class="animate-spin" />
-              <span>Generating...</span>
-            </button>
-          </Show>
-
-          <Show when={audio.audioState() === 'loading'}>
-            <button class="btn btn-primary btn-sm gap-2" disabled>
-              <Loader2 size={18} class="animate-spin" />
-              <span>Loading...</span>
-            </button>
-          </Show>
-
-          <Show
-            when={
-              audio.audioState() === 'ready' ||
-              audio.audioState() === 'playing' ||
-              audio.audioState() === 'paused'
-            }
+      <div className="flex items-center gap-4">
+        {audio.audioState === 'idle' && (
+          <button
+            className="btn btn-primary btn-sm gap-2"
+            onClick={generateAudio}
+            title="Generate audio for this article"
           >
-            <button class="btn btn-primary btn-circle btn-sm" onClick={togglePlayPause}>
-              <Show when={audio.audioState() === 'playing'} fallback={<Play size={18} />}>
-                <Pause size={18} />
-              </Show>
+            <Headphones size={18} />
+            <span>Listen</span>
+          </button>
+        )}
+
+        {audio.audioState === 'generating' && (
+          <button className="btn btn-primary btn-sm gap-2" disabled>
+            <Loader2 size={18} className="animate-spin" />
+            <span>Generating...</span>
+          </button>
+        )}
+
+        {audio.audioState === 'loading' && (
+          <button className="btn btn-primary btn-sm gap-2" disabled>
+            <Loader2 size={18} className="animate-spin" />
+            <span>Loading...</span>
+          </button>
+        )}
+
+        {(audio.audioState === 'ready' ||
+          audio.audioState === 'playing' ||
+          audio.audioState === 'paused') && (
+          <>
+            <button className="btn btn-primary btn-circle btn-sm" onClick={togglePlayPause}>
+              {audio.audioState === 'playing' ? <Pause size={18} /> : <Play size={18} />}
             </button>
 
-            {/* Progress bar */}
-            <div class="flex flex-1 items-center gap-2">
-              <span class="text-base-content/60 w-10 text-xs tabular-nums">
-                {formatTime(currentTime())}
+            <div className="flex flex-1 items-center gap-2">
+              <span className="text-base-content/60 w-10 text-xs tabular-nums">
+                {formatTime(currentTime)}
               </span>
               <input
                 type="range"
                 min="0"
-                max={duration()}
-                value={currentTime()}
-                class="range range-primary range-xs flex-1"
-                onInput={(e) => {
-                  if (audioRef) {
-                    audioRef.currentTime = Number(e.currentTarget.value);
+                max={duration}
+                value={currentTime}
+                className="range range-primary range-xs flex-1"
+                onChange={(e) => {
+                  if (audioRef.current) {
+                    audioRef.current.currentTime = Number(e.currentTarget.value);
                   }
                 }}
               />
-              <span class="text-base-content/60 w-10 text-xs tabular-nums">
-                {formatTime(duration())}
+              <span className="text-base-content/60 w-10 text-xs tabular-nums">
+                {formatTime(duration)}
               </span>
             </div>
 
-            <Show when={buffering()}>
+            {buffering && (
               <span
-                class="flex items-center gap-1 text-xs text-amber-600 dark:text-amber-400"
+                className="flex items-center gap-1 text-xs text-amber-600 dark:text-amber-400"
                 title="Slow connection"
               >
                 <Wifi size={14} />
                 Buffering...
               </span>
-            </Show>
-          </Show>
+            )}
+          </>
+        )}
 
-          <Show when={audio.audioState() === 'error'}>
-            <div class="flex items-center gap-2">
-              <span class="text-error text-sm">{error()}</span>
-              <Show
-                when={audioUrl()}
-                fallback={
-                  <button class="btn btn-ghost btn-sm" onClick={generateAudio}>
-                    Retry
-                  </button>
-                }
+        {audio.audioState === 'error' && (
+          <div className="flex items-center gap-2">
+            <span className="text-error text-sm">{error}</span>
+            {audioUrl ? (
+              <button
+                className="btn btn-ghost btn-sm"
+                onClick={() => {
+                  setError(null);
+                  audio.setAudioState('ready');
+                }}
               >
-                <button
-                  class="btn btn-ghost btn-sm"
-                  onClick={() => {
-                    setError(null);
-                    audio.setAudioState('ready');
-                  }}
-                >
-                  Retry
-                </button>
-              </Show>
-            </div>
-          </Show>
-        </div>
+                Retry
+              </button>
+            ) : (
+              <button className="btn btn-ghost btn-sm" onClick={generateAudio}>
+                Retry
+              </button>
+            )}
+          </div>
+        )}
       </div>
-    </Show>
+    </div>
   );
 }

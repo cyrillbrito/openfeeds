@@ -1,6 +1,6 @@
 import { FilterOperator, type FilterRule } from '@repo/domain/client';
-import { CircleAlert } from 'lucide-solid';
-import { createSignal, For, Show } from 'solid-js';
+import { CircleAlert } from 'lucide-react';
+import { useState } from 'react';
 import { filterRulesCollection } from '~/entities/filter-rules';
 
 interface RuleItemProps {
@@ -9,26 +9,25 @@ interface RuleItemProps {
   onDelete?: () => void;
 }
 
-export function RuleItem(props: RuleItemProps) {
-  const [isEditing, setIsEditing] = createSignal(false);
-  const [editPattern, setEditPattern] = createSignal(props.rule.pattern);
-  const [editOperator, setEditOperator] = createSignal(props.rule.operator);
-  const [editIsActive, setEditIsActive] = createSignal(props.rule.isActive);
-  const [error, setError] = createSignal<string | null>(null);
+export function RuleItem({ rule, onUpdate, onDelete }: RuleItemProps) {
+  const [isEditing, setIsEditing] = useState(false);
+  const [editPattern, setEditPattern] = useState(rule.pattern);
+  const [editOperator, setEditOperator] = useState(rule.operator);
+  const [editIsActive, setEditIsActive] = useState(rule.isActive);
+  const [error, setError] = useState<string | null>(null);
 
   const operatorOptions = [
     { value: FilterOperator.INCLUDES, label: 'Title contains this text' },
     { value: FilterOperator.NOT_INCLUDES, label: 'Title does not contain this text' },
   ];
 
-  const getOperatorLabel = (op: (typeof FilterOperator)[keyof typeof FilterOperator]) => {
-    return operatorOptions.find((option) => option.value === op)?.label || op;
-  };
+  const getOperatorLabel = (op: (typeof FilterOperator)[keyof typeof FilterOperator]) =>
+    operatorOptions.find((option) => option.value === op)?.label || op;
 
   const handleEdit = () => {
-    setEditPattern(props.rule.pattern);
-    setEditOperator(props.rule.operator);
-    setEditIsActive(props.rule.isActive);
+    setEditPattern(rule.pattern);
+    setEditOperator(rule.operator);
+    setEditIsActive(rule.isActive);
     setIsEditing(true);
     setError(null);
   };
@@ -38,9 +37,9 @@ export function RuleItem(props: RuleItemProps) {
     setError(null);
   };
 
-  const handleSaveEdit = (e: Event) => {
+  const handleSaveEdit = (e: React.FormEvent) => {
     e.preventDefault();
-    const trimmedPattern = editPattern().trim();
+    const trimmedPattern = editPattern.trim();
 
     if (!trimmedPattern) {
       setError('Please enter a pattern');
@@ -48,140 +47,132 @@ export function RuleItem(props: RuleItemProps) {
     }
 
     setError(null);
-    filterRulesCollection.update(props.rule.id, (draft) => {
+    filterRulesCollection.update(rule.id, (draft) => {
       draft.pattern = trimmedPattern;
-      draft.operator = editOperator();
-      draft.isActive = editIsActive();
+      draft.operator = editOperator;
+      draft.isActive = editIsActive;
       draft.updatedAt = new Date().toISOString();
     });
 
     setIsEditing(false);
-    props.onUpdate?.();
+    onUpdate?.();
   };
 
   const handleDelete = () => {
-    if (!confirm('Are you sure you want to delete this filter rule?')) {
-      return;
-    }
-
-    filterRulesCollection.delete(props.rule.id);
-    props.onDelete?.();
+    if (!confirm('Are you sure you want to delete this filter rule?')) return;
+    filterRulesCollection.delete(rule.id);
+    onDelete?.();
   };
 
   const handleToggleActive = () => {
-    filterRulesCollection.update(props.rule.id, (draft) => {
-      draft.isActive = !props.rule.isActive;
+    filterRulesCollection.update(rule.id, (draft) => {
+      draft.isActive = !rule.isActive;
       draft.updatedAt = new Date().toISOString();
     });
-    props.onUpdate?.();
+    onUpdate?.();
   };
 
   return (
-    <div class="card bg-base-100 border-base-300 border p-4">
-      <Show
-        when={isEditing()}
-        fallback={
-          <div class="flex items-center justify-between gap-4">
-            <div class="flex-1">
-              <div class="mb-1 flex items-center gap-2">
-                <span class={`badge ${props.rule.isActive ? 'badge-success' : 'badge-neutral'}`}>
-                  {props.rule.isActive ? 'Enabled' : 'Disabled'}
-                </span>
-              </div>
-              <div class="text-sm">
-                <p class="mb-1">
-                  <span class="font-medium">Mark as read when:</span>{' '}
-                  <span class="text-base-content/80">
-                    {getOperatorLabel(props.rule.operator).toLowerCase()}
-                  </span>
-                </p>
-                <p class="bg-base-200 rounded px-2 py-1 font-mono text-sm">
-                  "{props.rule.pattern}"
-                </p>
-              </div>
-              <Show when={props.rule.updatedAt}>
-                <p class="text-base-content/60 mt-1 text-xs">
-                  Updated: {new Date(props.rule.updatedAt!).toLocaleString()}
-                </p>
-              </Show>
-            </div>
-            <div class="flex gap-2">
-              <button
-                class="btn btn-sm"
-                onClick={handleToggleActive}
-                title={props.rule.isActive ? 'Disable rule' : 'Enable rule'}
-              >
-                {props.rule.isActive ? 'Disable' : 'Enable'}
-              </button>
-              <button class="btn btn-sm" onClick={handleEdit}>
-                Edit
-              </button>
-              <button class="btn btn-sm btn-error" onClick={handleDelete}>
-                Delete
-              </button>
-            </div>
-          </div>
-        }
-      >
-        <form onSubmit={handleSaveEdit} class="space-y-3">
-          <div class="form-control w-full">
+    <div className="card bg-base-100 border-base-300 border p-4">
+      {isEditing ? (
+        <form onSubmit={handleSaveEdit} className="space-y-3">
+          <div className="form-control w-full">
             <input
               type="text"
               placeholder="Pattern"
-              class="input input-sm input-bordered w-full"
-              value={editPattern()}
-              onInput={(e) => setEditPattern(e.currentTarget.value)}
+              className="input input-sm input-bordered w-full"
+              value={editPattern}
+              onChange={(e) => setEditPattern(e.currentTarget.value)}
               required
             />
           </div>
 
-          <div class="space-y-2">
-            <div class="flex gap-4">
-              <For each={operatorOptions}>
-                {(option) => (
-                  <label class="label cursor-pointer justify-start gap-2">
-                    <input
-                      type="radio"
-                      name={`edit-operator-${props.rule.id}`}
-                      class="radio radio-sm"
-                      value={option.value}
-                      checked={editOperator() === option.value}
-                      onChange={() => setEditOperator(option.value)}
-                    />
-                    <span class="label-text text-sm">{option.label}</span>
-                  </label>
-                )}
-              </For>
+          <div className="space-y-2">
+            <div className="flex gap-4">
+              {operatorOptions.map((option) => (
+                <label key={option.value} className="label cursor-pointer justify-start gap-2">
+                  <input
+                    type="radio"
+                    name={`edit-operator-${rule.id}`}
+                    className="radio radio-sm"
+                    value={option.value}
+                    checked={editOperator === option.value}
+                    onChange={() => setEditOperator(option.value)}
+                  />
+                  <span className="label-text text-sm">{option.label}</span>
+                </label>
+              ))}
             </div>
 
-            <label class="label cursor-pointer justify-start gap-2">
+            <label className="label cursor-pointer justify-start gap-2">
               <input
                 type="checkbox"
-                class="checkbox checkbox-sm"
-                checked={editIsActive()}
+                className="checkbox checkbox-sm"
+                checked={editIsActive}
                 onChange={(e) => setEditIsActive(e.currentTarget.checked)}
               />
-              <span class="label-text text-sm">Enable rule</span>
+              <span className="label-text text-sm">Enable rule</span>
             </label>
           </div>
 
-          <Show when={error()}>
-            <div class="alert alert-error alert-sm">
+          {error && (
+            <div className="alert alert-error alert-sm">
               <CircleAlert size={16} />
-              <span class="text-sm">{error()}</span>
+              <span className="text-sm">{error}</span>
             </div>
-          </Show>
+          )}
 
-          <div class="flex justify-end gap-2">
-            <button type="button" class="btn btn-sm" onClick={handleCancelEdit}>
+          <div className="flex justify-end gap-2">
+            <button type="button" className="btn btn-sm" onClick={handleCancelEdit}>
               Cancel
             </button>
-            <button type="submit" class="btn btn-sm btn-primary">
+            <button type="submit" className="btn btn-sm btn-primary">
               Save
             </button>
           </div>
         </form>
-      </Show>
+      ) : (
+        <div className="flex items-center justify-between gap-4">
+          <div className="flex-1">
+            <div className="mb-1 flex items-center gap-2">
+              <span className={`badge ${rule.isActive ? 'badge-success' : 'badge-neutral'}`}>
+                {rule.isActive ? 'Enabled' : 'Disabled'}
+              </span>
+            </div>
+            <div className="text-sm">
+              <p className="mb-1">
+                <span className="font-medium">Mark as read when:</span>{' '}
+                <span className="text-base-content/80">
+                  {getOperatorLabel(rule.operator).toLowerCase()}
+                </span>
+              </p>
+              <p className="bg-base-200 rounded px-2 py-1 font-mono text-sm">
+                "{rule.pattern}"
+              </p>
+            </div>
+            {rule.updatedAt && (
+              <p className="text-base-content/60 mt-1 text-xs">
+                Updated: {new Date(rule.updatedAt).toLocaleString()}
+              </p>
+            )}
+          </div>
+          <div className="flex gap-2">
+            <button
+              className="btn btn-sm"
+              onClick={handleToggleActive}
+              title={rule.isActive ? 'Disable rule' : 'Enable rule'}
+            >
+              {rule.isActive ? 'Disable' : 'Enable'}
+            </button>
+            <button className="btn btn-sm" onClick={handleEdit}>
+              Edit
+            </button>
+            <button className="btn btn-sm btn-error" onClick={handleDelete}>
+              Delete
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

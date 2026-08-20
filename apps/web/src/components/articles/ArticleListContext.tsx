@@ -9,8 +9,8 @@
  */
 import type { Article, ArticleTag, Feed, Tag } from '@repo/domain/client';
 import { createId } from '@repo/shared/utils';
-import { type Ref, and, eq, ilike, useLiveQuery } from '@tanstack/solid-db';
-import { type Accessor, type JSX, createSignal, onMount } from 'solid-js';
+import { and, eq, ilike, useLiveQuery } from '@tanstack/react-db';
+import { useCallback, useEffect, useMemo, useState, type ReactNode } from 'react';
 import { articleTagsCollection } from '~/entities/article-tags';
 import { articlesCollection } from '~/entities/articles';
 import { useFeeds } from '~/entities/feeds';
@@ -43,24 +43,27 @@ function removeArticleTag(articleTagId: string) {
   articleTagsCollection.delete(articleTagId);
 }
 
-function createArticleTagsAccessorFn(articleId: string): Accessor<ArticleTag[]> {
-  const query = useLiveQuery((q) =>
-    q
-      .from({ articleTag: articleTagsCollection })
-      .where(({ articleTag }) => eq(articleTag.articleId, articleId)),
+/** Hook to query article-tags for a specific article. Call from components, not callbacks. */
+export function useArticleTagsForArticle(articleId: string): ArticleTag[] {
+  const { data } = useLiveQuery(
+    (q) =>
+      q
+        .from({ articleTag: articleTagsCollection })
+        .where(({ articleTag }) => eq(articleTag.articleId, articleId)),
+    [articleId],
   );
-  return () => (query() as ArticleTag[] | undefined) ?? [];
+  return (data as ArticleTag[] | undefined) ?? [];
 }
 
 type SortDirection = 'asc' | 'desc';
 
 export interface ArticleQueryFilter {
   /** Base query with from + joins + where (no select, orderBy, or limit). */
-  buildQuery: (q: any, extra: { readStatusWhere: ((article: Ref<Article>) => any) | null }) => any;
+  buildQuery: (q: any, extra: { readStatusWhere: ((article: any) => any) | null }) => any;
   /** Build a count-only query variant (no limit, select id only). */
   buildCountQuery: (
     q: any,
-    extra: { readStatusWhere: ((article: Ref<Article>) => any) | null },
+    extra: { readStatusWhere: ((article: any) => any) | null },
   ) => any;
   /** Build the unread count query (ignores current read status filter). */
   buildUnreadQuery: (q: any) => any;
@@ -70,130 +73,148 @@ export interface ArticleQueryFilter {
 
 export interface ArticleListProviderProps {
   filter: ArticleQueryFilter;
-  readStatus: Accessor<ReadStatus>;
-  sortDirection?: Accessor<SortDirection>;
+  readStatus: ReadStatus;
+  sortDirection?: SortDirection;
   viewKey: string;
   context: 'inbox' | 'feed' | 'tag';
   /** Optional callback when an article is archived (e.g. for toast with undo). */
   onArchive?: (articleId: string) => void;
-  children: JSX.Element;
+  children: ReactNode;
 }
 
-export function ArticleListProvider(props: ArticleListProviderProps) {
+export function ArticleListProvider({
+  filter,
+  readStatus,
+  sortDirection,
+  viewKey,
+  context,
+  onArchive,
+  children,
+}: ArticleListProviderProps) {
   const { sessionReadIds, addSessionRead, setViewKey } = useSessionRead();
-  const direction = props.sortDirection ?? (() => 'desc' as SortDirection);
+  const direction = sortDirection ?? 'desc';
 
-  onMount(() => setViewKey(props.viewKey));
+  useEffect(() => {
+    setViewKey(viewKey);
+  }, [viewKey, setViewKey]);
 
-  // Pagination
-  const [visibleCount, setVisibleCount] = createSignal(ARTICLES_PER_PAGE);
+  const [visibleCount, setVisibleCount] = useState(ARTICLES_PER_PAGE);
 
-  // Data queries
-  const feedsQuery = useFeeds();
-  const tagsQuery = useTags();
+  const feedsData = useFeeds();
+  const tagsData = useTags();
 
-  // Main articles query
-  const articlesQuery = useLiveQuery((q) => {
-    const filter = readStatusFilter(props.readStatus(), sessionReadIds());
-    return props.filter
-      .buildQuery(q, { readStatusWhere: filter })
-      .orderBy(({ article }: { article: Ref<Article> }) => article.pubDate, direction())
-      .limit(visibleCount());
-  });
-
-  // Total count query (current read status filter, no limit)
-  const totalCountQuery = useLiveQuery((q) => {
-    const filter = readStatusFilter(props.readStatus(), sessionReadIds());
-    return props.filter.buildCountQuery(q, { readStatusWhere: filter });
-  });
-
-  // Unread count (independent of current read status filter)
-  const unreadCountQuery = useLiveQuery((q) => props.filter.buildUnreadQuery(q));
-
-  // Archivable count (all non-archived)
-  const archivableQuery = useLiveQuery((q) => props.filter.buildArchivableQuery(q));
-
-  // Shorts existence check
-  const shortsQuery = useLiveQuery((q) =>
-    q
-      .from({ article: articlesCollection })
-      .where(({ article }: { article: Ref<Article> }) =>
-        and(eq(article.isArchived, false), ilike(article.url, '%youtube.com/shorts%')),
-      )
-      .orderBy(({ article }: { article: Ref<Article> }) => article.pubDate, 'desc')
-      .limit(1),
+  // Main articles query — re-runs when read status, session reads, page size, or sort changes
+  const { data: articlesData } = useLiveQuery(
+    (q) => {
+      const filterFn = readStatusFilter(readStatus, sessionReadIds);
+      return filter
+        .buildQuery(q, { readStatusWhere: filterFn })
+        .orderBy(({ article }: { article: any }) => article.pubDate, direction)
+        .limit(visibleCount);
+    },
+    [readStatus, sessionReadIds, filter, direction, visibleCount],
   );
 
-  // Derived values
-  // NOTE: iterate articlesQuery.state (a @solid-primitives ReactiveMap) directly
-  // instead of calling articlesQuery() — calling the accessor goes through
-  // createResource, which suspends the parent <Suspense> whenever the underlying
-  // collection rebuilds (e.g. when .limit(visibleCount()) changes on Load More).
-  // That suspension detaches the list from the DOM, collapses page height, and
-  // resets window.scrollY.
-  //
-  // The ReactiveMap is updated by useLiveQuery's internal subscribeChanges
-  // listener on every insert/update/delete, and iterating .values() tracks all
-  // mutations (including updates to existing keys — touching only .size would
-  // miss in-place updates such as toggling isArchived, leaving cards stale).
-  const articles = (): Article[] => {
-    return Array.from(articlesQuery.state.values()) as unknown as Article[];
-  };
-  const totalCount = () => (totalCountQuery() || []).length;
-  const unreadCount = () => (unreadCountQuery() || []).length;
-  const archivableCount = () => (archivableQuery() || []).length;
-  const feeds = (): Feed[] => (feedsQuery() as Feed[] | undefined) || [];
-  const tags = (): Tag[] => (tagsQuery() as Tag[] | undefined) || [];
-  const shortsExist = () => (shortsQuery()?.length ?? 0) > 0;
+  const { data: totalCountData } = useLiveQuery(
+    (q) => {
+      const filterFn = readStatusFilter(readStatus, sessionReadIds);
+      return filter.buildCountQuery(q, { readStatusWhere: filterFn });
+    },
+    [readStatus, sessionReadIds, filter],
+  );
 
-  // Handlers
-  const loadMore = () => {
+  const { data: unreadCountData } = useLiveQuery(
+    (q) => filter.buildUnreadQuery(q),
+    [filter],
+  );
+
+  const { data: archivableData } = useLiveQuery(
+    (q) => filter.buildArchivableQuery(q),
+    [filter],
+  );
+
+  const { data: shortsData } = useLiveQuery(
+    (q) =>
+      q
+        .from({ article: articlesCollection })
+        .where(({ article }: { article: any }) =>
+          and(eq(article.isArchived, false), ilike(article.url, '%youtube.com/shorts%')),
+        )
+        .orderBy(({ article }: { article: any }) => article.pubDate, 'desc')
+        .limit(1),
+    [],
+  );
+
+  const articles: Article[] = (articlesData as Article[] | undefined) ?? [];
+  const feeds: Feed[] = (feedsData as Feed[] | undefined) ?? [];
+  const tags: Tag[] = (tagsData as Tag[] | undefined) ?? [];
+  const totalCount = (totalCountData?.length ?? 0);
+  const unreadCount = (unreadCountData?.length ?? 0);
+  const archivableCount = (archivableData?.length ?? 0);
+  const shortsExist = (shortsData?.length ?? 0) > 0;
+
+  const loadMore = useCallback(() => {
     setVisibleCount((prev) => prev + ARTICLES_PER_PAGE);
-  };
+  }, []);
 
-  const updateArticle = (
-    articleId: string,
-    updates: { isRead?: boolean; isArchived?: boolean },
-  ) => {
-    if (updates.isRead === true) {
-      addSessionRead(articleId);
-    }
-    if (updates.isArchived === true) {
-      props.onArchive?.(articleId);
-    }
-    articlesCollection.update(articleId, (draft) => {
-      if (updates.isRead !== undefined) draft.isRead = updates.isRead;
-      if (updates.isArchived !== undefined) draft.isArchived = updates.isArchived;
-    });
-  };
+  const updateArticle = useCallback(
+    (articleId: string, updates: { isRead?: boolean; isArchived?: boolean }) => {
+      if (updates.isRead === true) {
+        addSessionRead(articleId);
+      }
+      if (updates.isArchived === true) {
+        onArchive?.(articleId);
+      }
+      articlesCollection.update(articleId, (draft) => {
+        if (updates.isRead !== undefined) draft.isRead = updates.isRead;
+        if (updates.isArchived !== undefined) draft.isArchived = updates.isArchived;
+      });
+    },
+    [addSessionRead, onArchive],
+  );
 
-  const markAllArchived = async () => {
-    const results = (archivableQuery() || []) as { id: string }[];
+  const markAllArchived = useCallback(async () => {
+    const results = (archivableData || []) as { id: string }[];
     const articleIds = results.map((a) => a.id);
     if (articleIds.length > 0) {
       articlesCollection.update(articleIds, (drafts) => {
         drafts.forEach((d) => (d.isArchived = true));
       });
     }
-  };
+  }, [archivableData]);
 
-  const value: ArticleListContextValue = {
-    articles,
-    totalCount,
-    unreadCount,
-    archivableCount,
-    feeds,
-    tags,
-    shortsExist,
-    readStatus: props.readStatus,
-    context: props.context,
-    loadMore,
-    updateArticle,
-    markAllArchived,
-    addTag: addArticleTag,
-    removeTag: removeArticleTag,
-    createArticleTagsAccessor: createArticleTagsAccessorFn,
-  };
+  const value = useMemo<ArticleListContextValue>(
+    () => ({
+      articles,
+      totalCount,
+      unreadCount,
+      archivableCount,
+      feeds,
+      tags,
+      shortsExist,
+      readStatus,
+      context,
+      loadMore,
+      updateArticle,
+      markAllArchived,
+      addTag: addArticleTag,
+      removeTag: removeArticleTag,
+    }),
+    [
+      articles,
+      totalCount,
+      unreadCount,
+      archivableCount,
+      feeds,
+      tags,
+      shortsExist,
+      readStatus,
+      context,
+      loadMore,
+      updateArticle,
+      markAllArchived,
+    ],
+  );
 
-  return <ArticleListContext.Provider value={value}>{props.children}</ArticleListContext.Provider>;
+  return <ArticleListContext.Provider value={value}>{children}</ArticleListContext.Provider>;
 }

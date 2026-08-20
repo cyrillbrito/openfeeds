@@ -1,4 +1,5 @@
-import type { Meta, StoryObj } from 'storybook-solidjs-vite';
+import type { Meta, StoryObj } from '@storybook/react-vite';
+import type { ComponentType } from 'react';
 import { expect, userEvent, within } from 'storybook/test';
 import { MockChatProvider } from './chat-context.mock';
 import { sessionFixtures } from './chat-stories.fixtures';
@@ -15,9 +16,9 @@ type Story = StoryObj;
 /** Default collapsed state showing title + chevron */
 export const Default: Story = {
   decorators: [
-    (Story: () => any) => (
+    (Story: ComponentType) => (
       <MockChatProvider currentTitle="What feeds do I follow?" sessions={sessionFixtures}>
-        <div style={{ position: 'relative', 'min-height': '300px' }}>
+        <div style={{ position: 'relative', minHeight: '300px' }}>
           <Story />
         </div>
       </MockChatProvider>
@@ -34,9 +35,9 @@ export const Default: Story = {
 export const SmallSize: Story = {
   args: { size: 'sm' },
   decorators: [
-    (Story: () => any) => (
+    (Story: ComponentType) => (
       <MockChatProvider currentTitle="Short title" sessions={sessionFixtures}>
-        <div style={{ position: 'relative', 'min-height': '300px' }}>
+        <div style={{ position: 'relative', minHeight: '300px' }}>
           <Story />
         </div>
       </MockChatProvider>
@@ -54,9 +55,9 @@ export const SmallSize: Story = {
 /** Clicking the title opens the ConversationSwitcher dropdown */
 export const OpenDropdown: Story = {
   decorators: [
-    (Story: () => any) => (
+    (Story: ComponentType) => (
       <MockChatProvider currentTitle="New chat" sessions={sessionFixtures}>
-        <div style={{ position: 'relative', 'min-height': '350px' }}>
+        <div style={{ position: 'relative', minHeight: '350px' }}>
           <Story />
         </div>
       </MockChatProvider>

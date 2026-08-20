@@ -9,11 +9,11 @@ function shortcutLabel() {
   return navigator.platform?.includes('Mac') ? '⌘J' : 'Ctrl+J';
 }
 
-export function AiFab(props: AiFabProps) {
+export function AiFab({ onClick }: AiFabProps) {
   return (
     <button
       className="btn btn-primary btn-circle fixed right-4 bottom-4 z-20 size-14 shadow-lg"
-      onClick={() => props.onClick()}
+      onClick={onClick}
       title={`Open AI chat (${shortcutLabel()})`}
     >
       <Sparkles size={24} />

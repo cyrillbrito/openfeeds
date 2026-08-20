@@ -1,4 +1,4 @@
-import { createSignal, onMount } from 'solid-js';
+import { useEffect, useState } from 'react';
 
 /**
  * YouTube video thumbnail with progressive resolution upgrade.
@@ -32,21 +32,18 @@ interface YouTubeThumbnailProps {
   alt: string;
 }
 
-export function YouTubeThumbnail(props: YouTubeThumbnailProps) {
-  const hqUrl = () => `https://img.youtube.com/vi/${props.videoId}/hqdefault.jpg`;
-  const maxResUrl = () => `https://img.youtube.com/vi/${props.videoId}/maxresdefault.jpg`;
+export function YouTubeThumbnail({ videoId, alt }: YouTubeThumbnailProps) {
+  const hqUrl = `https://img.youtube.com/vi/${videoId}/hqdefault.jpg`;
+  const maxResUrl = `https://img.youtube.com/vi/${videoId}/maxresdefault.jpg`;
 
-  const [src, setSrc] = createSignal(hqUrl());
+  const [src, setSrc] = useState(hqUrl);
 
-  onMount(() => {
-    // Defer probe to reduce network contention with the initial hqdefault load
-    setTimeout(() => {
+  useEffect(() => {
+    const timer = setTimeout(() => {
       const probe = new Image();
       probe.fetchPriority = 'low';
-      probe.src = maxResUrl();
+      probe.src = maxResUrl;
       probe.addEventListener('load', () => {
-        // YouTube serves a real JPEG on 404 — a 120x90 grey placeholder.
-        // Real maxresdefault images are 1280x720.
         const isPlaceholder =
           probe.naturalWidth === YT_PLACEHOLDER_WIDTH &&
           probe.naturalHeight === YT_PLACEHOLDER_HEIGHT;
@@ -56,12 +53,13 @@ export function YouTubeThumbnail(props: YouTubeThumbnailProps) {
         }
       });
     }, 100);
-  });
+    return () => clearTimeout(timer);
+  }, [videoId]);
 
   return (
-    <div class="mb-2 w-full overflow-hidden rounded-lg md:max-w-2xl">
-      <div class="aspect-video w-full">
-        <img src={src()} alt={props.alt} class="h-full w-full object-cover" loading="lazy" />
+    <div className="mb-2 w-full overflow-hidden rounded-lg md:max-w-2xl">
+      <div className="aspect-video w-full">
+        <img src={src} alt={alt} className="h-full w-full object-cover" loading="lazy" />
       </div>
     </div>
   );

@@ -1,4 +1,4 @@
-import type { Meta, StoryObj } from 'storybook-solidjs-vite';
+import type { Meta, StoryObj } from '@storybook/react-vite';
 import { expect, fn, within } from 'storybook/test';
 import { AiPopover } from './AiPopover';
 import { MockChatProvider } from './chat-context.mock';

@@ -1,6 +1,5 @@
-import { eq, useLiveQuery } from '@tanstack/solid-db';
-import { createFileRoute } from '@tanstack/solid-router';
-import { Show } from 'solid-js';
+import { eq, useLiveQuery } from '@tanstack/react-db';
+import { createFileRoute } from '@tanstack/react-router';
 import { TagFeedsTab } from '~/components/TagFeedManager';
 import { feedTagsCollection } from '~/entities/feed-tags';
 import { useFeeds } from '~/entities/feeds';
@@ -10,18 +9,12 @@ export const Route = createFileRoute('/_frame/tags/$tagId/feeds')({
 });
 
 function TagFeedsPage() {
-  const params = Route.useParams();
-  const tagId = () => params()?.tagId;
-
-  const feedsQuery = useFeeds();
-
-  const tagFeedTagsQuery = useLiveQuery((q) =>
-    q.from({ feedTag: feedTagsCollection }).where(({ feedTag }) => eq(feedTag.tagId, tagId())),
+  const { tagId } = Route.useParams();
+  const feeds = useFeeds();
+  const { data: tagFeedTags } = useLiveQuery(
+    (q) => q.from({ feedTag: feedTagsCollection }).where(({ feedTag }) => eq(feedTag.tagId, tagId)),
+    [tagId],
   );
 
-  return (
-    <Show when={feedsQuery()}>
-      <TagFeedsTab tagId={tagId()} feeds={feedsQuery()} feedTags={tagFeedTagsQuery() ?? []} />
-    </Show>
-  );
+  return <TagFeedsTab tagId={tagId} feeds={feeds} feedTags={tagFeedTags ?? []} />;
 }

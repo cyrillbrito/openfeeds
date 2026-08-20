@@ -1,44 +1,45 @@
-import { createUniqueId, type JSXElement } from 'solid-js';
+import type { ReactNode } from 'react';
+import { useId } from 'react';
 import { twMerge } from 'tailwind-merge';
 
 interface DropdownProps {
   end?: boolean;
   top?: boolean;
   btnClasses: string;
-  btnContent: JSXElement;
-  children: JSXElement;
+  btnContent: ReactNode;
+  children: ReactNode;
 }
 
-export function Dropdown(props: DropdownProps) {
-  const id = `dropdown-${createUniqueId()}`;
-  const anchor = `--dropdown-${createUniqueId()}`;
+export function Dropdown({ end, top, btnClasses, btnContent, children }: DropdownProps) {
+  const uid = useId();
+  const id = `dropdown-${uid}`;
+  const anchor = `--dropdown-${uid}`;
 
-  // Close popover when a menu item is clicked
-  const handleMenuClick = (e: MouseEvent) => {
+  const handleMenuClick = (e: React.MouseEvent) => {
     const target = e.target as HTMLElement;
     if (target.closest('button, a')) {
-      document.getElementById(id)?.hidePopover();
+      (document.getElementById(id) as any)?.hidePopover();
     }
   };
 
   return (
     <>
       <button
-        class={twMerge('btn', props.btnClasses)}
-        popovertarget={id}
-        style={{ 'anchor-name': anchor }}
+        className={twMerge('btn', btnClasses)}
+        popoverTarget={id}
+        style={{ anchorName: anchor } as React.CSSProperties}
       >
-        {props.btnContent}
+        {btnContent}
       </button>
       <ul
         popover="auto"
         id={id}
         role="menu"
-        class={`dropdown menu bg-base-200 border-base-300 rounded-box w-52 border p-2 shadow-sm ${props.end ? 'dropdown-end' : ''} ${props.top ? 'dropdown-top' : ''}`}
-        style={{ 'position-anchor': anchor }}
+        className={`dropdown menu bg-base-200 border-base-300 rounded-box w-52 border p-2 shadow-sm ${end ? 'dropdown-end' : ''} ${top ? 'dropdown-top' : ''}`}
+        style={{ positionAnchor: anchor } as React.CSSProperties}
         onClick={handleMenuClick}
       >
-        {props.children}
+        {children}
       </ul>
     </>
   );

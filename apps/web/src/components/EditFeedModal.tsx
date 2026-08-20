@@ -1,8 +1,8 @@
 import type { Feed } from '@repo/domain/client';
 import { createId } from '@repo/shared/utils';
-import { eq, useLiveQuery } from '@tanstack/solid-db';
-import { Link } from '@tanstack/solid-router';
-import { createSignal, Match, Show, Suspense, Switch } from 'solid-js';
+import { eq, useLiveQuery } from '@tanstack/react-db';
+import { Link } from '@tanstack/react-router';
+import { useRef, useState } from 'react';
 import { feedTagsCollection } from '~/entities/feed-tags';
 import { useTags } from '~/entities/tags';
 import { LazyModal, type ModalController } from './LazyModal';
@@ -14,21 +14,19 @@ interface EditFeedModalProps {
   feed: Feed | null;
 }
 
-export function EditFeedModal(props: EditFeedModalProps) {
-  let modalController!: ModalController;
+export function EditFeedModal({ controller, feed }: EditFeedModalProps) {
+  const modalRef = useRef<ModalController>(null!);
 
   return (
     <LazyModal
-      controller={(controller) => {
-        modalController = controller;
-        props.controller(controller);
+      controller={(ctrl) => {
+        modalRef.current = ctrl;
+        controller(ctrl);
       }}
-      class="max-w-2xl"
+      className="max-w-2xl"
       title="Edit"
     >
-      <Show when={props.feed}>
-        {(feed) => <EditFeedForm feed={feed()} onClose={() => modalController.close()} />}
-      </Show>
+      {feed && <EditFeedForm feed={feed} onClose={() => modalRef.current.close()} />}
     </LazyModal>
   );
 }
@@ -38,38 +36,36 @@ interface EditFeedFormProps {
   onClose: () => void;
 }
 
-function EditFeedForm(props: EditFeedFormProps) {
-  const tagsQuery = useTags();
+function EditFeedForm({ feed, onClose }: EditFeedFormProps) {
+  const tags = useTags();
 
-  const feedTagsQuery = useLiveQuery((q) =>
-    q
-      .from({ feedTag: feedTagsCollection })
-      .where(({ feedTag }) => eq(feedTag.feedId, props.feed.id)),
+  const { data: feedTagsData } = useLiveQuery(
+    (q) =>
+      q.from({ feedTag: feedTagsCollection }).where(({ feedTag }) => eq(feedTag.feedId, feed.id)),
+    [feed.id],
   );
+  const feedTags = (feedTagsData ?? []) as typeof feedTagsData & { tagId: string; id: string }[];
 
-  const [activeTab, setActiveTab] = createSignal<'tags' | 'rules'>('tags');
+  const [activeTab, setActiveTab] = useState<'tags' | 'rules'>('tags');
 
-  const currentTagIds = () => (feedTagsQuery() ?? []).map((ft) => ft.tagId);
+  const currentTagIds = feedTags.map((ft) => ft.tagId);
 
   const handleSelectionChange = (newIds: string[]) => {
-    const currentIds = new Set(currentTagIds());
+    const currentIds = new Set(currentTagIds);
     const newIdSet = new Set(newIds);
-    const feedTags = feedTagsQuery() ?? [];
 
-    // Delete removed tags
     const toDelete = feedTags.filter((ft) => !newIdSet.has(ft.tagId));
     if (toDelete.length > 0) {
       feedTagsCollection.delete(toDelete.map((ft) => ft.id));
     }
 
-    // Insert new tags
     const toInsert = [...newIdSet].filter((tagId) => !currentIds.has(tagId));
     if (toInsert.length > 0) {
       feedTagsCollection.insert(
         toInsert.map((tagId) => ({
           id: createId(),
-          userId: '', // Will be set server-side
-          feedId: props.feed.id,
+          userId: '',
+          feedId: feed.id,
           tagId,
         })),
       );
@@ -77,45 +73,39 @@ function EditFeedForm(props: EditFeedFormProps) {
   };
 
   return (
-    <div class="space-y-4">
+    <div className="space-y-4">
       {/* Feed Info */}
-      <div class="bg-base-200 rounded-lg p-4">
-        <div class="flex items-center gap-3">
-          <Show when={props.feed.icon}>
+      <div className="bg-base-200 rounded-lg p-4">
+        <div className="flex items-center gap-3">
+          {feed.icon && (
             <img
-              src={props.feed.icon!}
-              alt={`${props.feed.title} icon`}
-              class="h-6 w-6 rounded"
+              src={feed.icon}
+              alt={`${feed.title} icon`}
+              className="h-6 w-6 rounded"
               loading="lazy"
             />
-          </Show>
+          )}
           <div>
-            <h4 class="font-semibold">{props.feed.title}</h4>
-            <Show when={props.feed.description}>
-              <p class="text-base-content/70 mt-1 text-sm">{props.feed.description}</p>
-            </Show>
+            <h4 className="font-semibold">{feed.title}</h4>
+            {feed.description && (
+              <p className="text-base-content/70 mt-1 text-sm">{feed.description}</p>
+            )}
           </div>
         </div>
       </div>
 
       {/* Tab Navigation */}
-      <div role="tablist" class="tabs tabs-box w-fit">
+      <div role="tablist" className="tabs tabs-box w-fit">
         <a
           role="tab"
-          classList={{
-            tab: true,
-            'tab-active': activeTab() === 'tags',
-          }}
+          className={`tab${activeTab === 'tags' ? ' tab-active' : ''}`}
           onClick={() => setActiveTab('tags')}
         >
           Tags
         </a>
         <a
           role="tab"
-          classList={{
-            tab: true,
-            'tab-active': activeTab() === 'rules',
-          }}
+          className={`tab${activeTab === 'rules' ? ' tab-active' : ''}`}
           onClick={() => setActiveTab('rules')}
         >
           Auto archive Rules
@@ -124,37 +114,29 @@ function EditFeedForm(props: EditFeedFormProps) {
 
       {/* Tab Content */}
       <div>
-        <Switch>
-          <Match when={activeTab() === 'tags'}>
-            <Suspense fallback={<div class="loading loading-spinner"></div>}>
-              <Show
-                when={tagsQuery() && tagsQuery().length > 0}
-                fallback={
-                  <div class="py-8 text-center">
-                    <p class="text-base-content/60 mb-4">No tags available.</p>
-                    <Link to="/tags" class="btn btn-primary btn-sm">
-                      Create Tags
-                    </Link>
-                  </div>
-                }
-              >
-                <MultiSelectTag
-                  tags={tagsQuery()}
-                  selectedIds={currentTagIds()}
-                  onSelectionChange={handleSelectionChange}
-                />
-              </Show>
-            </Suspense>
-          </Match>
-          <Match when={activeTab() === 'rules'}>
-            <RuleManager feedId={props.feed.id} />
-          </Match>
-        </Switch>
+        {activeTab === 'tags' ? (
+          tags.length > 0 ? (
+            <MultiSelectTag
+              tags={tags}
+              selectedIds={currentTagIds}
+              onSelectionChange={handleSelectionChange}
+            />
+          ) : (
+            <div className="py-8 text-center">
+              <p className="text-base-content/60 mb-4">No tags available.</p>
+              <Link to="/tags" className="btn btn-primary btn-sm">
+                Create Tags
+              </Link>
+            </div>
+          )
+        ) : (
+          <RuleManager feedId={feed.id} />
+        )}
       </div>
 
       {/* Modal Actions */}
-      <div class="modal-action">
-        <button type="button" class="btn" onClick={() => props.onClose()}>
+      <div className="modal-action">
+        <button type="button" className="btn" onClick={onClose}>
           Done
         </button>
       </div>

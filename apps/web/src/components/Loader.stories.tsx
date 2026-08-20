@@ -1,4 +1,4 @@
-import type { Meta, StoryObj } from 'storybook-solidjs-vite';
+import type { Meta, StoryObj } from '@storybook/react-vite';
 import { Loader, CenterLoader } from '~/components/Loader';
 
 const meta: Meta = {

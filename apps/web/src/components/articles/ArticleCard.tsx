@@ -1,203 +1,191 @@
 import type { Article } from '@repo/domain/client';
-import { Link } from '@tanstack/solid-router';
-import { Archive, Check, Inbox, Rss } from 'lucide-solid';
-import { Show, Suspense } from 'solid-js';
+import { Link } from '@tanstack/react-router';
+import { Archive, Check, Inbox, Rss } from 'lucide-react';
+import { memo } from 'react';
 import { twMerge } from 'tailwind-merge';
 import { TimeAgo } from '~/components/TimeAgo';
 import { YouTubeThumbnail } from '~/components/YouTubeThumbnail';
 import { containsHtml, downshiftHeadings } from '~/utils/html';
 import { extractYouTubeVideoId, isYouTubeUrl } from '~/utils/youtube';
 import { useArticleList } from './ArticleListContext.shared';
+import { useArticleTagsForArticle } from './ArticleListContext';
 import { ArticleTagManager } from './ArticleTagManager';
 
 interface ArticleCardProps {
   article: Article;
 }
 
-export function ArticleCard(props: ArticleCardProps) {
+export const ArticleCard = memo(function ArticleCard({ article }: ArticleCardProps) {
   const ctx = useArticleList();
-  const articleTags = ctx.createArticleTagsAccessor(props.article.id);
+  const articleTags = useArticleTagsForArticle(article.id);
 
-  const feed = () =>
-    props.article.feedId ? ctx.feeds().find((f) => f.id === props.article.feedId) : null;
-  const feedName = () => feed()?.title || (props.article.feedId ? 'Loading...' : 'Saved Article');
-  const feedIcon = () => feed()?.icon;
+  const feed = article.feedId ? ctx.feeds.find((f) => f.id === article.feedId) : null;
+  const feedName = feed?.title || (article.feedId ? 'Loading...' : 'Saved Article');
+  const feedIcon = feed?.icon;
 
   const markAsRead = () => {
-    if (!props.article.isRead) {
-      ctx.updateArticle(props.article.id, { isRead: true });
+    if (!article.isRead) {
+      ctx.updateArticle(article.id, { isRead: true });
     }
   };
 
-  const isVideo = () => props.article.url && isYouTubeUrl(props.article.url);
-  const videoId = () => (props.article.url ? extractYouTubeVideoId(props.article.url) : null);
+  const isVideo = article.url ? isYouTubeUrl(article.url) : false;
+  const videoId = article.url ? extractYouTubeVideoId(article.url) : null;
 
   const handleMarkRead = () => {
-    ctx.updateArticle(props.article.id, { isRead: !props.article.isRead });
+    ctx.updateArticle(article.id, { isRead: !article.isRead });
   };
 
   const handleArchive = () => {
-    ctx.updateArticle(props.article.id, { isArchived: !props.article.isArchived });
+    ctx.updateArticle(article.id, { isArchived: !article.isArchived });
   };
 
   return (
     <article
-      class={twMerge(
+      className={twMerge(
         'hover:bg-base-200/50 relative w-full cursor-pointer px-4 transition-all md:px-6',
-        props.article.isRead && 'opacity-50',
-        // Video articles have thumbnails adding visual bulk; text-only articles need more padding for breathing room
-        isVideo() ? 'py-3 md:py-4' : 'py-4 md:py-5',
+        article.isRead && 'opacity-50',
+        isVideo ? 'py-3 md:py-4' : 'py-4 md:py-5',
       )}
     >
       {/* Stretched link — covers entire card for navigation */}
       <Link
         to="/articles/$articleId"
-        params={{ articleId: props.article.id }}
-        class="absolute inset-0"
+        params={{ articleId: article.id }}
+        className="absolute inset-0"
         tabIndex={-1}
         aria-hidden="true"
         onClick={markAsRead}
       />
-      <div class="mb-1.5 flex gap-2 md:gap-3">
-        <Show
-          when={props.article.feedId}
-          fallback={
-            <div class="shrink-0 pt-0.5">
-              <div class="bg-base-300 flex size-8 items-center justify-center rounded-full md:size-10">
-                <Rss size={12} class="text-base-content/50 md:size-4" />
-              </div>
-            </div>
-          }
-        >
+      <div className="mb-1.5 flex gap-2 md:gap-3">
+        {article.feedId ? (
           <Link
             to="/feeds/$feedId"
-            params={{ feedId: props.article.feedId! }}
-            class="relative shrink-0 pt-0.5"
+            params={{ feedId: article.feedId }}
+            className="relative shrink-0 pt-0.5"
           >
-            <Show
-              when={feedIcon()}
-              fallback={
-                <div class="bg-base-300 flex size-8 items-center justify-center rounded-full md:size-10">
-                  <Rss size={12} class="text-base-content/50 md:size-4" />
+            {feedIcon ? (
+              <>
+                <img
+                  src={feedIcon}
+                  alt={feedName}
+                  className="bg-base-300 size-8 rounded-full object-cover md:size-10"
+                  loading="lazy"
+                  onError={(e) => {
+                    e.currentTarget.style.display = 'none';
+                    e.currentTarget.nextElementSibling?.classList.remove('hidden');
+                  }}
+                />
+                <div className="bg-base-300 flex hidden size-8 items-center justify-center rounded-full md:size-10">
+                  <Rss size={12} className="text-base-content/50 md:size-4" />
                 </div>
-              }
-            >
-              <img
-                src={feedIcon() ?? undefined}
-                alt={feedName()}
-                class="bg-base-300 size-8 rounded-full object-cover md:size-10"
-                loading="lazy"
-                onError={(e) => {
-                  e.currentTarget.style.display = 'none';
-                  e.currentTarget.nextElementSibling?.classList.remove('hidden');
-                }}
-              />
-              <div class="bg-base-300 flex hidden size-8 items-center justify-center rounded-full md:size-10">
-                <Rss size={12} class="text-base-content/50 md:size-4" />
+              </>
+            ) : (
+              <div className="bg-base-300 flex size-8 items-center justify-center rounded-full md:size-10">
+                <Rss size={12} className="text-base-content/50 md:size-4" />
               </div>
-            </Show>
+            )}
           </Link>
-        </Show>
-        <div class="min-w-0 flex-1">
-          <h2 class="text-base-content line-clamp-2 text-[15px] leading-snug font-medium md:text-lg">
+        ) : (
+          <div className="shrink-0 pt-0.5">
+            <div className="bg-base-300 flex size-8 items-center justify-center rounded-full md:size-10">
+              <Rss size={12} className="text-base-content/50 md:size-4" />
+            </div>
+          </div>
+        )}
+
+        <div className="min-w-0 flex-1">
+          <h2 className="text-base-content line-clamp-2 text-[15px] leading-snug font-medium md:text-lg">
             <Link
               to="/articles/$articleId"
-              params={{ articleId: props.article.id }}
-              class="relative"
+              params={{ articleId: article.id }}
+              className="relative"
               onClick={markAsRead}
             >
-              {props.article.title}
+              {article.title}
             </Link>
           </h2>
-          <div class="text-base-content/50 flex items-center gap-1.5 text-xs md:text-sm">
-            <Show
-              when={props.article.feedId}
-              fallback={<span class="text-base-content/60 truncate">{feedName()}</span>}
-            >
+          <div className="text-base-content/50 flex items-center gap-1.5 text-xs md:text-sm">
+            {article.feedId ? (
               <Link
                 to="/feeds/$feedId"
-                params={{ feedId: props.article.feedId! }}
-                class="text-base-content/60 relative truncate hover:underline"
+                params={{ feedId: article.feedId }}
+                className="text-base-content/60 relative truncate hover:underline"
               >
-                {feedName()}
+                {feedName}
               </Link>
-            </Show>
+            ) : (
+              <span className="text-base-content/60 truncate">{feedName}</span>
+            )}
             <span>·</span>
-            <TimeAgo date={new Date(props.article.pubDate!)} tooltipBottom />
+            <TimeAgo date={new Date(article.pubDate!)} tooltipBottom />
           </div>
         </div>
       </div>
 
       {/* Description */}
-      <Show when={!isVideo() && (props.article.description || props.article.content)}>
-        <Show
-          when={containsHtml(props.article.description || props.article.content || '')}
-          fallback={
-            <p class="text-base-content/80 mt-2 mb-3 line-clamp-5 text-sm leading-relaxed md:text-base">
-              {props.article.description || props.article.content}
-            </p>
-          }
-        >
+      {!isVideo && (article.description || article.content) && (
+        containsHtml(article.description || article.content || '') ? (
           <div
-            class="prose prose-sm text-base-content prose-headings:text-base-content prose-a:text-primary prose-strong:text-base-content prose-code:text-base-content prose-blockquote:text-base-content/80 mt-2 mb-3 line-clamp-5 text-sm leading-relaxed md:text-base"
-            innerHTML={downshiftHeadings(props.article.description || props.article.content || '')}
+            className="prose prose-sm text-base-content prose-headings:text-base-content prose-a:text-primary prose-strong:text-base-content prose-code:text-base-content prose-blockquote:text-base-content/80 mt-2 mb-3 line-clamp-5 text-sm leading-relaxed md:text-base"
+            dangerouslySetInnerHTML={{ __html: downshiftHeadings(article.description || article.content || '') }}
           />
-        </Show>
-      </Show>
+        ) : (
+          <p className="text-base-content/80 mt-2 mb-3 line-clamp-5 text-sm leading-relaxed md:text-base">
+            {article.description || article.content}
+          </p>
+        )
+      )}
 
       {/* YouTube Thumbnail */}
-      <Show when={isVideo() && videoId()}>
-        <YouTubeThumbnail videoId={videoId()!} alt={props.article.title} />
-      </Show>
+      {isVideo && videoId && <YouTubeThumbnail videoId={videoId} alt={article.title} />}
 
-      {/* Tags — wrapped in Suspense so per-card useLiveQuery suspension is
-          contained here and doesn't detach the whole list from the DOM
-          (which would collapse page height and reset window.scrollY). */}
-      <Suspense fallback={null}>
-        <Show when={ctx.tags().length > 0}>
-          <div class="relative mb-2">
-            <ArticleTagManager
-              tags={ctx.tags()}
-              articleTags={articleTags()}
-              onAddTag={(tagId) => ctx.addTag(props.article.id, tagId)}
-              onRemoveTag={ctx.removeTag}
-            />
-          </div>
-        </Show>
-      </Suspense>
+      {/* Tags */}
+      {ctx.tags.length > 0 && (
+        <div className="relative mb-2">
+          <ArticleTagManager
+            tags={ctx.tags}
+            articleTags={articleTags}
+            onAddTag={(tagId) => ctx.addTag(article.id, tagId)}
+            onRemoveTag={ctx.removeTag}
+          />
+        </div>
+      )}
 
       {/* Actions */}
-      <div class="relative -ml-1 flex items-center gap-4">
+      <div className="relative -ml-1 flex items-center gap-4">
         <button
-          class={twMerge(
+          className={twMerge(
             'flex items-center gap-1 rounded px-1.5 py-1 text-xs transition-colors md:gap-1.5 md:text-sm',
-            props.article.isRead
+            article.isRead
               ? 'text-base-content/40 hover:text-primary hover:bg-primary/10'
               : 'text-base-content/60 hover:text-primary hover:bg-primary/10',
           )}
           onClick={handleMarkRead}
-          title={props.article.isRead ? 'Mark as unread' : 'Mark as read'}
+          title={article.isRead ? 'Mark as unread' : 'Mark as read'}
         >
-          <Check size={14} class="md:size-4" />
-          <span>{props.article.isRead ? 'Read' : 'Mark read'}</span>
+          <Check size={14} className="md:size-4" />
+          <span>{article.isRead ? 'Read' : 'Mark read'}</span>
         </button>
 
         <button
-          class={twMerge(
+          className={twMerge(
             'flex items-center gap-1 rounded px-1.5 py-1 text-xs transition-colors md:gap-1.5 md:text-sm',
-            props.article.isArchived
+            article.isArchived
               ? 'text-primary hover:bg-primary/10'
               : 'text-base-content/60 hover:text-primary hover:bg-primary/10',
           )}
           onClick={handleArchive}
-          title={props.article.isArchived ? 'Unarchive' : 'Archive'}
+          title={article.isArchived ? 'Unarchive' : 'Archive'}
         >
-          <Show when={props.article.isArchived} fallback={<Archive size={14} class="md:size-4" />}>
-            <Inbox size={14} class="md:size-4" />
-          </Show>
-          <span>{props.article.isArchived ? 'Archived' : 'Archive'}</span>
+          {article.isArchived ? (
+            <Inbox size={14} className="md:size-4" />
+          ) : (
+            <Archive size={14} className="md:size-4" />
+          )}
+          <span>{article.isArchived ? 'Archived' : 'Archive'}</span>
         </button>
       </div>
     </article>
   );
-}
+});

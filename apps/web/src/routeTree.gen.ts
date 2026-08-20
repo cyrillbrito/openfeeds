@@ -347,7 +347,7 @@ export interface RootRouteChildren {
   OauthConsentRoute: typeof OauthConsentRoute
 }
 
-declare module '@tanstack/solid-router' {
+declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
     '/signup': {
       id: '/signup'

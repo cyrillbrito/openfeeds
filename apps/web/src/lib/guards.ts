@@ -1,4 +1,4 @@
-import { redirect } from '@tanstack/solid-router';
+import { redirect } from '@tanstack/react-router';
 import { getSessionOnce } from './session';
 
 // See docs/auth-guards.md for the full auth guard architecture.
