@@ -69,14 +69,49 @@ Auth felt tricky in v1 because of TanStack Start's Solid port, not Better Auth �
 ### Workspaces, but minimal
 
 A monorepo is still needed — the browser extension is a separate build target, and likely more
-later. What goes is the *tooling* around it: plain `bun`/`pnpm` workspaces, no Turborepo. Turbo's
+later. What goes is the *tooling* around it: plain Bun workspaces, no Turborepo. Turbo's
 caching and task graph pay off across many packages and a CI matrix; with an app plus an
 extension it's config to maintain for no return.
 
 What does **not** come back is v1's package sprawl. Those packages existed mainly to share code
-between `web` and `worker` — no worker, no reason. The web app is one package, and the only
-structural rule that matters inside it is a hard `src/server/**` boundary, which is where the
-client/server split pain lived in v1.
+between `web` and `worker` — no worker, no reason.
+
+```
+apps/web/         # the app
+  src/server/**   # server-only, enforced at build time (see below)
+apps/extension/   # browser extension
+packages/shared/  # API types + client — stays exactly one package
+```
+
+### Solid 2 + start mode
+
+Chosen and scaffolded. SolidStart is **retired** — its capabilities moved into core and into the
+Vite plugin's "start mode", so there is no meta-framework layer any more. Most SolidStart
+material online describes a thing that no longer exists.
+
+`create-solid`'s `fullstack` template gave streaming SSR, file-system routing, server functions,
+sessions and API routes. It also enforces the `src/server/**` boundary for free: a `server-only`
+marker fails the build if that code can reach the client bundle. Vitest arrives configured with
+two projects (client/jsdom, server/node), and oxlint ships with it.
+
+Cost: Solid 2 is an RC and `@solidjs/router` is still a `next`. Coordinated-RC packages are
+**pinned exact** — carets pull mismatched prereleases, and the docs warn the set must stay
+compatible.
+
+### Bun
+
+Runtime and package manager, committed to — `bun:*` APIs included. Verified against the real
+scaffold: build, both Vitest projects, dev SSR and the production server behave identically under
+Bun and Node, and hydration, server functions and signed session cookies all work.
+
+`Bun.cron` (1.3.11+, with an in-process overload for long-running servers) is precisely the
+"cron in the app process" decision above — the no-queue plan needs no dependency at all.
+
+Lock-in is small: Drizzle abstracts the SQLite driver, and `Bun.serve` takes start mode's
+`handleRequest` directly, *deleting* the ~140 lines of Node http↔web glue in `server.js`.
+
+**Correction:** the "Node 24+" figure came from SolidStart v2 and is obsolete. The real floor is
+Node 20.19+ / 22.12+, a Vite 8 requirement.
 
 ### Tailwind
 
@@ -88,39 +123,15 @@ Staying. Only the component layer on top is in question.
 
 Ordered by how hard each is to reverse later. Spend deliberation accordingly.
 
-## 1. Framework + UI + agent ergonomics — *one decision, not three*
+## 1. UI component layer
 
-Hardest to reverse; everything is written in it.
+The framework is settled; the layer on top is not. **Kobalte** is Solid's Radix equivalent
+(unstyled, WAI-ARIA), and three shadcn ports sit on it: `solid-ui`, `shadcn-solid`, `solidcn`.
+Community-maintained and smaller than the React originals — that's the real trade, not
+availability. DaisyUI is out: styling over browser defaults, with no focus management, no ARIA
+wiring, no keyboard semantics.
 
-**The pull toward Solid 2:** genuinely exciting — async as a first-class citizen of the reactive
-graph, a trusted author, excellent performance. API churn (`createResource`/`batch`/
-`startTransition` removed, memos return promises, `<Loading>`/`<Errored>`/`<Reveal>`) is the
-cheap kind of change and agents handle documented renames fine.
-
-**The pull toward React:** it's the standard. Better agent support, deeper ecosystem, far more
-material when debugging, and shadcn officially. Less to explore means less to get stuck in — and
-getting stuck is what stalled v1.
-
-**What's actually risky about Solid 2** isn't the API, it's the ecosystem seam: SolidStart v2
-went stable 2026-08-04 (Vite Environment API, Vite 8/Rolldown, Node 24+), then two weeks later
-Solid 2.0 RC announced SolidStart is retired and absorbed into "start mode". Stable ≠ future,
-and most docs and training data describe whichever one you aren't using.
-
-**On accessibility:** the DaisyUI critique is right — it's styling over browser defaults, with no
-focus management, no ARIA wiring, no keyboard semantics. But that doesn't force React.
-**Kobalte** is Solid's Radix equivalent (unstyled, WAI-ARIA), and three shadcn ports sit on it:
-`solid-ui` (~1.3k stars, also uses corvu), `shadcn-solid`, `solidcn`. Community-maintained and
-smaller than the React originals — that's the real trade, not availability. Solid 2 RC claims
-Kobalte is ready; verify rather than trust.
-
-So accessibility is solvable either way. The decision is really: **how much does agent support
-and ecosystem depth matter versus working in something you enjoy?** Given that the stated reason
-for v2 is lost motivation, that's not a tiebreaker to wave away in either direction.
-
-**How to decide:** one week, throwaway code, in whichever is preferred — an auth-gated page that
-server-fetches from SQLite, mutates, revalidates, using the real component library. That exercises
-the framework, the UI kit, the server/client boundary, and what it's like to work with an agent on
-it, all at once.
+Solid 2 RC claims Kobalte is ready; verify rather than trust.
 
 ## 2. Database architecture
 
@@ -160,20 +171,9 @@ is not an alternative to Playwright — it drives Playwright underneath.** It we
 4; the choice is which runner orchestrates, and it buys one config and one `expect` across unit
 and browser tests.
 
-Likely answer is both, doing different jobs: Vitest browser mode for components, Playwright
-directly for full E2E flows. Cheap to reverse — tests are additive.
-
-## 5. Runtime: Bun or Node
-
-**Bun** — embeds a lot (SQLite, test runner, bundler, cron), very fast, and resolves the ESM /
-TypeScript import friction that caused real pain in v1.
-
-**Node** — the standard, better supported, more material to debug against. Relevant: SolidStart
-v2 states Node 24+, and Vite 8/Rolldown is a Node toolchain, so a Solid path may mean Node for
-dev/build even with Bun at runtime.
-
-**Most reversible decision here** — Nitro presets make the deploy target roughly a config line,
-and it's not a rewrite either way. Don't let it block anything; decide it late.
+The scaffold already ships Vitest 4 with two projects — client in jsdom, server in node against
+the real server build — so this is now an increment, not a decision: whether to add Vitest
+browser mode for components and Playwright for full E2E flows. Cheap to reverse either way.
 
 ---
 

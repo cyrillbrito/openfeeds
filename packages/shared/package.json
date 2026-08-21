@@ -1,0 +1,5 @@
+{
+  "name": "@openfeeds/shared",
+  "private": true,
+  "type": "module"
+}

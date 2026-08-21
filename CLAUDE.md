@@ -3,41 +3,63 @@
 ## What this is
 
 OpenFeeds v2 — a full rewrite of a self-hosted, multi-user RSS reader. This branch has its own
-history and **no application code yet**.
+history. The app is scaffolded; there is no feature code yet.
 
 - [README.md](README.md) — what the product is and does
 - [docs/v2-plan.md](docs/v2-plan.md) — **read this before proposing anything**: settled
   decisions, open questions, and the reasoning behind both
 - v1 is on `main`, with unrelated history but readable from here: `git show main:<path>`
 
-## The one rule that matters right now
+## Still undecided — don't resolve these by writing code
 
-**Several foundational choices are deliberately undecided. Do not resolve them by writing code.**
+**The UI component layer** (Kobalte, or one of the shadcn-for-Solid ports on top of it) ·
+**database layout** (one shared DB vs one per user) · **whether feed fetching is shared across
+users**.
 
-Open: the frontend framework (Solid 2 vs React) and the UI component layer · the runtime
-(Bun vs Node) · database layout (one shared DB vs one per user) · whether feed fetching is
-shared across users · the testing approach.
+If a task requires one of them, **say so and ask**. The plan doc explains what each costs.
 
-Scaffolding a project picks all of these implicitly. If a task requires one of them, **say so and
-ask** rather than choosing. The plan doc explains what each decision costs.
+## Stack
 
-## Settled constraints
+- **Bun 1.4** — runtime and package manager, committed to, `bun:*` APIs included. Node works too
+  (floor 20.19+ / 22.12+) but isn't the target.
+- **Solid 2** (RC) via `@solidjs/vite-plugin` **start mode**. SolidStart is retired — don't reach
+  for it, and treat most SolidStart material online as describing the old thing.
+- **Vite 8**, **Vitest 4**, **oxlint**.
+- **SQLite** (Drizzle), **Tailwind**, **Better Auth** — settled, not yet installed.
 
-These hold regardless of how the open questions land:
+Coordinated-RC packages are **pinned exact** in `apps/web/package.json`; carets pull mismatched
+prereleases. Unpin when Solid 2 goes stable.
 
-- **Self-hostable.** Anything requiring a hosted-only service is out, no matter how convenient.
-  This is what ruled out Clerk and Turso Sync.
-- **SQLite.** One file. Not Postgres.
-- **No sync engine.** Plain endpoints and a query cache. v1's local-first layer is gone.
-- **No job queue.** Scheduled work runs in the app process. No Redis, no separate worker.
-- **Workspaces, but minimal.** A monorepo for the app plus the browser extension — no Turborepo,
-  and none of v1's package sprawl.
-- **Tailwind** for styling.
+## Layout
+
+```
+apps/web/         # the app — Solid 2 start mode
+  src/server/**   # server-only; the `server-only` marker fails the build if it leaks clientward
+apps/extension/   # browser extension (empty)
+packages/shared/  # API types + client (empty) — stays exactly one package
+```
+
+## Commands
+
+`bun install` from the repo root; the rest from `apps/web`:
+
+```
+bun run dev      # vite dev server (port 3000)
+bun run build    # client + SSR build
+bun run test     # vitest — client (jsdom) + server (node) projects
+bun run lint     # oxlint
+bun run start    # production server against dist/
+```
+
+Gotchas:
+
+- The dev server only SSRs requests whose `Accept` includes `text/html`. `curl` sends `*/*` and
+  gets a Vite 404 — pass `-H 'Accept: text/html'` or you'll misdiagnose dev as broken.
+- `apps/web/.env` (gitignored) needs `SESSION_SECRET`; see `.env.example`.
 
 ## Working here
 
 - v2 is a rewrite, not a port. v1 code is a **reference**, not a source to copy from.
 - Prefer boring over clever — v1 failed on complexity, not on capability.
 - Ask before adding a dependency that becomes load-bearing.
-- Conventions, file layout and commands get documented here once there's code worth describing.
-  Don't invent them ahead of time.
+- No Turborepo. Plain Bun workspaces; `bun run --filter` to span packages.

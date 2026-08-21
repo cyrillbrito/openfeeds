@@ -1,0 +1,17 @@
+node_modules/
+dist/
+build/
+.output/
+.vite/
+
+# Local data — SQLite lives in ./data at runtime
+data/
+*.db
+*.db-shm
+*.db-wal
+
+.env
+.env.*
+!.env.example
+
+.DS_Store

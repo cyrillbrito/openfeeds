@@ -5,9 +5,9 @@
 Subscribe to blogs, news sites, YouTube channels and podcasts in one place — no algorithm,
 no tracking, no ads deciding what you see.
 
-> **This branch is v2, a full rewrite.** It has its own history and currently contains only
-> documentation — no application code yet. See [docs/v2-plan.md](docs/v2-plan.md) for what's
-> decided, what's still open, and why. v1 lives on `main` and is readable from here
+> **This branch is v2, a full rewrite.** It has its own history, and the app is scaffolded but
+> has no feature code yet. See [docs/v2-plan.md](docs/v2-plan.md) for what's decided, what's
+> still open, and why. v1 lives on `main` and is readable from here
 > (`git show main:<path>`).
 
 ## What it does
@@ -41,8 +41,9 @@ convenient it would otherwise be.
 
 ## Status
 
-Pre-development. The v2 plan is written; the framework, runtime, UI layer, testing approach and
-database layout are still open questions.
+Early development. The stack is settled — Bun, Solid 2 (start mode), SQLite, Tailwind, Better
+Auth — and the app is scaffolded. The UI component layer, the database layout and the
+feed-sharing model are still open.
 
 ## License
 

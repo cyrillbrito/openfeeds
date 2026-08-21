@@ -1,0 +1,8 @@
+{
+  "name": "@openfeeds/extension",
+  "private": true,
+  "type": "module",
+  "dependencies": {
+    "@openfeeds/shared": "workspace:*"
+  }
+}

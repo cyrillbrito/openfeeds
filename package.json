@@ -1,0 +1,9 @@
+{
+  "name": "openfeeds",
+  "private": true,
+  "type": "module",
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ]
+}
