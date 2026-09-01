@@ -20,7 +20,7 @@ const TABS = [
 
 function SettingsLayout() {
   return (
-    <PageLayout title="Settings">
+    <PageLayout title="Settings" responsiveTitle>
       <div role="tablist" class="tabs tabs-border mb-6">
         {TABS.map((tab) => (
           <Link to={tab.to} role="tab" class="tab" activeProps={{ class: 'tab tab-active' }}>

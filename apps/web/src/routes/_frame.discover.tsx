@@ -227,7 +227,7 @@ function DiscoverPage() {
   const hasFeeds = () => discoveredFeeds().length > 0;
 
   return (
-    <PageLayout title="Discover" mobileOnlyTitle>
+    <PageLayout title="Discover" responsiveTitle desktopTitle={false}>
       {/* Hero URL Input */}
       <div class="sm:py-4">
         <h2 class="mb-2 hidden text-2xl font-bold sm:block sm:text-3xl">Discover</h2>

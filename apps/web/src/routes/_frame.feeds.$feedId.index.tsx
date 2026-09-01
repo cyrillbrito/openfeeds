@@ -3,7 +3,7 @@ import type { Feed, TagColor } from '@repo/domain/client';
 import { and, eq, toArray, useLiveQuery } from '@tanstack/solid-db';
 import { createFileRoute, Link } from '@tanstack/solid-router';
 import { MoreVertical, TriangleAlert } from 'lucide-solid';
-import { createSignal, For, Show, Suspense } from 'solid-js';
+import { createSignal, For, Show, Suspense, type JSXElement } from 'solid-js';
 import { ArticleList } from '~/components/articles/ArticleList';
 import {
   ArticleListProvider,
@@ -114,43 +114,49 @@ function FeedArticlesContent(props: { feedId: string; readStatus: ReadStatus }) 
 
   const currentFeed = () => (feedWithTagsQuery() ?? [])[0] ?? null;
 
+  function FeedActions() {
+    return (
+      <div class="flex flex-wrap gap-2">
+        <ShortsButton
+          shortsExist={ctx.shortsExist()}
+          linkProps={{
+            to: '/feeds/$feedId/shorts',
+            params: { feedId: props.feedId },
+            search: { readStatus: props.readStatus },
+          }}
+        />
+        <Show when={currentFeed()}>
+          <Dropdown end btnClasses="btn-sm" btnContent={<MoreVertical size={20} />}>
+            <li>
+              <button onClick={() => editFeedModalController.open()}>Edit</button>
+            </li>
+            <li>
+              <button onClick={() => syncLogsModalController.open()}>Sync Logs</button>
+            </li>
+            <div class="divider my-0"></div>
+            <li>
+              <button
+                class="text-error w-full text-left"
+                onClick={() => {
+                  setFeedToDelete(currentFeed());
+                  deleteFeedModalController.open();
+                }}
+              >
+                Unfollow
+              </button>
+            </li>
+          </Dropdown>
+        </Show>
+      </div>
+    );
+  }
+
   return (
     <PageLayout
-      title="Feed Articles"
-      headerActions={
-        <div class="flex flex-wrap gap-2">
-          <ShortsButton
-            shortsExist={ctx.shortsExist()}
-            linkProps={{
-              to: '/feeds/$feedId/shorts',
-              params: { feedId: props.feedId },
-              search: { readStatus: props.readStatus },
-            }}
-          />
-          <Show when={currentFeed()}>
-            <Dropdown end btnClasses="btn-sm" btnContent={<MoreVertical size={20} />}>
-              <li>
-                <button onClick={() => editFeedModalController.open()}>Edit</button>
-              </li>
-              <li>
-                <button onClick={() => syncLogsModalController.open()}>Sync Logs</button>
-              </li>
-              <div class="divider my-0"></div>
-              <li>
-                <button
-                  class="text-error w-full text-left"
-                  onClick={() => {
-                    setFeedToDelete(currentFeed());
-                    deleteFeedModalController.open();
-                  }}
-                >
-                  Unfollow
-                </button>
-              </li>
-            </Dropdown>
-          </Show>
-        </div>
-      }
+      title={currentFeed()?.title ?? 'Feed Articles'}
+      responsiveTitle
+      desktopTitle={false}
+      actions={FeedActions}
     >
       {/* Sync error notice */}
       <Show
@@ -206,7 +212,7 @@ function FeedArticlesContent(props: { feedId: string; readStatus: ReadStatus }) 
       </Show>
 
       <Show when={currentFeed()} keyed>
-        {(feed) => <FeedHeader feed={feed} />}
+        {(feed) => <FeedHeader feed={feed} actions={<FeedActions />} />}
       </Show>
 
       <ArticleListToolbar
@@ -261,7 +267,7 @@ type FeedWithTags = Feed & {
   }[];
 };
 
-function FeedHeader(props: { feed: FeedWithTags }) {
+function FeedHeader(props: { feed: FeedWithTags; actions?: JSXElement }) {
   return (
     <div class="mb-4 flex items-start gap-4 sm:gap-5">
       <Show when={props.feed.icon}>
@@ -278,7 +284,10 @@ function FeedHeader(props: { feed: FeedWithTags }) {
         </div>
       </Show>
       <div class="min-w-0 flex-1">
-        <h2 class="mb-1.5 text-lg font-semibold sm:text-2xl">{props.feed.title}</h2>
+        <div class="mb-1.5 flex items-start justify-between gap-4">
+          <h1 class="text-lg font-semibold sm:text-2xl">{props.feed.title}</h1>
+          <div class="hidden lg:flex">{props.actions}</div>
+        </div>
         <p class="text-base-content/70 mb-3 line-clamp-3 text-sm leading-relaxed">
           {props.feed.description || 'No description found'}
         </p>

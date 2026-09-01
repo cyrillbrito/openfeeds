@@ -189,7 +189,7 @@ function FeedsComponent() {
   };
 
   return (
-    <PageLayout title="Feeds" mobileOnlyTitle>
+    <PageLayout title="Feeds" responsiveTitle desktopTitle={false}>
       {/* Modals — always mounted so controllers are available */}
       <ImportOpmlModal controller={(controller) => (importOpmlModalController = controller)} />
 

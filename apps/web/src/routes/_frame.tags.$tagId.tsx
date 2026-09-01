@@ -76,6 +76,16 @@ function TagLayout() {
   );
   const shortsExist = () => (shortsExistQuery()?.length ?? 0) > 0;
 
+  const tagTitle = () =>
+    tag() ? (
+      <span class="flex min-w-0 items-center gap-2.5">
+        <ColorIndicator class={getTagDotColor(tag()!.color)} />
+        <span>{tag()!.name}</span>
+      </span>
+    ) : (
+      'Tag'
+    );
+
   const navigate = useNavigate();
   createEffect(
     on(
@@ -90,17 +100,9 @@ function TagLayout() {
 
   return (
     <PageLayout
-      title={
-        tag() ? (
-          <div class="flex items-center gap-2.5">
-            <ColorIndicator class={getTagDotColor(tag()!.color)} />
-            <span>{tag()!.name}</span>
-          </div>
-        ) : (
-          'Tag'
-        )
-      }
-      headerActions={
+      title={tagTitle}
+      responsiveTitle
+      actions={() => (
         <ShortsButton
           shortsExist={shortsExist()}
           linkProps={{
@@ -109,7 +111,7 @@ function TagLayout() {
             search: { readStatus: 'unread' },
           }}
         />
-      }
+      )}
     >
       <Show
         when={hasContent()}
