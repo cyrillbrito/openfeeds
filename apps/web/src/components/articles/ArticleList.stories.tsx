@@ -15,9 +15,10 @@ const createFixtureTagsAccessor = (articleId: string) => () =>
   articleTagFixtures.filter((at) => at.articleId === articleId);
 
 function createMockCtx(overrides?: Partial<ArticleListContextValue>): ArticleListContextValue {
+  const articles = articleFixtures.filter((a) => !a.isArchived);
   return {
-    articles: () => articleFixtures.filter((a) => !a.isArchived),
-    totalCount: () => 25,
+    articles: () => articles,
+    totalCount: () => articles.length,
     unreadCount: () => 10,
     archivableCount: () => 5,
     feeds: () => feedFixtures,
@@ -25,7 +26,6 @@ function createMockCtx(overrides?: Partial<ArticleListContextValue>): ArticleLis
     shortsExist: () => false,
     readStatus: () => 'all',
     context: 'inbox',
-    loadMore: fn().mockName('loadMore'),
     updateArticle: fn().mockName('updateArticle'),
     markAllArchived: fn().mockName('markAllArchived') as any,
     addTag: fn().mockName('addTag'),
@@ -53,16 +53,20 @@ const meta: Meta<typeof ArticleList> = {
 export default meta;
 type Story = StoryObj;
 
-/** List with multiple articles, more available to load */
+/** Virtualized list with multiple articles */
 export const WithArticles: Story = {
   play: async ({ canvasElement }: { canvasElement: HTMLElement }) => {
     const canvas = within(canvasElement);
-    await expect(canvas.getByText(/Load More/)).toBeInTheDocument();
+    // First-rendered article from fixtures should be in the DOM (virtualizer
+    // renders the first overscan window even before any scroll).
+    const firstArticle = articleFixtures.filter((a) => !a.isArchived)[0];
+    if (!firstArticle) throw new Error('Fixture must contain at least one unarchived article');
+    await expect(canvas.getByText(firstArticle.title)).toBeInTheDocument();
   },
 };
 
-/** All articles shown — no "Load More" button */
-export const AllLoaded: Story = {
+/** Smaller fixture set — full list of unread articles */
+export const AllUnread: Story = {
   decorators: [
     withRouter,
     (Story: () => any) => (

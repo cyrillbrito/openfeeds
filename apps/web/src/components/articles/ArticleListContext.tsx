@@ -1,16 +1,21 @@
 /**
- * Article list context — owns all queries, pagination, and mutation handlers.
+ * Article list context — owns all queries and mutation handlers.
  *
  * Each route wraps its article list UI in `<ArticleListProvider>` with a
  * route-specific query filter. The provider creates all reactive state
  * internally; child components access it via `useArticleList()`.
  *
  * This keeps route components thin: they configure the filter and compose the UI.
+ *
+ * Pagination note: with virtualized rendering (see ArticleList.tsx), the
+ * articles query has no `.limit()` — all matching rows from the local
+ * collection are loaded and the virtualizer renders only what's visible.
+ * `totalCount` is therefore just `articles().length`.
  */
 import type { Article, ArticleTag, Feed, Tag } from '@repo/domain/client';
 import { createId } from '@repo/shared/utils';
 import { type Ref, and, eq, ilike, useLiveQuery } from '@tanstack/solid-db';
-import { type Accessor, type JSX, createSignal, onMount } from 'solid-js';
+import { type Accessor, type JSX, onMount } from 'solid-js';
 import { articleTagsCollection } from '~/entities/article-tags';
 import { articlesCollection } from '~/entities/articles';
 import { useFeeds } from '~/entities/feeds';
@@ -27,8 +32,6 @@ export {
   useArticleList,
 } from './ArticleListContext.shared';
 export { type ReadStatus } from './ReadStatusToggle';
-
-export const ARTICLES_PER_PAGE = 20;
 
 function addArticleTag(articleId: string, tagId: string) {
   articleTagsCollection.insert({
@@ -57,11 +60,6 @@ type SortDirection = 'asc' | 'desc';
 export interface ArticleQueryFilter {
   /** Base query with from + joins + where (no select, orderBy, or limit). */
   buildQuery: (q: any, extra: { readStatusWhere: ((article: Ref<Article>) => any) | null }) => any;
-  /** Build a count-only query variant (no limit, select id only). */
-  buildCountQuery: (
-    q: any,
-    extra: { readStatusWhere: ((article: Ref<Article>) => any) | null },
-  ) => any;
   /** Build the unread count query (ignores current read status filter). */
   buildUnreadQuery: (q: any) => any;
   /** Build the archivable count query (all non-archived, ignores read status). */
@@ -85,26 +83,18 @@ export function ArticleListProvider(props: ArticleListProviderProps) {
 
   onMount(() => setViewKey(props.viewKey));
 
-  // Pagination
-  const [visibleCount, setVisibleCount] = createSignal(ARTICLES_PER_PAGE);
-
   // Data queries
   const feedsQuery = useFeeds();
   const tagsQuery = useTags();
 
-  // Main articles query
+  // Main articles query — no `.limit()` because the article list is virtualized.
+  // The local collection holds at most a few thousand rows for a given filter,
+  // and only ~10–15 cards exist in the DOM at once thanks to windowing.
   const articlesQuery = useLiveQuery((q) => {
     const filter = readStatusFilter(props.readStatus(), sessionReadIds());
     return props.filter
       .buildQuery(q, { readStatusWhere: filter })
-      .orderBy(({ article }: { article: Ref<Article> }) => article.pubDate, direction())
-      .limit(visibleCount());
-  });
-
-  // Total count query (current read status filter, no limit)
-  const totalCountQuery = useLiveQuery((q) => {
-    const filter = readStatusFilter(props.readStatus(), sessionReadIds());
-    return props.filter.buildCountQuery(q, { readStatusWhere: filter });
+      .orderBy(({ article }: { article: Ref<Article> }) => article.pubDate, direction());
   });
 
   // Unread count (independent of current read status filter)
@@ -128,9 +118,8 @@ export function ArticleListProvider(props: ArticleListProviderProps) {
   // NOTE: iterate articlesQuery.state (a @solid-primitives ReactiveMap) directly
   // instead of calling articlesQuery() — calling the accessor goes through
   // createResource, which suspends the parent <Suspense> whenever the underlying
-  // collection rebuilds (e.g. when .limit(visibleCount()) changes on Load More).
-  // That suspension detaches the list from the DOM, collapses page height, and
-  // resets window.scrollY.
+  // collection rebuilds (e.g. on filter/sort change). That suspension detaches
+  // the list from the DOM, collapses page height, and resets window.scrollY.
   //
   // The ReactiveMap is updated by useLiveQuery's internal subscribeChanges
   // listener on every insert/update/delete, and iterating .values() tracks all
@@ -139,7 +128,7 @@ export function ArticleListProvider(props: ArticleListProviderProps) {
   const articles = (): Article[] => {
     return Array.from(articlesQuery.state.values()) as unknown as Article[];
   };
-  const totalCount = () => (totalCountQuery() || []).length;
+  const totalCount = () => articles().length;
   const unreadCount = () => (unreadCountQuery() || []).length;
   const archivableCount = () => (archivableQuery() || []).length;
   const feeds = (): Feed[] => (feedsQuery() as Feed[] | undefined) || [];
@@ -147,10 +136,6 @@ export function ArticleListProvider(props: ArticleListProviderProps) {
   const shortsExist = () => (shortsQuery()?.length ?? 0) > 0;
 
   // Handlers
-  const loadMore = () => {
-    setVisibleCount((prev) => prev + ARTICLES_PER_PAGE);
-  };
-
   const updateArticle = (
     articleId: string,
     updates: { isRead?: boolean; isArchived?: boolean },
@@ -187,7 +172,6 @@ export function ArticleListProvider(props: ArticleListProviderProps) {
     shortsExist,
     readStatus: props.readStatus,
     context: props.context,
-    loadMore,
     updateArticle,
     markAllArchived,
     addTag: addArticleTag,

@@ -38,17 +38,6 @@ function TagArticlesPage() {
           return readStatusWhere ? and(base, readStatusWhere(article)) : base;
         })
         .select(({ article }: any) => article),
-    buildCountQuery: (q, { readStatusWhere }) =>
-      q
-        .from({ article: articlesCollection })
-        .innerJoin({ articleTag: articleTagsCollection }, ({ article, articleTag }: any) =>
-          eq(article.id, articleTag.articleId),
-        )
-        .where(({ article, articleTag }: any) => {
-          const base = eq(articleTag.tagId, tagId());
-          return readStatusWhere ? and(base, readStatusWhere(article)) : base;
-        })
-        .select(({ article }: any) => ({ id: article.id })),
     buildUnreadQuery: (q) =>
       q
         .from({ article: articlesCollection })
