@@ -3,9 +3,9 @@
 ## What this is
 
 OpenFeeds v2 — a full rewrite of a self-hosted, multi-user RSS reader. This branch has its own
-history. A working **single-user prototype** exists: subscribe to a feed, fetch and parse it on a
-cron, read the inbox, and watch the YouTube Shorts it carries on a screen of their own. No auth, and no
-`userId` anywhere yet.
+history. It works end to end: sign up, subscribe to a feed, fetch and parse it on a cron, read
+the inbox, and watch the YouTube Shorts it carries on a screen of their own. Multi-user, with
+Better Auth and per-user subscriptions and read state.
 
 - [README.md](README.md) — what the product is and does
 - [docs/v2-plan.md](docs/v2-plan.md) — **read this before proposing anything**: settled
@@ -14,15 +14,20 @@ cron, read the inbox, and watch the YouTube Shorts it carries on a screen of the
   was built in its simplest form, and what was deliberately left out
 - v1 is on `main`, with unrelated history but readable from here: `git show main:<path>`
 
-## Still undecided — don't resolve these by writing code
+## Multi-user, in one paragraph
 
-**Database layout** (one shared DB vs one per user) · **whether feed fetching is shared across
-users**. They are coupled; decide them together.
+`feeds` and `articles` are **global**: one row per canonical feed URL, one per entry, fetched
+once however many people subscribe. Per-user data is two tables — `subscriptions` (the sidebar)
+and `article_state` (read/archived, absent row = unread). So an article is visible because the
+user follows its feed, never because of a column on the article.
 
-If a task requires one of them, **say so and ask**. The plan doc explains what each costs.
+Every function in `server/feeds/queries.ts` takes `userId` first, and it comes from the session
+in `server/require-user.ts` — never from a client argument. `src/middleware.ts` redirects
+anonymous document requests to `/signin`; that is navigation, and the queries are the actual
+boundary. Adding a query that reads `articles` without joining `subscriptions` is the way to
+break this.
 
-The prototype deliberately sidesteps both by being single-user. It does keep the one cheap thing
-that preserves the choice: `feeds.feed_url` is canonical and unique system-wide.
+Still open (docs/v2-plan.md): whether to back the convention with Postgres RLS.
 
 ## Stack
 

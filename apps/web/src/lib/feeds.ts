@@ -10,6 +10,7 @@ import { action, query } from '@solidjs/router';
 // moved out in 2.0, and most material online still shows the old import.
 import { reload, respond } from '@solidjs/web';
 
+import { requireUserId } from '../server/require-user';
 import { slowDown } from '../server/dev-delay';
 import {
   countUnread,
@@ -32,17 +33,19 @@ import {
 
 export const getFeeds = query(async () => {
   'use server';
+  const userId = await requireUserId();
   await slowDown();
-  return listFeeds();
+  return listFeeds(userId);
 }, 'feeds');
 
 export const getInbox = query(async (unreadOnly: boolean) => {
   'use server';
+  const userId = await requireUserId();
   await slowDown();
   // Shorts are excluded here and nowhere else: a channel that posts five a
   // day would otherwise bury every article in the inbox. They still show up
   // on their own feed's page, which is the screen that should be complete.
-  return listArticles({ unreadOnly, shorts: 'exclude' });
+  return listArticles(userId, { unreadOnly, shorts: 'exclude' });
 }, 'inbox');
 
 /**
@@ -56,30 +59,35 @@ export const getInbox = query(async (unreadOnly: boolean) => {
  */
 export const getShorts = query(async () => {
   'use server';
+  const userId = await requireUserId();
   await slowDown();
-  return listArticles({ shorts: 'only' });
+  return listArticles(userId, { shorts: 'only' });
 }, 'shorts-queue');
 
 export const getFeedArticles = query(async (feedId: number) => {
   'use server';
+  const userId = await requireUserId();
   await slowDown();
   const [feed, items] = await Promise.all([
-    getFeed(feedId),
-    listArticles({ feedId }),
+    getFeed(userId, feedId),
+    listArticles(userId, { feedId }),
   ]);
-  return { feed, items };
+  // A feed the user does not follow reads as one that does not exist.
+  return { feed, items: feed ? items : [] };
 }, 'feed-articles');
 
 export const getUnreadCount = query(async () => {
   'use server';
+  const userId = await requireUserId();
   await slowDown();
-  return countUnread();
+  return countUnread(userId);
 }, 'unread-count');
 
 export const getShortsCount = query(async () => {
   'use server';
+  const userId = await requireUserId();
   await slowDown();
-  return countUnreadShorts();
+  return countUnreadShorts(userId);
 }, 'shorts-count');
 
 // --- Writes -----------------------------------------------------------
@@ -136,13 +144,14 @@ export type AddFeedResult =
 // mismatch at the boundary. AddFeedResult describes what the CALLER sees.
 export const addFeed = action(async (formData: FormData) => {
   'use server';
+  const userId = await requireUserId();
   await slowDown();
   const url = String(formData.get('url') ?? '').trim();
   if (!url) return { status: 'error', message: 'Enter a feed URL' };
   const exact = formData.get('exact') === '1';
 
   try {
-    const outcome = await subscribeToFeed(url, { exact });
+    const outcome = await subscribeToFeed(userId, url, { exact });
     if (outcome.kind === 'choices') {
       // No revalidation: nothing was written, we are just asking a question.
       return { status: 'choose', source: url, candidates: outcome.candidates };
@@ -169,15 +178,22 @@ export const addFeed = action(async (formData: FormData) => {
 
 export const removeFeed = action(async (feedId: number) => {
   'use server';
+  const userId = await requireUserId();
   await slowDown();
-  await unsubscribeFromFeed(feedId);
+  await unsubscribeFromFeed(userId, feedId);
   return reload({ revalidate: UNREAD_KEYS });
 }, 'remove-feed');
 
 /** The manual refresh button — bypasses the schedule for one feed. */
 export const refreshFeed = action(async (feedId: number) => {
   'use server';
+  const userId = await requireUserId();
   await slowDown();
+  // Only for a feed the user follows — the button must not become a way to
+  // make the server fetch arbitrary rows.
+  if (!(await getFeed(userId, feedId))) {
+    return respond({ feedId, status: 'error' as const, inserted: 0 });
+  }
   const result = await syncFeedNow(feedId);
   return respond(result ?? { feedId, status: 'error' as const, inserted: 0 }, {
     revalidate: UNREAD_KEYS,
@@ -186,23 +202,29 @@ export const refreshFeed = action(async (feedId: number) => {
 
 export const toggleRead = action(async (id: number, isRead: boolean) => {
   'use server';
+  const userId = await requireUserId();
   await slowDown();
-  await setArticleRead(id, isRead);
+  await setArticleRead(userId, id, isRead);
   return reload({ revalidate: UNREAD_KEYS });
 }, 'toggle-read');
 
 export const archiveArticle = action(async (id: number) => {
   'use server';
+  const userId = await requireUserId();
   await slowDown();
-  await setArticleArchived(id, true);
+  await setArticleArchived(userId, id, true);
   return reload({ revalidate: UNREAD_KEYS });
 }, 'archive-article');
 
 export const markFeedRead = action(async (feedId?: number) => {
   'use server';
+  const userId = await requireUserId();
   await slowDown();
   // No feed id means the inbox button, which must leave the shorts queue
   // alone — see markAllRead.
-  await markAllRead(feedId === undefined ? { shorts: 'exclude' } : { feedId });
+  await markAllRead(
+    userId,
+    feedId === undefined ? { shorts: 'exclude' } : { feedId },
+  );
   return reload({ revalidate: UNREAD_KEYS });
 }, 'mark-feed-read');

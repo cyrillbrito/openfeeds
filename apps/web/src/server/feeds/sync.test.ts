@@ -12,18 +12,23 @@ import { afterAll, beforeEach, describe, expect, it } from 'vitest';
 process.env.DATABASE_URL = 'memory://';
 
 const { db } = await import('../db');
-const { articles, feeds } = await import('../db/schema');
+const { articles, articleState, feeds, subscriptions, user } = await import(
+  '../db/schema'
+);
 const { subscribeToFeed, syncFeedNow, unsubscribeFromFeed } = await import(
   './sync'
 );
+
+const ALICE = 'user_alice';
+const BOB = 'user_bob';
 
 /**
  * Subscribing now has two outcomes — one feed, or a list to choose from.
  * These tests are about the sync pipeline, so they assert the single-feed
  * outcome and unwrap it; the picker branch has its own suite below.
  */
-async function subscribe(url: string) {
-  const outcome = await subscribeToFeed(url);
+async function subscribe(url: string, userId = ALICE) {
+  const outcome = await subscribeToFeed(userId, url);
   if (outcome.kind !== 'subscribed') {
     throw new Error(`Expected a subscription, got ${outcome.candidates.length} choices`);
   }
@@ -101,8 +106,15 @@ const ITEM_TWO = `<item><title>Two</title><link>https://test.example/2</link>
   <guid>guid-2</guid><pubDate>Tue, 02 Jan 2024 10:00:00 GMT</pubDate></item>`;
 
 beforeEach(async () => {
+  await db.delete(articleState);
+  await db.delete(subscriptions);
   await db.delete(articles);
   await db.delete(feeds);
+  await db.delete(user);
+  await db.insert(user).values([
+    { id: ALICE, name: 'Alice', email: 'alice@example.com' },
+    { id: BOB, name: 'Bob', email: 'bob@example.com' },
+  ]);
   feedBody = rss(ITEM_ONE);
   etag = 'v1';
   requests = [];
@@ -150,8 +162,29 @@ describe('subscribeToFeed', () => {
     expect(await db.select().from(feeds)).toHaveLength(0);
   });
 
+  it('reuses the existing feed row for a second subscriber', async () => {
+    const feed = await subscribe(`${base}/feed.xml`);
+    requests = [];
+
+    const again = await subscribe(`${base}/feed.xml`, BOB);
+
+    // Same global feed, no second fetch, no duplicate articles.
+    expect(again.id).toBe(feed.id);
+    expect(requests).toHaveLength(0);
+    expect(await db.select().from(feeds)).toHaveLength(1);
+    expect(await db.select().from(articles)).toHaveLength(1);
+    expect(await db.select().from(subscriptions)).toHaveLength(2);
+  });
+
+  it('refuses the same feed twice for the same user', async () => {
+    await subscribe(`${base}/feed.xml`);
+    await expect(subscribe(`${base}/feed.xml`)).rejects.toThrow(
+      /Already subscribed/,
+    );
+  });
+
   it('asks which one when a page advertises several', async () => {
-    const outcome = await subscribeToFeed(`${base}/two-feeds.html`);
+    const outcome = await subscribeToFeed(ALICE, `${base}/two-feeds.html`);
 
     expect(outcome.kind).toBe('choices');
     if (outcome.kind !== 'choices') return;
@@ -166,7 +199,7 @@ describe('subscribeToFeed', () => {
   it('marks choices already in the sidebar rather than hiding them', async () => {
     await subscribe(`${base}/feed.xml`);
 
-    const outcome = await subscribeToFeed(`${base}/two-feeds.html`);
+    const outcome = await subscribeToFeed(ALICE, `${base}/two-feeds.html`);
     if (outcome.kind !== 'choices') throw new Error('expected choices');
 
     const seen = outcome.candidates.find((c) => c.title === 'Test Feed');
@@ -176,7 +209,9 @@ describe('subscribeToFeed', () => {
   });
 
   it('subscribes to a picked choice without rediscovering it', async () => {
-    const outcome = await subscribeToFeed(`${base}/other.xml`, { exact: true });
+    const outcome = await subscribeToFeed(ALICE, `${base}/other.xml`, {
+      exact: true,
+    });
 
     expect(outcome.kind).toBe('subscribed');
     if (outcome.kind !== 'subscribed') return;
@@ -262,13 +297,25 @@ describe('syncFeed', () => {
 });
 
 describe('unsubscribeFromFeed', () => {
-  it('takes the feed articles with it', async () => {
+  it('takes the feed articles with it once nobody is left', async () => {
     const feed = await subscribe(`${base}/feed.xml`);
     expect(await db.select().from(articles)).toHaveLength(1);
 
-    await unsubscribeFromFeed(feed.id);
+    await unsubscribeFromFeed(ALICE, feed.id);
 
+    expect(await db.select().from(feeds)).toHaveLength(0);
     // Cascade, which only works because db/index.ts turns foreign keys on.
     expect(await db.select().from(articles)).toHaveLength(0);
+  });
+
+  it('keeps the feed while another subscriber remains', async () => {
+    const feed = await subscribe(`${base}/feed.xml`);
+    await subscribe(`${base}/feed.xml`, BOB);
+
+    await unsubscribeFromFeed(ALICE, feed.id);
+
+    expect(await db.select().from(feeds)).toHaveLength(1);
+    expect(await db.select().from(articles)).toHaveLength(1);
+    expect(await db.select().from(subscriptions)).toHaveLength(1);
   });
 });

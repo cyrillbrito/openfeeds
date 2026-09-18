@@ -225,11 +225,15 @@ export async function markAllRead(
   if (options.shorts === 'exclude') conditions.push(ne(articles.kind, 'short'));
   if (options.shorts === 'only') conditions.push(eq(articles.kind, 'short'));
 
+  // Every column of article_state, in declaration order: Drizzle's
+  // INSERT ... SELECT rejects a partial or reordered projection.
   const target = db
     .select({
       userId: sql<string>`${userId}`.as('user_id'),
       articleId: articles.id,
       isRead: sql<boolean>`true`.as('is_read'),
+      isArchived: sql<boolean>`false`.as('is_archived'),
+      updatedAt: sql`now()`.as('updated_at'),
     })
     .from(articles)
     .innerJoin(subscriptions, eq(subscriptions.feedId, articles.feedId))

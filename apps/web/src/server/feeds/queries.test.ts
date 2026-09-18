@@ -6,16 +6,22 @@
  * emitted UNQUALIFIED column names, so the subquery's `"id"` bound to
  * articles.id instead of feeds.id and every feed reported exactly 1 unread.
  * Numbers that are plausible-but-wrong are the ones that ship.
+ *
+ * Two users throughout, because with global `feeds` and `articles` the only
+ * thing keeping them apart is a join this layer is responsible for writing.
  */
 import { beforeEach, describe, expect, it } from 'vitest';
 
 process.env.DATABASE_URL = 'memory://';
 
 const { db } = await import('../db');
-const { articles, feeds } = await import('../db/schema');
+const { articles, articleState, feeds, subscriptions, user } = await import(
+  '../db/schema'
+);
 const {
   countUnread,
   countUnreadShorts,
+  getFeed,
   listArticles,
   listFeeds,
   markAllRead,
@@ -23,12 +29,23 @@ const {
   setArticleRead,
 } = await import('./queries');
 
+const ALICE = 'user_alice';
+const BOB = 'user_bob';
+
 let feedA = 0;
 let feedB = 0;
 
 beforeEach(async () => {
+  await db.delete(articleState);
+  await db.delete(subscriptions);
   await db.delete(articles);
   await db.delete(feeds);
+  await db.delete(user);
+
+  await db.insert(user).values([
+    { id: ALICE, name: 'Alice', email: 'alice@example.com' },
+    { id: BOB, name: 'Bob', email: 'bob@example.com' },
+  ]);
 
   const [a] = await db
     .insert(feeds)
@@ -41,6 +58,13 @@ beforeEach(async () => {
   feedA = a.id;
   feedB = b.id;
 
+  // Alice follows both; Bob follows only Beta.
+  await db.insert(subscriptions).values([
+    { userId: ALICE, feedId: feedA },
+    { userId: ALICE, feedId: feedB },
+    { userId: BOB, feedId: feedB },
+  ]);
+
   await db.insert(articles).values([
     { feedId: feedA, guid: 'a1', title: 'A1', publishedAt: new Date(3) },
     { feedId: feedA, guid: 'a2', title: 'A2', publishedAt: new Date(2) },
@@ -51,79 +75,119 @@ beforeEach(async () => {
 
 describe('listFeeds', () => {
   it('counts every unread article per feed, not just one', async () => {
-    const rows = await listFeeds();
+    const rows = await listFeeds(ALICE);
     expect(rows.map((r) => [r.title, r.unreadCount])).toEqual([
       ['Alpha', 3],
       ['Beta', 1],
     ]);
   });
 
+  it('returns only the feeds the user subscribes to', async () => {
+    expect((await listFeeds(BOB)).map((r) => r.title)).toEqual(['Beta']);
+  });
+
   it('excludes read and archived articles from the count', async () => {
     const [first] = await db.select().from(articles);
-    await setArticleRead(first.id, true);
+    await setArticleRead(ALICE, first.id, true);
 
-    const alpha = (await listFeeds()).find((f) => f.title === 'Alpha')!;
+    const alpha = (await listFeeds(ALICE)).find((f) => f.title === 'Alpha')!;
     expect(alpha.unreadCount).toBe(2);
 
     const [second] = (await db.select().from(articles)).filter(
       (a) => a.id !== first.id && a.feedId === feedA,
     );
-    await setArticleArchived(second.id, true);
-    expect((await listFeeds()).find((f) => f.title === 'Alpha')!.unreadCount).toBe(1);
+    await setArticleArchived(ALICE, second.id, true);
+    expect(
+      (await listFeeds(ALICE)).find((f) => f.title === 'Alpha')!.unreadCount,
+    ).toBe(1);
   });
 
   it('keeps a feed with no articles at all, at zero', async () => {
+    await db.delete(articleState);
     await db.delete(articles);
-    const rows = await listFeeds();
+    const rows = await listFeeds(ALICE);
     // LEFT join, not inner: a brand-new feed must still appear in the sidebar.
     expect(rows).toHaveLength(2);
     expect(rows.every((r) => r.unreadCount === 0)).toBe(true);
   });
 });
 
+describe('getFeed', () => {
+  it('returns nothing for a feed the user does not follow', async () => {
+    expect(await getFeed(ALICE, feedA)).not.toBeNull();
+    expect(await getFeed(BOB, feedA)).toBeNull();
+  });
+});
+
 describe('listArticles', () => {
   it('returns newest first, across all feeds', async () => {
-    const items = await listArticles();
+    const items = await listArticles(ALICE);
     expect(items.map((i) => i.title)).toEqual(['B1', 'A1', 'A2', 'A3']);
   });
 
+  it('returns only articles from feeds the user follows', async () => {
+    expect((await listArticles(BOB)).map((i) => i.title)).toEqual(['B1']);
+  });
+
   it('filters to one feed', async () => {
-    const items = await listArticles({ feedId: feedB });
+    const items = await listArticles(ALICE, { feedId: feedB });
     expect(items.map((i) => i.title)).toEqual(['B1']);
   });
 
   it('hides read articles when asked, and archived ones always', async () => {
-    const [newest] = await listArticles();
-    await setArticleRead(newest.id, true);
+    const [newest] = await listArticles(ALICE);
+    await setArticleRead(ALICE, newest.id, true);
 
-    expect((await listArticles({ unreadOnly: true })).map((i) => i.title)).toEqual([
-      'A1',
-      'A2',
-      'A3',
-    ]);
+    expect(
+      (await listArticles(ALICE, { unreadOnly: true })).map((i) => i.title),
+    ).toEqual(['A1', 'A2', 'A3']);
     // Not unreadOnly: the read article is still listed.
-    expect(await listArticles()).toHaveLength(4);
+    expect(await listArticles(ALICE)).toHaveLength(4);
 
-    await setArticleArchived(newest.id, true);
-    expect(await listArticles()).toHaveLength(3);
+    await setArticleArchived(ALICE, newest.id, true);
+    expect(await listArticles(ALICE)).toHaveLength(3);
+  });
+
+  it('keeps read state per user on a shared article', async () => {
+    const [b1] = await listArticles(BOB);
+    await setArticleRead(BOB, b1.id, true);
+
+    expect((await listArticles(BOB))[0].isRead).toBe(true);
+    // Same article, Alice's copy of the state: untouched.
+    expect((await listArticles(ALICE))[0].isRead).toBe(false);
+    expect(await countUnread(ALICE)).toBe(4);
+    expect(await countUnread(BOB)).toBe(0);
   });
 
   it('joins the feed title for display', async () => {
-    const items = await listArticles({ feedId: feedA });
+    const items = await listArticles(ALICE, { feedId: feedA });
     expect(items[0].feedTitle).toBe('Alpha');
   });
 });
 
 describe('markAllRead', () => {
   it('scopes to one feed when given one', async () => {
-    await markAllRead({ feedId: feedA });
-    expect(await countUnread()).toBe(1);
-    expect((await listFeeds()).find((f) => f.title === 'Beta')!.unreadCount).toBe(1);
+    await markAllRead(ALICE, { feedId: feedA });
+    expect(await countUnread(ALICE)).toBe(1);
+    expect(
+      (await listFeeds(ALICE)).find((f) => f.title === 'Beta')!.unreadCount,
+    ).toBe(1);
   });
 
   it('clears everything when given nothing', async () => {
-    await markAllRead();
-    expect(await countUnread()).toBe(0);
+    await markAllRead(ALICE);
+    expect(await countUnread(ALICE)).toBe(0);
+  });
+
+  it('leaves the other user unread', async () => {
+    await markAllRead(ALICE);
+    expect(await countUnread(BOB)).toBe(1);
+  });
+
+  it('is repeatable — the second run updates rather than conflicts', async () => {
+    await markAllRead(ALICE);
+    await markAllRead(ALICE);
+    expect(await countUnread(ALICE)).toBe(0);
   });
 });
 
@@ -156,28 +220,28 @@ describe('shorts', () => {
   });
 
   it('keeps shorts out of the inbox', async () => {
-    const items = await listArticles({ shorts: 'exclude' });
+    const items = await listArticles(ALICE, { shorts: 'exclude' });
     expect(items.map((i) => i.title)).toEqual(['B1', 'A1', 'A2', 'A3']);
   });
 
   it('returns only shorts for the queue, newest first', async () => {
-    const items = await listArticles({ shorts: 'only' });
+    const items = await listArticles(ALICE, { shorts: 'only' });
     expect(items.map((i) => i.title)).toEqual(['S2', 'S1']);
   });
 
   it('still shows them on their own feed page', async () => {
-    const items = await listArticles({ feedId: feedB });
+    const items = await listArticles(ALICE, { feedId: feedB });
     expect(items.map((i) => i.title)).toEqual(['S2', 'S1', 'B1']);
   });
 
   it('counts each badge against the list it sits over', async () => {
-    expect(await countUnread()).toBe(4);
-    expect(await countUnreadShorts()).toBe(2);
+    expect(await countUnread(ALICE)).toBe(4);
+    expect(await countUnreadShorts(ALICE)).toBe(2);
   });
 
   it('leaves the shorts queue alone when the inbox is marked read', async () => {
-    await markAllRead({ shorts: 'exclude' });
-    expect(await countUnread()).toBe(0);
-    expect(await countUnreadShorts()).toBe(2);
+    await markAllRead(ALICE, { shorts: 'exclude' });
+    expect(await countUnread(ALICE)).toBe(0);
+    expect(await countUnreadShorts(ALICE)).toBe(2);
   });
 });

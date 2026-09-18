@@ -217,20 +217,21 @@ Ordered by how hard each is to reverse later. Spend deliberation accordingly.
 
 *(Database architecture and feed sharing used to be items 1 and 2 here. Both are settled above.)*
 
-## 1. Per-user isolation, once auth lands
+## 1. Per-user isolation: RLS, or the convention we have?
 
-The engine and the layout are decided; the discipline that keeps a shared database honest is not.
-A forgotten `userId` filter in a shared database leaks or loses data, and that is not theoretical
-— v1's GUID dedup at `rss-sync.ts:94` omitted it, so once any user had an article GUID, no other
-user ever received it.
+Multi-user is built. `subscriptions` and `article_state` exist, every function in
+`server/feeds/queries.ts` takes `userId` as its first argument, and that id comes from the
+session cookie in `server/require-user.ts` — never from a parameter the client controls.
+Normalisation does the heavy lifting: `feeds` and `articles` are global, so there is no `userId`
+on them to forget, and the exposure is confined to those two tables.
 
-Normalising helps more than it looks: `feeds` and `articles` are global by design, so there is no
-`userId` on them to forget. The exposure narrows to `subscriptions` and `article_state`. Open
-question is the mechanism — a repository layer where `userId` is always the first argument, or
-Postgres row-level security, which enforces it in the database and cannot be bypassed by a query
-written in a hurry. RLS was not available to us before this decision and now is.
+What remains open is whether convention is enough. A repository layer where `userId` is always
+the first argument is what we have; Postgres row-level security would enforce it in the database,
+where a query written in a hurry cannot bypass it. The cost of RLS is a per-request `SET LOCAL`
+and a connection model that respects it.
 
-The prototype is still single-user: no `userId` column exists anywhere yet.
+The precedent for caring: v1's GUID dedup at `rss-sync.ts:94` omitted the user, so once any user
+had an article GUID, no other user ever received it.
 
 ## 2. Testing
 

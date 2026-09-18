@@ -11,7 +11,7 @@ import 'server-only';
 import { and, asc, eq, inArray, lte, sql } from 'drizzle-orm';
 
 import { db } from '../db';
-import { articles, feeds, type Feed } from '../db/schema';
+import { articles, feeds, subscriptions, type Feed } from '../db/schema';
 import { discoverFeeds } from './discover';
 import { canonicalizeFeedUrl, fetchFeed } from './fetch';
 import { normalizeFeed } from './normalize';
@@ -264,6 +264,31 @@ async function findByUrl(feedUrl: string): Promise<Feed | undefined> {
   return existing;
 }
 
+async function isSubscribed(userId: string, feedId: number): Promise<boolean> {
+  const [row] = await db
+    .select({ feedId: subscriptions.feedId })
+    .from(subscriptions)
+    .where(
+      and(eq(subscriptions.userId, userId), eq(subscriptions.feedId, feedId)),
+    );
+  return row !== undefined;
+}
+
+/**
+ * Point a user at an existing feed row, or throw if they already follow it.
+ *
+ * This is where the shared-feed design pays out: the second subscriber to a
+ * feed costs one row and no network request, and the feed is still fetched
+ * once an hour in total.
+ */
+async function subscribe(userId: string, feed: Feed): Promise<Feed> {
+  if (await isSubscribed(userId, feed.id)) {
+    throw new SubscribeError(`Already subscribed to ${feed.title}`);
+  }
+  await db.insert(subscriptions).values({ userId, feedId: feed.id });
+  return feed;
+}
+
 /**
  * Subscribe to whatever the user pasted.
  *
@@ -276,6 +301,7 @@ async function findByUrl(feedUrl: string): Promise<Feed | undefined> {
  * would be a wasted round of requests.
  */
 export async function subscribeToFeed(
+  userId: string,
   rawUrl: string,
   options: { exact?: boolean } = {},
 ): Promise<SubscribeOutcome> {
@@ -286,11 +312,11 @@ export async function subscribeToFeed(
     throw new SubscribeError(`"${rawUrl}" is not a valid URL`);
   }
 
-  // Re-pasting a feed already in the sidebar is a no-op worth naming, and
-  // catching it here saves the network entirely.
+  // Someone already follows this URL, so the feed and its articles are
+  // already here: subscribing is one row and no network at all.
   const existing = await findByUrl(inputUrl);
   if (existing) {
-    throw new SubscribeError(`Already subscribed to ${existing.title}`);
+    return { kind: 'subscribed', feed: await subscribe(userId, existing) };
   }
 
   if (options.exact) {
@@ -304,10 +330,13 @@ export async function subscribeToFeed(
     }
     return {
       kind: 'subscribed',
-      feed: await insertFeed(inputUrl, result.body, {
-        etag: result.etag,
-        lastModified: result.lastModified,
-      }),
+      feed: await subscribe(
+        userId,
+        await insertFeed(inputUrl, result.body, {
+          etag: result.etag,
+          lastModified: result.lastModified,
+        }),
+      ),
     };
   }
 
@@ -322,14 +351,17 @@ export async function subscribeToFeed(
     // to can differ from the one we checked above — check the resolved one.
     const alreadyHave = await findByUrl(discovery.url);
     if (alreadyHave) {
-      throw new SubscribeError(`Already subscribed to ${alreadyHave.title}`);
+      return { kind: 'subscribed', feed: await subscribe(userId, alreadyHave) };
     }
     return {
       kind: 'subscribed',
-      feed: await insertFeed(discovery.url, discovery.body, {
-        etag: discovery.etag,
-        lastModified: discovery.lastModified,
-      }),
+      feed: await subscribe(
+        userId,
+        await insertFeed(discovery.url, discovery.body, {
+          etag: discovery.etag,
+          lastModified: discovery.lastModified,
+        }),
+      ),
     };
   }
 
@@ -340,10 +372,14 @@ export async function subscribeToFeed(
       await db
         .select({ feedUrl: feeds.feedUrl })
         .from(feeds)
+        .innerJoin(subscriptions, eq(subscriptions.feedId, feeds.id))
         .where(
-          inArray(
-            feeds.feedUrl,
-            discovery.candidates.map((candidate) => candidate.url),
+          and(
+            eq(subscriptions.userId, userId),
+            inArray(
+              feeds.feedUrl,
+              discovery.candidates.map((candidate) => candidate.url),
+            ),
           ),
         )
     ).map((row) => row.feedUrl),
@@ -359,9 +395,32 @@ export async function subscribeToFeed(
   };
 }
 
-/** Unsubscribe. Articles go with it via the schema's cascade. */
-export async function unsubscribeFromFeed(feedId: number): Promise<void> {
-  await db.delete(feeds).where(eq(feeds.id, feedId));
+/**
+ * Unsubscribe one user, and drop the feed itself once nobody is left.
+ *
+ * Deleting the feed cascades to its articles and to everyone's state for
+ * them, which is why it only happens when the last subscriber leaves. It is
+ * also what keeps the fetch queue to feeds somebody actually reads.
+ */
+export async function unsubscribeFromFeed(
+  userId: string,
+  feedId: number,
+): Promise<void> {
+  await db
+    .delete(subscriptions)
+    .where(
+      and(eq(subscriptions.userId, userId), eq(subscriptions.feedId, feedId)),
+    );
+
+  // The id is a parameter, not a correlation to the outer `feeds` row:
+  // Drizzle renders columns unqualified inside a single-table subquery, and
+  // `subscriptions` has no `id` column for `feeds.id` to be mistaken for.
+  await db.delete(feeds).where(
+    and(
+      eq(feeds.id, feedId),
+      sql`not exists (select 1 from ${subscriptions} where ${subscriptions.feedId} = ${feedId})`,
+    ),
+  );
 }
 
 /** Exposed for the "sync all" button and for the cron sweep's logging. */

@@ -15,6 +15,7 @@ import { env } from 'virtual:env/client';
 import { AddFeedDialog } from './components/AddFeedDialog';
 import type { FeedSummary } from './server/feeds/queries';
 import { getFeeds, getShortsCount, getUnreadCount } from './lib/feeds';
+import { getUser, signOut } from './lib/auth-client';
 import { paths, Router } from './router';
 import { Skeleton } from './components/ui/skeleton';
 import './app.css';
@@ -109,6 +110,7 @@ function Shell(props: { children?: JSX.Element }) {
   const feeds = createMemo(() => getFeeds());
   const unread = createMemo(() => getUnreadCount());
   const shorts = createMemo(() => getShortsCount());
+  const user = createMemo(() => getUser());
   const location = useLocation();
 
   /**
@@ -247,6 +249,29 @@ function Shell(props: { children?: JSX.Element }) {
             </Show>
           </Loading>
         </div>
+
+        <div class="flex items-center gap-2 border-t border-border px-4 py-3">
+          <Loading fallback={<Skeleton class="h-3.5 w-32" />}>
+            <span class="min-w-0 flex-1 truncate text-xs text-muted-foreground">
+              {user()?.email}
+            </span>
+          </Loading>
+          {/*
+            A full page load, not a client navigation: signing out has to
+            drop every cached query, and the sign-in page is rendered
+            without the shell that would refetch them.
+          */}
+          <button
+            type="button"
+            class="text-xs underline underline-offset-4 hover:text-foreground"
+            onClick={async () => {
+              await signOut();
+              window.location.href = paths.signin();
+            }}
+          >
+            Sign out
+          </button>
+        </div>
       </aside>
 
       <main ref={main} class="min-w-0 flex-1 overflow-y-auto">
@@ -278,13 +303,30 @@ function Shell(props: { children?: JSX.Element }) {
   );
 }
 
+/**
+ * The shell reads the signed-in user's feeds, so it cannot wrap the page
+ * that exists for people who are not signed in: those reads redirect to
+ * /signin, and /signin rendering them is a redirect loop.
+ */
+function Chrome(props: { children?: JSX.Element }) {
+  const location = useLocation();
+  return (
+    <Show
+      when={location.pathname !== paths.signin()}
+      fallback={props.children}
+    >
+      <Shell>{props.children}</Shell>
+    </Show>
+  );
+}
+
 export default function App() {
   return (
     <Router>
       {(props) => (
         <>
           <Title>{env.VITE_APP_NAME}</Title>
-          <Shell>{props.children}</Shell>
+          <Chrome>{props.children}</Chrome>
         </>
       )}
     </Router>
