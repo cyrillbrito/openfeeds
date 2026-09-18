@@ -2,6 +2,7 @@ import { fileURLToPath } from 'node:url';
 import { fileRoutes } from 'filesystem-routing/vite';
 import { defineConfig } from 'vitest/config';
 import solid from '@solidjs/vite-plugin';
+import tailwindcss from '@tailwindcss/vite';
 
 export default defineConfig({
   // Turnkey streaming SSR: no index.html and no entry files — the plugin
@@ -31,6 +32,10 @@ export default defineConfig({
       // modules the fileRoutes plugin emits (their ids end in a query string).
       extensions: ['.jsx', '.tsx'],
     }),
+    // Tailwind 4 is a Vite plugin, not a PostCSS step: there is no
+    // tailwind.config.js and no content globs — it scans the module graph
+    // and the theme is declared in CSS (see src/app.css).
+    tailwindcss(),
     // `httpMethods` also scans route modules for GET/POST/... exports (API
     // routes). One router serves both sides: handler modules — and the
     // server-only code they import — never enter the client bundle.
@@ -52,7 +57,11 @@ export default defineConfig({
         test: {
           name: 'client',
           environment: 'jsdom',
-          include: ['src/**/*.test.tsx'],
+          // .tsx anywhere, plus .ts outside src/server — without the second
+          // pattern a plain .ts test in src/lib matches NO project and is
+          // silently never run.
+          include: ['src/**/*.test.tsx', 'src/**/*.test.ts'],
+          exclude: ['src/server/**'],
         },
       },
       {
@@ -77,6 +86,14 @@ export default defineConfig({
         },
       },
     ],
+  },
+  // `bun:sqlite` is a Bun builtin: it has no file on disk to resolve, so
+  // Vite must leave the import alone instead of trying to bundle it.
+  ssr: {
+    external: ['bun:sqlite'],
+  },
+  optimizeDeps: {
+    exclude: ['bun:sqlite'],
   },
   build: {
     target: 'esnext',

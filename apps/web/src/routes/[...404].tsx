@@ -2,6 +2,9 @@ import { Title } from '@solidjs/meta';
 import type { RouteDefinition } from '@solidjs/router';
 import { httpStatus } from '@solidjs/web';
 
+import { Button } from '../components/ui/button';
+import { paths } from '../router';
+
 // The catch-all route. httpStatus() sets the response status during SSR
 // (a no-op in the browser); it runs in preload so the status code is set
 // before the response head flushes.
@@ -11,16 +14,15 @@ export const route = {
 
 export default function NotFound() {
   return (
-    <main>
-      <Title>Not Found - Solid App</Title>
-      <h1>Page Not Found</h1>
-      <p>
-        Visit{' '}
-        <a href="https://docs.solidjs.com" target="_blank" rel="noreferrer">
-          docs.solidjs.com
-        </a>{' '}
-        to learn how to build Solid apps.
+    <main class="px-6 py-24 text-center">
+      <Title>Not found — OpenFeeds</Title>
+      <h1 class="text-lg font-semibold">Page not found</h1>
+      <p class="mt-2 text-sm text-muted-foreground">
+        That page does not exist.
       </p>
+      <Button as="a" href={paths()} size="sm" class="mt-6">
+        Back to inbox
+      </Button>
     </main>
   );
 }

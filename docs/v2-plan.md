@@ -115,7 +115,38 @@ Node 20.19+ / 22.12+, a Vite 8 requirement.
 
 ### Tailwind
 
-Staying. Only the component layer on top is in question.
+Staying — v4, as a Vite plugin, so there is no `tailwind.config.js` and the theme is declared in
+`src/app.css`.
+
+### UI: Kobalte 2 alpha, shadcn components vendored
+
+`@kobalte/core@2.0.0-alpha.0` is the only accessibility layer that runs on Solid 2: its peers pin
+`solid-js@2.0.0-rc.0` and `@solidjs/web@2.0.0-rc.0` exactly, matching our pins. The stable 0.13
+line is Solid 1 only, and Kobalte is skipping 1.0 entirely.
+
+All three shadcn-for-Solid ports (`solid-ui`, `shadcn-solid`, `solidcn`) sit on Kobalte 0.13, so
+none of them installs. That turns out not to matter: shadcn's premise is copy-paste code you own,
+and the components are thin — a Kobalte primitive plus `cva` and `cn`. They are **vendored** into
+`src/components/ui` and retargeted. `hngngn/shadcn-solid` is the better base (shadcn-v4
+generation, inline SVGs, no icon dependency).
+
+The real porting cost was Solid's own changes, not Kobalte's — `splitProps`→`omit`,
+`classList`→`class` array form, and the `ValidComponent` type moving to `@solidjs/web`. Kobalte's
+own compound part names are unchanged from 0.13.
+
+Cost: an alpha published days before adoption, with no migration guide. Mitigated by owning the
+component source outright — a breaking change is a local edit, not a blocked upgrade.
+
+### Parsing: feedsmith
+
+`feedsmith@3.0.0-rc.3` handles RSS, Atom, RDF and JSON Feed behind one `parseFeed`. It preserves
+each format's structure rather than normalising, so the mapping to our schema is ours to write and
+own — which is the right split, because that mapping is exactly where feed-format reality lives
+(`guid` vs `id` vs `url`, `content:encoded` vs `description`, RFC 822 vs ISO 8601).
+
+Two v1 bugs are fixed by construction: the identity fallback chain means items without a `<guid>`
+are no longer silently dropped, and `content:encoded` is preferred over the `<description>` teaser
+so full-text feeds are no longer truncated.
 
 ---
 
@@ -123,17 +154,7 @@ Staying. Only the component layer on top is in question.
 
 Ordered by how hard each is to reverse later. Spend deliberation accordingly.
 
-## 1. UI component layer
-
-The framework is settled; the layer on top is not. **Kobalte** is Solid's Radix equivalent
-(unstyled, WAI-ARIA), and three shadcn ports sit on it: `solid-ui`, `shadcn-solid`, `solidcn`.
-Community-maintained and smaller than the React originals — that's the real trade, not
-availability. DaisyUI is out: styling over browser defaults, with no focus management, no ARIA
-wiring, no keyboard semantics.
-
-Solid 2 RC claims Kobalte is ready; verify rather than trust.
-
-## 2. Database architecture
+## 1. Database architecture
 
 Multi-user is settled; the layout is not.
 
@@ -148,9 +169,12 @@ export/delete/backup is a file operation. Shards writes (SQLite has one writer p
 needs a shared "system" DB for anything cross-user, and migrations run across N+1 files where
 partial failure strands users on mixed schema versions.
 
-Coupled to (3) — decide them together.
+Coupled to (2) — decide them together.
 
-## 3. Feed sharing
+The single-user prototype sidesteps this rather than answering it: no `userId` column exists. It
+does keep the cheap half of the option open — `feeds.feed_url` is canonical and unique.
+
+## 2. Feed sharing
 
 Popular feeds are heavily shared. The risk isn't bandwidth, it's **getting rate-limited or
 blocked** — 50 subscribers to one YouTube channel = 50 requests/hour to one host from one IP.
@@ -164,7 +188,7 @@ The cheap way to keep the path open is to make feed *identity* canonical from da
 normalised feed URL that's unique across the system — even while fetching stays per-user. That's
 the hard half of the migration, and it costs almost nothing to add up front.
 
-## 4. Testing
+## 3. Testing
 
 v1 used Playwright. Worth reconsidering, but the framing needs correcting: **Vitest browser mode
 is not an alternative to Playwright — it drives Playwright underneath.** It went stable in Vitest
@@ -181,14 +205,17 @@ browser mode for components and Playwright for full E2E flows. Cheap to reverse 
 
 Pointers, not designs.
 
-- **Conditional GET.** v1's `rss-fetch.ts` is a bare `fetch(url)` — no `If-None-Match` /
-  `If-Modified-Since`, so every sync downloads every feed body in full. ~10 lines, widely
-  supported, a 304 is a few hundred bytes with no parse. Distinct from GUID dedup, which skips
-  the *write* but still downloads and parses. Biggest efficiency win available, and it's
-  independent of the feed-sharing decision.
-- **Feed URL normalisation** — the canonical identity above. `http`/`https`, trailing slashes,
-  `?utm_*`, FeedBurner, YouTube's several channel-feed URL forms. Duplicate sources are harmless;
-  wrongly merged ones aren't.
+- ~~**Conditional GET**~~ — done. `src/server/feeds/fetch.ts` stores the ETag / Last-Modified from
+  each response and echoes them back, so an unchanged feed costs a 304 and no parse.
+- **Feed URL normalisation** — partly done (`canonicalizeFeedUrl`): scheme, host case, default
+  ports, fragments, `utm_*`. Deliberately conservative, since a wrongly merged feed loses a
+  subscription while a duplicate is merely untidy. Still open: FeedBurner and YouTube's several
+  channel-feed URL forms.
+- **Feed encoding.** `response.text()` assumes UTF-8; feeds declaring ISO-8859-1 or windows-1252
+  in their XML prolog decode to mojibake. Reads as a display bug, is a fetch bug.
+- **HTML sanitising.** `src/lib/sanitize-html.ts` is regex-based and explicitly a stopgap. A
+  parser-based sanitiser is a prerequisite for multi-user, where one user's feed could otherwise
+  script another's session.
 - **Per-host politeness** — group a sync batch by host, cap concurrency per host. BullMQ never
   gave us this (its limiter is global).
 - **Backfill on subscribe** — if feeds are ever shared, does a new subscriber get existing

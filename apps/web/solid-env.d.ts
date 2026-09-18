@@ -21,6 +21,8 @@ declare module 'virtual:env/server' {
     : string;
   const env: {
     readonly "SESSION_SECRET": __Out<__Schema["server"]["SESSION_SECRET"]>;
+    readonly "DATABASE_PATH": __Out<__Schema["server"]["DATABASE_PATH"]>;
+    readonly "SYNTHETIC_DELAY_MS": __Out<__Schema["server"]["SYNTHETIC_DELAY_MS"]>;
     readonly "VITE_APP_NAME": __Out<__Schema["client"]["VITE_APP_NAME"]>;
   };
   export { env };

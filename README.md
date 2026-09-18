@@ -41,9 +41,10 @@ convenient it would otherwise be.
 
 ## Status
 
-Early development. The stack is settled — Bun, Solid 2 (start mode), SQLite, Tailwind, Better
-Auth — and the app is scaffolded. The UI component layer, the database layout and the
-feed-sharing model are still open.
+Early development. The stack is settled — Bun, Solid 2 (start mode), SQLite, Tailwind, Kobalte,
+Better Auth — and a single-user prototype works end to end: subscribe to a feed, fetch and parse
+it on a cron, read the inbox. Authentication, and with it the database layout and the
+feed-sharing model, are still open.
 
 ## License
 

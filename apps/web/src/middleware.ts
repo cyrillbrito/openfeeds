@@ -6,6 +6,14 @@
 import { createAPIHandler } from 'filesystem-routing/api';
 import routes from 'virtual:file-routes';
 
+import { startFeedCron } from './server/cron';
+
+// This module is evaluated once when the server boots — dev middleware and
+// production handler alike — which makes it the app's server lifecycle hook.
+// The feed sweep starts here rather than in server.js so that `bun run dev`
+// fetches feeds too. startFeedCron() is idempotent (see server/cron.ts).
+startFeedCron();
+
 // createAPIHandler serves the GET/POST/... exports of route modules
 // (see src/routes/api) and passes everything else down the chain.
 export default [createAPIHandler(routes)];
