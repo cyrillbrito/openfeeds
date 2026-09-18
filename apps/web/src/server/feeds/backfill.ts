@@ -8,7 +8,8 @@
 // It is deliberately best-effort and works from STORED COLUMNS ONLY — no
 // re-fetching of every feed, which is what the same job would cost done the
 // obvious way. That puts a ceiling on what it can recover: an image from the
-// body HTML or a YouTube link, a kind from the link and the title. A podcast
+// stored `summary` HTML or a YouTube link, a kind from the link and the
+// title. A podcast
 // enclosure is not in any stored column, so old episodes stay 'article' until
 // they fall out of the feed — an acceptable price for not re-downloading
 // every feed on a schema change.
@@ -53,7 +54,6 @@ export async function backfillArticleMetadata(): Promise<number> {
         title: articles.title,
         url: articles.url,
         summary: articles.summary,
-        content: articles.content,
         kind: articles.kind,
         imageUrl: articles.imageUrl,
       })
@@ -80,12 +80,11 @@ export async function backfillArticleMetadata(): Promise<number> {
         .set({
           excerpt:
             (showsExcerpt(kind)
-              ? deriveExcerpt(row.summary, row.content, excerptLimitFor(kind))
+              ? deriveExcerpt(row.summary, null, excerptLimitFor(kind))
               : '') ?? '',
           imageUrl:
             row.imageUrl ??
             (videoId ? youtubeThumbnailUrl(videoId) : undefined) ??
-            bodyImage(row.content, row.url) ??
             bodyImage(row.summary, row.url) ??
             null,
           kind,
@@ -118,7 +117,8 @@ function bodyImage(
 /** How much work is outstanding — used to skip the log line when there is none. */
 export async function countUnenrichedArticles(): Promise<number> {
   const [row] = await db
-    .select({ value: sql<number>`count(*)` })
+    // `::int` — count() is bigint, which arrives as a string otherwise.
+    .select({ value: sql<number>`count(*)::int` })
     .from(articles)
     .where(and(isNull(articles.excerpt)));
   return row?.value ?? 0;

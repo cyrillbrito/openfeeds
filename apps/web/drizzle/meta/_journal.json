@@ -1,26 +1,19 @@
 {
   "version": "7",
-  "dialect": "sqlite",
+  "dialect": "postgresql",
   "entries": [
     {
       "idx": 0,
-      "version": "6",
-      "when": 1787345204538,
-      "tag": "0000_peaceful_iron_fist",
+      "version": "7",
+      "when": 1789767960120,
+      "tag": "0000_init",
       "breakpoints": true
     },
     {
       "idx": 1,
-      "version": "6",
-      "when": 1787562013029,
-      "tag": "0001_happy_marauders",
-      "breakpoints": true
-    },
-    {
-      "idx": 2,
-      "version": "6",
-      "when": 1787563257993,
-      "tag": "0002_concerned_dreaming_celestial",
+      "version": "7",
+      "when": 1789768108496,
+      "tag": "0001_drop_article_content",
       "breakpoints": true
     }
   ]

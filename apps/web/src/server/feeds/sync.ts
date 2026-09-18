@@ -63,8 +63,10 @@ async function insertArticles(
       title: item.title,
       url: item.url,
       author: item.author,
-      summary: item.summary,
-      content: item.content,
+      // One body column: the teaser when there is one, the full body when
+      // that is all the feed ships. Only the excerpt and the fallback
+      // thumbnail read it — nothing renders it.
+      summary: item.summary ?? item.content,
       kind: item.kind,
       // '' rather than NULL when there is no excerpt: NULL is reserved as
       // the "never enriched" marker the backfill scans for.
@@ -82,7 +84,8 @@ async function insertArticles(
 
   // Re-fetching a feed re-sees every item it still lists, so almost all of
   // these collide with the unique(feedId, guid) index. That is the intended
-  // path, not an error case — SQLite skips them and reports what it wrote.
+  // path, not an error case — Postgres skips them and RETURNING reports
+  // only the rows actually written.
   const inserted = await db
     .insert(articles)
     .values(rows)
@@ -364,7 +367,8 @@ export async function unsubscribeFromFeed(feedId: number): Promise<void> {
 /** Exposed for the "sync all" button and for the cron sweep's logging. */
 export async function countDueFeeds(): Promise<number> {
   const [row] = await db
-    .select({ count: sql<number>`count(*)` })
+    // `::int` — count() is bigint, which arrives as a string otherwise.
+    .select({ count: sql<number>`count(*)::int` })
     .from(feeds)
     .where(and(lte(feeds.nextFetchAt, new Date())));
   return row?.count ?? 0;

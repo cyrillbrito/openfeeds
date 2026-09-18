@@ -20,8 +20,11 @@ declare module 'virtual:env/server' {
     ? O
     : string;
   const env: {
-    readonly "SESSION_SECRET": __Out<__Schema["server"]["SESSION_SECRET"]>;
-    readonly "DATABASE_PATH": __Out<__Schema["server"]["DATABASE_PATH"]>;
+    readonly "BETTER_AUTH_SECRET": __Out<__Schema["server"]["BETTER_AUTH_SECRET"]>;
+    readonly "BETTER_AUTH_URL": __Out<__Schema["server"]["BETTER_AUTH_URL"]>;
+    readonly "GOOGLE_CLIENT_ID": __Out<__Schema["server"]["GOOGLE_CLIENT_ID"]>;
+    readonly "GOOGLE_CLIENT_SECRET": __Out<__Schema["server"]["GOOGLE_CLIENT_SECRET"]>;
+    readonly "DATABASE_URL": __Out<__Schema["server"]["DATABASE_URL"]>;
     readonly "SYNTHETIC_DELAY_MS": __Out<__Schema["server"]["SYNTHETIC_DELAY_MS"]>;
     readonly "VITE_APP_NAME": __Out<__Schema["client"]["VITE_APP_NAME"]>;
   };

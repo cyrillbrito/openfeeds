@@ -170,7 +170,9 @@ describe('normalizeFeed — hostile input', () => {
   it('throws on a document that is not a feed', () => {
     // An HTML error page served with a 200 is the common real-world case.
     // The caller turns this into a visible per-feed error.
-    expect(() => normalizeFeed('<html><body>Nope</body></html>', FEED_URL)).toThrow();
+    expect(() => normalizeFeed('<html><body>Nope</body></html>', FEED_URL)).toThrow(
+      Error,
+    );
   });
 
   it('handles a feed with no items', () => {

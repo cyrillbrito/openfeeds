@@ -1,0 +1,51 @@
+# Local infrastructure only — the app itself runs on the host under Bun
+# (`bun run dev`). This file exists so a fresh clone is one command away from
+# a working database, not so development happens inside a container.
+#
+# ONE compose file, deliberately. When the self-host image exists it gets
+# added here as a second service behind a profile, rather than forked into a
+# `compose.prod.yml` that drifts from this one.
+#
+# RUNNING TWO CHECKOUTS AT ONCE costs one line of .env and nothing else.
+# Compose derives its project name from the DIRECTORY NAME, and the project
+# name namespaces containers, networks and volumes — so a second git worktree
+# in a differently-named directory already gets its own isolated Postgres and
+# its own data. The only thing that genuinely collides is the published host
+# port, which is why it is a variable. In the second worktree:
+#
+#     echo 'POSTGRES_PORT=5433' > .env          # repo root; Compose reads it
+#     docker compose up -d
+#     cd apps/web && bun run dev --port 3001    # with DATABASE_URL on :5433
+#
+# `docker compose down -v` in that directory takes only that instance down.
+services:
+  postgres:
+    image: postgres:18-alpine
+    # Credentials are 'openfeeds' on purpose: this port is bound to
+    # localhost, holds RSS articles, and matching the DATABASE_URL default in
+    # env.ts is what makes a clone work with no .env edit. A deployment
+    # supplies real ones through the environment.
+    environment:
+      POSTGRES_USER: openfeeds
+      POSTGRES_PASSWORD: openfeeds
+      POSTGRES_DB: openfeeds
+    # Variable so a second checkout can publish 5433 without colliding — see
+    # the note above. Defaults to the standard port for the common case.
+    ports:
+      - '${POSTGRES_PORT:-5432}:5432'
+    # Mounted at /var/lib/postgresql, not .../data: the 18+ images store
+    # data in a major-version subdirectory and refuse to start when the
+    # old .../data path is the mount point. docker-library/postgres#1259.
+    volumes:
+      - pgdata:/var/lib/postgresql
+    # Without this, `docker compose up -d && bun run dev` races: the
+    # container is "up" several seconds before Postgres accepts connections,
+    # and the app's boot migration is the thing that loses.
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U openfeeds -d openfeeds']
+      interval: 2s
+      timeout: 3s
+      retries: 15
+
+volumes:
+  pgdata:

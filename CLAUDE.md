@@ -32,7 +32,9 @@ that preserves the choice: `feeds.feed_url` is canonical and unique system-wide.
   for it, and treat most SolidStart material online as describing the old thing.
 - **Vite 8**, **Vitest 4**, **oxlint**.
 - **SQLite** via `bun:sqlite` + **Drizzle**; migrations run at boot. **Tailwind 4** (Vite plugin,
-  no config file). **Better Auth** — settled, not yet installed.
+  no config file). **Better Auth** `1.7.5` — `src/server/auth.ts`, mounted at
+  `src/routes/api/auth/[...all].ts`, its four tables in `db/schema.ts`. Email+password always
+  on, Google when its two env vars are set. No mailer, so no verification, reset, or magic link.
 - **UI: Kobalte `2.0.0-alpha.0`** (the Solid 2 line) with shadcn components **vendored** into
   `src/components/ui`. They are our source files, not a dependency. The shadcn-for-Solid ports all
   target Kobalte 0.13 / Solid 1, so their code is a starting point that must be retargeted.
@@ -67,7 +69,7 @@ bun run test       # vitest — client (jsdom) + server projects
 bun run lint       # oxlint
 bun run typecheck  # tsc --noEmit
 bun run start      # production server against dist/
-bun run db:generate  # schema.ts -> drizzle/*.sql
+bun run db:generate --name add_x   # schema.ts -> drizzle/000N_add_x.sql
 ```
 
 Gotchas:
@@ -76,10 +78,18 @@ Gotchas:
   `#!/usr/bin/env node` shebangs, so a plain `bun run dev` executes under **Node** — where
   `bun:sqlite` fails to resolve and `Bun.cron` is undefined (it silently falls back to
   `setInterval`). `src/server/runtime.test.ts` guards this.
+- **`jsdom` is capped at 29.** 30.x throws `'addEventListener' called on an object that is not a
+  valid instance of EventTarget` when Vitest sets up the jsdom environment under `bun --bun` —
+  every client test file dies at setup and Vitest still exits reporting the server files as
+  passing. Not a Vitest bug: 4 and 5 both fail identically, 29 passes on both.
 - The dev server only SSRs requests whose `Accept` includes `text/html`. `curl` sends `*/*` and
   gets a Vite 404 — pass `-H 'Accept: text/html'` or you'll misdiagnose dev as broken.
-- `apps/web/.env` (gitignored) needs `SESSION_SECRET`; see `.env.example`. `DATABASE_PATH`
-  defaults to `./data/openfeeds.db`.
+- `apps/web/.env` (gitignored) needs `BETTER_AUTH_SECRET` (32+ chars); see `.env.example`.
+- `bunx drizzle-kit migrate` does not work — it wants a node Postgres driver and the app uses
+  `Bun.SQL`. Migrations apply at boot, so one request to `bun run dev` runs them.
+- The Better Auth CLI (`bunx auth@latest generate`) cannot load `src/server/auth.ts`: jiti does
+  not resolve `server-only` or `virtual:env/server`. Point `--config` at a throwaway file that
+  repeats only the table-affecting options.
 - `run lint`/`run test` do not typecheck. Run `bun run typecheck` — several Solid 2 traps below
   are type-only and invisible to both.
 
@@ -102,6 +112,8 @@ RC software, and most material online describes retired APIs. Verified against `
   it falls back immediately. Crossing to a *different* route needs no `on` — that mounts a
   fresh boundary. `isPending(() => memo())` is the third mode: an inline "updating" affordance
   that keeps the current content; it performs the read, so it must sit under the same boundary.
+- No `solid-js/store` subpath — `createStore`/`reconcile` are on the root export. This breaks
+  `better-auth/solid`, hence the vanilla client in `src/lib/auth-client.ts`.
 - `redirect`/`reload`/`respond`/`markSafeError` come from `@solidjs/web`, not the router.
 - `createEffect` takes **two** arguments (track, then act).
 - No `onMount`. `onCleanup` survives, `onMount` does not — reach for
@@ -126,7 +138,11 @@ RC software, and most material online describes retired APIs. Verified against `
 
 - v2 is a rewrite, not a port. v1 code is a **reference**, not a source to copy from.
 - Prefer boring over clever — v1 failed on complexity, not on capability.
+- **Comments state facts, not justifications.** Say what the code does and what constraint it
+  obeys. Don't argue for the choice, don't compare with v1, don't narrate the alternatives
+  considered. A few lines per file, not a preamble.
 - Ask before adding a dependency that becomes load-bearing.
 - No Turborepo. Plain Bun workspaces; `bun run --filter` to span packages.
-- `src/lib/sanitize-html.ts` is a regex stopgap, not a real sanitiser. The article body is the one
-  place rendering remote HTML — swap in a parser-based sanitiser **before** multi-user lands.
+- No detail page and no content extraction: a row links straight to its source (`_blank`, marks
+  read on click). The shorts viewer is the one in-app screen. Nothing renders remote HTML, which
+  is why `sanitize-html.ts` no longer exists — bring it back parser-based if a reader pane does.

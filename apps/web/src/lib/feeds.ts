@@ -14,7 +14,6 @@ import { slowDown } from '../server/dev-delay';
 import {
   countUnread,
   countUnreadShorts,
-  getArticle,
   getFeed,
   listArticles,
   listFeeds,
@@ -70,12 +69,6 @@ export const getFeedArticles = query(async (feedId: number) => {
   ]);
   return { feed, items };
 }, 'feed-articles');
-
-export const getArticleDetail = query(async (id: number) => {
-  'use server';
-  await slowDown();
-  return getArticle(id);
-}, 'article');
 
 export const getUnreadCount = query(async () => {
   'use server';
@@ -195,14 +188,14 @@ export const toggleRead = action(async (id: number, isRead: boolean) => {
   'use server';
   await slowDown();
   await setArticleRead(id, isRead);
-  return reload({ revalidate: [...UNREAD_KEYS, 'article'] });
+  return reload({ revalidate: UNREAD_KEYS });
 }, 'toggle-read');
 
 export const archiveArticle = action(async (id: number) => {
   'use server';
   await slowDown();
   await setArticleArchived(id, true);
-  return reload({ revalidate: [...UNREAD_KEYS, 'article'] });
+  return reload({ revalidate: UNREAD_KEYS });
 }, 'archive-article');
 
 export const markFeedRead = action(async (feedId?: number) => {

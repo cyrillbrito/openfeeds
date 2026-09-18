@@ -16,7 +16,9 @@ afterEach(() => {
 
 /** Capture the Request the code under test makes. */
 function stubFetch(response: Response) {
-  const spy = vi.fn(async (..._args: unknown[]) => response);
+  const spy = vi.fn<(...args: unknown[]) => Promise<Response>>(
+    async () => response,
+  );
   vi.stubGlobal('fetch', spy);
   return spy;
 }

@@ -9,7 +9,7 @@
  */
 import { beforeEach, describe, expect, it } from 'vitest';
 
-process.env.DATABASE_PATH = ':memory:';
+process.env.DATABASE_URL = 'memory://';
 
 const { db } = await import('../db');
 const { articles, feeds } = await import('../db/schema');

@@ -3,8 +3,10 @@ dist/
 build/
 .output/
 .vite/
+.vitest/
 
-# Local data — SQLite lives in ./data at runtime
+# Local data — Postgres lives in a Docker volume, but PGlite and older
+# SQLite checkouts write here.
 data/
 *.db
 *.db-shm

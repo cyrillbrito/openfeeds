@@ -16,8 +16,8 @@ no tracking, no ads deciding what you see.
 - Subscribe to RSS and Atom feeds, YouTube channels, and podcasts
 - Paste any website URL and let OpenFeeds find the feed for you
 - An inbox across every feed, plus per-feed and per-tag views
-- Readability mode — pulls the article out of the page, without the site's furniture
-- A dedicated vertical viewer for YouTube Shorts, kept out of the main reading flow
+- Clicking an item opens the original in a new tab — no in-app reader, no content extraction
+- A dedicated vertical viewer for YouTube Shorts, the one thing you read in the app
 
 **Organising**
 - Tags on feeds and on individual articles

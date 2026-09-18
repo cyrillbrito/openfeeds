@@ -51,10 +51,10 @@ declare module "virtual:file-routes" {
       $$route: FileRouteEagerRef<typeof import("./src/routes/[...404]")>;
     },
     {
-      path: "/articles/:id";
+      path: "/signin";
       page: true;
-      $component: FileRouteLazyRef<typeof import("./src/routes/articles/[id]")>;
-      $$route: FileRouteEagerRef<typeof import("./src/routes/articles/[id]")>;
+      $component: FileRouteLazyRef<typeof import("./src/routes/signin")>;
+      $$route: FileRouteEagerRef<typeof import("./src/routes/signin")>;
     },
     {
       path: "/feeds/";
@@ -67,6 +67,14 @@ declare module "virtual:file-routes" {
       page: true;
       $component: FileRouteLazyRef<typeof import("./src/routes/feeds/[id]")>;
       $$route: FileRouteEagerRef<typeof import("./src/routes/feeds/[id]")>;
+    },
+    {
+      path: "/api/auth/*all";
+      page: false;
+      $GET: FileRouteLazyRef<typeof import("./src/routes/api/auth/[...all]")>;
+      $POST: FileRouteLazyRef<typeof import("./src/routes/api/auth/[...all]")>;
+      $HEAD: FileRouteLazyRef<typeof import("./src/routes/api/auth/[...all]")>;
+      $$route?: undefined;
     }
   ];
   export default routes;
@@ -98,6 +106,14 @@ declare module "virtual:file-routes" {
       children?: undefined;
     },
     {
+      path: "/signin";
+      id: "/signin";
+      page: true;
+      $component: FileRouteLazyRef<typeof import("./src/routes/signin")>;
+      $$route: FileRouteEagerRef<typeof import("./src/routes/signin")>;
+      children?: undefined;
+    },
+    {
       path: "/feeds/";
       id: "/feeds/";
       page: true;
@@ -111,14 +127,6 @@ declare module "virtual:file-routes" {
       page: true;
       $component: FileRouteLazyRef<typeof import("./src/routes/feeds/[id]")>;
       $$route: FileRouteEagerRef<typeof import("./src/routes/feeds/[id]")>;
-      children?: undefined;
-    },
-    {
-      path: "/articles/:id";
-      id: "/articles/:id";
-      page: true;
-      $component: FileRouteLazyRef<typeof import("./src/routes/articles/[id]")>;
-      $$route: FileRouteEagerRef<typeof import("./src/routes/articles/[id]")>;
       children?: undefined;
     }
   ];

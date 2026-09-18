@@ -9,7 +9,7 @@
  */
 import { afterAll, beforeEach, describe, expect, it } from 'vitest';
 
-process.env.DATABASE_PATH = ':memory:';
+process.env.DATABASE_URL = 'memory://';
 
 const { db } = await import('../db');
 const { articles, feeds } = await import('../db/schema');
@@ -187,7 +187,9 @@ describe('subscribeToFeed', () => {
 
   it('refuses a URL that is not a feed', async () => {
     feedBody = '<html><body>Not a feed</body></html>';
-    await expect(subscribe(`${base}/page.html`)).rejects.toThrow();
+    await expect(subscribe(`${base}/page.html`)).rejects.toThrow(
+      'No feed found at that address',
+    );
     expect(await db.select().from(feeds)).toHaveLength(0);
   });
 });

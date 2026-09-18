@@ -168,7 +168,7 @@ export function AddFeedDialog() {
                 so it subscribes directly instead of rediscovering. */}
             <input type="hidden" name="exact" value="1" />
 
-            <div class="flex flex-col gap-2" role="group">
+            <fieldset class="flex flex-col gap-2">
               <For each={choices()}>
                 {(choice) => (
                   <label
@@ -204,7 +204,7 @@ export function AddFeedDialog() {
                   </label>
                 )}
               </For>
-            </div>
+            </fieldset>
 
             <Show when={errorMessage()}>
               {(message) => (

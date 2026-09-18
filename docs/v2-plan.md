@@ -16,9 +16,12 @@ pre-fetched, so the offline story was theoretical while the costs were real.
 
 ### Goals
 
-1. **One container, one file.** `docker run -v ./data:/data openfeeds`
+1. **Two containers, no more.** App + Postgres, one `compose.yml`. Amended from "one
+   container, one file" — see the Postgres decision below for what that cost and why it was
+   paid.
 2. **One framework.** Full-stack, as native as possible. No meta-stack glue.
-3. **Boring data path.** SQLite + plain endpoints + a query cache. No sync engine.
+3. **Boring data path.** One relational database + plain endpoints + a query cache. No sync
+   engine.
 4. **Self-hostable.** The spine — vetoes any hosted-only dependency.
 5. **Enjoyable to work on.**
 
@@ -30,14 +33,58 @@ Local-first / offline · AI & TTS · realtime cross-device sync · multi-machine
 
 # Settled
 
-### SQLite
+### Postgres, one shared database
 
-Simplicity, testing, local dev — the whole point. Drizzle's libSQL driver means a deployment
-wanting managed backups can point at Turso via one env var, no code change.
+**Reversed from SQLite.** The prototype shipped on `bun:sqlite`, and the trade is now decided the
+other way. Taken together with the normalisation decision below, this closes what were open
+questions 1 and 2.
 
-**Turso Sync (browser replication) rejected:** requires Turso Cloud (breaks self-hosting),
-partial sync not shipped (browser would receive the whole multi-user DB), OIDC limited to
-Clerk/Auth0, beta with last-push-wins. Same shape of bet as Electric, one rung less mature.
+The layout is **one shared database, fully normalised**: `feeds` and `articles` are global, one
+row per canonical feed URL and one row per entry, with per-user data arriving later as
+`subscriptions` and `article_state`. The alternative — per-user copies of every article row —
+stores the same YouTube video once per subscriber, and the duplication is in the largest columns
+in the schema (`summary`). Normalising also makes shared fetching fall out for free
+rather than needing a design: one feed row, one `nextFetchAt`, one request per hour no matter how
+many people follow it. That was the actual risk in question 2 — not bandwidth, but 50 requests an
+hour to one host from one IP getting the self-hoster blocked.
+
+Given a shared, normalised database, three things pick Postgres over SQLite:
+
+- **Concurrent writers.** SQLite serialises writes database-wide. The cron sweep writing articles
+  while readers mark things read is precisely that contention, and it gets worse with every user
+  since they now share one file. WAL and `busy_timeout` raise the ceiling; they do not remove it.
+- **Real types.** `timestamptz` retires the "pick integer-ms or ISO text, globally" question that
+  sat in the rabbit-hole list. Also `jsonb`, real booleans, and `ALTER TABLE` that does not
+  rewrite the table.
+- **Timing.** The schema is two tables with no production data. This is the cheapest this port
+  will ever be; after auth and real users it is a migration project.
+
+**What it costs, stated plainly:** goal 1 as originally written. `docker run -v ./data:/data
+openfeeds` is dead, and with it "back up by copying a file". Self-hosters now run a second
+container and own `pg_dump`. This is the same complexity v1 was criticised for at the top of this
+document — the difference is that v1 needed Postgres *with logical replication* to feed a sync
+sidecar, plus Redis, plus a worker, plus a queue dashboard. A plain Postgres and nothing else is
+one container, not six, and it buys the data model rather than a sync engine we already rejected.
+
+**Driver: `drizzle-orm/bun-sql`**, wrapping Bun's built-in `Bun.SQL`. No `pg`, no `postgres.js`,
+no native module — the switch cost zero dependencies, which is the Bun commitment paying off a
+second time.
+
+**Local development: `compose.yml` at the repo root, Postgres only.** The app still runs on the
+host under Bun; the container is infrastructure, not a dev environment. One compose file — the
+self-host image gets added to it as a second service behind a profile rather than forked into a
+`compose.prod.yml` that drifts.
+
+**Tests use PGlite** (`memory://`), real Postgres compiled to WASM and run in-process. It
+replaces SQLite's `:memory:` and keeps the suite hermetic; without it `bun run test` would need
+`docker compose up` first, on every machine and in CI. It is from the Electric SQL people and is
+not Electric — no sync, no replication, no server. Reversible: it is a devDependency behind one
+branch in `src/server/db/index.ts`.
+
+**Turso / libSQL is no longer the escape hatch.** It was the SQLite-compatible answer to managed
+backups; on Postgres that is every managed provider in existence. **Turso Sync (browser
+replication) stays rejected** on its own merits: requires Turso Cloud (breaks self-hosting),
+partial sync not shipped, OIDC limited to Clerk/Auth0, beta with last-push-wins.
 
 ### No sync engine
 
@@ -145,8 +192,22 @@ own — which is the right split, because that mapping is exactly where feed-for
 (`guid` vs `id` vs `url`, `content:encoded` vs `description`, RFC 822 vs ISO 8601).
 
 Two v1 bugs are fixed by construction: the identity fallback chain means items without a `<guid>`
-are no longer silently dropped, and `content:encoded` is preferred over the `<description>` teaser
-so full-text feeds are no longer truncated.
+are no longer silently dropped, and `content:encoded` is used when a feed ships no
+`<description>`, so those items still get a preview.
+
+### The list links out — no reader, no extraction
+
+There is no article page. A row's title opens the source in a new tab and marks the item read;
+the **shorts viewer is the only screen that plays content in-app**, because a vertical video is
+unwatchable as a link.
+
+This is the single biggest thing v1 owned that v2 does not: readability extraction, an HTML
+sanitiser, a reader layout, and a body column holding every article's full text. The feed's own
+body is still parsed — it is where the excerpt and the fallback thumbnail come from — but it is
+stored once as `articles.summary` and never rendered.
+
+Reversible: a reader pane means re-adding a parser-based sanitiser and a body column, and nothing
+else.
 
 ---
 
@@ -154,41 +215,24 @@ so full-text feeds are no longer truncated.
 
 Ordered by how hard each is to reverse later. Spend deliberation accordingly.
 
-## 1. Database architecture
+*(Database architecture and feed sharing used to be items 1 and 2 here. Both are settled above.)*
 
-Multi-user is settled; the layout is not.
+## 1. Per-user isolation, once auth lands
 
-**One shared DB, `user_id` on user tables** — simple: one file, one migration path, one
-connection. Makes shared feed fetching possible. Scaling is a non-issue for a long time. Risk is
-that a forgotten `userId` filter leaks or loses data — not theoretical: v1's GUID dedup at
-`rss-sync.ts:94` omits it, so once any user has an article GUID, no other user ever gets it.
-Mitigated by a repository layer where `userId` is always the first argument.
+The engine and the layout are decided; the discipline that keeps a shared database honest is not.
+A forgotten `userId` filter in a shared database leaks or loses data, and that is not theoretical
+— v1's GUID dedup at `rss-sync.ts:94` omitted it, so once any user had an article GUID, no other
+user ever received it.
 
-**One DB per user** — isolation is structural, so the bug above is impossible to write. Per-user
-export/delete/backup is a file operation. Shards writes (SQLite has one writer per DB). Cost:
-needs a shared "system" DB for anything cross-user, and migrations run across N+1 files where
-partial failure strands users on mixed schema versions.
+Normalising helps more than it looks: `feeds` and `articles` are global by design, so there is no
+`userId` on them to forget. The exposure narrows to `subscriptions` and `article_state`. Open
+question is the mechanism — a repository layer where `userId` is always the first argument, or
+Postgres row-level security, which enforces it in the database and cannot be bypassed by a query
+written in a hurry. RLS was not available to us before this decision and now is.
 
-Coupled to (2) — decide them together.
+The prototype is still single-user: no `userId` column exists anywhere yet.
 
-The single-user prototype sidesteps this rather than answering it: no `userId` column exists. It
-does keep the cheap half of the option open — `feeds.feed_url` is canonical and unique.
-
-## 2. Feed sharing
-
-Popular feeds are heavily shared. The risk isn't bandwidth, it's **getting rate-limited or
-blocked** — 50 subscribers to one YouTube channel = 50 requests/hour to one host from one IP.
-Bites at modest scale, not just at scale. Never actually hit in v1.
-
-**Current lean: don't build it yet, but don't preclude it.** Options in increasing cost — keep
-per-user fetching; dedupe the *fetch* via a global `feed_sources` table and fan out to per-user
-article rows; or fully normalise (global articles + per-user state, the Feedbin model).
-
-The cheap way to keep the path open is to make feed *identity* canonical from day one — a
-normalised feed URL that's unique across the system — even while fetching stays per-user. That's
-the hard half of the migration, and it costs almost nothing to add up front.
-
-## 3. Testing
+## 2. Testing
 
 v1 used Playwright. Worth reconsidering, but the framing needs correcting: **Vitest browser mode
 is not an alternative to Playwright — it drives Playwright underneath.** It went stable in Vitest
@@ -213,16 +257,15 @@ Pointers, not designs.
   channel-feed URL forms.
 - **Feed encoding.** `response.text()` assumes UTF-8; feeds declaring ISO-8859-1 or windows-1252
   in their XML prolog decode to mojibake. Reads as a display bug, is a fetch bug.
-- **HTML sanitising.** `src/lib/sanitize-html.ts` is regex-based and explicitly a stopgap. A
-  parser-based sanitiser is a prerequisite for multi-user, where one user's feed could otherwise
-  script another's session.
+- ~~**HTML sanitising**~~ — moot while nothing renders remote HTML. `sanitize-html.ts` is gone.
 - **Per-host politeness** — group a sync batch by host, cap concurrency per host. BullMQ never
   gave us this (its limiter is global).
-- **Backfill on subscribe** — if feeds are ever shared, does a new subscriber get existing
-  articles? Fetching once on subscribe keeps behaviour independent of other users.
-- **Timestamps** — SQLite has no date type. Pick integer-ms or ISO text once, globally.
-- **JS-rendered article pages.** An HTML parser (happy-dom or similar) handles static pages, but
-  returns empty on pages that need JS. A real browser is the fallback — `Bun.WebView` would do it,
-  but on Linux it drives an installed Chromium (~+500MB image), so it would have to be opt-in. The
-  cheaper answer is the browser extension: it already has a real DOM and the host permissions the
-  web app lacks.
+- **Backfill on subscribe** — now live, not hypothetical: feeds *are* shared, so a new subscriber
+  finds a feed row that already has articles. Does their inbox start empty, at the feed's current
+  window, or with everything ever collected? Only a question because the rows are global.
+- **Migration advisory lock** — boot-time migrations race if two app instances start together.
+  One `pg_advisory_lock` in `src/server/db/index.ts` fixes it; unnecessary while single-instance.
+- ~~**Timestamps**~~ — settled by Postgres. `timestamptz` everywhere, `withTimezone` always.
+- **Per-user retention.** Global articles are never deleted just because one reader archived
+  them. Something eventually has to decide when a row nobody subscribes to any more goes away.
+- ~~**JS-rendered article pages**~~ — dropped with the reader; see the link-out decision above.

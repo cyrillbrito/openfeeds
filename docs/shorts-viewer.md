@@ -262,9 +262,9 @@ or per-user, and they're identical whether or not fetching is shared across user
 per-user thing here is the "hide shorts in inbox" preference, which needs the same home as every
 other preference and can wait for it.
 
-The existing `sanitize-html.ts` caveat is untouched: the shorts viewer renders no remote HTML. The
-embed iframe is a new remote-content surface, but it's a trust decision about one known origin
-rather than a sanitiser problem.
+The shorts viewer renders no remote HTML — nothing in the app does any more. The embed iframe is
+a remote-content surface, but it's a trust decision about one known origin rather than a
+sanitiser problem.
 
 ---
 

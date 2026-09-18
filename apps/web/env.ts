@@ -12,12 +12,23 @@ import * as v from 'valibot';
 // baked into the bundle. Generated types land in solid-env.d.ts.
 export default {
   server: {
-    // Comma-separated, newest first — see src/server/session.ts for the
-    // rotation story. Generate one: `openssl rand -base64 32`.
-    SESSION_SECRET: v.pipe(v.string(), v.minLength(32)),
-    // Where the SQLite file lives. The default keeps the "one container, one
-    // file" story honest: `docker run -v ./data:/data openfeeds`.
-    DATABASE_PATH: v.optional(v.string(), './data/openfeeds.db'),
+    // Signs and encrypts Better Auth sessions and tokens; minimum 32
+    // characters. Generate one: `openssl rand -base64 32`.
+    BETTER_AUTH_SECRET: v.pipe(v.string(), v.minLength(32)),
+    // The app's public origin. Better Auth builds the Google OAuth callback
+    // URL from it; the default only works on localhost.
+    BETTER_AUTH_URL: v.optional(v.string(), 'http://localhost:3000'),
+    // Google sign-in. Both must be set for it to be enabled.
+    GOOGLE_CLIENT_ID: v.optional(v.string()),
+    GOOGLE_CLIENT_SECRET: v.optional(v.string()),
+    // Postgres connection string. The default matches compose.yml, so a
+    // fresh clone is `docker compose up -d && bun run dev` with no .env
+    // edit. Tests pass the literal 'memory://' and get in-process PGlite
+    // (see src/server/db/index.ts).
+    DATABASE_URL: v.optional(
+      v.string(),
+      'postgres://openfeeds:openfeeds@localhost:5432/openfeeds',
+    ),
     // Development-only: stall every server function in the data layer by
     // this many milliseconds so loading states are visible on localhost.
     // See src/server/dev-delay.ts; ignored entirely in a production build.

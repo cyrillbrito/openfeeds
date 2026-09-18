@@ -246,8 +246,17 @@ function ArticleRow(props: {
             made it a note — so its body IS the link text. Every other kind
             puts the title here and the excerpt underneath.
           */}
+          {/*
+            The title IS the link out. There is no detail page: the feed's own
+            copy is a teaser more often than not, so opening the source is the
+            thing the click always wanted. Opening marks it read, which is what
+            a detail page used to do on mount.
+          */}
           <a
-            href={paths.articles(article().id)}
+            href={article().url ?? '#'}
+            target="_blank"
+            rel="noreferrer noopener"
+            onClick={() => void setRead(article().id, true)}
             class={[
               'block text-sm leading-snug hover:underline',
               article().isRead ? 'font-normal' : 'font-medium',
@@ -326,20 +335,6 @@ function ArticleRow(props: {
         to sit at the edge.
       */}
       <div class="absolute right-4 top-3 flex items-center gap-0.5 rounded-full bg-background/80 p-0.5 opacity-0 shadow-sm backdrop-blur transition-opacity focus-within:opacity-100 group-hover:opacity-100">
-        <Show when={article().url}>
-          {(url) => (
-            <Button
-              as="a"
-              href={url()}
-              target="_blank"
-              rel="noreferrer noopener"
-              variant="ghost"
-              size="sm"
-            >
-              Open
-            </Button>
-          )}
-        </Show>
         <Button
           variant="ghost"
           size="sm"

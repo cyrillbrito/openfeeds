@@ -87,13 +87,16 @@ export default defineConfig({
       },
     ],
   },
-  // `bun:sqlite` is a Bun builtin: it has no file on disk to resolve, so
-  // Vite must leave the import alone instead of trying to bundle it.
+  // `bun` is a Bun builtin (the driver imports `SQL` from it): no file on
+  // disk to resolve, so Vite must leave the import alone instead of trying
+  // to bundle it. PGlite is a test-only devDependency behind a dynamic
+  // import, so it is external too — otherwise a production install without
+  // dev dependencies fails the build on a package it never runs.
   ssr: {
-    external: ['bun:sqlite'],
+    external: ['bun', '@electric-sql/pglite'],
   },
   optimizeDeps: {
-    exclude: ['bun:sqlite'],
+    exclude: ['bun', '@electric-sql/pglite'],
   },
   build: {
     target: 'esnext',

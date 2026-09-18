@@ -2,6 +2,9 @@ import { defineConfig } from "oxlint";
 import solidV2 from "eslint-plugin-solid/configs/v2";
 
 export default defineConfig({
+  // Listing `plugins` replaces oxlint's defaults, so the three it enables on
+  // its own (typescript, unicorn, oxc) are repeated here.
+  plugins: ["typescript", "unicorn", "oxc", "vitest", "jsx-a11y"],
   jsPlugins: ["eslint-plugin-solid"],
   ignorePatterns: ["**/*.gen.ts", "dist"],
   settings: solidV2.settings,
@@ -15,5 +18,8 @@ export default defineConfig({
     // @solidjs/web, which this project also sets as jsxImportSource.
     // Following the rule would produce code that does not compile.
     "solid/imports": "off",
+    // Default depth is 2, which stops before label text wrapped in a layout
+    // <span>.
+    "jsx-a11y/label-has-associated-control": ["warn", { depth: 3 }],
   },
 });
