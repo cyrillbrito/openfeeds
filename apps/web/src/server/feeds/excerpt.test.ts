@@ -1,13 +1,8 @@
-/**
- * The excerpt deriver, against the three things that made the old
- * client-side `toPlainText` produce bad previews: raw entities, publisher
- * boilerplate eating the budget, and a cut landing mid-word.
- */
+// The excerpt deriver: entities, boilerplate, and where the cut lands.
 import { describe, expect, it } from 'vitest';
 
 import {
   deriveExcerpt,
-  firstImageUrl,
   htmlToText,
   isLinkOnly,
   stripBoilerplate,
@@ -120,46 +115,6 @@ describe('deriveExcerpt', () => {
     expect(result).not.toContain('appeared first on');
     expect(result).not.toContain('<');
     expect(result.length).toBeLessThanOrEqual(201);
-  });
-});
-
-describe('firstImageUrl', () => {
-  const BASE = 'https://example.com/feed.xml';
-
-  it('resolves a relative src against the feed', () => {
-    expect(firstImageUrl('<img src="/img/hero.jpg">', BASE)).toBe(
-      'https://example.com/img/hero.jpg',
-    );
-  });
-
-  it('skips 1x1 tracking pixels', () => {
-    // A counter pixel as the hero image is a visible bug, not a missing one.
-    expect(
-      firstImageUrl(
-        '<img src="https://feeds.example/pixel.gif" width="1" height="1"><img src="/real.jpg">',
-        BASE,
-      ),
-    ).toBe('https://example.com/real.jpg');
-  });
-
-  it('skips known counter hosts even at a normal size', () => {
-    expect(
-      firstImageUrl(
-        '<img src="https://feedburner.com/~ff/track.gif"><img src="/real.jpg">',
-        BASE,
-      ),
-    ).toBe('https://example.com/real.jpg');
-  });
-
-  it('skips data URIs — they would land in the SSR payload', () => {
-    expect(
-      firstImageUrl('<img src="data:image/gif;base64,R0lGOD"><img src="/real.jpg">', BASE),
-    ).toBe('https://example.com/real.jpg');
-  });
-
-  it('is undefined when there is no image', () => {
-    expect(firstImageUrl('<p>No pictures.</p>', BASE)).toBeUndefined();
-    expect(firstImageUrl(null, BASE)).toBeUndefined();
   });
 });
 

@@ -1,13 +1,8 @@
-// shadcn's Dialog over Kobalte's dialog primitive.
-//
-// This is the component that justifies the whole Kobalte decision. A dialog
-// is not a styled div: it needs a focus trap, focus restoration on close,
-// `aria-modal` with a labelled title, Escape handling, scroll locking, and
-// an overlay that does not steal focus from the content. Kobalte implements
-// all of that; the code here is the appearance and nothing else.
+// shadcn's Dialog over Kobalte's dialog primitive, which supplies the focus
+// trap, focus restoration, `aria-modal` with a labelled title, Escape
+// handling and scroll locking. The code here is appearance only.
 import { omit } from 'solid-js';
-// See button.tsx: these types moved to @solidjs/web in Solid 2. JSX comes
-// from there too — it is this project's jsxImportSource.
+// See button.tsx: these types come from @solidjs/web, not solid-js.
 import type { ComponentProps, JSX, ValidComponent } from '@solidjs/web';
 import * as DialogPrimitive from '@kobalte/core/dialog';
 import type { PolymorphicProps } from '@kobalte/core/polymorphic';

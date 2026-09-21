@@ -1,11 +1,6 @@
-// shadcn's Button, vendored and retargeted onto @kobalte/core@2 (the Solid 2
-// line). This is the shadcn model working as intended: the component is our
-// source file, not a dependency, so it took a change of import path and
-// nothing else to move it from the Solid 1 ports to a Kobalte alpha.
-//
-// Kobalte supplies the behaviour (correct button semantics on any element,
-// disabled handling, focus); cva supplies the variants; nothing here is
-// styling over browser defaults.
+// shadcn's Button, vendored and retargeted onto @kobalte/core@2. Kobalte
+// supplies the behaviour (button semantics on any element, disabled, focus);
+// cva supplies the variants.
 import { omit } from 'solid-js';
 // NOT from 'solid-js': its ValidComponent is Component<any> and does not
 // admit intrinsic tags like 'button'. @solidjs/web has the real one.
@@ -16,7 +11,7 @@ import { cva, type VariantProps } from 'class-variance-authority';
 
 import { cn } from '../../lib/cn';
 
-export const buttonVariants = cva(
+const buttonVariants = cva(
   'inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background disabled:pointer-events-none disabled:opacity-50 cursor-pointer',
   {
     variants: {
@@ -48,10 +43,8 @@ type ButtonProps<T extends ValidComponent = 'button'> =
 export function Button<T extends ValidComponent = 'button'>(
   props: PolymorphicProps<T, ButtonProps<T>>,
 ) {
-  // Solid 2 replaced splitProps/mergeProps with omit/merge. `omit` returns a
-  // reactive proxy without the listed keys — the old `splitProps(p, [...])[1]`
-  // — and the keys we handle are read straight off `props`, which is what
-  // keeps them reactive.
+  // `omit` returns a reactive proxy without the listed keys; the keys handled
+  // here are read straight off `props`, which is what keeps them reactive.
   const others = omit(props as ButtonProps, 'variant', 'size', 'class');
   return (
     <ButtonPrimitive.Root

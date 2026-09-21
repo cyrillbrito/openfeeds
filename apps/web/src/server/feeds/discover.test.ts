@@ -1,15 +1,7 @@
-/**
- * Resolution, against a REAL HTTP server.
- *
- * Same reasoning as sync.test.ts: discovery is almost entirely about how real
- * responses behave — redirects, content types, 404s on stale links — so a
- * mocked `fetch` would mostly assert that the mock returns what it was told
- * to. The one exception is the known-service table, which is pure string
- * work and is tested as such.
- *
- * The regression cases from v1 are called out by name: every one of them
- * shipped, and every one came from asking the questions in the wrong order.
- */
+// Resolution against a REAL HTTP server: discovery is almost entirely about
+// how real responses behave — redirects, content types, 404s on stale links
+// — so a mocked fetch would mostly assert that the mock works. The
+// known-service table is pure string work and is tested as such.
 import { afterAll, beforeEach, describe, expect, it } from 'vitest';
 
 import { discoverFeeds, feedLinksIn, knownServiceFeeds } from './discover';

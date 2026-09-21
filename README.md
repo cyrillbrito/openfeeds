@@ -5,46 +5,45 @@
 Subscribe to blogs, news sites, YouTube channels and podcasts in one place — no algorithm,
 no tracking, no ads deciding what you see.
 
-> **This branch is v2, a full rewrite.** It has its own history, and the app is scaffolded but
-> has no feature code yet. See [docs/v2-plan.md](docs/v2-plan.md) for what's decided, what's
-> still open, and why. v1 lives on `main` and is readable from here
-> (`git show main:<path>`).
+> **This branch is v2, a full rewrite** with its own history. v1 lives on `main` and is
+> readable from here (`git show main:<path>`). See [docs/decisions.md](docs/decisions.md)
+> for what is settled and what is still open.
 
-## What it does
+## What works today
 
-**Reading**
-- Subscribe to RSS and Atom feeds, YouTube channels, and podcasts
-- Paste any website URL and let OpenFeeds find the feed for you
-- An inbox across every feed, plus per-feed and per-tag views
-- Clicking an item opens the original in a new tab — no in-app reader, no content extraction
-- A dedicated vertical viewer for YouTube Shorts, the one thing you read in the app
+- Subscribe by pasting a feed URL **or** a homepage — OpenFeeds finds the feed, and verifies
+  it before saving so a bad address fails immediately
+- RSS, Atom, RDF and JSON Feed
+- An inbox across every feed, and a page per feed
+- Rows link straight to the source. There is no in-app reader and no content extraction
+- A dedicated vertical viewer for YouTube Shorts, which are kept out of the inbox
+- Background sync on a schedule, with visible per-feed failure state
+- Multi-user: feeds and articles are stored once and shared; subscriptions and read state
+  are per user
 
-**Organising**
-- Tags on feeds and on individual articles
-- Per-feed filter rules that auto-mark articles as read by title match
-- Archive, with optional auto-archive after N days
-- OPML import and export, so moving in or out is never a trap
+Not built yet: tags, filter rules, archive, OPML import/export, a browser extension.
 
-**Running it**
-- Feeds sync in the background on a schedule
-- Multi-user: several people share one instance, each with their own feeds and read state
-- Self-hosted: one container, one database file, your server
+## Running it
+
+Needs [Bun](https://bun.sh) and a Postgres. From the repo root:
+
+```sh
+docker compose up -d          # Postgres
+bun install
+cp apps/web/.env.example apps/web/.env   # set BETTER_AUTH_SECRET
+cd apps/web && bun run dev    # http://localhost:3000
+```
+
+Migrations apply at boot. See [CLAUDE.md](CLAUDE.md) for the full command list.
 
 ## Why it exists
 
 Most readers are either someone else's cloud service or a desktop app tied to one machine.
-OpenFeeds is meant to be the thing you run yourself and reach from anywhere — where the cost of
-owning it is low enough that self-hosting is genuinely easy rather than a weekend project.
+OpenFeeds is meant to be the thing you run yourself and reach from anywhere — where the cost
+of owning it is low enough that self-hosting is genuinely easy.
 
-That constraint drives the architecture: **anything that can't be self-hosted is out**, however
-convenient it would otherwise be.
-
-## Status
-
-Early development. The stack is settled — Bun, Solid 2 (start mode), SQLite, Tailwind, Kobalte,
-Better Auth — and a single-user prototype works end to end: subscribe to a feed, fetch and parse
-it on a cron, read the inbox. Authentication, and with it the database layout and the
-feed-sharing model, are still open.
+That constraint drives the architecture: **anything that can't be self-hosted is out**,
+however convenient it would otherwise be.
 
 ## License
 

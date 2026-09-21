@@ -1,16 +1,12 @@
 // The subscribe flow: a Kobalte dialog wrapping plain forms that post to the
 // `addFeed` server action.
 //
-// Two steps, but only when the second one earns its place. Paste a URL and if
-// exactly one feed comes back you are subscribed — no confirmation screen for
-// a question with one answer. A page offering several (a blog with comments,
-// a GitHub repo's releases/commits/tags) shows a picker instead, because
-// choosing for you would be guessing.
+// Two steps, but only when the second earns its place — one feed subscribes
+// straight away, several show a picker.
 //
-// Both forms have `action={addFeed} method="post"` and real inputs, so they
-// work as forms first — the router intercepts the submit when JS is running,
-// and posts directly to /_server when it is not. `method="post"` is required:
-// the router's delegated handler rejects GET forms outright.
+// Both forms are real forms, so the router intercepts the submit when JS is
+// running and posts to /_server when it is not. `method="post"` is required:
+// the router's delegated handler rejects GET forms.
 import {
   createEffect,
   createMemo,
@@ -34,25 +30,20 @@ import {
 } from './ui/dialog';
 import { TextField, TextFieldInput, TextFieldLabel } from './ui/text-field';
 
-/**
- * Derived from the action's own result type rather than imported from
- * `src/server`, which the `server-only` marker keeps out of the client graph.
- */
+/** Derived from the action's result type: `src/server` cannot be imported here. */
 type Choice = Extract<AddFeedResult, { status: 'choose' }>['candidates'][number];
 
 export function AddFeedDialog() {
   const [open, setOpen] = createSignal(false);
-  // The picker lives in a signal rather than being read straight off the
-  // latest result. Submitting a choice creates a NEW submission whose result
-  // is briefly undefined, and deriving the step from that would make the list
-  // vanish mid-click and flash the URL field back.
+  // A signal, not derived from the latest result: submitting a choice makes
+  // a NEW submission whose result is briefly undefined, which would flash
+  // the URL field back mid-click.
   const [choices, setChoices] = createSignal<Choice[]>([]);
   const [source, setSource] = createSignal('');
 
-  // Submissions are settled history plus whatever is in flight; the last
-  // entry is this dialog's attempt. There is no `pending` flag on a
-  // Submission in this version, so "in flight" is derived: dispatched, but
-  // with neither a result nor an error yet.
+  // Settled history plus whatever is in flight. There is no `pending` flag
+  // on a Submission in this version, so it is derived: dispatched, with
+  // neither a result nor an error yet.
   const submissions = useSubmissions(addFeed);
   const latest = createMemo(() => submissions[submissions.length - 1]);
   const pending = createMemo(() => {
@@ -71,24 +62,20 @@ export function AddFeedDialog() {
 
   /**
    * Drop settled submissions so reopening the dialog starts clean.
-   *
-   * `untrack` because this reads `submissions` from inside effect bodies,
-   * where Solid 2 warns (correctly) that a bare read will not update. A
-   * one-shot snapshot is exactly what is wanted here — subscribing to the
-   * list we are in the middle of emptying would be the bug.
+   * `untrack` because subscribing to the list being emptied is the bug.
    */
   function reset() {
     setChoices([]);
     setSource('');
     untrack(() => {
-      // Snapshot first: clear() removes the entry from `submissions`, so
-      // iterating the live array would skip every other one.
+      // Snapshot first: clear() removes the entry, so iterating the live
+      // array would skip every other one.
       for (const submission of Array.from(submissions)) submission.clear();
     });
   }
 
-  // Solid 2's createEffect takes TWO functions: what to track, and what to do
-  // with it. A one-argument createEffect is the Solid 1 API.
+  // createEffect takes TWO functions in Solid 2: what to track, then what to
+  // do with it.
   createEffect(
     () => result(),
     (settled) => {
@@ -128,7 +115,7 @@ export function AddFeedDialog() {
           <DialogDescription>
             {picking()
               ? `${source()} offers more than one feed. Pick the one you want.`
-              : 'Paste a website or a feed URL. A site that advertises its feed is resolved for you, and the feed is fetched once now — so a bad address fails here rather than silently later.'}
+              : 'Paste a website or a feed URL. The feed is fetched once now, so a bad address fails here rather than silently later.'}
           </DialogDescription>
         </DialogHeader>
 
@@ -164,8 +151,8 @@ export function AddFeedDialog() {
           }
         >
           <form action={addFeed} method="post" class="flex flex-col gap-4 pt-4">
-            {/* Tells the server this URL came from a list it just verified,
-                so it subscribes directly instead of rediscovering. */}
+            {/* This URL came from a list the server just verified, so it
+                subscribes directly instead of rediscovering. */}
             <input type="hidden" name="exact" value="1" />
 
             <fieldset class="flex flex-col gap-2">

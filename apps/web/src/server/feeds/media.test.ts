@@ -1,13 +1,8 @@
-/**
- * The image, duration and enclosure chains — through normalizeFeed rather
- * than against extractMedia directly, because the thing worth testing is that
- * feedsmith's per-format shapes actually land where this code looks for them.
- * A unit test against a hand-built object would pass while the real parser
- * returned something else entirely.
- */
+// The image and duration chains, driven through normalizeFeed so that
+// feedsmith's real per-format shapes are what gets exercised.
 import { describe, expect, it } from 'vitest';
 
-import { parseDuration } from './media';
+import { firstImageUrl, parseDuration } from './media';
 import { normalizeFeed } from './normalize';
 
 const FEED_URL = 'https://example.com/feed.xml';
@@ -86,8 +81,6 @@ describe('media extraction — Media RSS', () => {
 
   it('picks the largest thumbnail, resolved against the feed', () => {
     expect(items[0].imageUrl).toBe('https://cdn.example.com/large.jpg');
-    expect(items[0].imageWidth).toBe(1280);
-    expect(items[0].imageHeight).toBe(720);
   });
 
   it('reads a video medium and its duration', () => {
@@ -101,7 +94,6 @@ describe('media extraction — Media RSS', () => {
 
   it('uses an image-medium content as the thumbnail', () => {
     expect(items[2].imageUrl).toBe('https://cdn.example.com/photo.jpg');
-    expect(items[2].imageWidth).toBe(900);
     expect(items[2].kind).toBe('article');
   });
 });
@@ -111,7 +103,6 @@ describe('media extraction — podcast', () => {
 
   it('classifies an audio enclosure as a podcast', () => {
     expect(episode.kind).toBe('podcast');
-    expect(episode.enclosureUrl).toBe('https://cdn.example.com/ep4.mp3');
   });
 
   it('parses an hh:mm:ss iTunes duration', () => {
@@ -162,5 +153,45 @@ describe('parseDuration', () => {
     expect(parseDuration('1:2:3:4')).toBeUndefined();
     expect(parseDuration(undefined)).toBeUndefined();
     expect(parseDuration(0)).toBeUndefined();
+  });
+});
+
+describe('firstImageUrl', () => {
+  const BASE = 'https://example.com/feed.xml';
+
+  it('resolves a relative src against the feed', () => {
+    expect(firstImageUrl('<img src="/img/hero.jpg">', BASE)).toBe(
+      'https://example.com/img/hero.jpg',
+    );
+  });
+
+  it('skips 1x1 tracking pixels', () => {
+    // A counter pixel as the hero image is a visible bug, not a missing one.
+    expect(
+      firstImageUrl(
+        '<img src="https://feeds.example/pixel.gif" width="1" height="1"><img src="/real.jpg">',
+        BASE,
+      ),
+    ).toBe('https://example.com/real.jpg');
+  });
+
+  it('skips known counter hosts even at a normal size', () => {
+    expect(
+      firstImageUrl(
+        '<img src="https://feedburner.com/~ff/track.gif"><img src="/real.jpg">',
+        BASE,
+      ),
+    ).toBe('https://example.com/real.jpg');
+  });
+
+  it('skips data URIs — they would land in the SSR payload', () => {
+    expect(
+      firstImageUrl('<img src="data:image/gif;base64,R0lGOD"><img src="/real.jpg">', BASE),
+    ).toBe('https://example.com/real.jpg');
+  });
+
+  it('is undefined when there is no image', () => {
+    expect(firstImageUrl('<p>No pictures.</p>', BASE)).toBeUndefined();
+    expect(firstImageUrl(null, BASE)).toBeUndefined();
   });
 });

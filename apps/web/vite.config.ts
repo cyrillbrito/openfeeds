@@ -5,40 +5,29 @@ import solid from '@solidjs/vite-plugin';
 import tailwindcss from '@tailwindcss/vite';
 
 export default defineConfig({
-  // Turnkey streaming SSR: no index.html and no entry files — the plugin
-  // generates the entries around src/App.tsx, wrapped in src/Document.tsx.
-  // `vite build` emits static client assets to dist/client and the request
-  // handler to dist/server; `npm start` serves both with server.js.
+  // No index.html and no entry files: the plugin generates the entries
+  // around src/App.tsx, wrapped in src/Document.tsx. `vite build` emits
+  // dist/client and dist/server; server.js serves both.
   plugins: [
     solid({
       start: {
-        // Fetch-style chain fronting every request: dispatches API routes.
         middleware: './src/middleware.ts',
-        // Typed env is on by convention: ./env.ts is probed automatically
-        // and validated — server vars are read from process.env when the
-        // server boots, client vars are baked at build time. (Set
-        // `env: false` here to opt out.)
+        // Typed env is on by convention — ./env.ts is probed and validated.
       },
-      // Set to false for a static shell + API server: pages render on the
-      // client while server functions, sessions, and API routes keep
-      // working. (Tests always compile with the client posture.)
       ssr: true,
-      // Compiles 'use server' functions into fetch calls on the client and
-      // serves them from the /_server endpoint. The configure module runs
-      // in the handler graph before any dispatch — it registers the
-      // router's single-flight collector (see src/server-config.ts).
+      // Compiles 'use server' into fetch calls served from /_server. The
+      // configure module registers the router's single-flight collector.
       serverFunctions: { configure: './src/server-config.ts' },
-      // `extensions` makes @solidjs/vite-plugin also compile the `?pick=` route
-      // modules the fileRoutes plugin emits (their ids end in a query string).
+      // Also compile the `?pick=` route modules fileRoutes emits — their
+      // ids end in a query string.
       extensions: ['.jsx', '.tsx'],
     }),
-    // Tailwind 4 is a Vite plugin, not a PostCSS step: there is no
-    // tailwind.config.js and no content globs — it scans the module graph
-    // and the theme is declared in CSS (see src/app.css).
+    // Tailwind 4 as a Vite plugin: no config file, no content globs. The
+    // theme is declared in src/app.css.
     tailwindcss(),
-    // `httpMethods` also scans route modules for GET/POST/... exports (API
-    // routes). One router serves both sides: handler modules — and the
-    // server-only code they import — never enter the client bundle.
+    // `httpMethods` also scans route modules for GET/POST/... exports, so
+    // handler modules and their server-only imports stay out of the client
+    // bundle.
     fileRoutes({ httpMethods: true, types: true }),
   ],
   server: {
@@ -47,10 +36,8 @@ export default defineConfig({
   test: {
     globals: false,
     setupFiles: ['./vitest-setup.ts'],
-    // Two projects because they need different halves of the framework:
-    // component tests run in a DOM against the browser build (the test
-    // pipeline's default posture), while server-runtime tests (the session
-    // suite) run in node against the real server build.
+    // Two projects: component tests in a DOM against the browser build,
+    // server tests in node against the real server build.
     projects: [
       {
         extends: true,
@@ -68,9 +55,8 @@ export default defineConfig({
         extends: true,
         test: {
           name: 'server',
-          // environment:'node' projects get the server posture from the
-          // plugin automatically: server resolve conditions, the framework
-          // inlined, and ssr codegen.
+          // environment:'node' gets the server posture from the plugin
+          // automatically: server conditions and ssr codegen.
           environment: 'node',
           include: ['src/server/**/*.test.ts'],
           alias: [
@@ -87,11 +73,9 @@ export default defineConfig({
       },
     ],
   },
-  // `bun` is a Bun builtin (the driver imports `SQL` from it): no file on
-  // disk to resolve, so Vite must leave the import alone instead of trying
-  // to bundle it. PGlite is a test-only devDependency behind a dynamic
-  // import, so it is external too — otherwise a production install without
-  // dev dependencies fails the build on a package it never runs.
+  // `bun` is a builtin with no file to resolve, so Vite must leave it
+  // alone. PGlite is a test-only devDependency behind a dynamic import, so
+  // a production install without dev dependencies must not try to bundle it.
   ssr: {
     external: ['bun', '@electric-sql/pglite'],
   },

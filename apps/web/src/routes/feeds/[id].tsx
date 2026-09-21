@@ -50,22 +50,16 @@ export default function FeedPage(props: RouteSectionProps) {
   return (
     <>
       {/*
-        The <header> element is outside the boundary, so its height, border
-        and sticky position are painted on the first frame of the
+        Outside the boundary, so the chrome paints on the first frame of the
         navigation. Only its contents wait for data.
+
+        `on` is required here and not on the inbox: clicking a different feed
+        does not remount this component — the route matches, only the param
+        changes — so without it the boundary holds the previous feed's title
+        and list until the new data arrives.
       */}
-      <header class="sticky top-0 z-10 border-b border-border bg-background/95 backdrop-blur">
+      <header class="shrink-0 border-b border-border">
         <div class={`px-6 py-4 ${LIST_MEASURE}`}>
-        {/*
-          `on` is required on this route and not on the inbox, for a reason
-          worth remembering: clicking a different feed in the sidebar does
-          not remount this component — the route matches, only the param
-          changes. So the boundary is already initialised, and without `on`
-          it would hold the PREVIOUS feed's title and list until the new
-          feed's data arrived. That is the "clicked but nothing moved"
-          symptom. Keyed on the param, it drops to the skeleton the instant
-          the id changes.
-        */}
         <Loading fallback={<FeedHeaderSkeleton />} on={props.params.id}>
           <Show
             when={data().feed}
@@ -124,27 +118,25 @@ export default function FeedPage(props: RouteSectionProps) {
         </div>
       </header>
 
-      {/*
-        A second boundary rather than one around both. They read the same
-        memo so they resolve on the same tick anyway, but keeping the header
-        out of the list's boundary is what lets the chrome stay put while
-        only the list is replaced.
-      */}
-      <Loading fallback={<ArticleListSkeleton />} on={props.params.id}>
-        <Show
-          when={data().feed}
-          fallback={
-            <p class="px-6 py-16 text-center text-sm text-muted-foreground">
-              That feed does not exist.
-            </p>
-          }
-        >
-          <ArticleList
-            items={data().items}
-            emptyMessage="This feed has no articles yet."
-          />
-        </Show>
-      </Loading>
+      {/* A second boundary, so the chrome stays put while only the list is
+          replaced. */}
+      <div class="min-h-0 flex-1 overflow-y-auto">
+        <Loading fallback={<ArticleListSkeleton />} on={props.params.id}>
+          <Show
+            when={data().feed}
+            fallback={
+              <p class="px-6 py-16 text-center text-sm text-muted-foreground">
+                That feed does not exist.
+              </p>
+            }
+          >
+            <ArticleList
+              items={data().items}
+              emptyMessage="This feed has no articles yet."
+            />
+          </Show>
+        </Loading>
+      </div>
     </>
   );
 }

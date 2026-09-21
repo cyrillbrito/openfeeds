@@ -1,12 +1,6 @@
-/**
- * The normaliser against real feed documents, one per format.
- *
- * These are the cases that actually break feed readers: an item with no
- * <guid>, a summary that is a teaser while the real body sits in
- * content:encoded, an Atom entry whose link is relative, a date the
- * publisher invented. Each assertion below corresponds to a decision in
- * normalize.ts rather than to a field being copied across.
- */
+// The normaliser against real feed documents, one per format: an item with
+// no <guid>, a teaser summary with the body in content:encoded, a relative
+// Atom link, a date the publisher invented.
 import { describe, expect, it } from 'vitest';
 
 import { normalizeFeed } from './normalize';

@@ -1,12 +1,6 @@
-/**
- * The pipeline end to end, against a REAL HTTP server and a REAL database.
- *
- * Everything here is genuine except the clock: a Bun.serve instance plays
- * the feed publisher, so conditional GET is exercised the way it works in
- * production — we send If-None-Match, the server decides, and the branch
- * that runs is chosen by an actual 304. Mocking `fetch` here would only
- * prove that our mock returns what we told it to.
- */
+// The pipeline end to end against a REAL HTTP server and a REAL database: a
+// Bun.serve instance plays the feed publisher, so the 304 branch is chosen
+// by an actual 304 rather than by a mock.
 import { afterAll, beforeEach, describe, expect, it } from 'vitest';
 
 process.env.DATABASE_URL = 'memory://';

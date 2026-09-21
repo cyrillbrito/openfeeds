@@ -8,18 +8,17 @@ the inbox, and watch the YouTube Shorts it carries on a screen of their own. Mul
 Better Auth and per-user subscriptions and read state.
 
 - [README.md](README.md) — what the product is and does
-- [docs/v2-plan.md](docs/v2-plan.md) — **read this before proposing anything**: settled
-  decisions, open questions, and the reasoning behind both
-- [docs/shorts-viewer.md](docs/shorts-viewer.md) — the shorts feature: how detection works, what
-  was built in its simplest form, and what was deliberately left out
+- [docs/decisions.md](docs/decisions.md) — **read before proposing architecture**: what is
+  settled, what is open
+- [docs/shorts.md](docs/shorts.md) — how Shorts detection works and what was left out
 - v1 is on `main`, with unrelated history but readable from here: `git show main:<path>`
 
 ## Multi-user, in one paragraph
 
 `feeds` and `articles` are **global**: one row per canonical feed URL, one per entry, fetched
 once however many people subscribe. Per-user data is two tables — `subscriptions` (the sidebar)
-and `article_state` (read/archived, absent row = unread). So an article is visible because the
-user follows its feed, never because of a column on the article.
+and `article_state` (read, absent row = unread). So an article is visible because the user
+follows its feed, never because of a column on the article.
 
 Every function in `server/feeds/queries.ts` takes `userId` first, and it comes from the session
 in `server/require-user.ts` — never from a client argument. `src/middleware.ts` redirects
@@ -27,7 +26,7 @@ anonymous document requests to `/signin`; that is navigation, and the queries ar
 boundary. Adding a query that reads `articles` without joining `subscriptions` is the way to
 break this.
 
-Still open (docs/v2-plan.md): whether to back the convention with Postgres RLS.
+Open: whether to back the convention with Postgres row-level security.
 
 ## Stack
 
@@ -35,9 +34,10 @@ Still open (docs/v2-plan.md): whether to back the convention with Postgres RLS.
   (floor 20.19+ / 22.12+) but isn't the target.
 - **Solid 2** (RC) via `@solidjs/vite-plugin` **start mode**. SolidStart is retired — don't reach
   for it, and treat most SolidStart material online as describing the old thing.
-- **Vite 8**, **Vitest 4**, **oxlint**.
-- **SQLite** via `bun:sqlite` + **Drizzle**; migrations run at boot. **Tailwind 4** (Vite plugin,
-  no config file). **Better Auth** `1.7.5` — `src/server/auth.ts`, mounted at
+- **Vite 8**, **Vitest 5**, **oxlint**.
+- **Postgres** via `drizzle-orm/bun-sql` (Bun's built-in `Bun.SQL`, no `pg`); migrations run at
+  boot. Tests get **PGlite** in process by passing `DATABASE_URL=memory://`. **Tailwind 4**
+  (Vite plugin, no config file). **Better Auth** `1.7.5` — `src/server/auth.ts`, mounted at
   `src/routes/api/auth/[...all].ts`, its four tables in `db/schema.ts`. Email+password always
   on, Google when its two env vars are set. No mailer, so no verification, reset, or magic link.
 - **UI: Kobalte `2.0.0-alpha.0`** (the Solid 2 line) with shadcn components **vendored** into
@@ -47,9 +47,7 @@ Still open (docs/v2-plan.md): whether to back the convention with Postgres RLS.
   `src/server/feeds/normalize.ts` is ours and is where the RSS/Atom/RDF/JSON differences live.
 - **Feed resolution** — `src/server/feeds/discover.ts` turns a pasted homepage into a feed URL.
   Reads `<head>` with **`HTMLRewriter`**, a Bun global, so that file is the one place the "Node
-  works too" note above does not hold. No HTML-parsing dependency. v1's `packages/discovery`
-  (happy-dom, ~700 LOC) is a cautionary reference, not a source — the module comment names the
-  bugs its stage ordering was designed to make unwriteable.
+  works too" note above does not hold. No HTML-parsing dependency.
 
 Coordinated-RC packages are **pinned exact** in `apps/web/package.json`; carets pull mismatched
 prereleases. Unpin when Solid 2 goes stable.
@@ -81,8 +79,8 @@ Gotchas:
 
 - **Every script runs `bun --bun`, on purpose.** The `vite` and `vitest` binaries carry
   `#!/usr/bin/env node` shebangs, so a plain `bun run dev` executes under **Node** — where
-  `bun:sqlite` fails to resolve and `Bun.cron` is undefined (it silently falls back to
-  `setInterval`). `src/server/runtime.test.ts` guards this.
+  `Bun.SQL` and `HTMLRewriter` are missing and `Bun.cron` is undefined (the cron silently falls
+  back to `setInterval`). `src/server/runtime.test.ts` guards this.
 - **`jsdom` is capped at 29.** 30.x throws `'addEventListener' called on an object that is not a
   valid instance of EventTarget` when Vitest sets up the jsdom environment under `bun --bun` —
   every client test file dies at setup and Vitest still exits reporting the server files as
@@ -121,15 +119,13 @@ RC software, and most material online describes retired APIs. Verified against `
   `better-auth/solid`, hence the vanilla client in `src/lib/auth-client.ts`.
 - `redirect`/`reload`/`respond`/`markSafeError` come from `@solidjs/web`, not the router.
 - `createEffect` takes **two** arguments (track, then act).
-- No `onMount`. `onCleanup` survives, `onMount` does not — reach for
-  `createEffect(() => trigger, () => …)` instead, which also gives you the
-  re-run on navigation you usually wanted anyway. Effects never run during SSR,
-  so that is also where DOM measurement belongs. Its act callback owns **no cleanup
-  scope**: `onCleanup` in there warns `NO_OWNER_CLEANUP` and never runs. Register listeners
-  from the component body instead, guarded by `isServer` (`@solidjs/web`) so SSR skips them.
+- No `onMount`. `onCleanup` survives — reach for `createEffect(() => trigger, () => …)`, which
+  also gives you the re-run on navigation you usually wanted. Effects never run during SSR. The
+  act callback owns **no cleanup scope**: `onCleanup` in there warns `NO_OWNER_CLEANUP` and
+  never runs, so register listeners from the component body instead, guarded by `isServer`
+  (`@solidjs/web`).
 - Passing an **element** child to the vendored `Button` (an `<svg>`, even a `<span>`) leaves an
-  unclaimed node at hydration. Plain text children are fine, which is why nothing tripped over
-  it until the first icon.
+  unclaimed node at hydration. Plain text children are fine.
 - `query()` reads router context — calling one above `<Router>` throws during SSR.
 - Actions must scope revalidation (`reload({ revalidate: [...] })`) or **every** cached query
   refetches. Revalidation matches by **prefix**, so query names must not prefix one another.
@@ -138,6 +134,15 @@ RC software, and most material online describes retired APIs. Verified against `
   `markSafeError`.
 - Drizzle renders columns **unqualified** when one table is in scope, which silently breaks
   correlated subqueries. Use a join.
+- `db.insert(x).select(q)` requires `q` to select **every** column of `x`, in order.
+
+## Layout conventions
+
+- `<main>` does not scroll. Each route renders a `shrink-0` header plus its own
+  `min-h-0 flex-1 overflow-y-auto` scroller, which is what lets ArticleList's sticky day
+  separators sit at `top-0` without measuring anything.
+- `src/lib/feeds.ts` is the only thing the UI imports for data: `query()` for reads,
+  `action()` for writes, `requireUserId()` at the top of each.
 
 ## Working here
 
@@ -149,5 +154,6 @@ RC software, and most material online describes retired APIs. Verified against `
 - Ask before adding a dependency that becomes load-bearing.
 - No Turborepo. Plain Bun workspaces; `bun run --filter` to span packages.
 - No detail page and no content extraction: a row links straight to its source (`_blank`, marks
-  read on click). The shorts viewer is the one in-app screen. Nothing renders remote HTML, which
-  is why `sanitize-html.ts` no longer exists — bring it back parser-based if a reader pane does.
+  read on click). The shorts viewer is the one in-app screen. Nothing renders remote HTML —
+  bring a parser-based sanitiser back only if a reader pane does.
+- Don't add a column, an argument or a flag before something reads it.

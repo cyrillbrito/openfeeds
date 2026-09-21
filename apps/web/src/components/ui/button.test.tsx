@@ -1,8 +1,5 @@
-/**
- * The smoke test that matters for this stack: @kobalte/core@2.0.0-alpha.0 is
- * an ALPHA whose peer deps pin solid-js@2.0.0-rc.0 exactly. If that pairing
- * breaks, it breaks here — at render — rather than three components later.
- */
+// Kobalte 2 is an alpha whose peers pin solid-js exactly. If that pairing
+// breaks it breaks here, at render, rather than three components later.
 import { describe, expect, it } from 'vitest';
 import { render } from '@solidjs/testing-library';
 

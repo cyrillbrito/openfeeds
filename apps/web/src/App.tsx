@@ -1,12 +1,4 @@
-import {
-  createEffect,
-  createMemo,
-  For,
-  Loading,
-  onCleanup,
-  Repeat,
-  Show,
-} from 'solid-js';
+import { createMemo, For, Loading, Repeat, Show } from 'solid-js';
 import type { JSX } from '@solidjs/web';
 import { Title } from '@solidjs/meta';
 import { useLocation } from '@solidjs/router';
@@ -20,20 +12,13 @@ import { paths, Router } from './router';
 import { Skeleton } from './components/ui/skeleton';
 import './app.css';
 
-// The router sets `aria-current="page"` on claimed anchors that match the
-// location exactly, and `data-active` on those that match OR are a prefix of
-// it. Styling on `aria-current` rather than `data-active` on purpose:
-// `data-active` would light "Manage feeds" up the whole time you are reading
-// /feeds/3, since /feeds is its prefix.
-//
-// This costs nothing and is the most visible half of "the click landed" —
-// the sidebar highlight moves on the same frame as the navigation, before
-// any data for the new page exists.
+// `aria-current="page"` matches the location exactly; the router's
+// `data-active` also matches prefixes, which would light "Manage feeds" up
+// the whole time you are reading /feeds/3.
 const NAV_ACTIVE = 'aria-[current=page]:bg-accent';
 
 const NAV_LINK = `flex items-center gap-2 rounded-md px-2 py-1.5 text-sm font-medium transition-colors hover:bg-accent ${NAV_ACTIVE}`;
 
-/** A feed whose last fetch failed gets a marker rather than silent staleness. */
 function FeedRow(props: { feed: FeedSummary }) {
   return (
     <a
@@ -94,14 +79,13 @@ function FeedListSkeleton() {
 /**
  * The app shell: sidebar plus the routed page.
  *
- * A separate component rendered INSIDE <Router>, for a reason that is not
- * cosmetic: `query()` reads the router context, so calling getFeeds() from
- * App's own body — outside the <Router> element — throws during SSR with a
- * context error whose stack points only at solid-js internals.
+ * Rendered INSIDE <Router> because `query()` reads router context — calling
+ * getFeeds() from App's own body throws during SSR. It is not a route layout
+ * file because a layout whose name matches a directory (routes/feeds.tsx
+ * beside routes/feeds/) makes its own path unroutable.
  *
- * The shell lives here rather than in a route layout file because a layout
- * file whose name matches a directory (routes/feeds.tsx next to
- * routes/feeds/) silently makes its own path unroutable.
+ * <main> does not scroll: each route is a fixed header plus its own
+ * scroller, which is what lets ArticleList's day separators be `top-0`.
  */
 function Shell(props: { children?: JSX.Element }) {
   // Solid 2 has no createResource and no Suspense: an async computation IS
@@ -112,79 +96,6 @@ function Shell(props: { children?: JSX.Element }) {
   const shorts = createMemo(() => getShortsCount());
   const user = createMemo(() => getUser());
   const location = useLocation();
-
-  /**
-   * Publish the route header's height as `--route-header-h` on <main>.
-   *
-   * ArticleList's day separators are sticky and have to park directly BELOW
-   * the route header, which is itself sticky at the top of this same scroll
-   * container. Two sticky elements in one container do not stack — the second
-   * needs to know the first one's height.
-   *
-   * Measured rather than hardcoded because the headers genuinely differ: the
-   * inbox's is one line, a feed's is two, and a feed whose last fetch failed
-   * grows a third. A constant would be right on one route, wrong on the
-   * others, and silently wrong again the first time a header gains a line.
-   */
-  // `ref={main}` assigns this at render time — the compiler rewrites the JSX,
-  // so the linter cannot see the assignment.
-  // oxlint-disable-next-line no-unassigned-vars
-  let main: HTMLElement | undefined;
-  let resize: ResizeObserver | undefined;
-  let mutation: MutationObserver | undefined;
-  let written = '';
-  const observed = new WeakSet<Element>();
-
-  const measure = (host: HTMLElement) => {
-    const header = host.querySelector(':scope header');
-    const value = `${header?.getBoundingClientRect().height ?? 0}px`;
-    // Guarded because this also runs from a MutationObserver: without it,
-    // every list re-render would force a synchronous layout for no change.
-    if (value === written) return;
-    written = value;
-    host.style.setProperty('--route-header-h', value);
-  };
-
-  const retarget = (host: HTMLElement) => {
-    const header = host.querySelector(':scope header');
-    if (header && !observed.has(header)) {
-      observed.add(header);
-      resize?.observe(header);
-    }
-    measure(host);
-  };
-
-  // Solid 2 has no onMount; an effect keyed on the pathname runs after the
-  // first render and after every navigation, which is when a new header
-  // element needs finding. Effects do not run during SSR, so nothing below
-  // touches the DOM on the server.
-  createEffect(
-    () => location.pathname,
-    () => {
-      const host = main;
-      if (!host) return;
-
-      // Catches a header that changes size in place: a feed error appearing,
-      // or a long title rewrapping when the window narrows.
-      resize ??= new ResizeObserver(() => measure(host));
-
-      // And this catches a header that is not there YET. A navigation changes
-      // the pathname BEFORE the new route commits its DOM, so the effect
-      // above frequently runs while the old header is gone and the new one
-      // has not arrived — measuring 0 and never correcting itself. Watching
-      // for the element to appear is what makes the offset right on a route
-      // whose header renders a frame later, or from under a Loading boundary.
-      mutation ??= new MutationObserver(() => retarget(host));
-      mutation.observe(host, { childList: true, subtree: true });
-
-      retarget(host);
-    },
-  );
-
-  onCleanup(() => {
-    resize?.disconnect();
-    mutation?.disconnect();
-  });
 
   return (
     <div class="flex h-screen">
@@ -210,7 +121,6 @@ function Shell(props: { children?: JSX.Element }) {
           </a>
           <a href={paths.shorts()} class={NAV_LINK}>
             <span class="flex-1">Shorts</span>
-            {/* Its own boundary, for the same reason the inbox count has one. */}
             <Loading fallback={null}>
               <Show when={shorts() > 0}>
                 <span class="rounded-full bg-primary px-1.5 py-0.5 text-xs font-semibold tabular-nums text-primary-foreground">
@@ -229,12 +139,10 @@ function Shell(props: { children?: JSX.Element }) {
         </p>
         <div class="min-h-0 flex-1 overflow-y-auto px-2 pb-4">
           {/*
-            No `on` prop, on purpose. This boundary should show its fallback
-            once — on first paint — and then never again: after a feed is
-            added or an article is read the sidebar revalidates, and Solid 2's
-            default (hold the rendered content through the transition) is
-            exactly right there. A blanking sidebar on every mark-as-read
-            would be the worst version of this screen.
+            No `on`: this should fall back on first paint and never again.
+            Holding content through a revalidation is right here — a sidebar
+            that blanks on every mark-as-read would be the worst version of
+            this screen.
           */}
           <Loading fallback={<FeedListSkeleton />}>
             <Show
@@ -274,26 +182,15 @@ function Shell(props: { children?: JSX.Element }) {
         </div>
       </aside>
 
-      <main ref={main} class="min-w-0 flex-1 overflow-y-auto">
+      <main class="flex min-w-0 flex-1 flex-col overflow-hidden">
         {/*
-          `on` is the whole reason a click feels instant.
+          `on` is the whole reason a click feels instant: a boundary that has
+          already rendered content holds it when its data goes pending again,
+          which is right for revalidation and wrong for navigation. Keyed on
+          the pathname it drops to its fallback the moment the URL changes.
 
-          A Loading boundary that has already rendered content does NOT go
-          back to its fallback when its data goes pending again — it holds
-          the content it has and lets the transition run underneath. That is
-          the right default for revalidation, and the wrong one for
-          navigation: it is why clicking a feed used to leave the previous
-          page on screen until the new page's data arrived.
-
-          Keyed on the pathname, the boundary notices the URL changed and
-          drops to its fallback immediately, so the navigation commits on the
-          first frame and each route paints its own chrome.
-
-          The fallback is `null` and not a spinner because nothing should
-          reach this boundary: every route below wraps its own async reads,
-          and a fresh route component brings a fresh (uninitialised)
-          boundary with it. This one is the backstop that keeps an
-          unwrapped read from stalling the whole shell.
+          `null`, not a spinner — every route wraps its own reads, so this is
+          only the backstop against an unwrapped one stalling the shell.
         */}
         <Loading fallback={null} on={location.pathname}>
           {props.children}

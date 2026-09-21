@@ -1,11 +1,6 @@
-/**
- * Conditional GET and URL canonicalisation — the two pieces of the fetch
- * layer with real consequences.
- *
- * `fetch` is stubbed rather than hitting the network: these tests are about
- * which headers we SEND and how we interpret what comes back, both of which
- * are deterministic and both of which v1 got wrong by never doing them.
- */
+// Conditional GET and URL canonicalisation. `fetch` is stubbed: these are
+// about which headers go out and how the response is read, both
+// deterministic.
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { canonicalizeFeedUrl, fetchFeed } from './fetch';

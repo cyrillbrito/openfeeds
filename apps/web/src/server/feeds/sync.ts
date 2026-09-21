@@ -1,11 +1,6 @@
-// The sync engine: turn a due feed into new article rows, and decide when to
-// look at it next.
-//
-// There is no job queue. `feeds.nextFetchAt` IS the queue — a sweep asks for
-// rows whose time has come. Job state could only ever mirror the feeds table
-// and then drift from it, so keeping the schedule on the row it describes is
-// what makes this self-healing: a crash mid-sweep loses nothing, and a
-// restart picks up exactly the feeds that are still due.
+// The write path: turn a due feed into new article rows, and decide when to
+// look at it next. `feeds.nextFetchAt` is the queue — a sweep selects rows
+// whose time has come, so a crash mid-sweep loses nothing.
 import 'server-only';
 
 import { and, asc, eq, inArray, lte, sql } from 'drizzle-orm';
@@ -26,13 +21,9 @@ const CONCURRENCY = 6;
 const ms = (n: number) => new Date(Date.now() + n);
 
 /**
- * Backoff in HOURS, not seconds.
- *
- * v1 retried within seconds and hid the failure. But RSS failures are almost
- * never transient — a dead domain, a feed that moved, a new Cloudflare rule —
- * so hammering a broken feed every minute accomplishes nothing except making
- * us look like a bad citizen to the host. Doubling from one hour reaches the
- * 24h ceiling after about five consecutive failures.
+ * Backoff in hours. RSS failures are almost never transient — a dead domain,
+ * a moved feed, a new Cloudflare rule — so retrying in seconds only makes us
+ * a bad citizen. Doubling from one hour hits the ceiling after ~5 failures.
  */
 function backoffFor(failureCount: number): Date {
   const delay = Math.min(
@@ -63,29 +54,21 @@ async function insertArticles(
       title: item.title,
       url: item.url,
       author: item.author,
-      // One body column: the teaser when there is one, the full body when
-      // that is all the feed ships. Only the excerpt and the fallback
-      // thumbnail read it — nothing renders it.
+      // The teaser when there is one, the full body when that is all the
+      // feed ships. Only the excerpt and fallback thumbnail read it.
       summary: item.summary ?? item.content,
       kind: item.kind,
-      // '' rather than NULL when there is no excerpt: NULL is reserved as
-      // the "never enriched" marker the backfill scans for.
       excerpt: item.excerpt ?? '',
       imageUrl: item.imageUrl,
-      imageWidth: item.imageWidth,
-      imageHeight: item.imageHeight,
       durationSeconds: item.durationSeconds,
-      enclosureUrl: item.enclosureUrl,
       // A feed that omits dates still needs to sort somewhere sensible.
       publishedAt: item.publishedAt ?? new Date(),
     }));
 
   if (rows.length === 0) return 0;
 
-  // Re-fetching a feed re-sees every item it still lists, so almost all of
-  // these collide with the unique(feedId, guid) index. That is the intended
-  // path, not an error case — Postgres skips them and RETURNING reports
-  // only the rows actually written.
+  // Almost all of these collide with unique(feedId, guid) — the intended
+  // path. RETURNING reports only the rows actually written.
   const inserted = await db
     .insert(articles)
     .values(rows)
@@ -93,6 +76,39 @@ async function insertArticles(
     .returning({ id: articles.id });
 
   return inserted.length;
+}
+
+type FeedMetadata = Partial<
+  Pick<
+    Feed,
+    'title' | 'description' | 'siteUrl' | 'iconUrl' | 'etag' | 'lastModified'
+  >
+>;
+
+async function recordSuccess(feed: Feed, metadata: FeedMetadata = {}) {
+  await db
+    .update(feeds)
+    .set({
+      ...metadata,
+      failureCount: 0,
+      lastError: null,
+      lastFetchedAt: new Date(),
+      nextFetchAt: ms(BASE_INTERVAL_MS),
+    })
+    .where(eq(feeds.id, feed.id));
+}
+
+async function recordFailure(feed: Feed, message: string) {
+  const failureCount = feed.failureCount + 1;
+  await db
+    .update(feeds)
+    .set({
+      failureCount,
+      lastError: message,
+      lastFetchedAt: new Date(),
+      nextFetchAt: backoffFor(failureCount),
+    })
+    .where(eq(feeds.id, feed.id));
 }
 
 /** Fetch one feed and record the outcome on its row. */
@@ -103,16 +119,7 @@ export async function syncFeed(feed: Feed): Promise<SyncResult> {
   });
 
   if (result.status === 'error') {
-    const failureCount = feed.failureCount + 1;
-    await db
-      .update(feeds)
-      .set({
-        failureCount,
-        lastError: result.message,
-        lastFetchedAt: new Date(),
-        nextFetchAt: backoffFor(failureCount),
-      })
-      .where(eq(feeds.id, feed.id));
+    await recordFailure(feed, result.message);
     return {
       feedId: feed.id,
       status: 'error',
@@ -122,16 +129,7 @@ export async function syncFeed(feed: Feed): Promise<SyncResult> {
   }
 
   if (result.status === 'not-modified') {
-    // Reachable and unchanged — a success, and the cheapest kind.
-    await db
-      .update(feeds)
-      .set({
-        failureCount: 0,
-        lastError: null,
-        lastFetchedAt: new Date(),
-        nextFetchAt: ms(BASE_INTERVAL_MS),
-      })
-      .where(eq(feeds.id, feed.id));
+    await recordSuccess(feed);
     return { feedId: feed.id, status: 'not-modified', inserted: 0 };
   }
 
@@ -139,49 +137,28 @@ export async function syncFeed(feed: Feed): Promise<SyncResult> {
     const parsed = normalizeFeed(result.body, feed.feedUrl);
     const inserted = await insertArticles(feed.id, parsed.items);
 
-    await db
-      .update(feeds)
-      .set({
-        // Feeds rename themselves; follow along, but never blank a good title.
-        title: parsed.title || feed.title,
-        description: parsed.description ?? feed.description,
-        siteUrl: parsed.siteUrl ?? feed.siteUrl,
-        iconUrl: parsed.iconUrl ?? feed.iconUrl,
-        etag: result.etag ?? null,
-        lastModified: result.lastModified ?? null,
-        failureCount: 0,
-        lastError: null,
-        lastFetchedAt: new Date(),
-        nextFetchAt: ms(BASE_INTERVAL_MS),
-      })
-      .where(eq(feeds.id, feed.id));
+    await recordSuccess(feed, {
+      // Feeds rename themselves; follow along, but never blank a good title.
+      title: parsed.title || feed.title,
+      description: parsed.description ?? feed.description,
+      siteUrl: parsed.siteUrl ?? feed.siteUrl,
+      iconUrl: parsed.iconUrl ?? feed.iconUrl,
+      etag: result.etag ?? null,
+      lastModified: result.lastModified ?? null,
+    });
 
     return { feedId: feed.id, status: 'ok', inserted };
   } catch (error) {
     // Reachable but unparseable — an HTML error page served with a 200, say.
-    // Same treatment as a network failure: back off and stay visible.
+    // Treated as a network failure: back off and stay visible.
     const message =
       error instanceof Error ? error.message : 'Could not parse feed';
-    const failureCount = feed.failureCount + 1;
-    await db
-      .update(feeds)
-      .set({
-        failureCount,
-        lastError: message,
-        lastFetchedAt: new Date(),
-        nextFetchAt: backoffFor(failureCount),
-      })
-      .where(eq(feeds.id, feed.id));
+    await recordFailure(feed, message);
     return { feedId: feed.id, status: 'error', inserted: 0, error: message };
   }
 }
 
-/**
- * Sync every feed that is due, a few at a time.
- *
- * The concurrency cap is politeness as much as resource control: a burst of
- * simultaneous requests is what gets a self-hoster's IP rate-limited.
- */
+/** The concurrency cap is politeness: a burst is what gets an IP blocked. */
 export async function syncDueFeeds(): Promise<SyncResult[]> {
   const due = await db
     .select()
@@ -218,11 +195,8 @@ export type SubscribeOutcome =
   | { kind: 'choices'; candidates: SubscribeChoice[] };
 
 /**
- * Write the feed row and everything it currently lists.
- *
- * Takes the document rather than fetching it, because by the time we get here
- * discovery has already fetched and parsed it — re-requesting would double
- * every subscribe for no new information.
+ * Write the feed row and everything it currently lists. Takes the document
+ * rather than fetching it: discovery has already fetched and parsed it.
  */
 async function insertFeed(
   feedUrl: string,
@@ -276,10 +250,7 @@ async function isSubscribed(userId: string, feedId: number): Promise<boolean> {
 
 /**
  * Point a user at an existing feed row, or throw if they already follow it.
- *
- * This is where the shared-feed design pays out: the second subscriber to a
- * feed costs one row and no network request, and the feed is still fetched
- * once an hour in total.
+ * The second subscriber to a feed costs one row and no network request.
  */
 async function subscribe(userId: string, feed: Feed): Promise<Feed> {
   if (await isSubscribed(userId, feed.id)) {
@@ -290,15 +261,11 @@ async function subscribe(userId: string, feed: Feed): Promise<Feed> {
 }
 
 /**
- * Subscribe to whatever the user pasted.
+ * Subscribe to whatever the user pasted. Two outcomes: one feed subscribes
+ * immediately, several come back as choices and the dialog asks.
  *
- * Two outcomes rather than one, because a homepage can legitimately offer
- * several feeds and picking for the user would be guessing. One feed
- * subscribes immediately; several come back as choices and the dialog asks.
- *
- * `exact` is the second half of that conversation: the user has chosen from
- * the picker, so the URL is known to be a feed and re-running discovery on it
- * would be a wasted round of requests.
+ * `exact` means the URL came from that picker, so it is known to be a feed
+ * and discovery would be a wasted round of requests.
  */
 export async function subscribeToFeed(
   userId: string,
@@ -396,11 +363,8 @@ export async function subscribeToFeed(
 }
 
 /**
- * Unsubscribe one user, and drop the feed itself once nobody is left.
- *
- * Deleting the feed cascades to its articles and to everyone's state for
- * them, which is why it only happens when the last subscriber leaves. It is
- * also what keeps the fetch queue to feeds somebody actually reads.
+ * Unsubscribe one user, and drop the feed itself once nobody is left — which
+ * cascades to its articles and keeps the fetch queue to feeds people read.
  */
 export async function unsubscribeFromFeed(
   userId: string,
@@ -421,14 +385,4 @@ export async function unsubscribeFromFeed(
       sql`not exists (select 1 from ${subscriptions} where ${subscriptions.feedId} = ${feedId})`,
     ),
   );
-}
-
-/** Exposed for the "sync all" button and for the cron sweep's logging. */
-export async function countDueFeeds(): Promise<number> {
-  const [row] = await db
-    // `::int` — count() is bigint, which arrives as a string otherwise.
-    .select({ count: sql<number>`count(*)::int` })
-    .from(feeds)
-    .where(and(lte(feeds.nextFetchAt, new Date())));
-  return row?.count ?? 0;
 }

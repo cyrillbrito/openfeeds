@@ -1,6 +1,5 @@
-// Feedsmith deliberately does NOT normalise: it preserves each format's own
-// structure so nothing is lost. That is the right call for a parser and the
-// wrong shape for a database, so this module is the adapter between them.
+// feedsmith preserves each format's own structure rather than normalising,
+// so this module is the adapter between it and the database.
 //
 // The three formats disagree about nearly everything:
 //   RSS   items[]   title: string          guid: {value}   pubDate (RFC 822)
@@ -37,24 +36,15 @@ export interface NormalizedItem {
   /** The list's preview line. Absent for the kinds that show none. */
   excerpt?: string;
   imageUrl?: string;
-  imageWidth?: number;
-  imageHeight?: number;
   durationSeconds?: number;
-  enclosureUrl?: string;
 }
 
 /**
- * The half of an item that is identical across the three formats.
- *
- * Everything above this line in each branch is format-specific untangling —
- * Atom's `{value, type}` titles, RSS's `content:encoded`, JSON Feed's
- * `content_html`. Everything below it is the same three questions asked the
- * same way, so they are asked in one place: what is this, what does it look
- * like, and what does the list show as its preview.
+ * The three questions that are the same across all formats: what is this,
+ * what does it look like, and what does the list show as its preview.
  *
  * `feedTitle` is the title AS THE FEED GAVE IT, before the 'Untitled'
- * substitution — its absence is what makes an item a note, and a default
- * would erase exactly that signal.
+ * substitution — its absence is what makes an item a note.
  */
 function enrich(
   item: any,
@@ -67,13 +57,7 @@ function enrich(
   },
 ): Pick<
   NormalizedItem,
-  | 'kind'
-  | 'excerpt'
-  | 'imageUrl'
-  | 'imageWidth'
-  | 'imageHeight'
-  | 'durationSeconds'
-  | 'enclosureUrl'
+  'kind' | 'excerpt' | 'imageUrl' | 'durationSeconds'
 > {
   const media = extractMedia(item, {
     base: fields.feedUrl,
@@ -91,17 +75,11 @@ function enrich(
 
   return {
     kind,
-    // A video stores no excerpt because its row renders none. A note stores a
-    // LONGER one than an article, because for a note the excerpt is not a
-    // preview under a title — it is the row's primary text.
     excerpt: showsExcerpt(kind)
       ? deriveExcerpt(fields.summary, fields.content, excerptLimitFor(kind))
       : undefined,
     imageUrl: media.imageUrl,
-    imageWidth: media.imageWidth,
-    imageHeight: media.imageHeight,
     durationSeconds: media.durationSeconds,
-    enclosureUrl: media.enclosureUrl,
   };
 }
 
@@ -122,10 +100,8 @@ function clean(value: unknown): string | undefined {
 }
 
 /**
- * Feeds carry dates in RFC 822 (RSS) or ISO 8601 (Atom/JSON), and plenty of
- * real feeds carry something that is neither. `new Date()` reads both real
- * formats; the guard is what stops a garbage date becoming `Invalid Date`
- * and then a NaN timestamp in SQLite.
+ * RFC 822 (RSS) or ISO 8601 (Atom/JSON) — `new Date()` reads both. The guard
+ * stops a garbage date becoming `Invalid Date` in the column.
  */
 function toDate(value: unknown): Date | undefined {
   const text = clean(value);
@@ -171,10 +147,9 @@ function firstAuthor(authors: unknown): string | undefined {
 }
 
 /**
- * The dedup key. Feeds are supposed to supply a stable one; a surprising
- * number do not, so this falls back through everything that could serve.
- * The last resort is the item URL or title — imperfect, but stable across
- * fetches of an unchanged item, which is what dedup actually requires.
+ * The dedup key. Feeds are supposed to supply a stable one and many do not,
+ * so this falls back to the URL or title — imperfect, but stable across
+ * fetches of an unchanged item, which is all dedup requires.
  */
 function itemGuid(candidates: Array<unknown>): string | undefined {
   for (const candidate of candidates) {
@@ -185,10 +160,8 @@ function itemGuid(candidates: Array<unknown>): string | undefined {
 }
 
 /**
- * Parse a feed document into the shape the database stores.
- *
- * `feedUrl` is needed as the base for relative links, which Atom feeds in
- * particular emit freely. Throws when the body is not a feed at all — the
+ * Parse a feed document into the shape the database stores. `feedUrl` is the
+ * base for relative links. Throws when the body is not a feed at all; the
  * caller turns that into a visible per-feed error.
  */
 export function normalizeFeed(body: string, feedUrl: string): NormalizedFeed {
@@ -267,8 +240,6 @@ export function normalizeFeed(body: string, feedUrl: string): NormalizedFeed {
       // content:encoded is the full body; <description> is often a teaser.
       const content = clean(item.content?.encoded);
       return {
-        // `guid` is the RSS-blessed identity; `isPermaLink` only says whether
-        // it doubles as a URL, so the value is usable either way.
         guid: itemGuid([item.guid?.value, url, title]) ?? url ?? '',
         title: title ?? 'Untitled',
         url,

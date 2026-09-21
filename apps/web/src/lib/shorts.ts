@@ -1,29 +1,22 @@
-// Everything this app knows about short vertical video, as pure functions.
+// Short vertical video, as pure functions. Isomorphic and importing nothing:
+// sync classifies items with it on the server, the viewer builds embed URLs
+// with it in the browser.
 //
-// Isomorphic on purpose, and importing nothing: the sync path classifies
-// incoming items with it on the server, and the viewer builds embed URLs with
-// it in the browser.
+// Detection is the regex below and nothing else, because a YouTube channel
+// feed already distinguishes the two by link shape:
 //
-// The whole of Shorts detection is the regex below, because YouTube's
-// ordinary channel feed already distinguishes the two by LINK SHAPE:
+//   .../shorts/5mU6SRS2Bxo     vs     .../watch?v=Qtl8lJwbd4g
 //
-//   <link rel="alternate" href="https://www.youtube.com/shorts/5mU6SRS2Bxo"/>
-//   <link rel="alternate" href="https://www.youtube.com/watch?v=Qtl8lJwbd4g"/>
+// So it costs no request and no API key, and the stored `articles.url` makes
+// reclassifying the backlog an UPDATE. docs/shorts.md has the alternatives.
 //
-// So classification costs no network call, no API key and no heuristics — and
-// because we already store that link in `articles.url`, reclassifying the
-// backlog is an UPDATE rather than a re-fetch. docs/shorts-viewer.md has the
-// alternatives (the undocumented UUSH playlist feeds, a HEAD probe against
-// /shorts/<id>) and why they lost.
-//
-// This module answers only "is it a Short". The wider question — video,
-// podcast, note, article — lives in src/lib/article-kind.ts, which builds on
-// the id reader below rather than matching the same URLs a second time.
+// The wider question — video, podcast, note, article — is article-kind.ts,
+// which builds on the id reader below rather than rematching these URLs.
 
 /**
- * YouTube video ids are 11 characters of URL-safe base64. Anchored at the
- * path so a link that merely mentions /shorts/ in a query string can't match,
- * and tolerant of the host prefix (`m.`, `www.`, bare) that mobile shares use.
+ * Ids are 11 chars of URL-safe base64. Anchored at the path so a link that
+ * merely mentions /shorts/ in a query string cannot match, and tolerant of
+ * the host prefix (`m.`, `www.`, bare) that mobile shares use.
  */
 const YOUTUBE_SHORT = /^https?:\/\/(?:[\w-]+\.)*youtube\.com\/shorts\/([\w-]{11})/i;
 
@@ -34,26 +27,19 @@ export function youtubeShortId(url: string | null | undefined): string | null {
 }
 
 /**
- * The player URL.
- *
- * `youtube-nocookie.com` is the same player against a domain that doesn't set
- * tracking cookies until playback starts. `rel=0` keeps the end-card
- * recommendations inside the same channel instead of opening the wider
- * suggestion funnel — the point of this screen is the feeds you subscribed to.
- *
- * `autoplay=1` is honest here: the iframe is only ever created in response to
- * a click, so the gesture that browsers require has already happened.
+ * `youtube-nocookie.com` is the same player on a domain that sets no
+ * tracking cookies before playback. `rel=0` keeps end-card recommendations
+ * inside the channel. `autoplay=1` is safe because the iframe is only ever
+ * created from a click.
  */
 export function shortEmbedUrl(videoId: string): string {
   return `https://www.youtube-nocookie.com/embed/${videoId}?autoplay=1&playsinline=1&rel=0`;
 }
 
 /**
- * The poster frame.
- *
- * `hqdefault` exists for every video, which `maxresdefault` does not. For a
- * Short it holds the vertical frame pillarboxed into 480x360, so the stage
- * crops it (`object-cover`) rather than showing the black bars.
+ * `hqdefault` exists for every video where `maxresdefault` 404s. For a Short
+ * it holds the vertical frame pillarboxed into 480x360, so callers crop with
+ * `object-cover` rather than showing the bars.
  */
 export function shortThumbnailUrl(videoId: string): string {
   return `https://i.ytimg.com/vi/${videoId}/hqdefault.jpg`;

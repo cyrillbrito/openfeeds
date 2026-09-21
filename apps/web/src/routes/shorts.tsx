@@ -1,14 +1,11 @@
 // The shorts viewer: one vertical video per screen, scroll-snapped.
 //
-// Deliberately the dumb version. There is no autoplay, no auto-advance and no
-// YouTube IFrame Player API — a slide shows its poster frame until you click
-// it, and clicking is the user gesture that browsers demand before audio can
-// play, so the whole autoplay-policy problem simply never arises. Exactly one
-// iframe exists at a time (`playing` holds a single article id), which is also
-// what keeps a fifty-item queue from being fifty live players.
+// No autoplay, no auto-advance, no IFrame Player API. A slide shows its
+// poster until you click it, and that click is the gesture browsers demand
+// before audio — so the autoplay-policy problem never arises. Exactly one
+// iframe exists at a time, so a fifty-item queue is not fifty players.
 //
-// docs/shorts-viewer.md has the version with a persistent player and
-// auto-advance, and what it costs.
+// docs/shorts.md has the persistent-player version and what it costs.
 import {
   createMemo,
   createSignal,
@@ -44,19 +41,14 @@ function Slide(props: {
   onPlay: () => void;
 }) {
   const setRead = useAction(toggleRead);
-  // `kind === 'short'` was decided by this same function at sync time, so a
-  // null here means the URL changed shape under us. Fall back rather than
-  // rendering a broken player.
+  // Sync decided `kind` with this same function, so null means the URL
+  // changed shape under us.
   const videoId = createMemo(() => youtubeShortId(props.article.url));
 
   return (
     <li class="flex h-full snap-start snap-always flex-col items-center justify-center gap-3 px-4">
-      {/*
-        Height first, width derived. `h-[72%]` of the slide is a definite
-        height, and with an aspect ratio and no stated width the box sizes
-        itself sideways — so the stage stays 9:16 at any window height without
-        a single media query.
-      */}
+      {/* Height first, width derived: a definite height plus an aspect ratio
+          keeps the stage 9:16 at any window size, with no media query. */}
       <div class="relative aspect-[9/16] h-[72%] overflow-hidden rounded-xl bg-black shadow-lg">
         <Show
           when={videoId()}
@@ -77,15 +69,9 @@ function Slide(props: {
                   aria-label={`Play ${props.article.title}`}
                 >
                   {/*
-                    hqdefault holds the vertical frame pillarboxed into 480x360,
-                    so cover-cropping it is what removes the black bars.
-
-                    No `loading="lazy"`, and that is not an oversight: inside
-                    this snap scroller Chrome never resolves the lazy images at
-                    all — they stay at naturalWidth 0 even once scrolled fully
-                    into view, so every stage renders black. Eager is ~25KB per
-                    slide against a page size of 50, which is a fine trade for
-                    thumbnails that actually appear.
+                    No `loading="lazy"`: inside this snap scroller Chrome
+                    never resolves lazy images — they stay at naturalWidth 0
+                    even fully in view, so every stage renders black.
                   */}
                   <img
                     src={shortThumbnailUrl(id())}
@@ -195,12 +181,10 @@ function isControl(target: EventTarget | null): boolean {
 
 export default function Shorts() {
   const shorts = createMemo(() => getShorts());
-  // A single id, not a set: only one video plays, and switching slides tears
-  // the previous iframe down for free.
+  // A single id, not a set: switching slides tears the iframe down for free.
   const [playing, setPlaying] = createSignal<number | null>(null);
-  // Which slide is on screen. Every slide is exactly the scroller's height and
-  // snapping is mandatory, so the scroll position divides out to an exact
-  // index — no IntersectionObserver, no per-slide refs, no rounding drift.
+  // Every slide is exactly the scroller's height and snapping is mandatory,
+  // so scroll position divides out to an index — no IntersectionObserver.
   const [index, setIndex] = createSignal(0);
 
   let scroller: HTMLDivElement | undefined;
@@ -209,12 +193,9 @@ export default function Shorts() {
   const current = () => shorts()[index()];
 
   /**
-   * The one place the current slide changes, whether that came from a key, a
-   * button or the wheel.
-   *
-   * Moving off a slide stops its video, and stopping means REMOVING the
-   * iframe: a plain embed exposes no pause to script, so leaving `playing`
-   * set would leave a video you have scrolled past still talking.
+   * The one place the current slide changes, from key, button or wheel.
+   * Moving off a slide REMOVES its iframe — a plain embed exposes no pause
+   * to script, so a video scrolled past would otherwise keep talking.
    */
   function focusIndex(next: number) {
     if (next === index()) return;
@@ -229,47 +210,33 @@ export default function Shorts() {
     // Set it here as well as in onScroll so the counter and the disabled
     // states move on the press rather than on the scroll event.
     focusIndex(clamped);
-    // Instant, not smooth — and that is measured, not taste. Programmatic
-    // smooth scrolling does nothing on this container: neither
-    // `scrollTo({behavior:'smooth'})` nor CSS `scroll-behavior: smooth`
-    // moves it a pixel, which is a known fight between smooth scrolling and
-    // `scroll-snap-type: mandatory`. Assigning scrollTop always works, and
-    // an instant advance is the right feel for a shorts queue anyway.
+    // Instant, not smooth: neither `scrollTo({behavior:'smooth'})` nor CSS
+    // `scroll-behavior` moves this container a pixel, a known fight with
+    // `scroll-snap-type: mandatory`. Assigning scrollTop always works.
     scroller.scrollTop = clamped * scroller.clientHeight;
   }
 
   function play(article: ArticleListItem | undefined) {
     if (!article) return;
     setPlaying(article.id);
-    // Playing it IS reading it. The queue deliberately keeps read shorts, so
-    // the revalidation this triggers dims the caption instead of yanking the
-    // video out from under the player — see getShorts.
+    // Playing it IS reading it. The queue keeps read shorts, so the
+    // revalidation dims the caption instead of yanking the video away.
     if (!article.isRead) void setRead(article.id, true);
   }
 
   /**
-   * Keyboard control.
-   *
-   * On `window` rather than the scroller, so it works without anyone having
-   * clicked into the page first. The one thing it cannot cover: once you click
-   * *inside* the player, focus belongs to a cross-origin iframe and its key
-   * events never reach us. That is unfixable from here without adopting the
-   * IFrame Player API, and it is the reason the on-screen buttons exist rather
-   * than being decoration — they still work when the player has focus.
-   *
-   * There is no pause or mute key for the same reason: a plain embed exposes
-   * no controls to script. YouTube's own `k` / `m` work inside the player.
+   * Keyboard control, on `window` so it works before anyone clicks into the
+   * page. Once focus is inside the cross-origin player its key events never
+   * reach us — which is why the on-screen buttons are not decoration. No
+   * pause or mute key for the same reason; YouTube's own k/m work in-player.
    */
   if (!isServer) {
     const onKeyDown = (event: KeyboardEvent) => {
-      // Let the browser own anything that is a shortcut, and anything typed
-      // into a field or a dialog.
       if (event.metaKey || event.ctrlKey || event.altKey) return;
       if (isTypingTarget(event.target)) return;
-      // Enter and Space belong to whichever control has focus — after
-      // clicking "Next short" the button keeps focus, and handling Enter
-      // here as well would press the button AND start the video. The
-      // navigation keys stay ours in that state, which is the point.
+      // Enter and Space belong to whichever control has focus: after clicking
+      // "Next short" the button keeps focus, and handling Enter here too
+      // would press the button AND start the video.
       if ((event.key === 'Enter' || event.key === ' ') && isControl(event.target)) {
         return;
       }
@@ -308,16 +275,15 @@ export default function Shorts() {
         default:
           return;
       }
-      // Only reached when a case above matched — ArrowDown and space would
+      // Only reached when a case matched — ArrowDown and space would
       // otherwise scroll the container a second time, past the slide.
       event.preventDefault();
     };
 
     globalThis.addEventListener('keydown', onKeyDown);
-    // In the component body, NOT inside an effect: in Solid 2 an effect's
-    // callback owns no cleanup scope, so onCleanup there warns
-    // NO_OWNER_CLEANUP and the listener outlives the route — still calling
-    // goTo against a scroller that has been unmounted.
+    // In the component body, NOT an effect: a Solid 2 effect callback owns
+    // no cleanup scope, so onCleanup there warns NO_OWNER_CLEANUP and the
+    // listener outlives the route.
     onCleanup(() => globalThis.removeEventListener('keydown', onKeyDown));
   }
 
@@ -339,10 +305,8 @@ export default function Shorts() {
         </p>
       </header>
 
-      {/*
-        `relative` so the prev/next controls can be positioned once, over the
-        scroller, instead of once per slide.
-      */}
+      {/* `relative` so the prev/next controls are positioned once, over the
+          scroller, rather than once per slide. */}
       <div class="relative min-h-0 flex-1 bg-muted/30">
         <Loading fallback={<ShortsSkeleton />}>
           <Show
@@ -367,11 +331,8 @@ export default function Shorts() {
               </div>
             }
           >
-            {/*
-              The scroller, and the only scroller — it is exactly the height
-              left over, so the shell's <main> never scrolls behind it and
-              there are no nested scrollbars fighting for the wheel.
-            */}
+            {/* Exactly the height left over, so there are no nested
+                scrollbars fighting for the wheel. */}
             <div
               ref={(el) => (scroller = el)}
               onScroll={(event) => {
@@ -396,11 +357,10 @@ export default function Shorts() {
             </div>
 
             {/*
-              The same two moves the keyboard makes, for the mouse — and the
-              only ones that keep working once the cross-origin player has
-              focus. `pointer-events-none` on the column so the strip beside
-              the video is not a dead zone for the wheel; the buttons opt back
-              in individually.
+              The same two moves the keyboard makes, and the only ones that
+              work once the player has focus. `pointer-events-none` on the
+              column so the strip beside the video is not a dead zone for the
+              wheel; the buttons opt back in.
             */}
             <div class="pointer-events-none absolute inset-y-0 right-0 flex flex-col items-center justify-center gap-2 pr-4 sm:pr-8">
               <Button
@@ -411,14 +371,8 @@ export default function Shorts() {
                 disabled={index() === 0}
                 onClick={() => goTo(index() - 1)}
               >
-                {/*
-                  A bare glyph, not an icon element. It matches the ▶ the play
-                  overlay already uses — and it has to be bare: ANY element
-                  child of this Button (an <svg>, even a <span>) comes back as
-                  an unclaimed node at hydration. Every other Button in the
-                  app happens to take plain text, which is why nothing has
-                  tripped over it before.
-                */}
+                {/* A bare glyph, not an icon element: ANY element child of
+                    Button is an unclaimed node at hydration. */}
                 ▲
               </Button>
 

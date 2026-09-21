@@ -1,13 +1,9 @@
-/* Tailwind 4: one import, no config file, no content globs — the plugin in
-   vite.config.ts scans the module graph directly.
+/* Tailwind 4: one import, no config file — the Vite plugin scans the module
+   graph. The tokens are shadcn's, which is what src/components/ui expects.
 
-   The token set below is shadcn's, which is what the vendored components in
-   src/components/ui expect. Two layers on purpose:
-     :root / .dark   declare the raw palette, and are what a theme swap edits
-     @theme inline   maps those onto Tailwind's color scale, so `bg-background`
-                     and `text-muted-foreground` become real utilities
-   Colours are oklch: perceptually uniform, so `primary/90` in a hover state
-   darkens by the amount it looks like it should. */
+   Two layers: `:root` / `.dark` declare the raw oklch palette and are what a
+   theme swap edits; `@theme inline` maps them onto Tailwind's colour scale
+   so `bg-background` and `text-muted-foreground` become real utilities. */
 @import 'tailwindcss';
 
 /* Tailwind 4 has no `darkMode: 'class'` config — the variant is declared in

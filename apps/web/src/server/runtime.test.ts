@@ -1,16 +1,10 @@
 /**
  * A guard on the test runner's RUNTIME, not on app behaviour.
  *
- * The `vitest` binary carries a `#!/usr/bin/env node` shebang, so a plain
- * `vitest` script runs the suite under Node even when Bun invoked it. That
- * matters here because the database driver is `Bun.SQL`, a Bun builtin with
- * no Node equivalent — under Node every DB-backed test fails at import with
- * a message about an unresolvable module, which looks like a bundler
- * problem and is not one. `Bun.cron` has the same shape of problem and
- * fails more quietly: it silently degrades to setInterval.
- *
- * The fix is the `--bun` flag in package.json's test script. This test fails
- * loudly if that flag is ever dropped.
+ * The `vitest` binary carries a `#!/usr/bin/env node` shebang, so without
+ * `--bun` the suite runs under Node — where `Bun.SQL` does not resolve and
+ * every DB-backed test fails at import looking like a bundler problem. This
+ * fails loudly if that flag is ever dropped from package.json.
  */
 import { expect, it } from 'vitest';
 

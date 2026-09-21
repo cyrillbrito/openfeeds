@@ -11,7 +11,6 @@ import { action, query } from '@solidjs/router';
 import { reload, respond } from '@solidjs/web';
 
 import { requireUserId } from '../server/require-user';
-import { slowDown } from '../server/dev-delay';
 import {
   countUnread,
   countUnreadShorts,
@@ -19,7 +18,6 @@ import {
   listArticles,
   listFeeds,
   markAllRead,
-  setArticleArchived,
   setArticleRead,
 } from '../server/feeds/queries';
 import {
@@ -34,14 +32,12 @@ import {
 export const getFeeds = query(async () => {
   'use server';
   const userId = await requireUserId();
-  await slowDown();
   return listFeeds(userId);
 }, 'feeds');
 
 export const getInbox = query(async (unreadOnly: boolean) => {
   'use server';
   const userId = await requireUserId();
-  await slowDown();
   // Shorts are excluded here and nowhere else: a channel that posts five a
   // day would otherwise bury every article in the inbox. They still show up
   // on their own feed's page, which is the screen that should be complete.
@@ -60,14 +56,12 @@ export const getInbox = query(async (unreadOnly: boolean) => {
 export const getShorts = query(async () => {
   'use server';
   const userId = await requireUserId();
-  await slowDown();
   return listArticles(userId, { shorts: 'only' });
 }, 'shorts-queue');
 
 export const getFeedArticles = query(async (feedId: number) => {
   'use server';
   const userId = await requireUserId();
-  await slowDown();
   const [feed, items] = await Promise.all([
     getFeed(userId, feedId),
     listArticles(userId, { feedId }),
@@ -79,14 +73,12 @@ export const getFeedArticles = query(async (feedId: number) => {
 export const getUnreadCount = query(async () => {
   'use server';
   const userId = await requireUserId();
-  await slowDown();
   return countUnread(userId);
 }, 'unread-count');
 
 export const getShortsCount = query(async () => {
   'use server';
   const userId = await requireUserId();
-  await slowDown();
   return countUnreadShorts(userId);
 }, 'shorts-count');
 
@@ -145,7 +137,6 @@ export type AddFeedResult =
 export const addFeed = action(async (formData: FormData) => {
   'use server';
   const userId = await requireUserId();
-  await slowDown();
   const url = String(formData.get('url') ?? '').trim();
   if (!url) return { status: 'error', message: 'Enter a feed URL' };
   const exact = formData.get('exact') === '1';
@@ -179,7 +170,6 @@ export const addFeed = action(async (formData: FormData) => {
 export const removeFeed = action(async (feedId: number) => {
   'use server';
   const userId = await requireUserId();
-  await slowDown();
   await unsubscribeFromFeed(userId, feedId);
   return reload({ revalidate: UNREAD_KEYS });
 }, 'remove-feed');
@@ -188,7 +178,6 @@ export const removeFeed = action(async (feedId: number) => {
 export const refreshFeed = action(async (feedId: number) => {
   'use server';
   const userId = await requireUserId();
-  await slowDown();
   // Only for a feed the user follows — the button must not become a way to
   // make the server fetch arbitrary rows.
   if (!(await getFeed(userId, feedId))) {
@@ -203,23 +192,13 @@ export const refreshFeed = action(async (feedId: number) => {
 export const toggleRead = action(async (id: number, isRead: boolean) => {
   'use server';
   const userId = await requireUserId();
-  await slowDown();
   await setArticleRead(userId, id, isRead);
   return reload({ revalidate: UNREAD_KEYS });
 }, 'toggle-read');
 
-export const archiveArticle = action(async (id: number) => {
-  'use server';
-  const userId = await requireUserId();
-  await slowDown();
-  await setArticleArchived(userId, id, true);
-  return reload({ revalidate: UNREAD_KEYS });
-}, 'archive-article');
-
 export const markFeedRead = action(async (feedId?: number) => {
   'use server';
   const userId = await requireUserId();
-  await slowDown();
   // No feed id means the inbox button, which must leave the shorts queue
   // alone — see markAllRead.
   await markAllRead(

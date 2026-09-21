@@ -46,13 +46,13 @@ export default function FeedsPage() {
 
   return (
     <>
-      <header class="sticky top-0 z-10 flex items-center gap-3 border-b border-border bg-background/95 px-6 py-4 backdrop-blur">
+      <header class="flex shrink-0 items-center gap-3 border-b border-border px-6 py-4">
         <h1 class="flex-1 text-lg font-semibold">Feeds</h1>
         <AddFeedDialog />
       </header>
 
-      {/* The header above is static, so it needs no boundary and paints
-          immediately. Only the table waits. */}
+      {/* The header is static, so only the table waits. */}
+      <div class="min-h-0 flex-1 overflow-y-auto">
       <Loading fallback={<FeedTableSkeleton />}>
       <Show
         when={feeds().length > 0}
@@ -111,6 +111,7 @@ export default function FeedsPage() {
         </ul>
       </Show>
       </Loading>
+      </div>
     </>
   );
 }

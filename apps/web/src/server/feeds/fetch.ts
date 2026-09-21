@@ -1,21 +1,14 @@
-// Fetching a feed document over HTTP, politely.
-//
-// The headline feature is CONDITIONAL GET. v1's fetcher was a bare
-// `fetch(url)`, so every sweep downloaded every feed in full — for feeds that
-// had not changed, which is most of them, most of the time. Sending back the
-// ETag / Last-Modified the server gave us last time turns that into a 304
-// with an empty body: a few hundred bytes and no parse. It is roughly ten
-// lines of code and it is the single biggest efficiency win available here.
+// Fetching a feed document over HTTP, with conditional GET: echoing back
+// the ETag / Last-Modified from last time turns an unchanged feed into a
+// 304 with no body and no parse.
 import 'server-only';
 
 /** How long to wait on a feed before giving up. Slow feeds are common. */
 const TIMEOUT_MS = 15_000;
 
 /**
- * Some hosts serve 403 to clients without a plausible User-Agent.
- *
- * Exported so discovery identifies itself the same way the sync sweep does —
- * a host that decides to block us should see one client, not two.
+ * Some hosts serve 403 without a plausible User-Agent. Exported so discovery
+ * identifies itself the same way the sweep does.
  */
 export const USER_AGENT =
   'OpenFeeds/2.0 (+https://github.com/cyrillbrito/openfeeds; feed reader)';
@@ -34,11 +27,8 @@ export interface ConditionalHeaders {
 }
 
 /**
- * Fetch a feed document, sending validators when we have them.
- *
- * Never throws: every failure mode becomes an `error` result, because the
- * caller's job is to record the reason on the feed row and keep sweeping the
- * other feeds rather than abort the run.
+ * Never throws: every failure becomes an `error` result, so the sweep
+ * records the reason on the row and carries on with the other feeds.
  */
 export async function fetchFeed(
   url: string,
@@ -62,7 +52,6 @@ export async function fetchFeed(
       signal: AbortSignal.timeout(TIMEOUT_MS),
     });
 
-    // The whole point: the server says "you already have this".
     if (response.status === 304) return { status: 'not-modified' };
 
     if (!response.ok) {
@@ -80,7 +69,7 @@ export async function fetchFeed(
     return {
       status: 'ok',
       body,
-      // Store whatever the server gave us, verbatim, to echo back next time.
+      // Stored verbatim, to echo back next time.
       etag: response.headers.get('etag') ?? undefined,
       lastModified: response.headers.get('last-modified') ?? undefined,
     };
@@ -101,12 +90,10 @@ const TRACKING_PARAMS = /^(utm_|ref_?$|fbclid$|gclid$|mc_(cid|eid)$)/i;
 /**
  * Reduce a feed URL to a canonical form so the same feed is one row.
  *
- * Deliberately CONSERVATIVE. Two duplicate feed rows are a cosmetic
- * annoyance; two genuinely different feeds merged into one row silently
- * loses a subscription. So this only removes things that cannot change which
- * document is served — it does NOT upgrade http to https (they can be
- * different servers) and does NOT touch the path beyond a trailing slash on
- * the root.
+ * Deliberately conservative: a duplicate row is untidy, two different feeds
+ * merged into one silently loses a subscription. Only removes things that
+ * cannot change which document is served — no http→https upgrade, no path
+ * rewriting beyond a trailing slash on the root.
  */
 export function canonicalizeFeedUrl(input: string): string {
   const trimmed = input.trim();

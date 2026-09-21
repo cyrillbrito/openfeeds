@@ -1,24 +1,18 @@
 // The article list, shared by the inbox and by a single feed's page.
 //
-// ONE row component with layout branches, not a card-view/list-view toggle.
-// The inbox is heterogeneous by nature — a 40-word link post next to a
-// 3000-word essay next to a YouTube video next to a podcast episode — and
-// forcing a uniform card onto all of them is what makes most modern readers
-// scan worse than a plain list. So the layout follows `articles.kind`, which
-// sync already decided (src/lib/article-kind.ts), and the user is never asked
-// to manage a mode.
+// ONE row component with layout branches following `articles.kind`, not a
+// card/list toggle the user has to manage. An inbox is heterogeneous by
+// nature and a uniform card scans worse than a plain list.
 //
-// The one rule that matters most is negative: an item with no image gets NO
-// image slot. No grey box, no letter avatar, no 16:9 of nothing. Plenty of
-// excellent feeds ship no images at all, and a placeholder is the single
+// The rule that matters most is negative: an item with no image gets NO
+// image slot — no grey box, no letter avatar. A placeholder is the single
 // biggest reason a reader looks broken rather than sparse.
 import { createMemo, createSignal, For, Repeat, Show } from 'solid-js';
 import { useAction } from '@solidjs/router';
 
 import type { ArticleListItem } from '../server/feeds/queries';
-import { archiveArticle, toggleRead } from '../lib/feeds';
+import { toggleRead } from '../lib/feeds';
 import { paths } from '../router';
-import { Button } from './ui/button';
 import { Skeleton } from './ui/skeleton';
 
 /** Relative for anything recent, absolute once it stops being useful. */
@@ -47,17 +41,9 @@ function formatDuration(seconds: number | null) {
 }
 
 /**
- * The sticky separator's label.
- *
- * Twelve consecutive rows reading "3h ago" tell you nothing; one "Today" over
- * the group tells you everything, and lets the per-row stamp stay quiet.
- *
- * The granularity COARSENS with age, and that is the important part. Grouping
- * strictly by day looks right on a busy feed and absurd on a sparse one: a
- * blog that posts monthly gets a separator above every single row, which is
- * more chrome than content. Days for the last week, months after that, so the
- * separator always marks a real boundary rather than restating each row's
- * own date.
+ * The sticky separator's label. The granularity coarsens with age — days for
+ * the last week, months after that — so a blog that posts monthly does not
+ * get a separator above every single row.
  */
 function dayLabel(date: Date | null) {
   if (!date) return 'Undated';
@@ -84,11 +70,8 @@ interface DayGroup {
 }
 
 /**
- * Group consecutive rows by day.
- *
- * Consecutive, not sorted-into-buckets: the query already returns newest
- * first, so a linear pass is enough and the list keeps exactly the order the
- * database chose. Bucketing would silently reorder a feed whose dates lie.
+ * Consecutive, not bucketed: the query already returns newest first, so the
+ * list keeps exactly the order the database chose even when dates lie.
  */
 function groupByDay(items: ArticleListItem[]): DayGroup[] {
   const groups: DayGroup[] = [];
@@ -102,22 +85,14 @@ function groupByDay(items: ArticleListItem[]): DayGroup[] {
 }
 
 /**
- * The thumbnail.
+ * Three things here are load-bearing:
  *
- * Three things here are load-bearing and none of them are visual:
- *
- *  - The aspect ratio is fixed by the CALLER, not by the image. The image is
- *    absolutely positioned inside a box that already has its final size, so
- *    the row's height is known before a byte of it arrives and nothing
- *    reflows when it lands. That holds whether or not the feed declared
- *    dimensions, which most do not.
- *  - `onError` removes the slot entirely rather than leaving a broken-image
- *    icon. Feed thumbnails 404 and hotlink-block constantly, and the row must
- *    degrade to its no-image layout instead of showing a hole.
- *  - `referrerpolicy="no-referrer"` is the cheap half of the privacy problem.
- *    Loading a publisher's image still hands them the reader's IP; withholding
- *    the referrer at least stops them learning which reader, on which page.
- *    The real fix is a caching proxy, which is a separate piece of work.
+ *  - The aspect ratio comes from the CALLER, so the row's height is known
+ *    before the image arrives and nothing reflows when it lands.
+ *  - `onError` removes the slot entirely; feed thumbnails 404 and
+ *    hotlink-block constantly, and a hole is worse than the no-image layout.
+ *  - `referrerpolicy` is the cheap half of the privacy problem. The full fix
+ *    is a caching proxy.
  */
 function Thumbnail(props: {
   src: string;
@@ -178,7 +153,6 @@ function ArticleRow(props: {
   showFeedName?: boolean;
 }) {
   const setRead = useAction(toggleRead);
-  const archive = useAction(archiveArticle);
 
   const article = () => props.article;
   const kind = () => article().kind;
@@ -186,17 +160,12 @@ function ArticleRow(props: {
   const isNote = () => kind() === 'note';
 
   /**
-   * The thumbnail's box, per kind.
-   *
-   * A Short gets a PORTRAIT box, and that is not a style choice. YouTube only
-   * ever serves `hqdefault` at 480x360, so a Short's vertical frame arrives
-   * pillarboxed inside it. Cropping that to 16:9 keeps the grey bars and
-   * throws away the subject; cropping it to 9:16 removes the bars and keeps
-   * the frame. The Shorts screen already relies on the same trick.
+   * A Short gets a PORTRAIT box: `hqdefault` is 480x360 with the vertical
+   * frame pillarboxed inside, so cropping to 9:16 removes the bars where
+   * 16:9 would keep them and lose the subject. Narrow, so one Short does not
+   * tower over the rows around it.
    */
   const thumbnailBox = () => {
-    // Narrow, so that a portrait box costs the row about as much height as
-    // a 16:9 one does — otherwise a single Short towers over the feed page.
     if (kind() === 'short') return 'w-16 aspect-[9/16]';
     if (kind() === 'video') return 'w-40 aspect-video';
     return 'w-28 aspect-[16/10]';
@@ -224,12 +193,8 @@ function ArticleRow(props: {
       />
 
       <div class="flex min-w-0 flex-1 items-start gap-4">
-        {/*
-          A podcast's square artwork goes on the LEFT, alone among the kinds.
-          Square art on the right reads as a video thumbnail that failed to
-          load at the right aspect; on the left it reads as cover art, which
-          is what it is.
-        */}
+        {/* A podcast's square art goes LEFT: on the right it reads as a
+            video thumbnail that loaded at the wrong aspect. */}
         <Show when={kind() === 'podcast' && article().imageUrl}>
           {(src) => (
             <Thumbnail
@@ -242,15 +207,8 @@ function ArticleRow(props: {
 
         <div class="flex min-w-0 flex-1 flex-col gap-1">
           {/*
-            A note has no title of its own — the feed gave none, which is what
-            made it a note — so its body IS the link text. Every other kind
-            puts the title here and the excerpt underneath.
-          */}
-          {/*
-            The title IS the link out. There is no detail page: the feed's own
-            copy is a teaser more often than not, so opening the source is the
-            thing the click always wanted. Opening marks it read, which is what
-            a detail page used to do on mount.
+            The title IS the link out — there is no detail page, and opening
+            marks it read. A note has no title, so its body is the link text.
           */}
           <a
             href={article().url ?? '#'}
@@ -266,12 +224,8 @@ function ArticleRow(props: {
             {isNote() ? (article().excerpt ?? article().title) : article().title}
           </a>
 
-          {/*
-            Derived at sync time (server/feeds/excerpt.ts), not regex-stripped
-            here on every render. An empty string means the item HAS no
-            excerpt — a video, whose feed description is a wall of sponsor
-            copy and timestamps — so this is a falsy check, not a null check.
-          */}
+          {/* Empty string means the kind HAS no excerpt, so this is a falsy
+              check rather than a null check. */}
           <Show when={!isNote() && article().excerpt}>
             {(preview) => (
               <p
@@ -312,8 +266,8 @@ function ArticleRow(props: {
           </p>
         </div>
 
-        {/* Video keeps 16:9; a still image is boxier and narrower, so a
-            mixed list still reads as one column rather than two. */}
+        {/* Video keeps 16:9; a still image is boxier, so a mixed list still
+            reads as one column. */}
         <Show when={kind() !== 'podcast' && article().imageUrl}>
           {(src) => (
             <Thumbnail
@@ -326,38 +280,15 @@ function ArticleRow(props: {
         </Show>
       </div>
 
-      {/*
-        Overlaid, not inline.
-
-        Inline actions reserve their width on EVERY row forever, so the list
-        carries a permanent empty gutter down its right edge — invisible while
-        the rows are all text, and glaring the moment a thumbnail is supposed
-        to sit at the edge.
-      */}
-      <div class="absolute right-4 top-3 flex items-center gap-0.5 rounded-full bg-background/80 p-0.5 opacity-0 shadow-sm backdrop-blur transition-opacity focus-within:opacity-100 group-hover:opacity-100">
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={() => void archive(article().id)}
-        >
-          Archive
-        </Button>
-      </div>
     </li>
   );
 }
 
 /**
- * The measure, shared by the list and by the headers that sit above it.
- *
- * The list had no max-width, so on a wide monitor a title ran the full width
- * of the window — the single cheapest thing wrong with the old screen.
- *
- * Exported rather than applied once around the whole route, because a cap at
- * that altitude also hits screens that want the full width: the Shorts viewer
- * is a full-bleed `h-full` stage and collapses inside a centred column. The
- * headers import this so their content stays aligned with the rows while
- * their border and background still span the window.
+ * The reading measure, shared by the list and the headers above it so their
+ * content aligns while their borders still span the window. Not applied
+ * around the whole route: the Shorts stage is full-bleed and collapses
+ * inside a centred column.
  */
 export const LIST_MEASURE = 'mx-auto w-full max-w-3xl';
 
@@ -382,15 +313,9 @@ export function ArticleList(props: {
         <For each={groups()}>
           {(group) => (
             <>
-              {/*
-                Parked directly under the route header, which is itself sticky
-                at `top-0` in this same scroll container. Two sticky elements
-                in one container do not stack, so this one needs the header's
-                height — published as `--route-header-h` by App.tsx, which
-                measures it. The headers differ per route and can grow a line,
-                so a hardcoded offset is wrong on at least one of them.
-              */}
-              <li class="sticky top-[var(--route-header-h,0px)] z-[5] border-b border-border bg-background/95 px-6 py-1.5 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground backdrop-blur">
+              {/* The route header is outside this scroller, so `top-0` is
+                  the right offset on every route. */}
+              <li class="sticky top-0 z-[5] border-b border-border bg-background/95 px-6 py-1.5 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground backdrop-blur">
                 {group.label}
               </li>
               <For each={group.items}>
@@ -410,17 +335,10 @@ export function ArticleList(props: {
 }
 
 /**
- * The <Loading> fallback for every place ArticleList is rendered.
- *
- * Deliberately not a spinner. It reproduces the row geometry above —
- * `px-6 py-4`, the same gap, the same dot, the same text lines — so that when
- * the data lands the only thing that changes is the pixels inside the boxes.
- *
- * Every fourth row carries a thumbnail block, because the real list does and
- * a skeleton of pure text lines would jump the moment a video row arrived.
- * Widths cycle instead of repeating so a column of them reads as text rather
- * than as a bar chart, and they are written out as literal class names
- * because Tailwind 4 scans the module graph for exactly that.
+ * Not a spinner: it reproduces the row geometry above, so when the data
+ * lands only the pixels inside the boxes change. Every fourth row carries a
+ * thumbnail, because the real list does. Widths are literal class names
+ * because Tailwind 4 scans the module graph for exactly those.
  */
 const TITLE_WIDTHS = ['w-3/5', 'w-4/5', 'w-2/5', 'w-3/4', 'w-1/2', 'w-2/3'];
 const PREVIEW_WIDTHS = ['w-11/12', 'w-4/5', 'w-full', 'w-3/4'];

@@ -1,8 +1,6 @@
 // Better Auth's vanilla client, not `better-auth/solid`: the Solid client's
 // `useStore` imports `solid-js/store`, a subpath Solid 2 does not export.
-//
-// No baseURL — the auth routes are same-origin, and the client defaults to
-// window.location.origin.
+// No baseURL needed — the auth routes are same-origin.
 import { query } from '@solidjs/router';
 import { createAuthClient } from 'better-auth/client';
 import { getRequestEvent } from '@solidjs/web';

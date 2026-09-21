@@ -42,18 +42,3 @@ export function TextFieldLabel<T extends ValidComponent = 'label'>(
     />
   );
 }
-
-export function TextFieldErrorMessage<T extends ValidComponent = 'div'>(
-  props: PolymorphicProps<T, TextFieldPrimitive.TextFieldErrorMessageProps<T>>,
-) {
-  const others = omit(props as { class?: string }, 'class');
-  return (
-    <TextFieldPrimitive.ErrorMessage
-      class={cn(
-        'text-sm text-destructive',
-        (props as { class?: string }).class,
-      )}
-      {...others}
-    />
-  );
-}

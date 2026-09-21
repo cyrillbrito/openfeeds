@@ -1,15 +1,9 @@
-/**
- * The read layer against a real database.
- *
- * The unread-count test exists because of a bug this suite caught in the
- * browser and not in code review: written as a correlated subquery, Drizzle
- * emitted UNQUALIFIED column names, so the subquery's `"id"` bound to
- * articles.id instead of feeds.id and every feed reported exactly 1 unread.
- * Numbers that are plausible-but-wrong are the ones that ship.
- *
- * Two users throughout, because with global `feeds` and `articles` the only
- * thing keeping them apart is a join this layer is responsible for writing.
- */
+// The read layer against a real database. Two users throughout, because with
+// global `feeds` and `articles` the only thing keeping them apart is a join
+// this layer is responsible for writing.
+//
+// The unread-count test guards a real bug: as a correlated subquery Drizzle
+// emitted unqualified columns, so every feed reported exactly 1 unread.
 import { beforeEach, describe, expect, it } from 'vitest';
 
 process.env.DATABASE_URL = 'memory://';
@@ -25,7 +19,6 @@ const {
   listArticles,
   listFeeds,
   markAllRead,
-  setArticleArchived,
   setArticleRead,
 } = await import('./queries');
 
@@ -86,20 +79,12 @@ describe('listFeeds', () => {
     expect((await listFeeds(BOB)).map((r) => r.title)).toEqual(['Beta']);
   });
 
-  it('excludes read and archived articles from the count', async () => {
+  it('excludes read articles from the count', async () => {
     const [first] = await db.select().from(articles);
     await setArticleRead(ALICE, first.id, true);
 
     const alpha = (await listFeeds(ALICE)).find((f) => f.title === 'Alpha')!;
     expect(alpha.unreadCount).toBe(2);
-
-    const [second] = (await db.select().from(articles)).filter(
-      (a) => a.id !== first.id && a.feedId === feedA,
-    );
-    await setArticleArchived(ALICE, second.id, true);
-    expect(
-      (await listFeeds(ALICE)).find((f) => f.title === 'Alpha')!.unreadCount,
-    ).toBe(1);
   });
 
   it('keeps a feed with no articles at all, at zero', async () => {
@@ -134,7 +119,7 @@ describe('listArticles', () => {
     expect(items.map((i) => i.title)).toEqual(['B1']);
   });
 
-  it('hides read articles when asked, and archived ones always', async () => {
+  it('hides read articles when asked', async () => {
     const [newest] = await listArticles(ALICE);
     await setArticleRead(ALICE, newest.id, true);
 
@@ -143,9 +128,6 @@ describe('listArticles', () => {
     ).toEqual(['A1', 'A2', 'A3']);
     // Not unreadOnly: the read article is still listed.
     expect(await listArticles(ALICE)).toHaveLength(4);
-
-    await setArticleArchived(ALICE, newest.id, true);
-    expect(await listArticles(ALICE)).toHaveLength(3);
   });
 
   it('keeps read state per user on a shared article', async () => {

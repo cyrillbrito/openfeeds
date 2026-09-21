@@ -1,23 +1,14 @@
-// Turning "whatever the user pasted" into a feed URL.
+// Turning "whatever the user pasted" into a feed URL, because people paste
+// homepages.
 //
-// People paste homepages, not feed documents. Without this module the
-// subscribe dialog only accepts an exact feed URL, which means the user has
-// to go find it themselves — the one job a reader should do for them.
+// Two rules hold the design together:
 //
-// The ordering below is the whole design, and it is the inverse of v1's.
-// v1 asked "does this URL look like YouTube/Reddit/WordPress?" FIRST and
-// rewrote accordingly, so pasting a URL that was already a feed got rewritten
-// into something else: `reddit.com/r/x.rss` became `reddit.com/r/x.rss.rss`,
-// and any URL containing `/feed/` matched the WordPress rule and came back as
-// three guessed `?feed=rss2` variants — the working URL you pasted was never
-// even tried. Asking "is this already a feed?" first makes that entire class
-// of bug unwriteable, and it is also the common case, so it costs one request
-// and stops.
-//
-// Every candidate this module returns has been FETCHED AND PARSED. v1 handed
-// back `<link>` hrefs it had never tried, so a stale tag in someone's <head>
-// became a broken subscription that only failed an hour later. A candidate we
-// cannot parse is not a candidate.
+//  1. "Is this already a feed?" is asked FIRST. It is the common case (one
+//     request, then stop) and it makes rewriting a working feed URL into a
+//     broken guess structurally impossible.
+//  2. Every candidate returned has been fetched and parsed. A stale <link>
+//     in someone's <head> must fail here, not an hour later as a dead
+//     subscription.
 import 'server-only';
 
 import {
@@ -40,13 +31,9 @@ const PROBE_CONCURRENCY = 4;
 const MAX_LINK_CANDIDATES = 10;
 
 /**
- * Last-resort guesses, tried only when the site advertises nothing.
- *
- * Six, not v1's twenty-nine. The long tail of that list (`/data/rss`,
- * `/rss/featured`, `/feed/posts/default`) exists to serve platforms that all
- * emit a proper <link> tag anyway, so it never paid for itself — while v1 ran
- * the whole list SEQUENTIALLY at up to 5s each, which is why a site with no
- * feed could hang the dialog for two minutes.
+ * Last-resort guesses, tried only when the site advertises nothing. Kept
+ * short: anything longer serves platforms that emit a <link> tag anyway,
+ * and each entry is a request a user waits on.
  */
 const GUESSED_PATHS = [
   '/feed',
@@ -58,12 +45,9 @@ const GUESSED_PATHS = [
 ] as const;
 
 /**
- * `type` values that mean "this link is a feed".
- *
- * `text/xml` and `application/xml` are deliberately absent: paired with
- * `rel="alternate"` they are used for sitemaps and for localised variants far
- * more often than for feeds, and anything that IS a feed gets verified by
- * fetching anyway — so including them would buy nothing but wasted requests.
+ * `type` values that mean "this link is a feed". `text/xml` and
+ * `application/xml` are absent on purpose: with `rel="alternate"` they mark
+ * sitemaps and localised variants far more often than feeds.
  */
 const FEED_LINK_TYPES = new Set([
   'application/rss+xml',
@@ -95,12 +79,7 @@ export type Discovery =
   | { status: 'candidates'; candidates: FeedCandidate[] }
   | { status: 'error'; message: string };
 
-/**
- * Canonicalise, or nothing.
- *
- * `discoverFeeds` promises an error BRANCH rather than a thrown error, so
- * nothing inside it may throw on malformed input.
- */
+/** `discoverFeeds` returns an error branch rather than throwing. */
 function safeCanonical(url: string): string | undefined {
   try {
     return canonicalizeFeedUrl(url);
@@ -132,12 +111,8 @@ type DocumentResult =
   | { ok: false; message: string };
 
 /**
- * Fetch something that might be a feed or might be a web page.
- *
- * Distinct from `fetchFeed` on purpose: that one is the sync path and asks
- * only for feed types with conditional-GET validators, whereas discovery has
- * no validators to send and specifically wants the HTML when the URL turns
- * out to be a homepage.
+ * Fetch something that might be a feed or might be a web page. Distinct from
+ * `fetchFeed`, which asks only for feed types and sends validators.
  */
 async function fetchDocument(
   url: string,
@@ -197,12 +172,8 @@ interface HeadLink {
 }
 
 /**
- * Read `<base>` and `<link>` out of an HTML document.
- *
- * `HTMLRewriter` is a Bun builtin (the same streaming parser Cloudflare
- * Workers use), so this costs no dependency at all. v1 pulled in `happy-dom`
- * to build a whole DOM and then assigned the document to `body.innerHTML`,
- * which is the wrong place for tags that belong in `<head>`.
+ * Read `<base>` and `<link>` out of an HTML document. `HTMLRewriter` is a
+ * Bun builtin, so this costs no HTML-parsing dependency.
  */
 async function readHeadLinks(
   html: string,
@@ -282,16 +253,12 @@ export async function feedLinksIn(
 }
 
 /**
- * Feeds we can derive from a URL without asking the site.
+ * Feeds derivable from a URL without asking the site. Every branch pins the
+ * exact number of path segments it accepts — a loose pattern here turns
+ * `github.com/owner/repo/issues` into a confidently wrong feed URL.
  *
- * Kept SMALL and anchored. v1's table was neither, and every one of its bugs
- * came from a loose regex: `github\.com\/([a-zA-Z0-9](.+))$` matched
- * `github.com/owner/repo/issues` and produced `issues.atom`, and the
- * WordPress entry matched on the mere presence of `/feed/` anywhere in the
- * URL. Each pattern here pins the exact number of path segments it accepts.
- *
- * This runs AFTER the is-it-already-a-feed check, so it can never mangle a
- * feed URL, and it returns guesses that still have to survive verification.
+ * Runs after the is-it-already-a-feed check, and its guesses still have to
+ * survive verification.
  */
 export function knownServiceFeeds(url: string): { url: string; title: string }[] {
   let parsed: URL;
@@ -388,15 +355,12 @@ interface VerifiedFeed {
 }
 
 /**
- * What makes two feed documents "the same feed".
+ * What makes two feed documents "the same feed" — most static-site
+ * generators publish identical content at both /atom.xml and /rss.xml, and a
+ * picker with two indistinguishable rows is worse than not asking.
  *
- * Most static-site generators advertise both `/atom.xml` and `/rss.xml` over
- * identical content. Offering both is a picker with two rows the user cannot
- * tell apart, which is worse than not asking at all.
- *
- * Title and site link alone would be too eager — a blog and its comments feed
- * often share both — so the newest item's identity has to match too. Feeds
- * that genuinely differ disagree about their first item almost immediately.
+ * The newest item is part of the key because a blog and its comments feed
+ * share a title and site link.
  */
 function fingerprintOf(parsed: ReturnType<typeof normalizeFeed>): string {
   return [
@@ -408,11 +372,8 @@ function fingerprintOf(parsed: ReturnType<typeof normalizeFeed>): string {
 }
 
 /**
- * Confirm a candidate by fetching it and parsing it.
- *
- * `hint` is the label the source gave us (a `<link title>`, or "Releases");
- * the feed's own title wins when it has one, because it is authoritative and
- * is what the user will see in the sidebar afterwards.
+ * Confirm a candidate by fetching and parsing it. `hint` is the label the
+ * source gave (a `<link title>`, or "Releases"); the feed's own title wins.
  */
 async function verifyCandidate(
   url: string,
@@ -435,8 +396,7 @@ async function verifyCandidate(
       fingerprint: fingerprintOf(parsed),
     };
   } catch {
-    // Detected as a feed but not parseable by us — subscribing would fail
-    // later, so it does not belong in the picker.
+    // Detected as a feed but not parseable here, so subscribing would fail.
     return null;
   }
 }
@@ -469,10 +429,9 @@ async function verifyAll(
     verified.push(...results.filter((r): r is VerifiedFeed => r !== null));
   }
 
-  // And dedupe AGAIN once we know what came back — by final URL, because two
-  // candidates can redirect to the same document, and by content, because the
-  // same feed is routinely published at one URL per format. First wins: a
-  // page's first advertised feed is its primary one by convention.
+  // Dedupe again once the answers are in: by final URL (two candidates can
+  // redirect to one document) and by content. First wins — a page's first
+  // advertised feed is its primary one by convention.
   const seenUrls = new Set<string>();
   const seenContent = new Set<string>();
   const unified: VerifiedFeed[] = [];
@@ -487,11 +446,9 @@ async function verifyAll(
 }
 
 /**
- * Guessed paths, tried against the pasted directory before the origin.
- *
- * A blog living at `example.com/blog` usually keeps its feed under `/blog`,
- * and v1 only ever tried the origin. Stopping at the first base that yields
- * anything keeps the usual cost at six requests rather than twelve.
+ * Guessed paths, tried against the pasted directory before the origin — a
+ * blog at `example.com/blog` usually keeps its feed under `/blog`. Stops at
+ * the first base that yields anything.
  */
 async function probeGuessedPaths(documentUrl: string): Promise<VerifiedFeed[]> {
   let parsed: URL;
@@ -542,11 +499,9 @@ function collapse(verified: VerifiedFeed[]): Discovery {
 }
 
 /**
- * Resolve a pasted URL to the feed (or feeds) behind it.
- *
- * Ordered cheapest-and-most-certain first, and each stage returns as soon as
- * it finds anything, so the overwhelmingly common case — someone pasting an
- * actual feed URL — costs exactly one request and never reaches the guesses.
+ * Resolve a pasted URL to the feed (or feeds) behind it. Ordered
+ * cheapest-and-most-certain first; each stage returns as soon as it finds
+ * anything, so pasting a real feed URL costs exactly one request.
  */
 export async function discoverFeeds(rawUrl: string): Promise<Discovery> {
   let startUrl: string;
@@ -561,8 +516,8 @@ export async function discoverFeeds(rawUrl: string): Promise<Discovery> {
   if (fetched.ok && isFeedBody(fetched.doc.body)) {
     return {
       status: 'feed',
-      // Redirects can land somewhere this cannot parse; the URL we asked for
-      // is already canonical, so it is the right thing to fall back to.
+      // A redirect can land somewhere unparseable; the requested URL is
+      // already canonical, so it is the right fallback.
       url: safeCanonical(fetched.doc.url) ?? startUrl,
       body: fetched.doc.body,
       etag: fetched.doc.etag,
@@ -570,8 +525,8 @@ export async function discoverFeeds(rawUrl: string): Promise<Discovery> {
     };
   }
 
-  // 2. Feeds derivable from the URL itself. Cheap, and works even when the
-  //    page was unreachable — which is the point for YouTube and Reddit.
+  // 2. Feeds derivable from the URL itself — works even when the page was
+  //    unreachable, which is the point for YouTube's consent wall.
   const service = knownServiceFeeds(startUrl);
   if (service.length > 0) {
     const verified = await verifyAll(service);
@@ -587,8 +542,7 @@ export async function discoverFeeds(rawUrl: string): Promise<Discovery> {
     }
   }
 
-  // 4. Guesses. Last, because it is the only stage that fetches URLs nobody
-  //    ever told us about.
+  // 4. Guesses — last, the only stage that fetches URLs nobody mentioned.
   const guessed = await probeGuessedPaths(
     fetched.ok ? fetched.doc.url : startUrl,
   );
