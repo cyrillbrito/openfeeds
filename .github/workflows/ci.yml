@@ -263,7 +263,7 @@ jobs:
 
       - name: Post report comment
         if: ${{ !cancelled() }}
-        uses: daun/playwright-report-summary@31ed947ec7a623d18a66cfd20ef546dc66ef8063 # v4.1.0
+        uses: daun/playwright-report-summary@5359ae22f265fd2dfdb7744a0cc6614c5c3abde6 # v4.1.1
         with:
           report-file: apps/e2e/results.json
           comment-title: 'Playwright E2E Report'
