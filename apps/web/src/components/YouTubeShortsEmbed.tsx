@@ -5,26 +5,24 @@ interface YouTubeShortsEmbedProps {
   url: string;
   title?: string;
   autoplay?: boolean;
-  class?: string;
+  className?: string;
 }
 
-export function YouTubeShortsEmbed(props: YouTubeShortsEmbedProps) {
-  const videoId = () => extractYouTubeVideoId(props.url);
-  const embedUrl = () => {
-    const id = videoId()!;
-    const baseUrl = `https://www.youtube.com/embed/${id}`;
-    return props.autoplay ? `${baseUrl}?autoplay=1` : baseUrl;
-  };
+export function YouTubeShortsEmbed({ url, title, autoplay, className }: YouTubeShortsEmbedProps) {
+  const videoId = extractYouTubeVideoId(url);
+  const embedUrl = videoId
+    ? autoplay
+      ? `https://www.youtube.com/embed/${videoId}?autoplay=1`
+      : `https://www.youtube.com/embed/${videoId}`
+    : undefined;
 
-  // No Show wrapper — keeping the iframe always mounted avoids a remount if
-  // videoId() ever goes briefly falsy during a transition.
   return (
     <iframe
-      src={embedUrl()}
-      title={props.title || 'YouTube Shorts'}
+      src={embedUrl}
+      title={title || 'YouTube Shorts'}
       allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-      allowfullscreen
-      class={twMerge('aspect-9/16', props.class)}
+      allowFullScreen
+      className={twMerge('aspect-9/16', className)}
     />
   );
 }

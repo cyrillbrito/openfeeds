@@ -1,9 +1,9 @@
 import { readFileSync } from 'node:fs';
 import tailwindcss from '@tailwindcss/vite';
 import { tanstackRouter } from '@tanstack/router-plugin/vite';
+import react from '@vitejs/plugin-react-oxc';
 import { defineConfig, type Plugin } from 'vite';
 import lucidePreprocess from 'vite-plugin-lucide-preprocess';
-import solidPlugin from 'vite-plugin-solid';
 
 const rootPkg = JSON.parse(readFileSync('../../package.json', 'utf-8'));
 
@@ -27,11 +27,11 @@ export default defineConfig({
   plugins: [
     lucidePreprocess(),
     tanstackRouter({
-      target: 'solid',
+      target: 'react',
       autoCodeSplitting: true,
     }),
     tailwindcss(),
-    solidPlugin(),
+    react(),
   ] as Plugin[],
   define: {
     __APP_VERSION__: JSON.stringify(rootPkg.version),

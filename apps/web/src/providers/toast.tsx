@@ -1,12 +1,4 @@
-import {
-  createContext,
-  createSignal,
-  For,
-  onMount,
-  Show,
-  useContext,
-  type ParentComponent,
-} from 'solid-js';
+import { createContext, use, useCallback, useEffect, useState } from 'react';
 import { toastService } from '~/lib/toast-service';
 
 export type ToastVariant = 'success' | 'error' | 'warning' | 'info';
@@ -25,7 +17,7 @@ interface Toast {
 }
 
 interface ToastContextValue {
-  toasts: () => Toast[];
+  toasts: Toast[];
   showToast: (
     message: string,
     options?: { variant?: ToastVariant; action?: ToastAction; duration?: number },
@@ -33,7 +25,7 @@ interface ToastContextValue {
   removeToast: (id: string) => void;
 }
 
-const ToastContext = createContext<ToastContextValue>();
+const ToastContext = createContext<ToastContextValue | undefined>(undefined);
 
 const variantClass: Record<ToastVariant, string> = {
   success: 'alert-success',
@@ -42,86 +34,69 @@ const variantClass: Record<ToastVariant, string> = {
   info: 'alert-info',
 };
 
-export const ToastProvider: ParentComponent = (props) => {
-  const [toasts, setToasts] = createSignal<Toast[]>([]);
+export function ToastProvider({ children }: { children: React.ReactNode }) {
+  const [toasts, setToasts] = useState<Toast[]>([]);
 
-  const showToast = (
-    message: string,
-    options?: { variant?: ToastVariant; action?: ToastAction; duration?: number },
-  ) => {
-    const variant = options?.variant ?? 'success';
-
-    // Skip duplicate: same message + variant already visible
-    if (toasts().some((t) => t.message === message && t.variant === variant)) return;
-
-    const id = Date.now().toString() + Math.random().toString(36).substring(7);
-    const duration = options?.duration ?? 6000; // Default 6 seconds
-
-    const toast: Toast = {
-      id,
-      message,
-      variant,
-      action: options?.action,
-      duration,
-    };
-
-    setToasts((prev) => [...prev, toast]);
-
-    // Auto-remove toast after duration
-    setTimeout(() => {
-      removeToast(id);
-    }, duration);
-  };
-
-  const removeToast = (id: string) => {
+  const removeToast = useCallback((id: string) => {
     setToasts((prev) => prev.filter((t) => t.id !== id));
-  };
+  }, []);
 
-  const value: ToastContextValue = {
-    toasts,
-    showToast,
-    removeToast,
-  };
+  const showToast = useCallback(
+    (
+      message: string,
+      options?: { variant?: ToastVariant; action?: ToastAction; duration?: number },
+    ) => {
+      const variant = options?.variant ?? 'success';
 
-  // Wire up the module-scope toast service so collection handlers can show toasts
-  onMount(() => {
+      setToasts((prev) => {
+        // Skip duplicate: same message + variant already visible
+        if (prev.some((t) => t.message === message && t.variant === variant)) return prev;
+
+        const id = Date.now().toString() + Math.random().toString(36).substring(7);
+        const duration = options?.duration ?? 6000;
+        const toast: Toast = { id, message, variant, action: options?.action, duration };
+
+        setTimeout(() => removeToast(id), duration);
+        return [...prev, toast];
+      });
+    },
+    [removeToast],
+  );
+
+  useEffect(() => {
     toastService.showToast = showToast;
-  });
+  }, [showToast]);
 
   return (
-    <ToastContext.Provider value={value}>
-      {props.children}
-      {/* Toast container rendered as part of the provider */}
-      <div class="toast toast-end toast-bottom z-50 max-w-md">
-        <For each={toasts().slice(-5)}>
-          {(toast) => (
-            <div
-              class={`alert ${variantClass[toast.variant]} flex items-center justify-between shadow-lg`}
-            >
-              <span class="line-clamp-3 break-words">{toast.message}</span>
-              <Show when={toast.action}>
-                {(action) => (
-                  <button
-                    class="btn btn-sm btn-ghost"
-                    onClick={() => {
-                      action().onClick();
-                      removeToast(toast.id);
-                    }}
-                  >
-                    {action().label}
-                  </button>
-                )}
-              </Show>
-            </div>
-          )}
-        </For>
+    <ToastContext.Provider value={{ toasts, showToast, removeToast }}>
+      {children}
+      <div className="toast toast-end toast-bottom z-50 max-w-md">
+        {toasts.slice(-5).map((toast) => (
+          <div
+            key={toast.id}
+            className={`alert ${variantClass[toast.variant]} flex items-center justify-between shadow-lg`}
+          >
+            <span className="line-clamp-3 break-words">{toast.message}</span>
+            {toast.action && (
+              <button
+                className="btn btn-sm btn-ghost"
+                onClick={() => {
+                  toast.action!.onClick();
+                  removeToast(toast.id);
+                }}
+              >
+                {toast.action.label}
+              </button>
+            )}
+          </div>
+        ))}
       </div>
     </ToastContext.Provider>
   );
-};
+}
 
 export function useToast() {
-  const context = useContext(ToastContext);
+  const context = use(ToastContext);
   if (!context) {
     throw new Error('useToast must be used within a ToastProvider');
   }

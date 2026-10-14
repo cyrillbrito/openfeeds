@@ -1,4 +1,4 @@
-import type { Meta, StoryObj } from 'storybook-solidjs-vite';
+import type { Meta, StoryObj } from '@storybook/react-vite';
 import { expect, fn, within } from 'storybook/test';
 import { MarkAllArchivedButton } from './MarkAllArchivedButton';
 
@@ -7,7 +7,7 @@ const meta: Meta<typeof MarkAllArchivedButton> = {
   component: MarkAllArchivedButton,
   decorators: [
     (Story: () => any) => (
-      <ul class="menu">
+      <ul className="menu">
         <li>
           <Story />
         </li>

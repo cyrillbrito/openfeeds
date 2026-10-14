@@ -1,5 +1,5 @@
-import { Check, CircleAlert, CircleMinus, FileWarning, Plus, TriangleAlert, X } from 'lucide-solid';
-import { createSignal, For, Match, Show, Switch } from 'solid-js';
+import { Check, CircleAlert, CircleMinus, FileX, Plus, TriangleAlert, X } from 'lucide-react';
+import { useRef, useState } from 'react';
 import { api, unwrap } from '~/lib/api-client';
 import { LazyModal, type ModalController } from './LazyModal';
 
@@ -7,18 +7,18 @@ interface ImportOpmlModalProps {
   controller: (controller: ModalController) => void;
 }
 
-export function ImportOpmlModal(props: ImportOpmlModalProps) {
-  let modalController!: ModalController;
+export function ImportOpmlModal({ controller }: ImportOpmlModalProps) {
+  const modalRef = useRef<ModalController>(null!);
 
   return (
     <LazyModal
-      controller={(controller) => {
-        modalController = controller;
-        props.controller(controller);
+      controller={(ctrl) => {
+        modalRef.current = ctrl;
+        controller(ctrl);
       }}
       title="Import OPML File"
     >
-      <ImportOpmlForm onClose={() => modalController.close()} />
+      <ImportOpmlForm onClose={() => modalRef.current.close()} />
     </LazyModal>
   );
 }
@@ -34,10 +34,10 @@ interface ImportOpmlFormProps {
   onClose: () => void;
 }
 
-function ImportOpmlForm(props: ImportOpmlFormProps) {
-  const [isImporting, setIsImporting] = createSignal(false);
-  const [importError, setImportError] = createSignal<string | null>(null);
-  const [importResult, setImportResult] = createSignal<ImportResult | null>(null);
+function ImportOpmlForm({ onClose }: ImportOpmlFormProps) {
+  const [isImporting, setIsImporting] = useState(false);
+  const [importError, setImportError] = useState<string | null>(null);
+  const [importResult, setImportResult] = useState<ImportResult | null>(null);
 
   const handleImportOpml = async (content: string) => {
     try {
@@ -60,153 +60,138 @@ function ImportOpmlForm(props: ImportOpmlFormProps) {
   const handleClose = () => {
     setImportError(null);
     setImportResult(null);
-    props.onClose();
+    onClose();
   };
 
   return (
     <>
-      <Switch>
-        <Match when={isImporting()}>
-          <div class="flex flex-col items-center justify-center py-12">
-            <span class="loading loading-spinner loading-lg mb-4"></span>
-            <span class="text-lg">Importing feeds...</span>
-            <span class="text-base-content/60 mt-2 text-sm">This may take a moment</span>
+      {isImporting ? (
+        <div className="flex flex-col items-center justify-center py-12">
+          <span className="loading loading-spinner loading-lg mb-4"></span>
+          <span className="text-lg">Importing feeds...</span>
+          <span className="text-base-content/60 mt-2 text-sm">This may take a moment</span>
+        </div>
+      ) : importError ? (
+        <div className="flex flex-col items-center py-8">
+          <div className="bg-error/10 flex size-12 items-center justify-center rounded-full">
+            <CircleAlert size={24} className="text-error" />
           </div>
-        </Match>
+          <p className="mt-3 text-lg font-medium">Import failed</p>
+          <p className="text-base-content/60 mt-1 text-center text-sm">{importError}</p>
+        </div>
+      ) : importResult ? (
+        <ImportResultView result={importResult} />
+      ) : (
+        <div className="form-control w-full">
+          <label className="label">
+            <span className="label-text">Choose OPML File</span>
+          </label>
+          <input
+            type="file"
+            accept=".opml,.xml"
+            className="file-input file-input-bordered w-full"
+            onChange={(e) => {
+              const file = e.currentTarget.files?.[0];
+              if (file) {
+                const reader = new FileReader();
+                reader.addEventListener('load', (event) => {
+                  const content = event.target?.result as string;
+                  void handleImportOpml(content);
+                });
+                reader.addEventListener('error', (error) => {
+                  console.error('[IMPORT UI] FileReader error:', error);
+                });
+                reader.readAsText(file);
+              }
+            }}
+          />
+          <label className="label">
+            <span className="label-text-alt">
+              Select an OPML file exported from your feed reader
+            </span>
+          </label>
+        </div>
+      )}
 
-        <Match when={importError()}>
-          <div class="flex flex-col items-center py-8">
-            <div class="bg-error/10 flex size-12 items-center justify-center rounded-full">
-              <CircleAlert size={24} class="text-error" />
-            </div>
-            <p class="mt-3 text-lg font-medium">Import failed</p>
-            <p class="text-base-content/60 mt-1 text-center text-sm">{importError()}</p>
-          </div>
-        </Match>
-
-        <Match when={importResult()}>{(result) => <ImportResultView result={result()} />}</Match>
-
-        <Match when={!isImporting() && !importResult() && !importError()}>
-          <div class="form-control w-full">
-            <label class="label">
-              <span class="label-text">Choose OPML File</span>
-            </label>
-            <input
-              type="file"
-              accept=".opml,.xml"
-              class="file-input file-input-bordered w-full"
-              onChange={(e) => {
-                const file = e.currentTarget.files?.[0];
-                if (file) {
-                  const reader = new FileReader();
-                  reader.addEventListener('load', (event) => {
-                    const content = event.target?.result as string;
-                    void handleImportOpml(content);
-                  });
-                  reader.addEventListener('error', (error) => {
-                    console.error('[IMPORT UI] FileReader error:', error);
-                  });
-                  reader.readAsText(file);
-                }
-              }}
-            />
-            <label class="label">
-              <span class="label-text-alt">Select an OPML file exported from your feed reader</span>
-            </label>
-          </div>
-        </Match>
-      </Switch>
-
-      <div class="modal-action">
-        <button type="button" class="btn" onClick={handleClose} disabled={isImporting()}>
-          {importResult() || importError() ? 'Done' : 'Cancel'}
+      <div className="modal-action">
+        <button type="button" className="btn" onClick={handleClose} disabled={isImporting}>
+          {importResult || importError ? 'Done' : 'Cancel'}
         </button>
       </div>
     </>
   );
 }
 
-function ImportResultView(props: { result: ImportResult }) {
-  const noFeedsFound = () => props.result.found === 0;
-  const allFailed = () =>
-    props.result.found > 0 && props.result.imported === 0 && props.result.failed.length > 0;
-  const hasSuccesses = () => props.result.imported > 0;
+function ImportResultView({ result }: { result: ImportResult }) {
+  const noFeedsFound = result.found === 0;
+  const allFailed = result.found > 0 && result.imported === 0 && result.failed.length > 0;
+  const hasSuccesses = result.imported > 0;
 
-  // Pick the hero state
-  const heroIcon = () => {
-    if (noFeedsFound())
-      return <FileWarning size={32} class="text-base-content/70" strokeWidth={1.5} />;
-    if (allFailed()) return <X size={32} class="text-error-content" strokeWidth={2.5} />;
-    return <Check size={32} class="text-success" strokeWidth={2.5} />;
-  };
+  const heroIcon = noFeedsFound ? (
+    <FileX size={32} className="text-base-content/70" strokeWidth={1.5} />
+  ) : allFailed ? (
+    <X size={32} className="text-error-content" strokeWidth={2.5} />
+  ) : (
+    <Check size={32} className="text-success" strokeWidth={2.5} />
+  );
 
-  const heroLabel = () => {
-    if (noFeedsFound()) return 'No feeds found';
-    if (allFailed()) return 'Import failed';
-    return 'Import complete';
-  };
+  const heroLabel = noFeedsFound ? 'No feeds found' : allFailed ? 'Import failed' : 'Import complete';
 
-  const heroDescription = () => {
-    if (noFeedsFound()) return 'The file may be empty or only contain folders without feeds.';
-    if (allFailed())
-      return `All ${props.result.found} ${props.result.found === 1 ? 'feed' : 'feeds'} failed to import.`;
-    return null;
-  };
+  const heroDescription = noFeedsFound
+    ? 'The file may be empty or only contain folders without feeds.'
+    : allFailed
+      ? `All ${result.found} ${result.found === 1 ? 'feed' : 'feeds'} failed to import.`
+      : null;
 
-  const heroBgClass = () => {
-    if (noFeedsFound()) return 'bg-base-300';
-    if (allFailed()) return 'bg-error';
-    return 'bg-success/15';
-  };
+  const heroBgClass = noFeedsFound ? 'bg-base-300' : allFailed ? 'bg-error' : 'bg-success/15';
 
   return (
-    <div class="flex flex-col items-center py-4">
-      {/* Hero icon + label */}
-      <div class={`flex size-16 items-center justify-center rounded-full ${heroBgClass()}`}>
-        {heroIcon()}
+    <div className="flex flex-col items-center py-4">
+      <div className={`flex size-16 items-center justify-center rounded-full ${heroBgClass}`}>
+        {heroIcon}
       </div>
-      <p class="mt-3 text-lg font-medium">{heroLabel()}</p>
-      <Show when={heroDescription()}>
-        <p class="text-base-content/60 mt-1 text-center text-sm">{heroDescription()}</p>
-      </Show>
+      <p className="mt-3 text-lg font-medium">{heroLabel}</p>
+      {heroDescription && (
+        <p className="text-base-content/60 mt-1 text-center text-sm">{heroDescription}</p>
+      )}
 
-      {/* Stats row */}
-      <Show when={!noFeedsFound()}>
-        <div class="text-base-content/60 mt-5 flex w-full flex-col items-center gap-3 text-sm">
-          <div class="flex justify-center gap-6">
-            <Show when={hasSuccesses()}>
-              <div class="flex items-center gap-1.5">
-                <Plus size={14} class="text-success" />
-                <span>{props.result.imported} imported</span>
+      {!noFeedsFound && (
+        <div className="text-base-content/60 mt-5 flex w-full flex-col items-center gap-3 text-sm">
+          <div className="flex justify-center gap-6">
+            {hasSuccesses && (
+              <div className="flex items-center gap-1.5">
+                <Plus size={14} className="text-success" />
+                <span>{result.imported} imported</span>
               </div>
-            </Show>
-            <Show when={props.result.skipped > 0}>
-              <div class="flex items-center gap-1.5">
-                <CircleMinus size={14} class="text-base-content/30" />
-                <span>{props.result.skipped} already following</span>
+            )}
+            {result.skipped > 0 && (
+              <div className="flex items-center gap-1.5">
+                <CircleMinus size={14} className="text-base-content/30" />
+                <span>{result.skipped} already following</span>
               </div>
-            </Show>
-            <Show when={props.result.failed.length > 0}>
-              <div class="flex items-center gap-1.5">
-                <TriangleAlert size={14} class="text-amber-600 dark:text-amber-400" />
-                <span>{props.result.failed.length} failed</span>
+            )}
+            {result.failed.length > 0 && (
+              <div className="flex items-center gap-1.5">
+                <TriangleAlert size={14} className="text-amber-600 dark:text-amber-400" />
+                <span>{result.failed.length} failed</span>
               </div>
-            </Show>
+            )}
           </div>
         </div>
-      </Show>
+      )}
 
-      {/* Failed feeds detail */}
-      <Show when={props.result.failed.length > 0}>
-        <div class="bg-base-200 mt-4 w-full rounded-lg px-4 py-3">
-          <p class="text-base-content/60 text-xs font-medium tracking-wide uppercase">
+      {result.failed.length > 0 && (
+        <div className="bg-base-200 mt-4 w-full rounded-lg px-4 py-3">
+          <p className="text-base-content/60 text-xs font-medium tracking-wide uppercase">
             Failed feeds
           </p>
-          <ul class="text-base-content/80 mt-2 space-y-1 text-sm">
-            <For each={props.result.failed}>{(feed) => <li>{feed}</li>}</For>
+          <ul className="text-base-content/80 mt-2 space-y-1 text-sm">
+            {result.failed.map((feed, i) => (
+              <li key={i}>{feed}</li>
+            ))}
           </ul>
         </div>
-      </Show>
+      )}
     </div>
   );
 }

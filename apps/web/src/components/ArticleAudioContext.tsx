@@ -1,45 +1,39 @@
 import type { WordTiming } from '@repo/domain/client';
-import { createContext, createSignal, useContext, type ParentProps } from 'solid-js';
+import { createContext, use, useCallback, useRef, useState, type ReactNode } from 'react';
 
 type AudioState = 'idle' | 'loading' | 'generating' | 'ready' | 'playing' | 'paused' | 'error';
 
 interface ArticleAudioContextValue {
-  audioState: () => AudioState;
+  audioState: AudioState;
   setAudioState: (state: AudioState) => void;
-  currentWordIndex: () => number;
+  currentWordIndex: number;
   setCurrentWordIndex: (index: number) => void;
-  wordTimings: () => WordTiming[];
+  wordTimings: WordTiming[];
   setWordTimings: (timings: WordTiming[]) => void;
-  isHighlightingEnabled: () => boolean;
-  // Seeking
+  isHighlightingEnabled: boolean;
   seekToWordIndex: (index: number) => void;
   onSeekRequest: (callback: (index: number) => void) => void;
 }
 
-const ArticleAudioContext = createContext<ArticleAudioContextValue>();
+const ArticleAudioContext = createContext<ArticleAudioContextValue | undefined>(undefined);
 
-export function ArticleAudioProvider(props: ParentProps) {
-  const [audioState, setAudioState] = createSignal<AudioState>('idle');
-  const [currentWordIndex, setCurrentWordIndex] = createSignal<number>(-1);
-  const [wordTimings, setWordTimings] = createSignal<WordTiming[]>([]);
+export function ArticleAudioProvider({ children }: { children: ReactNode }) {
+  const [audioState, setAudioState] = useState<AudioState>('idle');
+  const [currentWordIndex, setCurrentWordIndex] = useState<number>(-1);
+  const [wordTimings, setWordTimings] = useState<WordTiming[]>([]);
 
-  // Callback for seek requests - AudioPlayer will register this
-  let seekCallback: ((index: number) => void) | null = null;
+  const seekCallbackRef = useRef<((index: number) => void) | null>(null);
 
-  const isHighlightingEnabled = () => {
-    const state = audioState();
-    return (state === 'playing' || state === 'paused') && wordTimings().length > 0;
-  };
+  const isHighlightingEnabled =
+    (audioState === 'playing' || audioState === 'paused') && wordTimings.length > 0;
 
-  const seekToWordIndex = (index: number) => {
-    if (seekCallback) {
-      seekCallback(index);
-    }
-  };
+  const seekToWordIndex = useCallback((index: number) => {
+    seekCallbackRef.current?.(index);
+  }, []);
 
-  const onSeekRequest = (callback: (index: number) => void) => {
-    seekCallback = callback;
-  };
+  const onSeekRequest = useCallback((callback: (index: number) => void) => {
+    seekCallbackRef.current = callback;
+  }, []);
 
   return (
     <ArticleAudioContext.Provider
@@ -55,13 +49,13 @@ export function ArticleAudioProvider(props: ParentProps) {
         onSeekRequest,
       }}
     >
-      {props.children}
+      {children}
     </ArticleAudioContext.Provider>
   );
 }
 
 export function useArticleAudio() {
-  const context = useContext(ArticleAudioContext);
+  const context = use(ArticleAudioContext);
   if (!context) {
     throw new Error('useArticleAudio must be used within ArticleAudioProvider');
   }

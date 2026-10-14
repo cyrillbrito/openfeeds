@@ -1,13 +1,13 @@
-import { createFileRoute, Link, Outlet, useLocation, useNavigate } from '@tanstack/solid-router';
-import { Compass, Inbox, Plus, Rss, Sparkles } from 'lucide-solid';
+import { createFileRoute, Link, Outlet, useLocation, useNavigate } from '@tanstack/react-router';
+import { Compass, Inbox, Plus, Rss, Sparkles } from 'lucide-react';
 import { posthog } from 'posthog-js';
-import { createEffect, createSignal, For, on, onCleanup, onMount, Show, Suspense } from 'solid-js';
+import { Suspense, useEffect, useRef, useState } from 'react';
 import { AiFab } from '~/components/chat/AiFab';
 import { AiPopover } from '~/components/chat/AiPopover';
 import { ChatProvider } from '~/components/chat/chat-context';
 import { ColorIndicator } from '~/components/ColorIndicator';
 import type { ModalController } from '~/components/LazyModal';
-import { CenterLoader, Loader } from '~/components/Loader';
+import { CenterLoader } from '~/components/Loader';
 import { TagModal } from '~/components/TagModal';
 import { UserMenu } from '~/components/UserMenu';
 import { useTags } from '~/entities/tags';
@@ -26,35 +26,30 @@ function FrameLayout() {
   const location = useLocation();
   const navigate = useNavigate();
   const session = authClient.useSession();
-  const [popoverOpen, setPopoverOpen] = createSignal(false);
+  const [popoverOpen, setPopoverOpen] = useState(false);
 
   // Identify user for PostHog when session is available
-  createEffect(
-    on(
-      () => session().data?.user,
-      (user) => {
-        if (user) {
-          posthog.identify(user.id, {
-            email: user.email,
-            name: user.name,
-            created_at: user.createdAt,
-          });
-        }
-      },
-    ),
-  );
+  useEffect(() => {
+    const user = session.data?.user;
+    if (user) {
+      posthog.identify(user.id, {
+        email: user.email,
+        name: user.name,
+        created_at: user.createdAt,
+      });
+    }
+  }, [session.data?.user]);
 
   // Close sidebar drawer on navigation (mobile only)
-  createEffect(() => {
-    void location().pathname;
+  useEffect(() => {
     const drawerCheckbox = document.getElementById('my-drawer') as HTMLInputElement | null;
     if (drawerCheckbox) {
       drawerCheckbox.checked = false;
     }
-  });
+  }, [location.pathname]);
 
   // Cmd+J / Ctrl+J to toggle popover
-  onMount(() => {
+  useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if ((e.metaKey || e.ctrlKey) && e.key === 'j') {
         e.preventDefault();
@@ -66,11 +61,10 @@ function FrameLayout() {
       }
     };
     document.addEventListener('keydown', handleKeyDown);
-    onCleanup(() => document.removeEventListener('keydown', handleKeyDown));
-  });
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, [navigate]);
 
-  // Hide FAB when popover is open or on /ai route
-  const showFab = () => !popoverOpen() && !location().pathname.startsWith('/ai');
+  const showFab = !popoverOpen && !location.pathname.startsWith('/ai');
 
   const handleFabClick = () => {
     if (window.innerWidth < 1024) {
@@ -82,35 +76,32 @@ function FrameLayout() {
 
   return (
     <ChatProvider>
-      <div class="drawer lg:drawer-open">
-        <input id="my-drawer" type="checkbox" class="drawer-toggle" />
-        <div class="drawer-content flex min-h-dvh">
-          {/* Main content */}
-          <div class="flex min-w-0 flex-1 flex-col">
+      <div className="drawer lg:drawer-open">
+        <input id="my-drawer" type="checkbox" className="drawer-toggle" />
+        <div className="drawer-content flex min-h-dvh">
+          <div className="flex min-w-0 flex-1 flex-col">
             <Suspense fallback={<CenterLoader />}>
               <Outlet />
             </Suspense>
           </div>
         </div>
 
-        <div class="drawer-side z-10 shadow-sm">
-          <label for="my-drawer" aria-label="close sidebar" class="drawer-overlay"></label>
-          <aside class="menu bg-base-100 border-base-300 flex h-dvh w-80 flex-col flex-nowrap border-r !px-0 !pt-4 !pb-2">
-            {/* Menu Header */}
-            <Link to="/inbox" class="mt-2 flex items-center justify-center gap-2 px-4">
-              <img src="/logo.svg" class="h-10 w-10" alt="OpenFeeds logo" />
-              <h2 class="text-lg font-bold">OpenFeeds</h2>
+        <div className="drawer-side z-10 shadow-sm">
+          <label htmlFor="my-drawer" aria-label="close sidebar" className="drawer-overlay"></label>
+          <aside className="menu bg-base-100 border-base-300 flex h-dvh w-80 flex-col flex-nowrap border-r !px-0 !pt-4 !pb-2">
+            <Link to="/inbox" className="mt-2 flex items-center justify-center gap-2 px-4">
+              <img src="/logo.svg" className="h-10 w-10" alt="OpenFeeds logo" />
+              <h2 className="text-lg font-bold">OpenFeeds</h2>
             </Link>
-            <div class="divider mx-4"></div>
+            <div className="divider mx-4"></div>
 
-            <div class="flex-1 overflow-y-auto pr-2 pl-4">
-              {/* Navigation */}
-              <ul class="mb-6 space-y-1">
+            <div className="flex-1 overflow-y-auto pr-2 pl-4">
+              <ul className="mb-6 space-y-1">
                 <li>
                   <Link
                     to="/discover"
-                    class="flex items-center gap-3"
-                    activeProps={{ class: 'menu-active' }}
+                    className="flex items-center gap-3"
+                    activeProps={{ className: 'menu-active' }}
                   >
                     <Compass size={20} />
                     Discover
@@ -119,8 +110,8 @@ function FrameLayout() {
                 <li>
                   <Link
                     to="/inbox"
-                    class="flex items-center gap-3"
-                    activeProps={{ class: 'menu-active' }}
+                    className="flex items-center gap-3"
+                    activeProps={{ className: 'menu-active' }}
                   >
                     <Inbox size={20} />
                     Inbox
@@ -129,8 +120,8 @@ function FrameLayout() {
                 <li>
                   <Link
                     to="/feeds"
-                    class="flex items-center gap-3"
-                    activeProps={{ class: 'menu-active' }}
+                    className="flex items-center gap-3"
+                    activeProps={{ className: 'menu-active' }}
                   >
                     <Rss size={20} />
                     Feeds
@@ -139,8 +130,8 @@ function FrameLayout() {
                 <li>
                   <Link
                     to="/ai"
-                    class="flex items-center gap-3"
-                    activeProps={{ class: 'menu-active' }}
+                    className="flex items-center gap-3"
+                    activeProps={{ className: 'menu-active' }}
                   >
                     <Sparkles size={20} />
                     AI Chat
@@ -148,25 +139,22 @@ function FrameLayout() {
                 </li>
               </ul>
 
-              <div class="divider"></div>
+              <div className="divider"></div>
 
               <DrawerTags />
             </div>
 
-            <div class="divider mx-4"></div>
-            <div class="px-4">
+            <div className="divider mx-4"></div>
+            <div className="px-4">
               <UserMenu />
             </div>
           </aside>
         </div>
       </div>
 
-      {/* AI surfaces */}
-      <Show when={showFab()}>
-        <AiFab onClick={handleFabClick} />
-      </Show>
+      {showFab && <AiFab onClick={handleFabClick} />}
       <AiPopover
-        open={popoverOpen()}
+        open={popoverOpen}
         onClose={() => setPopoverOpen(false)}
         onExpand={(sessionId, hasMessages) => {
           if (hasMessages) {
@@ -181,64 +169,58 @@ function FrameLayout() {
 }
 
 function DrawerTags() {
-  const tags$ = useTags();
-  let createModalController!: ModalController;
+  const tags = useTags();
+  const createModalRef = useRef<ModalController>(null!);
 
   return (
-    <div class="flex-1">
-      <TagModal controller={(controller) => (createModalController = controller)} />
+    <div className="flex-1">
+      <TagModal
+        controller={(c) => {
+          createModalRef.current = c;
+        }}
+      />
 
-      <div class="flex">
+      <div className="flex">
         <Link
           to="/tags"
-          class="text-base-content-gray hover:text-base-content flex flex-1 items-center gap-2 text-sm font-semibold tracking-wide uppercase transition-colors"
+          className="text-base-content-gray hover:text-base-content flex flex-1 items-center gap-2 text-sm font-semibold tracking-wide uppercase transition-colors"
         >
           Tags
         </Link>
 
         <button
-          class="btn btn-circle btn-ghost btn-xs hover:btn-info ml-auto"
-          onClick={() => createModalController.open()}
+          className="btn btn-circle btn-ghost btn-xs hover:btn-info ml-auto"
+          onClick={() => createModalRef.current.open()}
           title="Add new tag"
         >
-          <Plus size={12} class="text-base-content-gray" />
+          <Plus size={12} className="text-base-content-gray" />
         </button>
       </div>
-      <Suspense
-        fallback={
-          <div class="flex justify-center">
-            <Loader />
+
+      <ul className="menu rounded-box w-full">
+        {tags.length === 0 ? (
+          <div className="py-4 text-center">
+            <p className="text-base-content/50 mb-3 text-sm">No tags yet</p>
+            <Link to="/tags" className="btn btn-xs btn-outline">
+              Create Tags
+            </Link>
           </div>
-        }
-      >
-        <ul class="menu rounded-box w-full">
-          <For
-            each={tags$()}
-            fallback={
-              <div class="py-4 text-center">
-                <p class="text-base-content/50 mb-3 text-sm">No tags yet</p>
-                <Link to="/tags" class="btn btn-xs btn-outline">
-                  Create Tags
-                </Link>
-              </div>
-            }
-          >
-            {(tag) => (
-              <li>
-                <Link
-                  to="/tags/$tagId"
-                  params={{ tagId: tag.id }}
-                  class="flex items-center gap-3"
-                  activeProps={{ class: 'menu-active' }}
-                >
-                  <ColorIndicator class={getTagDotColor(tag.color)} />
-                  {tag.name}
-                </Link>
-              </li>
-            )}
-          </For>
-        </ul>
-      </Suspense>
+        ) : (
+          tags.map((tag) => (
+            <li key={tag.id}>
+              <Link
+                to="/tags/$tagId"
+                params={{ tagId: tag.id }}
+                className="flex items-center gap-3"
+                activeProps={{ className: 'menu-active' }}
+              >
+                <ColorIndicator className={getTagDotColor(tag.color)} />
+                {tag.name}
+              </Link>
+            </li>
+          ))
+        )}
+      </ul>
     </div>
   );
 }

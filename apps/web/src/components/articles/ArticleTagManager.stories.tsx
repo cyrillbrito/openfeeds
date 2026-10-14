@@ -1,4 +1,4 @@
-import type { Meta, StoryObj } from 'storybook-solidjs-vite';
+import type { Meta, StoryObj } from '@storybook/react-vite';
 import { expect, fn, within } from 'storybook/test';
 import { withRouter } from './articles-stories.decorator';
 import { articleTagFixtures, tagFixtures } from './articles-stories.fixtures';

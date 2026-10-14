@@ -1,6 +1,6 @@
-import { and, eq } from '@tanstack/solid-db';
-import { createFileRoute } from '@tanstack/solid-router';
-import { Show, Suspense } from 'solid-js';
+import { and, eq } from '@tanstack/react-db';
+import { createFileRoute } from '@tanstack/react-router';
+import { Suspense } from 'react';
 import { ArticleList } from '~/components/articles/ArticleList';
 import {
   ArticleListProvider,
@@ -21,10 +21,9 @@ export const Route = createFileRoute('/_frame/tags/$tagId/articles')({
 });
 
 function TagArticlesPage() {
-  const params = Route.useParams();
+  const { tagId } = Route.useParams();
   const search = Route.useSearch();
-  const tagId = () => params()?.tagId;
-  const readStatus = () => search()?.readStatus || 'unread';
+  const readStatus = (search?.readStatus || 'unread') as ReadStatus;
 
   const filter: ArticleQueryFilter = {
     buildQuery: (q, { readStatusWhere }) =>
@@ -34,7 +33,7 @@ function TagArticlesPage() {
           eq(article.id, articleTag.articleId),
         )
         .where(({ article, articleTag }: any) => {
-          const base = eq(articleTag.tagId, tagId());
+          const base = eq(articleTag.tagId, tagId);
           return readStatusWhere ? and(base, readStatusWhere(article)) : base;
         })
         .select(({ article }: any) => article),
@@ -45,7 +44,7 @@ function TagArticlesPage() {
           eq(article.id, articleTag.articleId),
         )
         .where(({ article, articleTag }: any) => {
-          const base = eq(articleTag.tagId, tagId());
+          const base = eq(articleTag.tagId, tagId);
           return readStatusWhere ? and(base, readStatusWhere(article)) : base;
         })
         .select(({ article }: any) => ({ id: article.id })),
@@ -56,7 +55,7 @@ function TagArticlesPage() {
           eq(article.id, articleTag.articleId),
         )
         .where(({ article, articleTag }: any) =>
-          and(eq(articleTag.tagId, tagId()), eq(article.isRead, false)),
+          and(eq(articleTag.tagId, tagId), eq(article.isRead, false)),
         )
         .select(({ article }: any) => ({ id: article.id })),
     buildArchivableQuery: (q) =>
@@ -66,50 +65,45 @@ function TagArticlesPage() {
           eq(article.id, articleTag.articleId),
         )
         .where(({ article, articleTag }: any) =>
-          and(eq(articleTag.tagId, tagId()), eq(article.isArchived, false)),
+          and(eq(articleTag.tagId, tagId), eq(article.isArchived, false)),
         )
         .select(({ article }: any) => ({ id: article.id })),
   };
 
   return (
-    <ArticleListProvider
-      filter={filter}
-      readStatus={() => readStatus()}
-      viewKey={`tag:${tagId()}`}
-      context="tag"
-    >
-      <TagArticlesContent readStatus={readStatus()} />
+    <ArticleListProvider filter={filter} readStatus={readStatus} viewKey={`tag:${tagId}`} context="tag">
+      <TagArticlesContent readStatus={readStatus} />
     </ArticleListProvider>
   );
 }
 
-function TagArticlesContent(props: { readStatus: ReadStatus }) {
+function TagArticlesContent({ readStatus }: { readStatus: ReadStatus }) {
   const ctx = useArticleList();
 
   return (
     <>
       <ArticleListToolbar
-        leftContent={<ReadStatusToggle currentStatus={props.readStatus} />}
+        leftContent={<ReadStatusToggle currentStatus={readStatus} />}
         menuContent={
-          <Show when={ctx.archivableCount() > 0}>
+          ctx.archivableCount > 0 ? (
             <li>
               <MarkAllArchivedButton
-                totalCount={ctx.archivableCount()}
+                totalCount={ctx.archivableCount}
                 contextLabel="in this tag"
                 onConfirm={ctx.markAllArchived}
               />
             </li>
-          </Show>
+          ) : null
         }
-        unreadCount={ctx.unreadCount()}
-        totalCount={ctx.totalCount()}
-        readStatus={props.readStatus as any}
+        unreadCount={ctx.unreadCount}
+        totalCount={ctx.totalCount}
+        readStatus={readStatus as any}
       />
 
       <Suspense fallback={<CenterLoader />}>
-        <Show when={ctx.feeds().length > 0 || ctx.tags().length > 0 || ctx.articles().length > 0}>
+        {(ctx.feeds.length > 0 || ctx.tags.length > 0 || ctx.articles.length > 0) && (
           <ArticleList />
-        </Show>
+        )}
       </Suspense>
     </>
   );

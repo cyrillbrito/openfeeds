@@ -1,7 +1,7 @@
 import { snakeCamelMapper } from '@electric-sql/client';
 import { FilterRuleSchema } from '@repo/domain/client';
 import { electricCollectionOptions } from '@tanstack/electric-db-collection';
-import { createCollection, eq, useLiveQuery } from '@tanstack/solid-db';
+import { createCollection, eq, useLiveQuery } from '@tanstack/react-db';
 import { api, unwrap } from '~/lib/api-client';
 import { collectionErrorHandler, shapeErrorHandler } from '~/lib/collection-errors';
 import { getShapeUrl, timestampParser } from '~/lib/electric-client';
@@ -50,7 +50,9 @@ export const filterRulesCollection = createCollection(
 );
 
 export function useFilterRules(feedId: string) {
-  return useLiveQuery((q) =>
-    q.from({ rule: filterRulesCollection }).where(({ rule }) => eq(rule.feedId, feedId)),
+  const { data } = useLiveQuery(
+    (q) => q.from({ rule: filterRulesCollection }).where(({ rule }) => eq(rule.feedId, feedId)),
+    [feedId],
   );
+  return data ?? [];
 }

@@ -1,9 +1,9 @@
 import { createId } from '@repo/shared/utils';
-import { eq, useLiveQuery } from '@tanstack/solid-db';
-import { createFileRoute, Link, useRouter } from '@tanstack/solid-router';
-import { Archive, ArrowLeft, Inbox } from 'lucide-solid';
+import { eq, useLiveQuery } from '@tanstack/react-db';
+import { createFileRoute, Link, useRouter } from '@tanstack/react-router';
+import { Archive, ArrowLeft, Inbox } from 'lucide-react';
 import { posthog } from 'posthog-js';
-import { createEffect, createSignal, on, Show, Suspense } from 'solid-js';
+import { useEffect, useRef, useState } from 'react';
 import { ArchiveIconButton } from '~/components/ArchiveIconButton';
 import { ArticleAudioProvider } from '~/components/ArticleAudioContext';
 import { ArticleAudioPlayer } from '~/components/ArticleAudioPlayer';
@@ -19,9 +19,9 @@ import { articlesCollection } from '~/entities/articles';
 import { feedsCollection } from '~/entities/feeds';
 import { useTags } from '~/entities/tags';
 import { api, unwrap } from '~/lib/api-client';
+import articlePrintCss from '~/styles/article-print.css?url';
 import { containsHtml, downshiftHeadings } from '~/utils/html';
 import { extractYouTubeVideoId, isYouTubeUrl } from '~/utils/youtube';
-import articlePrintCss from '~/styles/article-print.css?url';
 
 export const Route = createFileRoute('/_frame/articles/$articleId')({
   component: ArticleView,
@@ -35,374 +35,307 @@ function handleRemoveTag(articleTagId: string) {
 }
 
 function ArticleView() {
-  const params = Route.useParams();
+  const { articleId } = Route.useParams();
   const router = useRouter();
-  const articleId = () => params()?.articleId;
 
-  const articleQuery = useLiveQuery((q) =>
-    q.from({ article: articlesCollection }).where(({ article }) => eq(article.id, articleId())),
+  const { data: articlesData, isLoading: articlesLoading, isError: articlesError } = useLiveQuery(
+    (q) => q.from({ article: articlesCollection }).where(({ article }) => eq(article.id, articleId)),
+    [articleId],
   );
+  const article = articlesData?.[0];
 
-  const article = () => articleQuery()[0];
-  const cleanContent = () => article()?.cleanContent;
-  const contentExtractedAt = () => article()?.contentExtractedAt;
+  const [isExtracting, setIsExtracting] = useState(false);
+  const [extractionError, setExtractionError] = useState<string | null>(null);
 
-  const [isExtracting, setIsExtracting] = createSignal(false);
-  const [extractionError, setExtractionError] = createSignal<string | null>(null);
+  const trackedArticleIdRef = useRef<string | null>(null);
 
-  // Track article view when loaded (only once per article view)
-  const [trackedArticleId, setTrackedArticleId] = createSignal<string | null>(null);
-  createEffect(
-    on(
-      () => article()?.id,
-      (id) => {
-        const art = article();
-        if (!id || !art) return;
-        // Only track once per article view
-        if (trackedArticleId() === id) return;
-        setTrackedArticleId(id);
+  // Track article view once per article
+  useEffect(() => {
+    if (!article?.id) return;
+    if (trackedArticleIdRef.current === article.id) return;
+    trackedArticleIdRef.current = article.id;
+    posthog.capture('articles:article_view', {
+      article_id: article.id,
+      feed_id: article.feedId,
+      source: 'direct',
+    });
+  }, [article?.id]);
 
-        posthog.capture('articles:article_view', {
-          article_id: id,
-          feed_id: art.feedId,
-          source: 'direct', // Direct view from URL or navigation
-        });
-      },
-    ),
+  // Trigger content extraction when article loads without extracted content
+  useEffect(() => {
+    if (!article?.id) return;
+    if (article.contentExtractedAt || isExtracting || !article.url || isYouTubeUrl(article.url)) return;
+    setIsExtracting(true);
+    setExtractionError(null);
+    unwrap(api.api.articles['extract-content'].$post({ json: { id: article.id } }))
+      .catch((err: Error) => setExtractionError(err.message))
+      .finally(() => setIsExtracting(false));
+  }, [article?.id]);
+
+  const { data: feedsData } = useLiveQuery(
+    (q) =>
+      q.from({ feed: feedsCollection }).where(({ feed }) => eq(feed.id, article?.feedId ?? '')),
+    [article?.feedId],
   );
+  const tags = useTags();
 
-  // Trigger content extraction when article is loaded but content hasn't been extracted yet
-  createEffect(
-    on(
-      () => article()?.id,
-      (id) => {
-        const art = article();
-        if (!id || !art) return;
-        // Skip if already extracted, already extracting, is a video, or has no URL
-        if (contentExtractedAt() || isExtracting() || !art.url || isYouTubeUrl(art.url)) return;
-
-        setIsExtracting(true);
-        setExtractionError(null);
-        unwrap(api.api.articles['extract-content'].$post({ json: { id } }))
-          .catch((err: Error) => {
-            setExtractionError(err.message);
-          })
-          .finally(() => {
-            setIsExtracting(false);
-          });
-      },
-    ),
-  );
-
-  const feedsQuery = useLiveQuery((q) =>
-    q.from({ feed: feedsCollection }).where(({ feed }) => eq(feed.id, article()?.feedId ?? '')),
-  );
-  const tagsQuery = useTags();
-
-  // Article tags query + handlers
-  const articleTagsQuery = useLiveQuery((q) =>
-    q
-      .from({ articleTag: articleTagsCollection })
-      .where(({ articleTag }) => eq(articleTag.articleId, articleId())),
+  const { data: articleTagsData } = useLiveQuery(
+    (q) =>
+      q
+        .from({ articleTag: articleTagsCollection })
+        .where(({ articleTag }) => eq(articleTag.articleId, articleId)),
+    [articleId],
   );
 
   const handleAddTag = (tagId: string) => {
     articleTagsCollection.insert({
       id: createId(),
       userId: '',
-      articleId: articleId(),
+      articleId,
       tagId,
     });
   };
 
-  const feed = () => (feedsQuery() ?? [])[0] ?? null;
+  const feed = feedsData?.[0] ?? null;
 
-  const isVideo = () => {
-    const art = article();
-    return art?.url && isYouTubeUrl(art.url);
-  };
-
-  const videoEmbedUrl = () => {
-    const art = article();
-    if (!art?.url) return null;
-    const videoId = extractYouTubeVideoId(art.url);
+  const isVideo = article?.url && isYouTubeUrl(article.url);
+  const videoEmbedUrl = (() => {
+    if (!article?.url) return null;
+    const videoId = extractYouTubeVideoId(article.url);
     if (!videoId) return null;
     return `https://www.youtube.com/embed/${videoId}?autoplay=1`;
-  };
+  })();
 
   const handleBack = () => {
-    // Check if we have navigation history from within our app
-    // TanStack Router tracks history, so we can check the history state
     const hasAppHistory = window.history.state && window.history.state.key;
-
     if (hasAppHistory && window.history.length > 1) {
-      // User navigated here from within the app, safe to go back
       window.history.back();
     } else {
-      // User came from external link or bookmark, navigate to inbox
       void router.navigate({ to: '/inbox' });
     }
   };
 
   return (
     <PageLayout
-      title={article()?.title ?? 'Article'}
+      title={article?.title ?? 'Article'}
       headerActions={
-        <button onClick={handleBack} class="btn btn-ghost btn-sm">
+        <button onClick={handleBack} className="btn btn-ghost btn-sm">
           <ArrowLeft size={20} />
-          <span class="hidden sm:inline">Back</span>
+          <span className="hidden sm:inline">Back</span>
         </button>
       }
-      class="min-h-screen py-4 md:py-6"
+      className="min-h-screen py-4 md:py-6"
     >
-      {/* Content */}
-      <Suspense
-        fallback={
-          <div class="flex justify-center py-12">
-            <Loader />
-          </div>
-        }
-      >
-        <Show
-          when={article()}
-          fallback={
-            <Show when={articleQuery.isError}>
-              <div class="py-8 text-center">
-                <p class="text-error">Failed to load article</p>
+      {articlesLoading ? (
+        <div className="flex justify-center py-12">
+          <Loader />
+        </div>
+      ) : articlesError ? (
+        <div className="py-8 text-center">
+          <p className="text-error">Failed to load article</p>
+        </div>
+      ) : article ? (
+        <article>
+          <header className="mb-8">
+            <div className="mb-4 flex gap-3">
+              <h1 className="text-base-content flex-1 text-2xl leading-tight font-bold md:text-3xl">
+                {article.title}
+              </h1>
+              <div className="flex shrink-0 gap-2 print:hidden">
+                <PrintIconButton />
+                <ArchiveIconButton
+                  read={article.isRead || false}
+                  archived={article.isArchived || false}
+                  setArchived={(isArchived) => {
+                    articlesCollection.update(article.id, (draft) => {
+                      draft.isArchived = isArchived;
+                    });
+                  }}
+                />
+                <ReadIconButton
+                  read={article.isRead || false}
+                  setRead={(isRead) => {
+                    articlesCollection.update(article.id, (draft) => {
+                      draft.isRead = isRead;
+                    });
+                  }}
+                />
               </div>
-            </Show>
-          }
-        >
-          {(art) => (
-            <article>
-              {/* Article Header */}
-              <header class="mb-8">
-                <div class="mb-4 flex gap-3">
-                  <h1 class="text-base-content flex-1 text-2xl leading-tight font-bold md:text-3xl">
-                    {art().title}
-                  </h1>
-                  <div class="flex shrink-0 gap-2 print:hidden">
-                    <PrintIconButton />
-                    <ArchiveIconButton
-                      read={art().isRead || false}
-                      archived={art().isArchived || false}
-                      setArchived={(isArchived) => {
-                        articlesCollection.update(art().id, (draft) => {
-                          draft.isArchived = isArchived;
-                        });
-                      }}
-                    />
-                    <ReadIconButton
-                      read={art().isRead || false}
-                      setRead={(isRead) => {
-                        articlesCollection.update(art().id, (draft) => {
-                          draft.isRead = isRead;
-                        });
-                      }}
-                    />
-                  </div>
-                </div>
+            </div>
 
-                <div class="text-base-content/70 flex flex-wrap items-center gap-2 text-sm">
-                  <div class="flex items-center gap-1">
-                    <Show
-                      when={art().isArchived}
-                      fallback={<Inbox size={16} class="text-base-content/40 print:hidden" />}
-                    >
-                      <Archive size={16} class="text-base-content/40 print:hidden" />
-                    </Show>
-                    <Show
-                      when={feed()}
-                      fallback={
-                        <Show when={!art().feedId}>
-                          <span class="text-base-content/60 font-medium">Saved Article</span>
-                        </Show>
-                      }
-                    >
-                      <Link
-                        to="/feeds/$feedId"
-                        params={{ feedId: art().feedId! }}
-                        class="text-primary font-medium hover:underline"
-                      >
-                        {feed().title}
-                      </Link>
-                    </Show>
-                  </div>
+            <div className="text-base-content/70 flex flex-wrap items-center gap-2 text-sm">
+              <div className="flex items-center gap-1">
+                {article.isArchived ? (
+                  <Archive size={16} className="text-base-content/40 print:hidden" />
+                ) : (
+                  <Inbox size={16} className="text-base-content/40 print:hidden" />
+                )}
+                {feed ? (
+                  <Link
+                    to="/feeds/$feedId"
+                    params={{ feedId: article.feedId! }}
+                    className="text-primary font-medium hover:underline"
+                  >
+                    {feed.title}
+                  </Link>
+                ) : !article.feedId ? (
+                  <span className="text-base-content/60 font-medium">Saved Article</span>
+                ) : null}
+              </div>
 
-                  <Show when={art().author}>
-                    <span>•</span>
-                    <span>By {art().author}</span>
-                  </Show>
+              {article.author && (
+                <>
+                  <span>•</span>
+                  <span>By {article.author}</span>
+                </>
+              )}
 
-                  <Show when={art().pubDate}>
-                    <span>•</span>
-                    <TimeAgo date={art().pubDate!} class="print:hidden" />
-                    <span class="hidden print:inline">
-                      {new Date(art().pubDate!).toLocaleDateString('en-US', {
-                        year: 'numeric',
-                        month: 'long',
-                        day: 'numeric',
-                      })}
-                    </span>
-                  </Show>
+              {article.pubDate && (
+                <>
+                  <span>•</span>
+                  <TimeAgo date={article.pubDate} className="print:hidden" />
+                  <span className="hidden print:inline">
+                    {new Date(article.pubDate).toLocaleDateString('en-US', {
+                      year: 'numeric',
+                      month: 'long',
+                      day: 'numeric',
+                    })}
+                  </span>
+                </>
+              )}
 
-                  <Show when={art().url}>
-                    <span class="print:hidden">•</span>
-                    <a
-                      href={art().url!}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      class="text-primary hover:underline print:hidden"
-                    >
-                      View Original
-                    </a>
-                  </Show>
-                </div>
+              {article.url && (
+                <>
+                  <span className="print:hidden">•</span>
+                  <a
+                    href={article.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-primary hover:underline print:hidden"
+                  >
+                    View Original
+                  </a>
+                </>
+              )}
+            </div>
 
-                {/* Article Tags */}
-                <Show when={tagsQuery()}>
-                  <div class="mt-4 print:hidden">
-                    <ArticleTagManager
-                      tags={tagsQuery()}
-                      articleTags={articleTagsQuery() ?? []}
-                      onAddTag={handleAddTag}
-                      onRemoveTag={handleRemoveTag}
-                    />
-                  </div>
-                </Show>
-              </header>
+            {tags.length > 0 && (
+              <div className="mt-4 print:hidden">
+                <ArticleTagManager
+                  tags={tags}
+                  articleTags={articleTagsData ?? []}
+                  onAddTag={handleAddTag}
+                  onRemoveTag={handleRemoveTag}
+                />
+              </div>
+            )}
+          </header>
 
-              {/* Divider */}
-              <div class="border-base-300 mb-8 border-t"></div>
+          <div className="border-base-300 mb-8 border-t"></div>
 
-              {/* Audio Player and Content - for non-video articles with content */}
-              <Show when={!isVideo() && cleanContent()}>
-                <ArticleAudioProvider>
-                  <ArticleAudioPlayer articleId={art().id} />
-                  <HighlightedArticleContent
-                    html={cleanContent()!}
-                    class="prose prose-lg xl:prose-xl text-base-content prose-headings:text-base-content prose-a:text-primary prose-strong:text-base-content prose-code:text-base-content prose-blockquote:text-base-content/80 max-w-none"
-                  />
-                </ArticleAudioProvider>
-              </Show>
-
-              {/* Video Content */}
-              <Show when={isVideo() && videoEmbedUrl()}>
-                <div class="mb-8">
-                  <div class="aspect-video overflow-hidden rounded-lg shadow-lg">
-                    <iframe
-                      src={videoEmbedUrl()!}
-                      title={art().title}
-                      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-                      allowfullscreen
-                      class="h-full w-full border-0"
-                    ></iframe>
-                  </div>
-                </div>
-
-                {/* Video Description */}
-                <Show when={cleanContent() || art().description || art().content}>
-                  <div class="prose prose-lg xl:prose-xl text-base-content prose-headings:text-base-content prose-a:text-primary prose-strong:text-base-content prose-code:text-base-content prose-blockquote:text-base-content/80 max-w-none">
-                    <Show
-                      when={cleanContent()}
-                      fallback={
-                        <div>
-                          <h2 class="mb-3 text-xl font-semibold">Description</h2>
-                          <Show
-                            when={containsHtml(art().description || art().content || '')}
-                            fallback={
-                              <p class="whitespace-pre-wrap">
-                                {art().description || art().content}
-                              </p>
-                            }
-                          >
-                            <div
-                              innerHTML={downshiftHeadings(
-                                art().description || art().content || '',
-                                2,
-                              )}
-                            />
-                          </Show>
-                        </div>
-                      }
-                    >
-                      <div innerHTML={cleanContent()!} />
-                    </Show>
-                  </div>
-                </Show>
-              </Show>
-
-              {/* Loading state for content extraction */}
-              <Show when={!isVideo() && (articleQuery.isLoading || isExtracting())}>
-                <div class="flex flex-col items-center justify-center gap-3 py-12">
-                  <Loader />
-                  <p class="text-base-content/60 text-sm">Preparing readable content...</p>
-                </div>
-              </Show>
-
-              {/* Extraction rate limit hit */}
-              <Show when={!isVideo() && !isExtracting() && extractionError()}>
-                <div class="bg-base-200 mb-6 rounded-lg p-4 text-center">
-                  <p class="text-base-content/60 text-sm">{extractionError()}</p>
-                  <Show when={art().url}>
-                    <a
-                      href={art().url!}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      class="btn btn-primary btn-sm mt-3"
-                    >
-                      View Original Article
-                    </a>
-                  </Show>
-                </div>
-
-                {/* Show RSS content as fallback when extraction was rate-limited */}
-                <Show when={art().description || art().content}>
-                  <div class="prose prose-lg xl:prose-xl text-base-content prose-headings:text-base-content prose-a:text-primary prose-strong:text-base-content prose-code:text-base-content prose-blockquote:text-base-content/80 max-w-none">
-                    <Show
-                      when={containsHtml(art().description || art().content || '')}
-                      fallback={
-                        <p class="whitespace-pre-wrap">{art().description || art().content}</p>
-                      }
-                    >
-                      <div
-                        innerHTML={downshiftHeadings(art().description || art().content || '', 2)}
-                      />
-                    </Show>
-                  </div>
-                </Show>
-              </Show>
-
-              {/* No content fallback - only show after extraction has been attempted */}
-              <Show
-                when={
-                  !isVideo() &&
-                  !articleQuery.isLoading &&
-                  !isExtracting() &&
-                  !cleanContent() &&
-                  contentExtractedAt()
-                }
-              >
-                <div class="py-8 text-center">
-                  <p class="text-base-content/60">
-                    Readable content could not be extracted for this article.
-                  </p>
-                  <Show when={art().url}>
-                    <a
-                      href={art().url!}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      class="btn btn-primary btn-sm mt-4"
-                    >
-                      View Original Article
-                    </a>
-                  </Show>
-                </div>
-              </Show>
-            </article>
+          {!isVideo && article.cleanContent && (
+            <ArticleAudioProvider>
+              <ArticleAudioPlayer articleId={article.id} />
+              <HighlightedArticleContent
+                html={article.cleanContent}
+                className="prose prose-lg xl:prose-xl text-base-content prose-headings:text-base-content prose-a:text-primary prose-strong:text-base-content prose-code:text-base-content prose-blockquote:text-base-content/80 max-w-none"
+              />
+            </ArticleAudioProvider>
           )}
-        </Show>
-      </Suspense>
+
+          {isVideo && videoEmbedUrl && (
+            <div className="mb-8">
+              <div className="aspect-video overflow-hidden rounded-lg shadow-lg">
+                <iframe
+                  src={videoEmbedUrl}
+                  title={article.title}
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                  allowFullScreen
+                  className="h-full w-full border-0"
+                ></iframe>
+              </div>
+            </div>
+          )}
+
+          {isVideo && (article.cleanContent || article.description || article.content) && (
+            <div className="prose prose-lg xl:prose-xl text-base-content prose-headings:text-base-content prose-a:text-primary prose-strong:text-base-content prose-code:text-base-content prose-blockquote:text-base-content/80 max-w-none">
+              {article.cleanContent ? (
+                <div dangerouslySetInnerHTML={{ __html: article.cleanContent }} />
+              ) : (
+                <div>
+                  <h2 className="mb-3 text-xl font-semibold">Description</h2>
+                  {containsHtml(article.description || article.content || '') ? (
+                    <div
+                      dangerouslySetInnerHTML={{
+                        __html: downshiftHeadings(article.description || article.content || '', 2),
+                      }}
+                    />
+                  ) : (
+                    <p className="whitespace-pre-wrap">{article.description || article.content}</p>
+                  )}
+                </div>
+              )}
+            </div>
+          )}
+
+          {!isVideo && (articlesLoading || isExtracting) && (
+            <div className="flex flex-col items-center justify-center gap-3 py-12">
+              <Loader />
+              <p className="text-base-content/60 text-sm">Preparing readable content...</p>
+            </div>
+          )}
+
+          {!isVideo && !isExtracting && extractionError && (
+            <>
+              <div className="bg-base-200 mb-6 rounded-lg p-4 text-center">
+                <p className="text-base-content/60 text-sm">{extractionError}</p>
+                {article.url && (
+                  <a
+                    href={article.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="btn btn-primary btn-sm mt-3"
+                  >
+                    View Original Article
+                  </a>
+                )}
+              </div>
+
+              {(article.description || article.content) && (
+                <div className="prose prose-lg xl:prose-xl text-base-content prose-headings:text-base-content prose-a:text-primary prose-strong:text-base-content prose-code:text-base-content prose-blockquote:text-base-content/80 max-w-none">
+                  {containsHtml(article.description || article.content || '') ? (
+                    <div
+                      dangerouslySetInnerHTML={{
+                        __html: downshiftHeadings(article.description || article.content || '', 2),
+                      }}
+                    />
+                  ) : (
+                    <p className="whitespace-pre-wrap">{article.description || article.content}</p>
+                  )}
+                </div>
+              )}
+            </>
+          )}
+
+          {!isVideo && !articlesLoading && !isExtracting && !article.cleanContent && article.contentExtractedAt && (
+            <div className="py-8 text-center">
+              <p className="text-base-content/60">
+                Readable content could not be extracted for this article.
+              </p>
+              {article.url && (
+                <a
+                  href={article.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="btn btn-primary btn-sm mt-4"
+                >
+                  View Original Article
+                </a>
+              )}
+            </div>
+          )}
+        </article>
+      ) : null}
     </PageLayout>
   );
 }

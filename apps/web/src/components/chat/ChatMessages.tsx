@@ -1,19 +1,16 @@
 import type { ToolCallPart, UIMessage } from '@tanstack/ai-client';
 import DOMPurify from 'dompurify';
-import { AlertTriangle, Sparkles } from 'lucide-solid';
+import { AlertTriangle, Sparkles } from 'lucide-react';
 import { marked } from 'marked';
-import { createEffect, createMemo, Index, on, Show, Switch, Match } from 'solid-js';
+import { useEffect, useMemo, useRef } from 'react';
 import { useChatContext } from './chat-context.shared';
 
 // GFM tables / strikethrough / task lists + treat single newlines as <br>.
-// Same surface as the previous remark-gfm + remark-breaks setup.
 marked.setOptions({ gfm: true, breaks: true });
 
-/** Extract a human-readable error message from API errors. */
 function friendlyError(err: Error): string {
   const raw = err.message || '';
 
-  // Try to parse embedded JSON from Anthropic API errors (e.g. "429 {"type":"error","error":{...}}")
   const jsonMatch = raw.match(/\{[\s\S]*\}/);
   if (jsonMatch) {
     try {
@@ -25,7 +22,6 @@ function friendlyError(err: Error): string {
     }
   }
 
-  // Common HTTP status prefixes
   if (raw.includes('429')) return 'Rate limited — too many requests. Try again in a moment.';
   if (raw.includes('413')) return 'Request too large — try a simpler question or start a new chat.';
   if (raw.includes('500') || raw.includes('502') || raw.includes('503'))
@@ -36,200 +32,173 @@ function friendlyError(err: Error): string {
 
 export function ChatMessages() {
   const chat = useChatContext();
-  let messagesEndRef: HTMLDivElement | undefined;
+  const messagesEndRef = useRef<HTMLDivElement>(null);
 
-  createEffect(
-    on(
-      () => {
-        const msgs = chat.messages();
-        // Track both message count and total parts count to scroll on content updates
-        const partsCount = msgs.reduce((sum, m) => sum + m.parts.length, 0);
-        return `${msgs.length}:${partsCount}`;
-      },
-      (key) => {
-        if (key === '0:0') return;
-        requestAnimationFrame(() => {
-          messagesEndRef?.scrollIntoView({ behavior: 'smooth' });
-        });
-      },
-    ),
-  );
+  const msgKey = `${chat.messages.length}:${chat.messages.reduce((sum, m) => sum + m.parts.length, 0)}`;
 
-  const lastAssistantId = createMemo(() => {
-    const msgs = chat.messages();
+  useEffect(() => {
+    if (msgKey === '0:0') return;
+    requestAnimationFrame(() => {
+      messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    });
+  }, [msgKey]);
+
+  const lastAssistantId = useMemo(() => {
+    const msgs = chat.messages;
     for (let i = msgs.length - 1; i >= 0; i--) {
       if (msgs[i].role === 'assistant') return msgs[i].id;
     }
     return null;
-  });
+  }, [chat.messages]);
 
-  // True when the last assistant message has a tool call that is still running.
-  // Its own spinner is shown by <ToolCallIndicator>, so we suppress the global
-  // "Thinking..." indicator to avoid two spinners stacking.
-  const hasPendingToolCall = createMemo(() => {
-    const msgs = chat.messages();
+  const hasPendingToolCall = useMemo(() => {
+    const msgs = chat.messages;
     if (msgs.length === 0) return false;
     const last = msgs[msgs.length - 1];
     if (last.role !== 'assistant') return false;
     return last.parts.some(
       (p) => p.type === 'tool-call' && p.output == null && p.state !== 'input-complete',
     );
-  });
+  }, [chat.messages]);
 
-  const emptyLastAssistant = createMemo(() => {
-    const msgs = chat.messages();
+  const emptyLastAssistant = useMemo(() => {
+    const msgs = chat.messages;
     if (msgs.length === 0) return false;
     const last = msgs[msgs.length - 1];
     if (last.role !== 'assistant') return false;
-    // Check if the last assistant message has no text parts with content
     return !last.parts.some(
       (p) => p.type === 'text' && 'content' in p && (p as { content: string }).content.trim(),
     );
-  });
+  }, [chat.messages]);
 
   return (
-    <div class="min-h-0 flex-1 space-y-5 overflow-y-auto overscroll-contain py-4 pr-2 pl-4">
-      <Show when={chat.messages().length === 0}>
-        <div class="flex h-full items-center justify-center">
-          <div class="text-base-content/60 text-center">
-            <Sparkles size={28} class="mx-auto mb-3 opacity-50" />
-            <p class="text-sm font-medium">How can I help?</p>
-            <p class="text-base-content/50 mt-1 text-xs">
+    <div className="min-h-0 flex-1 space-y-5 overflow-y-auto overscroll-contain py-4 pr-2 pl-4">
+      {chat.messages.length === 0 && (
+        <div className="flex h-full items-center justify-center">
+          <div className="text-base-content/60 text-center">
+            <Sparkles size={28} className="mx-auto mb-3 opacity-50" />
+            <p className="text-sm font-medium">How can I help?</p>
+            <p className="text-base-content/50 mt-1 text-xs">
               Subscribe to feeds, organize tags, manage articles, and more.
             </p>
           </div>
         </div>
-      </Show>
+      )}
 
-      <Index each={chat.messages()}>
-        {(message) => (
-          <Message
-            message={message()}
-            isStreaming={chat.isLoading() && message().id === lastAssistantId()}
-          />
-        )}
-      </Index>
+      {chat.messages.map((message) => (
+        <Message
+          key={message.id}
+          message={message}
+          isStreaming={chat.isLoading && message.id === lastAssistantId}
+        />
+      ))}
 
-      <Show when={chat.isLoading() && !hasPendingToolCall()}>
-        <div class="text-base-content/40 flex items-center gap-1.5 text-xs">
-          <span class="loading loading-spinner loading-xs" />
+      {chat.isLoading && !hasPendingToolCall && (
+        <div className="text-base-content/40 flex items-center gap-1.5 text-xs">
+          <span className="loading loading-spinner loading-xs" />
           <span>Thinking...</span>
         </div>
-      </Show>
+      )}
 
-      <Show when={chat.error()}>
-        {(err) => (
-          <div class="text-error/80 flex items-start gap-1.5 text-xs">
-            <AlertTriangle size={14} class="mt-0.5 shrink-0" />
-            <span>{friendlyError(err())}</span>
-          </div>
-        )}
-      </Show>
+      {chat.error && (
+        <div className="text-error/80 flex items-start gap-1.5 text-xs">
+          <AlertTriangle size={14} className="mt-0.5 shrink-0" />
+          <span>{friendlyError(chat.error)}</span>
+        </div>
+      )}
 
-      <Show when={!chat.isLoading() && !chat.error() && emptyLastAssistant()}>
-        <div class="flex items-start gap-1.5 text-xs text-amber-600 dark:text-amber-400">
-          <AlertTriangle size={14} class="mt-0.5 shrink-0" />
+      {!chat.isLoading && !chat.error && emptyLastAssistant && (
+        <div className="flex items-start gap-1.5 text-xs text-amber-600 dark:text-amber-400">
+          <AlertTriangle size={14} className="mt-0.5 shrink-0" />
           <span>
             Response was empty — the model may have hit a limit. Try rephrasing or starting a new
             chat.
           </span>
         </div>
-      </Show>
+      )}
 
-      <Show when={chat.messages().length > 0}>
-        <div ref={(el) => (messagesEndRef = el)} />
-      </Show>
+      {chat.messages.length > 0 && <div ref={messagesEndRef} />}
     </div>
   );
 }
 
-function Message(props: { message: UIMessage; isStreaming: boolean }) {
-  const isUser = () => props.message.role === 'user';
-
-  return (
-    <Show
-      when={isUser()}
-      fallback={<AiMessage message={props.message} isStreaming={props.isStreaming} />}
-    >
-      <UserMessage message={props.message} />
-    </Show>
-  );
+function Message({ message, isStreaming }: { message: UIMessage; isStreaming: boolean }) {
+  if (message.role === 'user') {
+    return <UserMessage message={message} />;
+  }
+  return <AiMessage message={message} isStreaming={isStreaming} />;
 }
 
-/** User message — right-aligned bubble */
-function UserMessage(props: { message: UIMessage }) {
-  const textContent = () => {
-    const parts = props.message.parts.filter((p) => p.type === 'text' && 'content' in p);
-    return parts
-      .map((p) => (p as { content: string }).content)
-      .join('')
-      .trim();
-  };
+function UserMessage({ message }: { message: UIMessage }) {
+  const textContent = message.parts
+    .filter((p) => p.type === 'text' && 'content' in p)
+    .map((p) => (p as { content: string }).content)
+    .join('')
+    .trim();
+
+  if (!textContent) return null;
 
   return (
-    <Show when={textContent()}>
-      <div class="flex justify-end">
-        <div class="bg-primary text-primary-content max-w-[85%] rounded-2xl rounded-tr-sm px-3.5 py-2 text-sm">
-          <span class="break-words whitespace-pre-wrap">{textContent()}</span>
-        </div>
+    <div className="flex justify-end">
+      <div className="bg-primary text-primary-content max-w-[85%] rounded-2xl rounded-tr-sm px-3.5 py-2 text-sm">
+        <span className="break-words whitespace-pre-wrap">{textContent}</span>
       </div>
-    </Show>
-  );
-}
-
-/** AI message — full-width prose, no bubble. Parts rendered in order. */
-function AiMessage(props: { message: UIMessage; isStreaming: boolean }) {
-  return (
-    <div class="space-y-1">
-      <Index each={props.message.parts}>
-        {(part) => (
-          <Switch>
-            <Match when={part().type === 'tool-call'}>
-              <ToolCallIndicator part={part() as ToolCallPart} />
-            </Match>
-            <Match
-              when={
-                part().type === 'text' &&
-                'content' in part() &&
-                (part() as { content: string }).content.trim()
-              }
-            >
-              <MarkdownPart
-                content={(part() as { content: string }).content}
-                isStreaming={props.isStreaming}
-              />
-            </Match>
-          </Switch>
-        )}
-      </Index>
     </div>
   );
 }
 
-function MarkdownPart(props: { content: string; isStreaming: boolean }) {
-  const html = createMemo(() =>
-    // marked.parse is sync when no async extensions are configured.
-    DOMPurify.sanitize(marked.parse(props.content) as string),
+function AiMessage({ message, isStreaming }: { message: UIMessage; isStreaming: boolean }) {
+  return (
+    <div className="space-y-1">
+      {message.parts.map((part, i) => {
+        if (part.type === 'tool-call') {
+          return <ToolCallIndicator key={i} part={part as ToolCallPart} />;
+        }
+        if (
+          part.type === 'text' &&
+          'content' in part &&
+          (part as { content: string }).content.trim()
+        ) {
+          return (
+            <MarkdownPart
+              key={i}
+              content={(part as { content: string }).content}
+              isStreaming={isStreaming}
+            />
+          );
+        }
+        return null;
+      })}
+    </div>
   );
+}
+
+function MarkdownPart({ content, isStreaming }: { content: string; isStreaming: boolean }) {
+  const html = useMemo(
+    () => DOMPurify.sanitize(marked.parse(content) as string),
+    [content],
+  );
+
   return (
     <div
-      class="prose prose-sm prose-chat text-base-content prose-headings:text-base-content prose-a:text-primary prose-code:text-base-content max-w-none break-words"
-      classList={{ 'markdown-streaming': props.isStreaming }}
-      innerHTML={html()}
+      className={`prose prose-sm prose-chat text-base-content prose-headings:text-base-content prose-a:text-primary prose-code:text-base-content max-w-none break-words${isStreaming ? ' markdown-streaming' : ''}`}
+      dangerouslySetInnerHTML={{ __html: html }}
     />
   );
 }
 
-function ToolCallIndicator(props: { part: ToolCallPart }) {
-  const isDone = () => props.part.output != null || props.part.state === 'input-complete';
-  const label = () => props.part.name.replace(/_/g, ' ');
+function ToolCallIndicator({ part }: { part: ToolCallPart }) {
+  const isDone = part.output != null || part.state === 'input-complete';
+  const label = part.name.replace(/_/g, ' ');
 
   return (
-    <div class="text-base-content/50 mt-2 flex items-center gap-1.5 text-xs">
-      <Show when={isDone()} fallback={<span class="loading loading-spinner loading-xs" />}>
-        <span class="text-success">&#10003;</span>
-      </Show>
-      <span>{label()}</span>
+    <div className="text-base-content/50 mt-2 flex items-center gap-1.5 text-xs">
+      {isDone ? (
+        <span className="text-success">&#10003;</span>
+      ) : (
+        <span className="loading loading-spinner loading-xs" />
+      )}
+      <span>{label}</span>
     </div>
   );
 }

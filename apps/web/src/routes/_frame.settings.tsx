@@ -1,5 +1,5 @@
-import { createFileRoute, Link, Outlet, redirect } from '@tanstack/solid-router';
-import { Suspense } from 'solid-js';
+import { createFileRoute, Link, Outlet, redirect } from '@tanstack/react-router';
+import { Suspense } from 'react';
 import { CenterLoader } from '~/components/Loader';
 import { PageLayout } from '~/components/PageLayout';
 
@@ -21,9 +21,9 @@ const TABS = [
 function SettingsLayout() {
   return (
     <PageLayout title="Settings">
-      <div role="tablist" class="tabs tabs-border mb-6">
+      <div role="tablist" className="tabs tabs-border mb-6">
         {TABS.map((tab) => (
-          <Link to={tab.to} role="tab" class="tab" activeProps={{ class: 'tab tab-active' }}>
+          <Link to={tab.to} role="tab" className="tab" activeProps={{ className: 'tab tab-active' }}>
             {tab.label}
           </Link>
         ))}

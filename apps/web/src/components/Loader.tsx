@@ -1,11 +1,11 @@
 export function Loader() {
-  return <span class="loading loading-spinner loading-xl"></span>;
+  return <span className="loading loading-spinner loading-xl"></span>;
 }
 
 export function CenterLoader() {
   return (
-    <div class="flex justify-center py-12">
-      <span class="loading loading-spinner loading-xl"></span>
+    <div className="flex justify-center py-12">
+      <span className="loading loading-spinner loading-xl"></span>
     </div>
   );
 }

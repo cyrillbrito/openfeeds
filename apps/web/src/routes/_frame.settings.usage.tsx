@@ -1,6 +1,6 @@
 import type { UserUsage } from '@repo/domain/client';
-import { createFileRoute } from '@tanstack/solid-router';
-import { createResource, For, Show } from 'solid-js';
+import { createFileRoute } from '@tanstack/react-router';
+import { useEffect, useState } from 'react';
 import { Card } from '~/components/Card';
 import { api, unwrap } from '~/lib/api-client';
 
@@ -11,8 +11,8 @@ export const Route = createFileRoute('/_frame/settings/usage')({
 function UsagePage() {
   return (
     <>
-      <div class="mb-6">
-        <p class="text-base-content-gray text-sm">Your current resource usage and limits.</p>
+      <div className="mb-6">
+        <p className="text-base-content-gray text-sm">Your current resource usage and limits.</p>
       </div>
 
       <UsageLimitsCard />
@@ -37,52 +37,53 @@ function isUnlimited(limit: number | null) {
 }
 
 function UsageLimitsCard() {
-  const [usage] = createResource(() => unwrap(api.api.settings.usage.$get({})));
+  const [usage, setUsage] = useState<UserUsage | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    unwrap(api.api.settings.usage.$get({}))
+      .then(setUsage)
+      .catch(console.error)
+      .finally(() => setLoading(false));
+  }, []);
 
   return (
     <Card>
-      <div class="mb-4 flex items-center justify-between">
+      <div className="mb-4 flex items-center justify-between">
         <div>
-          <h2 class="text-base-content font-semibold">Usage & Limits</h2>
+          <h2 className="text-base-content font-semibold">Usage & Limits</h2>
         </div>
       </div>
 
-      <Show
-        when={!usage.loading}
-        fallback={
-          <div class="flex justify-center py-4">
-            <span class="loading loading-spinner loading-sm"></span>
-          </div>
-        }
-      >
-        <Show when={usage()}>
-          <div class="space-y-4">
-            <For each={flattenUsage(usage())}>
-              {(item) => {
-                const unlimited = isUnlimited(item.limit);
-                const pct = () => (unlimited ? 0 : Math.round((item.used / item.limit!) * 100));
-                return (
-                  <div>
-                    <div class="mb-1 flex justify-between text-sm">
-                      <span>{item.label}</span>
-                      <span class="text-base-content-gray">
-                        {unlimited ? item.used : `${item.used} / ${item.limit}`}
-                      </span>
-                    </div>
-                    <Show when={!unlimited}>
-                      <progress
-                        class={`progress w-full ${pct() >= 90 ? 'progress-error' : pct() >= 70 ? 'progress-warning' : 'progress-primary'}`}
-                        value={item.used}
-                        max={item.limit!}
-                      />
-                    </Show>
-                  </div>
-                );
-              }}
-            </For>
-          </div>
-        </Show>
-      </Show>
+      {loading ? (
+        <div className="flex justify-center py-4">
+          <span className="loading loading-spinner loading-sm"></span>
+        </div>
+      ) : usage ? (
+        <div className="space-y-4">
+          {flattenUsage(usage).map((item) => {
+            const unlimited = isUnlimited(item.limit);
+            const pct = unlimited ? 0 : Math.round((item.used / item.limit!) * 100);
+            return (
+              <div key={item.label}>
+                <div className="mb-1 flex justify-between text-sm">
+                  <span>{item.label}</span>
+                  <span className="text-base-content-gray">
+                    {unlimited ? item.used : `${item.used} / ${item.limit}`}
+                  </span>
+                </div>
+                {!unlimited && (
+                  <progress
+                    className={`progress w-full ${pct >= 90 ? 'progress-error' : pct >= 70 ? 'progress-warning' : 'progress-primary'}`}
+                    value={item.used}
+                    max={item.limit!}
+                  />
+                )}
+              </div>
+            );
+          })}
+        </div>
+      ) : null}
     </Card>
   );
 }

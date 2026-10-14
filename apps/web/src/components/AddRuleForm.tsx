@@ -1,7 +1,7 @@
 import { FilterOperator } from '@repo/domain/client';
 import { createId } from '@repo/shared/utils';
-import { CircleAlert } from 'lucide-solid';
-import { createSignal, For, Show } from 'solid-js';
+import { CircleAlert } from 'lucide-react';
+import { useState } from 'react';
 import { filterRulesCollection } from '~/entities/filter-rules';
 import { authClient } from '~/lib/auth-client';
 
@@ -11,14 +11,14 @@ interface AddRuleFormProps {
   onCancel?: () => void;
 }
 
-export function AddRuleForm(props: AddRuleFormProps) {
+export function AddRuleForm({ feedId, onSuccess, onCancel }: AddRuleFormProps) {
   const session = authClient.useSession();
-  const [pattern, setPattern] = createSignal('');
-  const [operator, setOperator] = createSignal<
-    (typeof FilterOperator)[keyof typeof FilterOperator]
-  >(FilterOperator.INCLUDES);
-  const [isActive, setIsActive] = createSignal(true);
-  const [error, setError] = createSignal<string | null>(null);
+  const [pattern, setPattern] = useState('');
+  const [operator, setOperator] = useState<(typeof FilterOperator)[keyof typeof FilterOperator]>(
+    FilterOperator.INCLUDES,
+  );
+  const [isActive, setIsActive] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   const operatorOptions = [
     {
@@ -33,16 +33,16 @@ export function AddRuleForm(props: AddRuleFormProps) {
     },
   ];
 
-  const handleSubmit = (e: Event) => {
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    const trimmedPattern = pattern().trim();
+    const trimmedPattern = pattern.trim();
 
     if (!trimmedPattern) {
       setError('Please enter a pattern');
       return;
     }
 
-    const userId = session().data?.user?.id;
+    const userId = session.data?.user?.id;
     if (!userId) {
       setError('Not authenticated');
       return;
@@ -53,20 +53,19 @@ export function AddRuleForm(props: AddRuleFormProps) {
     filterRulesCollection.insert({
       id: createId(),
       userId,
-      feedId: props.feedId,
+      feedId,
       pattern: trimmedPattern,
-      operator: operator(),
-      isActive: isActive(),
+      operator,
+      isActive,
       createdAt: now,
       updatedAt: now,
     });
 
-    // Reset form
     setPattern('');
     setOperator(FilterOperator.INCLUDES);
     setIsActive(true);
 
-    props.onSuccess?.();
+    onSuccess?.();
   };
 
   const handleCancel = () => {
@@ -74,90 +73,91 @@ export function AddRuleForm(props: AddRuleFormProps) {
     setOperator(FilterOperator.INCLUDES);
     setIsActive(true);
     setError(null);
-    props.onCancel?.();
+    onCancel?.();
   };
 
   return (
-    <form onSubmit={handleSubmit} class="space-y-4">
-      <div class="form-control w-full">
-        <label class="label">
-          <span class="label-text">Text Pattern to Match</span>
+    <form onSubmit={handleSubmit} className="space-y-4">
+      <div className="form-control w-full">
+        <label className="label">
+          <span className="label-text">Text Pattern to Match</span>
         </label>
         <input
           type="text"
           placeholder="e.g., advertisement, sponsored, breaking"
-          class="input input-bordered w-full"
-          value={pattern()}
-          onInput={(e) => setPattern(e.currentTarget.value)}
+          className="input input-bordered w-full"
+          value={pattern}
+          onChange={(e) => setPattern(e.currentTarget.value)}
           required
         />
-        <label class="label">
-          <span class="label-text-alt">
+        <label className="label">
+          <span className="label-text-alt">
             Articles with titles matching this pattern will be automatically marked as read
           </span>
         </label>
       </div>
 
-      <div class="form-control w-full">
-        <label class="label">
-          <span class="label-text">When to Mark as Read</span>
+      <div className="form-control w-full">
+        <label className="label">
+          <span className="label-text">When to Mark as Read</span>
         </label>
-        <div class="flex flex-col gap-3">
-          <For each={operatorOptions}>
-            {(option) => (
-              <label class="label border-base-300 hover:bg-base-100 cursor-pointer justify-start gap-3 rounded-lg border p-3">
-                <input
-                  type="radio"
-                  name="operator"
-                  class="radio"
-                  value={option.value}
-                  checked={operator() === option.value}
-                  onChange={() => setOperator(option.value)}
-                />
-                <div class="flex-1">
-                  <div class="label-text font-medium">{option.label}</div>
-                  <div class="label-text-alt mt-1 text-xs">{option.description}</div>
-                </div>
-              </label>
-            )}
-          </For>
+        <div className="flex flex-col gap-3">
+          {operatorOptions.map((option) => (
+            <label
+              key={option.value}
+              className="label border-base-300 hover:bg-base-100 cursor-pointer justify-start gap-3 rounded-lg border p-3"
+            >
+              <input
+                type="radio"
+                name="operator"
+                className="radio"
+                value={option.value}
+                checked={operator === option.value}
+                onChange={() => setOperator(option.value)}
+              />
+              <div className="flex-1">
+                <div className="label-text font-medium">{option.label}</div>
+                <div className="label-text-alt mt-1 text-xs">{option.description}</div>
+              </div>
+            </label>
+          ))}
         </div>
-        <label class="label">
-          <span class="label-text-alt">
+        <label className="label">
+          <span className="label-text-alt">
             Choose when articles should be automatically marked as read
           </span>
         </label>
       </div>
 
-      <div class="form-control">
-        <label class="label cursor-pointer">
-          <span class="label-text">Enable Rule</span>
+      <div className="form-control">
+        <label className="label cursor-pointer">
+          <span className="label-text">Enable Rule</span>
           <input
             type="checkbox"
-            class="checkbox"
-            checked={isActive()}
+            className="checkbox"
+            checked={isActive}
             onChange={(e) => setIsActive(e.currentTarget.checked)}
           />
         </label>
-        <label class="label">
-          <span class="label-text-alt">
+        <label className="label">
+          <span className="label-text-alt">
             Disabled rules will not automatically mark articles as read
           </span>
         </label>
       </div>
 
-      <Show when={error()}>
-        <div class="alert alert-error">
+      {error && (
+        <div className="alert alert-error">
           <CircleAlert size={20} />
-          <span>{error()}</span>
+          <span>{error}</span>
         </div>
-      </Show>
+      )}
 
-      <div class="flex justify-end gap-2">
-        <button type="button" class="btn" onClick={handleCancel}>
+      <div className="flex justify-end gap-2">
+        <button type="button" className="btn" onClick={handleCancel}>
           Cancel
         </button>
-        <button type="submit" class="btn btn-primary">
+        <button type="submit" className="btn btn-primary">
           Add Rule
         </button>
       </div>

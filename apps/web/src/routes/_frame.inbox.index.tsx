@@ -1,6 +1,6 @@
-import { and, eq } from '@tanstack/solid-db';
-import { createFileRoute } from '@tanstack/solid-router';
-import { Show, Suspense } from 'solid-js';
+import { and, eq } from '@tanstack/react-db';
+import { createFileRoute } from '@tanstack/react-router';
+import { Suspense } from 'react';
 import { ArticleList } from '~/components/articles/ArticleList';
 import {
   ArticleListProvider,
@@ -27,8 +27,8 @@ export const Route = createFileRoute('/_frame/inbox/')({
 
 function Inbox() {
   const search = Route.useSearch();
-  const readStatus = () => search()?.readStatus || 'unread';
-  const sortOrder = () => search()?.sort || 'newest';
+  const readStatus = (search?.readStatus || 'unread') as ReadStatus;
+  const sortOrder = search?.sort || 'newest';
   const { showToast } = useToast();
 
   const filter: ArticleQueryFilter = {
@@ -60,8 +60,8 @@ function Inbox() {
   return (
     <ArticleListProvider
       filter={filter}
-      readStatus={() => readStatus()}
-      sortDirection={() => (sortOrder() === 'oldest' ? 'asc' : 'desc')}
+      readStatus={readStatus}
+      sortDirection={sortOrder === 'oldest' ? 'asc' : 'desc'}
       viewKey="inbox"
       context="inbox"
       onArchive={(articleId) => {
@@ -77,56 +77,56 @@ function Inbox() {
         });
       }}
     >
-      <InboxContent readStatus={readStatus()} sortOrder={sortOrder()} />
+      <InboxContent readStatus={readStatus} sortOrder={sortOrder} />
     </ArticleListProvider>
   );
 }
 
-function InboxContent(props: { readStatus: ReadStatus; sortOrder: string }) {
+function InboxContent({ readStatus, sortOrder }: { readStatus: ReadStatus; sortOrder: string }) {
   const ctx = useArticleList();
 
   return (
     <PageLayout
       title="Inbox"
       headerActions={
-        <div class="flex flex-wrap gap-2">
+        <div className="flex flex-wrap gap-2">
           <ShortsButton
-            shortsExist={ctx.shortsExist()}
-            linkProps={{ to: '/inbox/shorts', search: { readStatus: props.readStatus } }}
+            shortsExist={ctx.shortsExist}
+            linkProps={{ to: '/inbox/shorts', search: { readStatus } }}
           />
         </div>
       }
     >
-      <p class="text-base-content-gray mb-4">Latest articles from all your feeds</p>
+      <p className="text-base-content-gray mb-4">Latest articles from all your feeds</p>
 
       <ArticleListToolbar
         leftContent={
           <>
-            <ReadStatusToggle currentStatus={props.readStatus} />
-            <SortToggle currentSort={props.sortOrder as any} />
+            <ReadStatusToggle currentStatus={readStatus} />
+            <SortToggle currentSort={sortOrder as any} />
           </>
         }
         menuContent={
-          <Show when={ctx.archivableCount() > 0}>
+          ctx.archivableCount > 0 ? (
             <li>
               <MarkAllArchivedButton
-                totalCount={ctx.archivableCount()}
+                totalCount={ctx.archivableCount}
                 contextLabel="globally"
                 onConfirm={ctx.markAllArchived}
               />
             </li>
-          </Show>
+          ) : null
         }
-        unreadCount={ctx.unreadCount()}
-        totalCount={ctx.totalCount()}
-        readStatus={props.readStatus}
+        unreadCount={ctx.unreadCount}
+        totalCount={ctx.totalCount}
+        readStatus={readStatus}
       />
 
       <CommonErrorBoundary>
         <Suspense fallback={<CenterLoader />}>
-          <Show when={ctx.feeds().length > 0 || ctx.tags().length > 0 || ctx.articles().length > 0}>
+          {(ctx.feeds.length > 0 || ctx.tags.length > 0 || ctx.articles.length > 0) && (
             <ArticleList />
-          </Show>
+          )}
         </Suspense>
       </CommonErrorBoundary>
     </PageLayout>

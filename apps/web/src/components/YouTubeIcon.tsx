@@ -1,9 +1,9 @@
 // Source: https://svgl.app/?search=youtube
 // https://svgl.app/library/youtube.svg
 
-import type { JSX } from 'solid-js';
+import type { SVGProps } from 'react';
 
-export function YouTubeIcon(props: JSX.SvgSVGAttributes<SVGSVGElement>) {
+export function YouTubeIcon(props: SVGProps<SVGSVGElement>) {
   return (
     <svg
       xmlns="http://www.w3.org/2000/svg"

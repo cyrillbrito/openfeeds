@@ -1,4 +1,4 @@
-import { Sparkles } from 'lucide-solid';
+import { Sparkles } from 'lucide-react';
 
 interface AiFabProps {
   onClick: () => void;
@@ -12,7 +12,7 @@ function shortcutLabel() {
 export function AiFab(props: AiFabProps) {
   return (
     <button
-      class="btn btn-primary btn-circle fixed right-4 bottom-4 z-20 size-14 shadow-lg"
+      className="btn btn-primary btn-circle fixed right-4 bottom-4 z-20 size-14 shadow-lg"
       onClick={() => props.onClick()}
       title={`Open AI chat (${shortcutLabel()})`}
     >

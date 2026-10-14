@@ -1,6 +1,6 @@
-import { createRootRoute, Outlet } from '@tanstack/solid-router';
+import { createRootRoute, Outlet } from '@tanstack/react-router';
 import { posthog } from 'posthog-js';
-import { onMount, Suspense } from 'solid-js';
+import { Suspense, useEffect } from 'react';
 import { SessionReadProvider } from '~/providers/session-read';
 import { ThemeProvider } from '~/providers/theme';
 import { ToastProvider } from '~/providers/toast';
@@ -10,7 +10,7 @@ export const Route = createRootRoute({
 });
 
 function RootComponent() {
-  onMount(() => {
+  useEffect(() => {
     const posthogKey = import.meta.env.VITE_POSTHOG_KEY;
     if (!posthogKey) return;
     posthog.init(posthogKey, {
@@ -20,7 +20,7 @@ function RootComponent() {
       capture_exceptions: true,
     });
     posthog.register({ app: 'web', app_version: __APP_VERSION__ });
-  });
+  }, []);
 
   return (
     <Suspense>
