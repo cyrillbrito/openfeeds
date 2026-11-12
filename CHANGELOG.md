@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.18.0](https://github.com/cyrillbrito/openfeeds/compare/v0.17.0...v0.18.0) (2026-11-12)
+
+
+### Features
+
+* **marketing:** show under construction page ([de0ef59](https://github.com/cyrillbrito/openfeeds/commit/de0ef59cea84b1dee3b69bdd6b1dd0c7cd61d70a))
+
 ## [0.17.0](https://github.com/cyrillbrito/openfeeds/compare/v0.16.0...v0.17.0) (2026-06-27)
 
 
